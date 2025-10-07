@@ -40,7 +40,7 @@ export default function TableLayout({
         <div className="mt-4 flex items-center gap-3 @lg:mt-0">
           {importButton?<ImportButton url={importButton}/>:""}
           <ExportButton data={data} fileName={fileName} header={'excel'} type={type} role={role} />
-          <ExportButton data={data} fileName={fileName} header={'pdf'} type={type} role={role} />
+          {/* <ExportButton data={data} fileName={fileName} header={'pdf'} type={type} role={role} /> */}
           {createName && 
           <CreateButton
            label={createName} 

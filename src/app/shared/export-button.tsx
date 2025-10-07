@@ -34,7 +34,7 @@ export default function ExportButton({
     let config = {
       method: 'get',
       maxBodyLength: Infinity,
-      url: `${process.env.NEXT_PUBLIC_API_ENDPOINT}/${fileName}?export=${header}&${params.toString()}&columns=${data.columns.reduce((str: string, col) => str + col + ',', '')}&rows=${data.rows.reduce((str: string, row) => str + row + ',', '')}`,
+      url: `${process.env.NEXT_PUBLIC_API_ENDPOINT}/${fileName}?export=1`,
       headers: { 
         'Authorization':`Bearer ${token}` ,
         'Accept-Language': 'en'

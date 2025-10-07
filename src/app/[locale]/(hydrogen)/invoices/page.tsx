@@ -36,7 +36,7 @@ console.log(data);
         columns: selectedColumns.filter((col) => col !== 'checked' && col !== 'action'),
         rows: selectedRowKeys,
       }}
-      fileName="Invoices/index"
+      fileName="invoices"
       header="Street,Created At"
       createName="Create Invoice"
       createElementButton={<InvoiceForm />}
