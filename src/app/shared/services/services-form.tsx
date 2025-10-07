@@ -10,7 +10,7 @@ import { Title } from '@/components/ui/text';
 import { useModal } from '@/app/shared/modal-views/use-modal';
 import Select from 'react-select'; // multi-select for categories
 import {  ServiceFormInput, ServiceFormSchema } from '@/utils/validators/service-form.schema'; // schema for validation
-import { Checkbox } from 'rizzui'; // Checkbox component for language switch
+import { Checkbox, Textarea } from 'rizzui'; // Checkbox component for language switch
 import Spinner from '@/components/ui/spinner';
 import { useCreateServices, useUpdateServices } from '@/framework/services';
 import { useCategories } from '@/framework/categories';
@@ -82,6 +82,8 @@ export default function CreateOrUpdateServices({ initValues }: { initValues?: an
     const requestBody = {
       name: data.name,
       slug: data.slug,
+      meta_title: data.meta_title,
+      meta_description: data.meta_description,
       category_id: selectedCategory?.value, // Use selected category ID
       image: isImageData || initValues.image,
       description: data.description,
@@ -118,6 +120,14 @@ if (!selectedCategory?.value) {
           name: {
             en: initValues?.name?.en || '',
             ar: initValues?.name?.ar || '',
+          },
+          meta_description: {
+            en: initValues?.meta_description?.en || '',
+            ar: initValues?.meta_description?.ar || '',
+          },
+          meta_title: {
+            en: initValues?.meta_title?.en || '',
+            ar: initValues?.meta_title?.ar || '',
           },
           slug: {
             en: initValues?.slug?.en || '',
@@ -178,6 +188,21 @@ console.log(errors, 'errors');
                     className="col-span-full [&_.ql-editor]:min-h-[100px]"
                     labelClassName="font-medium text-gray-700 dark:text-gray-600 mb-1.5"
                   />
+
+                  <Input
+              key={"meta_title.en"}
+              label="Meta Title (English)"
+              {...register('meta_title.en')}
+              placeholder='Enter Meta Title'
+              error={errors.meta_title?.en?.message}
+            />
+                  <Textarea
+                  key={"meta_description.en"}
+                                label="Meta Description (EN)"
+                                placeholder='Enter Meta Description'
+                                {...register('meta_description.en')}
+                                error={errors?.meta_description?.en?.message||""}
+                              />
             
             </>
           ) : (
@@ -203,6 +228,20 @@ console.log(errors, 'errors');
                     className="col-span-full [&_.ql-editor]:min-h-[100px]"
                     labelClassName="font-medium text-gray-700 dark:text-gray-600 mb-1.5"
                   />
+                  <Input
+              key={"meta_title.ar"}
+              label="Meta Title (Arabic)"
+              placeholder='Enter Meta Title'
+              {...register('meta_title.ar')}
+              error={errors.meta_title?.ar?.message}
+            />
+                  <Textarea
+                  key={"meta_description.ar"}
+                                label="Meta Description (AR)"
+                                placeholder='Enter Meta Description'
+                                {...register('meta_description.ar')}
+                                error={errors?.meta_description?.ar?.message}
+                              />
             </>
           )}
 

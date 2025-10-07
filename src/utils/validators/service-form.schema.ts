@@ -24,7 +24,14 @@ export const ServiceFormSchema = z.object({
     message: 'The English and Arabic Descriptions must be different',
     path: ['en', 'ar'],
   }),
-  
+  meta_title: z.object({
+    en: z.string().min(1, 'meta title EN is required'),
+    ar: z.string().min(1, 'meta title AR is required'),
+  }),
+  meta_description: z.object({
+    en: z.string().min(1, 'meta Description EN is required'),
+    ar: z.string().min(1, 'meta Description AR is required'),
+  }),
   category_id: z.number().min(1, 'Category is required').positive('Category must be a valid category'),
 });
 
