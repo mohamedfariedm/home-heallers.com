@@ -9,10 +9,7 @@ export function usePermissions(param:string) {
   return useQuery<any, Error>({queryKey: [routes.permissions.index,param], queryFn: () => client.permissions.all(param)});
 };
 
-export const usePermissionsCreate = () => {
 
-  return useQuery<any, Error>({ queryKey: ['permissions'], queryFn: () => client.permissions.permissions()})
-}
 
 export const useGetRole = (id: number) => {
   return useQuery({queryKey: [routes.permissions.index, {id}], queryFn: () => client.permissions.findOne(id)})

@@ -22,6 +22,15 @@ const timePeriods = [
   { id: 'evening', name: 'Evening' },
 ];
 
+const statusOptions = [
+  { value: "1", en: "Reviewing", ar: "قيد المراجعة" },
+  { value: "2", en: "Waiting for Confirmation", ar: "في انتظار التأكيد" },
+  { value: "3", en: "Confirmed", ar: "تم التأكيد" },
+  { value: "4", en: "Canceled", ar: "تم الإلغاء" },
+  { value: "5", en: "Completed", ar: "مكتمل" },
+  { value: "6", en: "Failed", ar: "فشل" },
+];
+
 export default function CreateOrUpdateReservation({ initValues }: { initValues?: any }) {
   const { mutate: createReservation, isPending: isCreating } = useCreateReservation();
   const { mutate: updateReservation, isPending: isUpdating } = useUpdateReservation();
@@ -48,6 +57,7 @@ export default function CreateOrUpdateReservation({ initValues }: { initValues?:
       fees: Number(data.fees),
       total_amount: Number(data.total_amount),
       transaction_reference: data.transaction_reference,
+      status: Number(data.status), // ✅ convert to number
       pain_location: data.pain_location,
       notes: data.notes,
       dates: data.dates.map(date => ({
@@ -67,6 +77,7 @@ export default function CreateOrUpdateReservation({ initValues }: { initValues?:
   return (
     <Form<ReservationFormInput>
       onSubmit={onSubmit}
+      //@ts-ignore
       validationSchema={reservationFormSchema}
       useFormProps={{
         defaultValues: {
@@ -78,6 +89,7 @@ export default function CreateOrUpdateReservation({ initValues }: { initValues?:
           sessions_count: initValues?.sessions_count?.toString() || '',
           sub_total: initValues?.sub_total?.toString() || '',
           fees: initValues?.fees?.toString() || '',
+          status: initValues?.status?.toString() || "1", // ✅ new default
           total_amount: initValues?.total_amount?.toString() || '',
           transaction_reference: initValues?.transaction_reference || '',
           pain_location: initValues?.pain_location || '',
@@ -104,7 +116,7 @@ export default function CreateOrUpdateReservation({ initValues }: { initValues?:
               <select {...register('client_id')} className="w-full border border-gray-300 rounded-lg p-2">
                 <option value="">Select Client</option>
                 {clients?.data?.map((client: any) => (
-                  <option key={client.id} value={client.id}>{client.name?.en}</option>
+                  <option key={client.id} value={client.id}>{client.name?.en||client.name?.ar}</option>
                 ))}
               </select>
               {errors.client_id && <p className="text-sm text-red-500">{errors.client_id.message}</p>}
@@ -157,6 +169,16 @@ export default function CreateOrUpdateReservation({ initValues }: { initValues?:
             </div>
             <Input label="Sessions Count" type="number" {...register('sessions_count')} error={errors.sessions_count?.message} />
           </div>
+{/* ✅ Status Field */}
+<select {...register("status")} className="w-full border border-gray-300 rounded-lg p-2">
+  <option value="">Select Status</option>
+  {statusOptions.map((option) => (
+    <option key={option.value} value={option.value}>
+      {lang === "ar" ? option.ar : option.en}
+    </option>
+  ))}
+</select>
+
 
           <div className="grid grid-cols-2 gap-4">
             <Input label="Sub Total" type="number" {...register('sub_total')} error={errors.sub_total?.message} />

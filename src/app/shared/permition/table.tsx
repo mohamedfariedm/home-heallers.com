@@ -10,7 +10,7 @@ import { getColumns } from '@/app/shared/permition/columns';
 import { Text } from '@/components/ui/text';
 import toast from 'react-hot-toast';
 import { useSearchParams } from 'next/navigation';
-import { usePermissionsCreate,useDeletePermition } from '@/framework/permitions';
+import { usePermissions,useDeletePermition } from '@/framework/permitions';
 // const FilterElement = dynamic(
 //   () => import('@/app/shared/invoice/invoice-list/filter-element'),
 //   { ssr: false }
@@ -31,7 +31,7 @@ export default function PermitionTable({ data = [], getSelectedColumns, getSelec
   const params = new URLSearchParams(searchParams)
   const [pageSize, setPageSize] = useState(Number(params.get('limit')));
     const { mutate: deleteRoles } = useDeletePermition();
-  const { data: permissions } = usePermissionsCreate();
+  const { data: permissions } = usePermissions("");
   const onHeaderCellClick = (value: string) => ({
     onClick: () => {
       handleSort(value);

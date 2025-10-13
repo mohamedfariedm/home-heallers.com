@@ -128,21 +128,21 @@ export const getColumns = ({
       width: 150,
       render: (type: string) => type,
     },
-    {
-      title: <HeaderCell title="Doctors" />,
-      dataIndex: 'doctors',
-      key: 'doctors',
-      width: 200,
-      render: (_: any, row: any) => (
-        <div>
-          {row?.doctors ? row?.doctors.map((doctor: any) => (
-            <span key={doctor.id}>
-              {doctor?.name?.[lang] ?? doctor?.name?.en} <br />
-            </span>
-          )) : 'No doctors'}
-        </div>
-      ),
-    },
+    // {
+    //   title: <HeaderCell title="Doctors" />,
+    //   dataIndex: 'doctors',
+    //   key: 'doctors',
+    //   width: 200,
+    //   render: (_: any, row: any) => (
+    //     <div>
+    //       {row?.doctors ? row?.doctors.map((doctor: any) => (
+    //         <span key={doctor.id}>
+    //           {doctor?.name?.[lang] ?? doctor?.name?.en} <br />
+    //         </span>
+    //       )) : 'No doctors'}
+    //     </div>
+    //   ),
+    // },
     // {
     //   title: <HeaderCell title="Status" />,
     //   dataIndex: 'status',

@@ -13,6 +13,11 @@ export const reservationFormSchema = z.object({
   transaction_reference: z.string().min(1, 'Transaction reference is required'),
   pain_location: z.string().min(1, 'Pain location is required'),
   notes: z.string().min(1, 'Notes is required'),
+  status: z
+    .enum(["1", "2", "3", "4", "5", "6"], {
+      errorMap: () => ({ message: "Status is required" }),
+    })
+    .default("1"),
   dates: z.array(
     z.object({
       start_time: z.string().min(1, 'Start time is required'),

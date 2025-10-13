@@ -19,19 +19,18 @@ export default function CreatePermition({ initValues }: { initValues?: any }) {
   const [isLoading, setLoading] = useState(false)
   const { mutate, isPending } = useCreatePermissions()
   const { mutate: update } = useUpdatePermition()
-console.log(initValues);
 
   const onSubmit: SubmitHandler<CreatePermitionInput> = (data) => {
     if (initValues) {
       update({
         role_id: initValues?.id,
         name: data.name,
-        guard_name:data.guard_name,
+        "guard_name":"web"
       })
     } else {
       mutate({
         name: data.name,
-        guard_name:data.guard_name,
+        "guard_name":"web"
       })
     }
 
@@ -46,7 +45,6 @@ console.log(initValues);
       useFormProps={{
         defaultValues: {
           name: initValues?.name || "",
-          guard_name: initValues?.guard_name || "",
         },
       }}
       className="flex flex-grow flex-col gap-6 p-6 @container [&_.rizzui-input-label]:font-medium [&_.rizzui-input-label]:text-gray-900"
@@ -69,17 +67,6 @@ console.log(initValues);
             {...register("name")}
             error={errors.name?.message}
           />
-          <Input
-          key={"guard_name"}
-            label="Guard Name"
-            placeholder="Guard Name"
-            {...register("guard_name")}
-            error={errors.guard_name?.message}
-          />
-
-
-
-
           <div className="flex items-center justify-end gap-4">
             <Button variant="outline" onClick={closeModal} className="w-full @xl:w-auto">
               Cancel

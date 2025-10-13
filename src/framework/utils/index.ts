@@ -33,7 +33,6 @@ class Client {
         create: (input: any) => HttpClient.post(`/permissions`, input),
         update: (input: {role_id: string ,name: any,guard_name:any}) => HttpClient.patch(`/permissions/${input.role_id}`, {name:input.name,guard_name:input.guard_name}),
         delete: (input: {role_id: number[]}) => HttpClient.delete(`/permissions/${input.role_id}`),
-        permissions: () => HttpClient.get('/roles/create'),
         findOne: (id: number) => HttpClient.get('/roles/edit', {role_id: id}),
     }
     nationalities = {
