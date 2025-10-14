@@ -42,8 +42,10 @@ export default function ExportButton({
     };
     try {
       const res = await axios.request(config)
+      console.log(res);
+      
       if(res.status == 200) {
-        window.open(res.data?.data?.path, '_blank')
+        window.open(res.data?.download_url, '_blank')
       } 
     } catch (e) {
       const error = new Error(e as string);

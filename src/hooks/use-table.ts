@@ -193,10 +193,22 @@ export function useTable<T extends AnyObject>(
    * Reset search and filters
    */
   function handleReset() {
-    setData(() => initialData);
-    handleSearch('');
-    if (initialFilterState) return setFilters(initialFilterState);
-  }
+  setData(initialData);
+  handleSearch('');
+
+  // ✅ Create fresh params only keeping `page` & `limit`
+  const newParams = new URLSearchParams();
+
+  // Keep pagination defaults
+  newParams.set('page', '1');
+  newParams.set('limit', String(countPerPage));
+
+  // ✅ Push clean URL (no other filters)
+  push(`${pathName}?${newParams.toString()}`);
+
+  // ✅ Clear local filters state too
+  setFilters({});
+}
 
   /*
    * Set isFiltered and final filtered data

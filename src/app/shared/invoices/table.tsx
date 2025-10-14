@@ -12,14 +12,14 @@ import { useSearchParams } from 'next/navigation';
 import { ActionIcon } from 'rizzui';
 import { PiCaretDownBold, PiCaretUpBold } from 'react-icons/pi';
 import { useDeleteInvoices } from '@/framework/invoices';
+
 const FilterElement = dynamic(
-  () => import('@/app/shared/regions/filter-element'),
+  () => import('@/app/shared/invoices/filter-element'),
   { ssr: false }
 );
 const TableFooter = dynamic(() => import('@/app/shared/table-footer'), {
   ssr: false,
 });
-
 
 function CustomExpandIcon(props: any) {
   return (
@@ -41,16 +41,34 @@ function CustomExpandIcon(props: any) {
   );
 }
 
+export default function InvoicesTable({
+  data = [],
+  getSelectedColumns,
+  getSelectedRowKeys,
+  totalItems,
+}: {
+  data: any[];
+  getSelectedColumns: React.Dispatch<React.SetStateAction<any[]>>;
+  getSelectedRowKeys: React.Dispatch<React.SetStateAction<any[]>>;
+  totalItems: number;
+}) {
+  const { mutate: deleteInvoice } = useDeleteInvoices();
+  const searchParams = useSearchParams();
+  const params = new URLSearchParams(searchParams);
+  const [pageSize, setPageSize] = useState(Number(params.get('limit')) || 10);
 
-export default function InvoicesTable({ data = [], getSelectedColumns, getSelectedRowKeys, totalItems }: { data: any[], getSelectedColumns: React.Dispatch<React.SetStateAction<any[]>>, getSelectedRowKeys: React.Dispatch<React.SetStateAction<any[]>>, totalItems: number }) {
-  const { mutate: deleteRegion } = useDeleteInvoices();
-  const searchParams = useSearchParams()
-  const params = new URLSearchParams(searchParams)
-  const [pageSize, setPageSize] = useState(Number(params.get('limit')));
-
+  // ✅ URL-based filter initialization
   const filterState = {
-    activation:params.get("activation") || '',
+    activation: params.get('activation') || '',
+    invoice_number: params.get('invoice_number') || '',
+    customer_name: params.get('customer_name') || '',
+    service_name: params.get('service_name') || '',
+    status: params.get('status') || '',
+    invoice_date: params.get('invoice_date')
+      ? params.get('invoice_date')
+      : '',
   };
+
   const onHeaderCellClick = (value: string) => ({
     onClick: () => {
       handleSort(value);
@@ -58,28 +76,29 @@ export default function InvoicesTable({ data = [], getSelectedColumns, getSelect
   });
 
   const handleDelete = (ids: string[]) => {
-    const data = ids?.map(id => Number(id))
-    deleteRegion({region_id: data}, {
-      onSuccess: () => {
-        toast.success(
-          <Text>
-            Invoice deleted successfully
-          </Text>
-        );
+    const payload = ids?.map((id) => Number(id));
+    deleteInvoice(
+      { region_id: payload },
+      {
+        onSuccess: () => {
+          toast.success(<Text>Invoice deleted successfully</Text>);
+        },
       }
-    })
-  }
-  const onDeleteItem = useCallback((id: string[]) => {
-    handleDelete(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    );
+  };
+
+  const onDeleteItem = useCallback(
+    (ids: string[]) => {
+      handleDelete(ids);
+    },
+    [] // eslint-disable-line react-hooks/exhaustive-deps
+  );
 
   const {
     isLoading,
     isFiltered,
     tableData,
     currentPage,
-    // totalItems,
     handlePaginate,
     filters,
     updateFilter,
@@ -91,7 +110,6 @@ export default function InvoicesTable({ data = [], getSelectedColumns, getSelect
     setSelectedRowKeys,
     handleRowSelect,
     handleSelectAll,
-    // handleDelete,
     handleReset,
   } = useTable(data, pageSize, filterState);
 
@@ -106,7 +124,6 @@ export default function InvoicesTable({ data = [], getSelectedColumns, getSelect
         onChecked: handleRowSelect,
         handleSelectAll,
       }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       selectedRowKeys,
       onHeaderCellClick,
@@ -120,64 +137,59 @@ export default function InvoicesTable({ data = [], getSelectedColumns, getSelect
 
   const { visibleColumns, checkedColumns, setCheckedColumns } =
     useColumn(columns);
-    useEffect(() => {
-      getSelectedColumns(checkedColumns)
-      getSelectedRowKeys(selectedRowKeys)
-    }, [checkedColumns, selectedRowKeys])
+
+  useEffect(() => {
+    getSelectedColumns(checkedColumns);
+    getSelectedRowKeys(selectedRowKeys);
+  }, [checkedColumns, selectedRowKeys, getSelectedColumns, getSelectedRowKeys]);
+
   return (
-    <>
-      <ControlledTable
-              variant="modern"
-              data={tableData}
-              isLoading={isLoading}
-              showLoadingText={true}
-              // @ts-ignore
-              columns={visibleColumns}
-              paginatorOptions={{
-                pageSize : pageSize || 10,
-                setPageSize,
-                total: totalItems,
-                current: currentPage,
-                onChange: (page: number) => handlePaginate(page),
-              }}
-        filterOptions={{
-          searchTerm,
-          onSearchClear: () => {
-            handleSearch('');
-          },
-          onSearchChange: (event) => {
-            handleSearch(event.target.value);
-          },
-          hasSearched: isFiltered,
-          columns,
-          checkedColumns,
-          setCheckedColumns,
-          filters
-        }}
-        filterElement={
-          <FilterElement
-            isFiltered={isFiltered}
-            filters={filters}
-            updateFilter={updateFilter}
-            handleReset={handleReset}
-          />
-        }
-        tableFooter={
-          <TableFooter
-            checkedItems={selectedRowKeys}
-            handleDelete={(ids: string[]) => {
-              setSelectedRowKeys([]);
-              handleDelete(ids);
-            }}
-          >
-            {/* <Button size="sm" className="dark:bg-gray-300 dark:text-gray-800">
-              Re-send {selectedRowKeys.length}{' '}
-              {selectedRowKeys.length > 1 ? 'Roles' : 'Role'}{' '}
-            </Button> */}
-          </TableFooter>
-        }
-        className="overflow-hidden rounded-md border border-gray-200 text-sm shadow-sm [&_.rc-table-placeholder_.rc-table-expanded-row-fixed>div]:h-60 [&_.rc-table-placeholder_.rc-table-expanded-row-fixed>div]:justify-center [&_.rc-table-row:last-child_td.rc-table-cell]:border-b-0 [&_thead.rc-table-thead]:border-t-0"
-      />
-    </>
+    <ControlledTable
+      variant="modern"
+      data={tableData}
+      isLoading={isLoading}
+      showLoadingText={true}
+      // @ts-ignore
+      columns={visibleColumns}
+      paginatorOptions={{
+        pageSize: pageSize,
+        setPageSize,
+        total: totalItems,
+        current: currentPage,
+        onChange: (page: number) => handlePaginate(page),
+      }}
+      filterOptions={{
+        searchTerm,
+        onSearchClear: () => handleSearch(''),
+        onSearchChange: (e) => handleSearch(e.target.value),
+        hasSearched: isFiltered,
+        columns,
+        checkedColumns,
+        setCheckedColumns,
+        filters,
+      }}
+      filterElement={
+        <FilterElement
+          isFiltered={isFiltered}
+          filters={filters}
+          updateFilter={updateFilter}
+          handleReset={handleReset}
+        />
+      }
+      tableFooter={
+        <TableFooter
+          checkedItems={selectedRowKeys}
+          handleDelete={(ids: string[]) => {
+            setSelectedRowKeys([]);
+            handleDelete(ids);
+          }}
+        />
+      }
+      className="overflow-hidden rounded-md border border-gray-200 text-sm shadow-sm 
+      [&_.rc-table-placeholder_.rc-table-expanded-row-fixed>div]:h-60 
+      [&_.rc-table-placeholder_.rc-table-expanded-row-fixed>div]:justify-center 
+      [&_.rc-table-row:last-child_td.rc-table-cell]:border-b-0 
+      [&_thead.rc-table-thead]:border-t-0"
+    />
   );
 }

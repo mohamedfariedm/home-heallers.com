@@ -55,15 +55,28 @@ function FilterDrawerView({
   const pathName = usePathname()
   const searchParams = useSearchParams()
   const handleShowResults = () => {
-    const keys = Object.keys(filters)
-    const params = new URLSearchParams(searchParams)
-    keys.forEach(key => {
-        params.set(key, filters[key])
-    })
-    params.set("page","1")
-    push(`${pathName}?${params.toString()}`)
-    setOpenDrawer(false)
-  }
+  const keys = Object.keys(filters);
+  const params = new URLSearchParams(searchParams);
+
+  keys.forEach((key) => {
+    const value = filters[key];
+
+    // ✅ only include if value is not empty, null, or undefined
+    if (value !== '' && value !== null && value !== undefined) {
+      params.set(key, String(value));
+    } else {
+      // ✅ remove empty params from URL
+      params.delete(key);
+    }
+  });
+
+  setOpenDrawer(false);
+  params.set('page', '1'); // always reset to first page
+
+  // ✅ Uncomment these in production
+  push(`${pathName}?${params.toString()}`);
+};
+
   return (
     <Drawer
       size="sm"
