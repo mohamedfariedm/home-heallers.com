@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useForm, SubmitHandler } from 'react-hook-form';
+import { useForm, SubmitHandler, useFieldArray } from 'react-hook-form';
 import { PiXBold } from 'react-icons/pi';
 import { Form } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -36,7 +36,7 @@ export default function CreateOrUpdateReservation({ initValues }: { initValues?:
   const { mutate: updateReservation, isPending: isUpdating } = useUpdateReservation();
   const [lang, setLang] = useState<"en" | "ar">("en");
   
-  const { data: clients } = usePatients("");
+  const { data: pationts } = usePatients("");
   const { data: services } = useServices("");
   const { data: doctors } = useDoctors("");
   const { data: categories } = useCategories("");
@@ -99,8 +99,14 @@ export default function CreateOrUpdateReservation({ initValues }: { initValues?:
       }}
       className="flex flex-grow flex-col gap-6 p-6 overflow-y-auto"
     >
-      {({ register, formState: { errors }, watch, setValue }) => (
-        <>
+      {({ register, formState: { errors }, watch, setValue, control }) => 
+        {
+const { fields, append, remove } = useFieldArray({
+  name: "dates",
+  control,
+});
+
+return        <>
           <div className="flex items-center justify-between">
             <Title as="h4" className="font-semibold">
               {initValues ? 'Update Reservation' : 'Create Reservation'}
@@ -115,7 +121,7 @@ export default function CreateOrUpdateReservation({ initValues }: { initValues?:
               <label className="text-sm text-gray-700">Client</label>
               <select {...register('client_id')} className="w-full border border-gray-300 rounded-lg p-2">
                 <option value="">Select Client</option>
-                {clients?.data?.map((client: any) => (
+                {pationts?.data?.map((client: any) => (
                   <option key={client.id} value={client.id}>{client.name?.en||client.name?.ar}</option>
                 ))}
               </select>
@@ -193,20 +199,65 @@ export default function CreateOrUpdateReservation({ initValues }: { initValues?:
           <Input label="Pain Location" {...register('pain_location')} error={errors.pain_location?.message} />
           <Input label="Notes" {...register('notes')} error={errors.notes?.message} />
 
-          <div className="grid grid-cols-2 gap-4">
-            <Input 
-              label="Start Time" 
-              type="datetime-local" 
-              {...register('dates.0.start_time')} 
-              error={errors.dates?.[0]?.start_time?.message}
-            />
-            <Input 
-              label="End Time" 
-              type="datetime-local" 
-              {...register('dates.0.end_time')} 
-              error={errors.dates?.[0]?.end_time?.message}
-            />
-          </div>
+          {/* ✅ Dates Array Handling */}
+<div className="space-y-4">
+  <div className="flex justify-between items-center">
+    <Title as="h5" className="font-semibold">Reservation Dates</Title>
+    <Button type="button" size="sm" onClick={() => append({ start_time: '', end_time: '', time_period: '' })}>
+      + Add Date
+    </Button>
+  </div>
+
+  {fields.map((field, index) => (
+    <div key={field.id} className="border rounded-lg p-4 space-y-3 relative">
+      {index > 0 && (
+        <ActionIcon
+          onClick={() => remove(index)}
+          className="absolute top-2 right-2 text-red-500"
+          size="sm"
+          variant="text"
+        >
+          <PiXBold className="w-4 h-4" />
+        </ActionIcon>
+      )}
+
+      <div className="grid grid-cols-2 gap-4">
+        <Input
+          label="Start Time"
+          type="datetime-local"
+          {...register(`dates.${index}.start_time` as const)}
+          error={errors.dates?.[index]?.start_time?.message}
+        />
+        <Input
+          label="End Time"
+          type="datetime-local"
+          {...register(`dates.${index}.end_time` as const)}
+          error={errors.dates?.[index]?.end_time?.message}
+        />
+      </div>
+
+      <div>
+        <label className="text-sm text-gray-700">Time Period</label>
+        <select
+          {...register(`dates.${index}.time_period` as const)}
+          className="w-full border border-gray-300 rounded-lg p-2"
+        >
+          <option value="">Select Time Period</option>
+          {timePeriods.map(period => (
+            <option key={period.id} value={period.id}>{period.name}</option>
+          ))}
+        </select>
+        {errors.dates?.[index]?.time_period && (
+          <p className="text-sm text-red-500">{errors.dates?.[index]?.time_period?.message}</p>
+        )}
+      </div>
+    </div>
+  ))}
+
+  {errors.dates && typeof errors.dates?.message === "string" && (
+    <p className="text-sm text-red-500">{errors.dates.message}</p>
+  )}
+</div>
 
           <div>
             <label className="text-sm text-gray-700">Time Period</label>
@@ -228,7 +279,11 @@ export default function CreateOrUpdateReservation({ initValues }: { initValues?:
             </Button>
           </div>
         </>
-      )}
+        }
+
+
+
+      }
     </Form>
   );
 }
