@@ -101,10 +101,10 @@ export default function CreateOrUpdateReservation({ initValues }: { initValues?:
     >
       {({ register, formState: { errors }, watch, setValue, control }) => 
         {
-const { fields, append, remove } = useFieldArray({
-  name: "dates",
-  control,
-});
+// const { fields, append, remove } = useFieldArray({
+//   name: "dates",
+//   control,
+// });
 
 return        <>
           <div className="flex items-center justify-between">
@@ -201,14 +201,14 @@ return        <>
 
           {/* ✅ Dates Array Handling */}
 <div className="space-y-4">
-  <div className="flex justify-between items-center">
+  {/* <div className="flex justify-between items-center">
     <Title as="h5" className="font-semibold">Reservation Dates</Title>
     <Button type="button" size="sm" onClick={() => append({ start_time: '', end_time: '', time_period: '' })}>
       + Add Date
     </Button>
-  </div>
+  </div> */}
 
-  {fields.map((field, index) => (
+  {/* {fields.map((field, index) => (
     <div key={field.id} className="border rounded-lg p-4 space-y-3 relative">
       {index > 0 && (
         <ActionIcon
@@ -252,7 +252,7 @@ return        <>
         )}
       </div>
     </div>
-  ))}
+  ))} */}
 
   {errors.dates && typeof errors.dates?.message === "string" && (
     <p className="text-sm text-red-500">{errors.dates.message}</p>
