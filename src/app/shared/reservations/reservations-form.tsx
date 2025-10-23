@@ -1,24 +1,25 @@
-"use client";
+"use client"
 
-import { useEffect } from "react";
-import { useForm, type SubmitHandler, Controller, useWatch } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { PiXBold } from "react-icons/pi";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { ActionIcon } from "rizzui";
+import { useEffect } from "react"
+import { useForm, type SubmitHandler, Controller, useWatch } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { PiXBold } from "react-icons/pi"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { ActionIcon } from "rizzui"
 import { useModal } from "../modal-views/use-modal";
-import { useCreateReservation, useUpdateReservation } from "@/framework/reservations";
-import { useServices } from "@/framework/services";
-import { useDoctors } from "@/framework/doctors";
-import { usePatients } from "@/framework/patients";
-import { type ReservationFormInput, reservationFormSchema } from "@/utils/validators/reservation-form-schema";
+import { useCreateReservation, useUpdateReservation } from "@/framework/reservations"
+import { useServices } from "@/framework/services"
+import { useDoctors } from "@/framework/doctors"
+import { usePatients } from "@/framework/patients"
+import { type ReservationFormInput, reservationFormSchema } from "@/utils/validators/reservation-form-schema"
+import Spinner from "@/components/ui/spinner"
 
 const timePeriods = [
   { id: "morning", name: "Morning" },
   { id: "afternoon", name: "Afternoon" },
   { id: "evening", name: "Evening" },
-];
+]
 
 const statusOptions = [
   { value: "1", en: "Reviewing", ar: "قيد المراجعة" },
@@ -27,25 +28,26 @@ const statusOptions = [
   { value: "4", en: "Canceled", ar: "تم الإلغاء" },
   { value: "5", en: "Completed", ar: "مكتمل" },
   { value: "6", en: "Failed", ar: "فشل" },
-];
+]
 
 const genderOptions = [
   { value: "male", label: "Male" },
   { value: "female", label: "Female" },
-];
+]
 
 export default function CreateOrUpdateReservation({ initValues }: { initValues?: any }) {
-  const { mutate: createReservation, isPending: isCreating } = useCreateReservation();
-  const { mutate: updateReservation, isPending: isUpdating } = useUpdateReservation();
+  const { mutate: createReservation, isPending: isCreating } = useCreateReservation()
+  const { mutate: updateReservation, isPending: isUpdating } = useUpdateReservation()
 
-  const { data: patients } = usePatients("");
-  const { data: services } = useServices("");
-  const { data: doctors } = useDoctors("");
+  const { data: patients, isLoading: isPatientsLoading } = usePatients("")
+  const { data: services, isLoading: isServicesLoading } = useServices("")
+  const { data: doctors, isLoading: isDoctorsLoading } = useDoctors("")
 
-  const { closeModal } = useModal();
+  const { closeModal } = useModal()
 
-  // 👇 Helper for safe nested values
-  const guest = initValues?.guest_info ?? {};
+  const guest = initValues?.guest_info ?? {}
+  const isGuestReservation = initValues?.is_guest === 1 || !!initValues?.guest_info
+  const isExistingPatient = !!initValues?.patient?.id
 
   const {
     register,
@@ -59,8 +61,7 @@ export default function CreateOrUpdateReservation({ initValues }: { initValues?:
     resolver: zodResolver(reservationFormSchema),
 
     defaultValues: {
-      // 🧩 detect guest or existing
-      reservation_type: initValues?.is_guest ? "guest" : "existing",
+      reservation_type: isExistingPatient ? "existing" : "guest",
 
       // 🧩 base IDs
       patient_id: initValues?.patient?.id?.toString() || "",
@@ -79,80 +80,137 @@ export default function CreateOrUpdateReservation({ initValues }: { initValues?:
       status: initValues?.status?.toString() || "2",
       pain_location: initValues?.pain_location || "",
       notes: initValues?.notes || "",
-      address_city: initValues?.guest_info?.city || initValues?.address_city || "",
-      address_state: initValues?.guest_info?.state || initValues?.address_state || "",
-      address_link: initValues?.address_link || "",
+      address_city: initValues?.address?.city?.en || initValues?.guest_info?.city || initValues?.address_city || "",
+      address_state: initValues?.address?.state?.en || initValues?.guest_info?.state || initValues?.address_state || "",
+      address_link: initValues?.address?.link || initValues?.address_link || "",
 
-      // 🧩 guest info (flatten)
-      patient_name: guest?.name || "",
-      patient_email: guest?.email || "",
-      patient_national_id: guest?.national_id || "",
-      patient_gender: guest?.gender || "male",
-      patient_country: guest?.country || guest?.nationality || "",
-      patient_mobile: guest?.mobile || "",
-      patient_city: guest?.city || "",
-      patient_state: guest?.state || "",
-      patient_date_of_birth: guest?.date_of_birth || "",
+      patient_name: guest?.name || initValues?.patient?.name?.en || initValues?.patient?.name?.ar || "",
+      patient_email: guest?.email || initValues?.patient?.email || "",
+      patient_national_id: guest?.national_id || initValues?.patient?.national_id || "",
+      patient_gender: guest?.gender || initValues?.patient?.gender || "male",
+      patient_country: guest?.country || guest?.nationality || initValues?.patient?.country?.name?.en?.en || "",
+      patient_mobile: guest?.mobile || initValues?.patient?.mobile || "",
+      patient_city: guest?.city || initValues?.patient?.city?.name?.en?.en || "",
+      patient_state: guest?.state || initValues?.patient?.state?.en || "",
+      patient_date_of_birth: guest?.date_of_birth || initValues?.patient?.date_of_birth || "",
 
-      // 🧩 nested dates handling
-      dates:
-        initValues?.dates?.map((d: any) => ({
-          date: d.date || d.end_time?.split("T")[0] || "",
-          time: d.time || d.end_time?.split("T")[1]?.substring(0, 5) || "",
-          time_period: d.time_period || "morning",
-          doctor_id: d.doctor?.id?.toString() || "",
-          status: d.status || "pending",
-        })) || [
-          {
-            date: "",
-            time: "",
-            time_period: "morning",
-            doctor_id: "",
-            status: "pending",
-          },
-        ],
+      // 🧩 nested dates handling - improved to handle both data structures
+      dates: initValues?.dates?.map((d: any) => ({
+        date: d.date ? d.date.split("T")[0] : "",
+        time: d.time ? d.time.split("T")[1]?.substring(0, 5) : d.end_time?.split("T")[1]?.substring(0, 5) || "",
+        time_period: d.time_period || "morning",
+        doctor_id: d.doctor?.id?.toString() || "",
+        status: d.status || "1",
+      })) || [
+        {
+          date: "",
+          time: "",
+          time_period: "morning",
+          doctor_id: "",
+          status: "1",
+        },
+      ],
     },
-  });
+  })
 
-  const reservationType = useWatch({ control, name: "reservation_type" });
-  const watchDates = watch("dates");
-  const watchSessionsCount = useWatch({ control, name: "sessions_count" });
-  const lang: "en" | "ar" = "en";
+  const reservationType = useWatch({ control, name: "reservation_type" })
+  const watchDates = watch("dates")
+  const watchSessionsCount = useWatch({ control, name: "sessions_count" })
+  const watchDoctorId = useWatch({ control, name: "doctor_id" })
+  const watchSubTotal = useWatch({ control, name: "sub_total" })
+  const watchFees = useWatch({ control, name: "fees" })
+  const watchTotalAmount = useWatch({ control, name: "total_amount" })
+  const watchReservationStatus = useWatch({ control, name: "status" })
+
+useEffect(() => {
+  if (watchReservationStatus && watchDates?.length > 0) {
+    const updatedDates = watchDates.map((date: any) => ({
+      ...date,
+      status: watchReservationStatus,
+    }))
+    setValue("dates", updatedDates, { shouldValidate: false })
+  }
+}, [watchReservationStatus])
+
+  const lang: "en" | "ar" = "en"
 
   // Reset irrelevant fields on switch
   useEffect(() => {
     if (reservationType === "guest") {
-      resetField("patient_id", { defaultValue: "" });
+      resetField("patient_id", { defaultValue: "" })
     } else if (reservationType === "existing") {
-      resetField("patient_name", { defaultValue: "" });
-      resetField("patient_email", { defaultValue: "" });
-      resetField("patient_national_id", { defaultValue: "" });
-      resetField("patient_gender", { defaultValue: "male" });
-      resetField("patient_country", { defaultValue: "" });
-      resetField("patient_mobile", { defaultValue: "" });
-      resetField("patient_city", { defaultValue: "" });
-      resetField("patient_state", { defaultValue: "" });
-      resetField("patient_date_of_birth", { defaultValue: "" });
+      resetField("patient_name", { defaultValue: "" })
+      resetField("patient_email", { defaultValue: "" })
+      resetField("patient_national_id", { defaultValue: "" })
+      resetField("patient_gender", { defaultValue: "male" })
+      resetField("patient_country", { defaultValue: "" })
+      resetField("patient_mobile", { defaultValue: "" })
+      resetField("patient_city", { defaultValue: "" })
+      resetField("patient_state", { defaultValue: "" })
+      resetField("patient_date_of_birth", { defaultValue: "" })
     }
-  }, [reservationType, resetField]);
+  }, [reservationType, resetField])
 
   // 🔁 sync number of date blocks
   useEffect(() => {
-    const sessionCount = Number(watchSessionsCount) || 1;
+    const sessionCount = Number(watchSessionsCount) || 1
     const newDates = Array.from({ length: sessionCount }, (_, i) => ({
       date: watchDates?.[i]?.date || "",
       time: watchDates?.[i]?.time || "",
       time_period: watchDates?.[i]?.time_period || "morning",
       doctor_id: watchDates?.[i]?.doctor_id || "",
-      status: watchDates?.[i]?.status || "pending",
-    }));
-    setValue("dates", newDates, { shouldValidate: true });
-  }, [watchSessionsCount]);
+      status: watchDates?.[i]?.status || "1",
+    }))
+    setValue("dates", newDates, { shouldValidate: true })
+  }, [watchSessionsCount])
+
+  useEffect(() => {
+    if (watchDoctorId && watchDates?.length > 0) {
+      const updatedDates = watchDates.map((date: any) => ({
+        ...date,
+        doctor_id: watchDoctorId,
+      }))
+      setValue("dates", updatedDates, { shouldValidate: false })
+    }
+  }, [watchDoctorId])
+
+useEffect(() => {
+  const subTotal = Number(watchSubTotal) || 0
+  const fees = Number(watchFees) || 0
+  const sessionsCount = Number(watchSessionsCount) || 1
+  const calculatedTotal = (subTotal * sessionsCount) + fees
+
+  setValue("total_amount", calculatedTotal.toString(), { shouldValidate: false })
+}, [watchSubTotal, watchFees, watchSessionsCount, setValue])
+
+
+  useEffect(() => {
+    if (patients?.data?.length && initValues?.patient?.id) {
+      setValue("patient_id", initValues.patient.id.toString())
+    }
+  }, [patients?.data, initValues?.patient?.id, setValue])
+
+  const applyStatusToAllDates = (status: string) => {
+    const updatedDates = watchDates.map((date: any) => ({
+      ...date,
+      status,
+    }))
+    setValue("dates", updatedDates, { shouldValidate: false })
+  }
+
+  const applyDoctorToAllDates = (doctorId: string) => {
+    const updatedDates = watchDates.map((date: any) => ({
+      ...date,
+      doctor_id: doctorId,
+    }))
+    setValue("dates", updatedDates, { shouldValidate: false })
+  }
 
   const onSubmit: SubmitHandler<ReservationFormInput> = (data) => {
     const requestBody = {
       service_id: Number(data.service_id),
       category_id: Number(data.category_id),
+      doctor_id: Number(data.doctor_id),
       sessions_count: Number(data.sessions_count),
       sub_total: Number(data.sub_total),
       fees: Number(data.fees),
@@ -170,7 +228,7 @@ export default function CreateOrUpdateReservation({ initValues }: { initValues?:
         time: date.time,
         time_period: date.time_period,
         doctor_id: Number(date.doctor_id),
-        status: date.status || "pending",
+        status: Number(date.status) || "1",
       })),
 
       ...(data.reservation_type === "guest"
@@ -181,23 +239,28 @@ export default function CreateOrUpdateReservation({ initValues }: { initValues?:
             patient_gender: data.patient_gender,
             patient_country: data.patient_country,
             patient_mobile: data.patient_mobile,
-            patient_city: data.patient_city,
-            patient_state: data.patient_state,
+            patient_city: data.address_city,
+            patient_state: data.address_state,
             patient_date_of_birth: data.patient_date_of_birth,
           }
         : {
             patient_id: Number(data.patient_id),
           }),
-    };
+    }
 
     if (initValues) {
-      updateReservation({ reservation_id: initValues.id, ...requestBody });
+      updateReservation({ reservation_id: initValues.id, ...requestBody })
     } else {
-      createReservation(requestBody);
+      createReservation(requestBody)
     }
-  };
-  
+  }
+
   return (
+    isPatientsLoading || isServicesLoading || isDoctorsLoading ? (
+      <div className="flex items-center justify-center h-64">
+        <Spinner size="lg" />
+      </div>
+    ) : (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-grow flex-col gap-6 p-6 overflow-y-auto">
       <div className="flex items-center justify-between">
         <h4 className="font-semibold text-lg">{initValues ? "Update Reservation" : "Create Reservation"}</h4>
@@ -300,28 +363,19 @@ export default function CreateOrUpdateReservation({ initValues }: { initValues?:
               {...register("patient_country")}
               error={errors.patient_country?.message}
             />
-            <Input
-              label="City"
-              placeholder="e.g., الرياض"
-              {...register("patient_city")}
-              error={errors.patient_city?.message}
-            />
           </div>
-
-          <Input
-            label="State/Region"
-            placeholder="e.g., منطقة الرياض"
-            {...register("patient_state")}
-            error={errors.patient_state?.message}
-          />
         </div>
       ) : (
         <div key="existing">
           <label className="text-sm text-gray-700">Select Existing Patient</label>
-          <select {...register("patient_id")} className="w-full border border-gray-300 rounded-lg p-2">
-            <option value="">Select Patient</option>
+          <select
+            {...register("patient_id")}
+            className="w-full border border-gray-300 rounded-lg p-2"
+            disabled={isPatientsLoading}
+          >
+            <option value="">{isPatientsLoading ? "Loading patients..." : "Select Patient"}</option>
             {patients?.data?.map((patient: any) => (
-              <option key={patient.id} value={patient.id}>
+              <option key={patient.id} value={String(patient.id)}>
                 {patient.name?.en || patient.name?.ar}
               </option>
             ))}
@@ -333,8 +387,12 @@ export default function CreateOrUpdateReservation({ initValues }: { initValues?:
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="text-sm text-gray-700">Service</label>
-          <select {...register("service_id")} className="w-full border border-gray-300 rounded-lg p-2">
-            <option value="">Select Service</option>
+          <select
+            {...register("service_id")}
+            className="w-full border border-gray-300 rounded-lg p-2"
+            disabled={isServicesLoading}
+          >
+            <option value="">{isServicesLoading ? "Loading services..." : "Select Service"}</option>
             {services?.data?.map((service: any) => (
               <option key={service.id} value={service.id}>
                 {service.name?.en}
@@ -345,8 +403,12 @@ export default function CreateOrUpdateReservation({ initValues }: { initValues?:
         </div>
         <div>
           <label className="text-sm text-gray-700">Doctor</label>
-          <select {...register("doctor_id")} className="w-full border border-gray-300 rounded-lg p-2">
-            <option value="">Select Doctor</option>
+          <select
+            {...register("doctor_id")}
+            className="w-full border border-gray-300 rounded-lg p-2"
+            disabled={isDoctorsLoading}
+          >
+            <option value="">{isDoctorsLoading ? "Loading doctors..." : "Select Doctor"}</option>
             {doctors?.data?.map((doctor: any) => (
               <option key={doctor.id} value={doctor.id}>
                 {doctor.name?.en}
@@ -405,12 +467,15 @@ export default function CreateOrUpdateReservation({ initValues }: { initValues?:
 
         <div className="grid grid-cols-2 gap-4">
           <Input label="Fees" type="number" {...register("fees")} error={errors.fees?.message} />
-          <Input
-            label="Total Amount"
-            type="number"
-            {...register("total_amount")}
-            error={errors.total_amount?.message}
-          />
+          <div>
+            <Input
+              label="Total Amount"
+              type="number"
+              {...register("total_amount")}
+              error={errors.total_amount?.message}
+            />
+            <p className="text-xs text-gray-500 mt-1">Auto-calculated from Sub Total + Fees (editable)</p>
+          </div>
         </div>
 
         <Input
@@ -444,7 +509,7 @@ export default function CreateOrUpdateReservation({ initValues }: { initValues?:
 
       <Input label="Notes" placeholder="e.g., حجز ضيف جديد" {...register("notes")} error={errors.notes?.message} />
 
- <div className="space-y-4 border-l-4 border-orange-500 pl-4">
+      <div className="space-y-4 border-l-4 border-orange-500 pl-4">
         <h5 className="font-semibold text-sm">Reservation Dates</h5>
 
         {watchDates?.map((_, index) => (
@@ -484,8 +549,9 @@ export default function CreateOrUpdateReservation({ initValues }: { initValues?:
                 <select
                   {...register(`dates.${index}.doctor_id` as const)}
                   className="w-full border border-gray-300 rounded-lg p-2"
+                  disabled={isDoctorsLoading}
                 >
-                  <option value="">Select Doctor</option>
+                  <option value="">{isDoctorsLoading ? "Loading..." : "Select Doctor"}</option>
                   {doctors?.data?.map((doctor: any) => (
                     <option key={doctor.id} value={doctor.id}>
                       {doctor.name?.en}
@@ -511,6 +577,33 @@ export default function CreateOrUpdateReservation({ initValues }: { initValues?:
           </div>
         ))}
 
+        {watchDates?.length > 1 && (
+          <div className="flex gap-2 mt-4">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const currentStatus = watch(`dates.0.status`)
+                applyStatusToAllDates(currentStatus)
+              }}
+            >
+              Apply First Date Status to All
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const currentDoctor = watch(`dates.0.doctor_id`)
+                applyDoctorToAllDates(currentDoctor)
+              }}
+            >
+              Apply First Date Doctor to All
+            </Button>
+          </div>
+        )}
+
         {errors.dates && typeof errors.dates?.message === "string" && (
           <p className="text-sm text-red-500">{errors.dates.message}</p>
         )}
@@ -525,5 +618,6 @@ export default function CreateOrUpdateReservation({ initValues }: { initValues?:
         </Button>
       </div>
     </form>
-  );
+    )
+  )
 }
