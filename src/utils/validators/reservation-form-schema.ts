@@ -10,7 +10,7 @@ export const reservationFormSchema = z
 
     // For guest reservations - patient details
     patient_name: z.string().optional(),
-    patient_email: z.string().email().optional(),
+    patient_email: z.string().optional(),
     patient_national_id: z.string().optional(),
     patient_gender: z.enum(["male", "female"]).optional(),
     patient_country: z.string().optional(),

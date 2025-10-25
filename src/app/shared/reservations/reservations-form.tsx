@@ -14,6 +14,7 @@ import { useDoctors } from "@/framework/doctors"
 import { usePatients } from "@/framework/patients"
 import { type ReservationFormInput, reservationFormSchema } from "@/utils/validators/reservation-form-schema"
 import Spinner from "@/components/ui/spinner"
+import { useCategories } from "@/framework/categories"
 
 const timePeriods = [
   { id: "morning", name: "Morning" },
@@ -42,6 +43,7 @@ export default function CreateOrUpdateReservation({ initValues }: { initValues?:
   const { data: patients, isLoading: isPatientsLoading } = usePatients("")
   const { data: services, isLoading: isServicesLoading } = useServices("")
   const { data: doctors, isLoading: isDoctorsLoading } = useDoctors("")
+  const { data: categories, isLoading: isCategoriesLoading } = useCategories("")
 
   const { closeModal } = useModal()
 
@@ -121,6 +123,7 @@ export default function CreateOrUpdateReservation({ initValues }: { initValues?:
   const watchFees = useWatch({ control, name: "fees" })
   const watchTotalAmount = useWatch({ control, name: "total_amount" })
   const watchReservationStatus = useWatch({ control, name: "status" })
+console.log("errors",errors);
 
 useEffect(() => {
   if (watchReservationStatus && watchDates?.length > 0) {
@@ -256,7 +259,7 @@ useEffect(() => {
   }
 
   return (
-    isPatientsLoading || isServicesLoading || isDoctorsLoading ? (
+    isPatientsLoading || isServicesLoading || isDoctorsLoading|| isCategoriesLoading ? (
       <div className="flex items-center justify-center h-64">
         <Spinner size="lg" />
       </div>
@@ -422,8 +425,12 @@ useEffect(() => {
       <div>
         <label className="text-sm text-gray-700">Category</label>
         <select {...register("category_id")} className="w-full border border-gray-300 rounded-lg p-2">
-          <option value="">Select Category</option>
-          <option value="21">Category 21</option>
+          <option value="">{isCategoriesLoading ? "Loading categories..." : "Select Category"}</option>
+          {categories?.data?.map((category: any) => (
+            <option key={category.id} value={category.id}>
+              {category.name?.en}
+            </option>
+          ))}
         </select>
         {errors.category_id && <p className="text-sm text-red-500">{errors.category_id.message}</p>}
       </div>
@@ -458,19 +465,19 @@ useEffect(() => {
         <div className="grid grid-cols-2 gap-4">
           <Input
             label="Sessions Count"
-            type="number"
+            type="tel"
             {...register("sessions_count")}
             error={errors.sessions_count?.message}
           />
-          <Input label="Sub Total" type="number" {...register("sub_total")} error={errors.sub_total?.message} />
+          <Input label="Sub Total" type="tel" {...register("sub_total")} error={errors.sub_total?.message} />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-          <Input label="Fees" type="number" {...register("fees")} error={errors.fees?.message} />
+          <Input label="Fees" type="tel" {...register("fees")} error={errors.fees?.message} />
           <div>
             <Input
               label="Total Amount"
-              type="number"
+              type="tel"
               {...register("total_amount")}
               error={errors.total_amount?.message}
             />
