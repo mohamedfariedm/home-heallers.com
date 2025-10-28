@@ -244,16 +244,16 @@ export const getColumns = ({
     title: (
       <HeaderCell
         align="center"
-        title="Created"
+        title="Invoice Date"
         sortable
         ascending={
-          sortConfig?.direction === 'asc' && sortConfig?.key === 'created_at'
+          sortConfig?.direction === 'asc' && sortConfig?.key === 'invoice_date'
         }
       />
     ),
-    onHeaderCell: () => onHeaderCellClick('created_at'),
-    dataIndex: 'created_at',
-    key: 'created_at',
+    onHeaderCell: () => onHeaderCellClick('invoice_date'),
+    dataIndex: 'invoice_date',
+    key: 'invoice_date',
     width: 100,
     render: (value: Date) => <DateCell date={value} />,
   },

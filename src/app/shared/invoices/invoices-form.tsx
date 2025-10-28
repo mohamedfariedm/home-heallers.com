@@ -19,14 +19,14 @@ import { useModal } from "../modal-views/use-modal"
 import { useCreateInvoices, useUpdateInvoices } from "@/framework/invoices"
 import { usePatients } from "@/framework/patients"
 import { useDoctors } from "@/framework/doctors"
-import { useServices } from "@/framework/services"
+import { useCategories } from "@/framework/categories" // <-- NEW
 
 // -------------------- Zod Schemas --------------------
 const InvoiceDetailSchema = z.object({
   id: z.union([z.string(), z.number(), z.null()]).optional(),
   customer_name: z.string().min(1, "Customer name is required"),
-  service_name: z.string().min(1, "Service name is required"),
-  service_code: z.string().min(1, "Service code is required"),
+  category_id: z.coerce.number().min(1, "Category selection is required"),
+  category_name: z.string().min(1, "Category name is required"),
   session_price: z.coerce.number().min(0, "Session price must be non-negative"),
   session_count: z.coerce.number().min(1, "Session count must be at least 1"),
   doctor_id: z.coerce.number().min(1, "Doctor selection is required"),
@@ -53,13 +53,13 @@ type InvoiceFormInput = z.infer<typeof InvoiceFormSchema>
 interface InvoiceDetail {
   id?: string | number | null
   customer_name: string
-  service_name: string
-  service_code: string
+  category_id: number | string
+  category_name: string
   session_price: number | string
   session_count: number | string
   doctor_id: number | string
   national_id?: string | number | null
-  tax_percentage?: string // "0%", "15%", "20%", "معافاه"
+  tax_percentage?: string
 }
 
 interface Invoice {
@@ -78,19 +78,15 @@ interface Invoice {
 
 // -------------------- Helpers --------------------
 const taxRateFrom = (v: unknown): number => {
-  if (v == null) return 0.15 // default if missing
+  if (v == null) return 0.15
   const s = String(v).trim()
-
   if (s === "معافاه") return 0
   if (s.endsWith("%")) {
     const n = Number(s.replace("%", "").trim())
     return isNaN(n) ? 0 : n / 100
   }
   const n = Number(s)
-  if (!isNaN(n)) {
-    // allow "0", 0.15, or 15 -> 15%
-    return n > 1 ? n / 100 : n
-  }
+  if (!isNaN(n)) return n > 1 ? n / 100 : n
   return 0
 }
 
@@ -143,7 +139,7 @@ export default function InvoiceManager({ initValues }: { initValues?: Invoice })
   const { mutate: update, isPending: isUpdating } = useUpdateInvoices()
   const { data: clientData, isLoading: clientsLoading } = usePatients("")
   const { data: doctorsData, isLoading: doctorsLoading } = useDoctors("")
-  const { data: servicesData, isLoading: servicesLoading } = useServices("")
+  const { data: categoriesData, isLoading: categoriesLoading } = useCategories("") // <-- NEW
 
   const statusOptions = [
     { value: "قيد الانتظار", label: "قيد الانتظار" },
@@ -188,25 +184,15 @@ export default function InvoiceManager({ initValues }: { initValues?: Invoice })
   useInvoiceCalculations(details, discount, setValue)
 
   // ---------- Handlers ----------
-  const handleServiceChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleCategoryChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     if (!editingDetail) return
-    const selectedServiceId = event.target.value
-    const selectedService = servicesData?.data?.find((s: any) => s.id.toString() === selectedServiceId)
-    if (selectedService) {
-      setEditingDetail({
-        ...editingDetail,
-        service_name: selectedService.name?.en || selectedService.name?.ar || "",
-        service_code: selectedService.id.toString(),
-        session_price: selectedService.price || 0,
-      })
-    } else {
-      setEditingDetail({
-        ...editingDetail,
-        service_name: "",
-        service_code: "",
-        session_price: 0,
-      })
-    }
+    const selectedId = Number(event.target.value)
+    const selected = categoriesData?.data?.find((c: any) => c.id === selectedId)
+    setEditingDetail({
+      ...editingDetail,
+      category_id: selectedId,
+      category_name: selected?.name?.en || selected?.name?.ar || "",
+    })
     setDetailErrors(null)
   }
 
@@ -222,8 +208,8 @@ export default function InvoiceManager({ initValues }: { initValues?: Invoice })
   const handleAddDetail = () => {
     setEditingDetail({
       customer_name: "",
-      service_name: "",
-      service_code: "",
+      category_id: 0,
+      category_name: "",
       session_price: 0,
       session_count: 1,
       doctor_id: 0,
@@ -236,9 +222,12 @@ export default function InvoiceManager({ initValues }: { initValues?: Invoice })
   }
 
   const handleEditDetail = (index: number) => {
+    const d = details[index]
     setEditingDetail({
-      ...details[index],
-      tax_percentage: details[index].tax_percentage || "15%",
+      ...d,
+      category_id: d.category_id ?? 0,
+      category_name: d.category_name ?? "",
+      tax_percentage: d.tax_percentage || "15%",
     })
     setIsAddingNew(false)
     setEditingIndex(index)
@@ -253,6 +242,8 @@ export default function InvoiceManager({ initValues }: { initValues?: Invoice })
         session_price: editingDetail.session_price,
         session_count: editingDetail.session_count,
         doctor_id: editingDetail.doctor_id,
+        category_id: editingDetail.category_id,
+        category_name: editingDetail.category_name,
       })
 
       const newDetail: InvoiceDetail = {
@@ -308,9 +299,8 @@ export default function InvoiceManager({ initValues }: { initValues?: Invoice })
         customer_name: detail.customer_name,
         national_id: detail.national_id ?? null,
         doctor_id: Number(detail.doctor_id),
-        service_name: detail.service_name,
-        service_code: detail.service_code,
-        service_id: detail.service_code, // if your API expects service_id, mapped from code
+        category_id: Number(detail.category_id),
+        category_name: detail.category_name,
         session_price: Number(detail.session_price),
         session_count: Number(detail.session_count),
         tax_percentage: detail.tax_percentage,
@@ -342,8 +332,8 @@ export default function InvoiceManager({ initValues }: { initValues?: Invoice })
       details: [
         {
           customer_name: "Ahmed Mostafa",
-          service_name: "Physiotherapy",
-          service_code: "1",
+          category_id: 1,
+          category_name: "Physiotherapy",
           session_price: 200,
           session_count: 2,
           doctor_id: 10,
@@ -352,8 +342,8 @@ export default function InvoiceManager({ initValues }: { initValues?: Invoice })
         },
         {
           customer_name: "Sarah Ali",
-          service_name: "Consultation",
-          service_code: "2",
+          category_id: 2,
+          category_name: "Consultation",
           session_price: 150,
           session_count: 3,
           doctor_id: 11,
@@ -366,8 +356,9 @@ export default function InvoiceManager({ initValues }: { initValues?: Invoice })
   }
 
   // ---------- Render ----------
-  const isLoadingAny = clientsLoading || doctorsLoading || servicesLoading
+  const isLoadingAny = clientsLoading || doctorsLoading || categoriesLoading
   console.log(errors)
+  console.log(categoriesData)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-6">
@@ -490,9 +481,9 @@ export default function InvoiceManager({ initValues }: { initValues?: Invoice })
                               )}
                             </div>
                             <div className="space-y-1">
-                              <p className="text-sm font-medium text-emerald-600">Service</p>
-                              <p className="font-semibold text-gray-900">{detail.service_name}</p>
-                              <p className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">Code: {detail.service_code}</p>
+                              <p className="text-sm font-medium text-emerald-600">Category</p>
+                              <p className="font-semibold text-gray-900">{detail.category_name}</p>
+                              <p className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">ID: {detail.category_id}</p>
                               <p className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">Tax: {detail.tax_percentage || "15%"}</p>
                             </div>
                             <div className="space-y-1">
@@ -584,22 +575,22 @@ export default function InvoiceManager({ initValues }: { initValues?: Invoice })
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <FormGroup title="Service *">
+                        <FormGroup title="Category *">
                           <select
-                            value={editingDetail.service_code}
-                            onChange={handleServiceChange}
+                            value={String(editingDetail.category_id ?? "")}
+                            onChange={handleCategoryChange}
                             className="w-full border border-gray-300 rounded-lg p-3 bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           >
-                            <option value="">Select Service</option>
-                            {servicesData?.data?.map((service: any) => (
-                              <option key={service.id} value={service.id}>
-                                {service.name?.en || service.name?.ar || service.id} - {service.price} ر.س
+                            <option value="">Select Category</option>
+                            {categoriesData?.data?.map((cat: any) => (
+                              <option key={cat.id} value={cat.id}>
+                                {cat.name?.en || cat.name?.ar || cat.id}
                               </option>
                             ))}
                           </select>
-                          {detailErrors?.errors.find((err) => err.path.includes("service_code")) && (
+                          {detailErrors?.errors.find((err) => err.path.includes("category_id")) && (
                             <p className="text-red-500 text-sm mt-1">
-                              {detailErrors.errors.find((err) => err.path.includes("service_code"))?.message}
+                              {detailErrors.errors.find((err) => err.path.includes("category_id"))?.message}
                             </p>
                           )}
                         </FormGroup>
@@ -675,12 +666,6 @@ export default function InvoiceManager({ initValues }: { initValues?: Invoice })
                             </p>
                           )}
                         </FormGroup>
-
-                        {/* <FormGroup title="Line Total">
-                          <div className="p-3 bg-emerald-100 border border-emerald-300 rounded-lg text-center font-bold text-emerald-700">
-                            {Number(editingDetail.session_price) * Number(editingDetail.session_count)} ر.س
-                          </div>
-                        </FormGroup> */}
                       </div>
 
                       <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
@@ -752,7 +737,21 @@ export default function InvoiceManager({ initValues }: { initValues?: Invoice })
                     <p className="text-3xl font-bold">{Number(watch("grand_total"))} ر.س</p>
                   </div>
                 </div>
-
+{errors.details && (
+                  <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+                    <p className="font-medium mb-2">Please fix the following line-item errors:</p>
+                    <ul className="list-disc list-inside space-y-1 text-sm">
+                      {(errors.details as any).map((err: any, idx: number) => (
+                        <li key={idx}>
+                          <strong>Item {idx + 1}:</strong>{" "}
+                          {Object.entries(err)
+                            .map(([key, val]: [string, any]) => `${key}: ${val.message}`)
+                            .join(", ")}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
                 <div className="flex items-center justify-between pt-6 border-t border-gray-200">
                   <div className="flex items-center gap-3">
                     <span className="text-sm font-medium text-gray-600">Status:</span>

@@ -28,6 +28,8 @@ export default function CountriesTablePage() {
   const params = new URLSearchParams(searchParams);
   if (!params.get('page')) params.set('page', '1');
   if (!params.get('limit')) params.set('limit', '10');
+  if (!params.get('type')) params.set('type', 'marketing');
+
   const { data, isLoading } = useCustomerSupport(params.toString());
   const [selectedColumns, setSelectedColumns] = useState<any[]>([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState<any[]>([]);

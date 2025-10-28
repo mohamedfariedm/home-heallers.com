@@ -65,12 +65,12 @@ export default function FilterElement({
           onChange={(e) => updateFilter('customer_name', e.target.value)}
         />
 
-        {/* 🧰 Service Name */}
+        {/* 🧰 category Name */}
         <Input
-          placeholder="Service Name"
+          placeholder="Category Name"
           className="h-9 w-full"
-          value={filters['service_name'] ?? ''}
-          onChange={(e) => updateFilter('service_name', e.target.value)}
+          value={filters['category_name'] ?? ''}
+          onChange={(e) => updateFilter('category_name', e.target.value)}
         />
 
         {/* 🗓️ Invoice Date */}

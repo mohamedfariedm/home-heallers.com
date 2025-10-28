@@ -246,10 +246,16 @@ export const menuItemsHaydrogen = [
     permissions: 'packages',
   },
   {
-    name: 'customer-supports',
-    href: routes.customerSupport.index,
+    name: 'Operation customer supports',
+    href:"/customer-supports-operation",
     icon: <PiPhoneCall />,
-    permissions: 'customer_supports',
+    permissions: 'customer_supports_operation',
+  },
+  {
+    name: ' Marketing customer  supports',
+    href: "/customer-supports-marketing",
+    icon: <PiPhoneCall />,
+    permissions: 'customer_supports_marketing',
   },
   {
     name: 'Patients',
