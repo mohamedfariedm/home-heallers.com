@@ -4,8 +4,6 @@ import { ActionIcon } from '@/components/ui/action-icon';
 import { HeaderCell } from '@/components/ui/table';
 import { Text } from '@/components/ui/text';
 import { Tooltip } from '@/components/ui/tooltip';
-import { routes } from '@/config/routes';
-import { useRouter } from 'next/navigation';
 import { PiPencilSimple, PiTrash } from 'react-icons/pi';
 import { Contract } from '@/types';
 import dayjs from 'dayjs';
@@ -29,7 +27,6 @@ export const getColumns = ({
   onChecked,
   handleSelectAll,
 }: Columns) => {
-  const router = useRouter();
 
   return [
     {
