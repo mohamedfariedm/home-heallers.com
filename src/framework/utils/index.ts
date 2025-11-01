@@ -217,6 +217,16 @@ class Client {
         update: (input : Products) => HttpClient.post(`${routes.products.index}/update`, input) ,
         delete: (input: {product_id: number[]}) => HttpClient.post(`${routes.products.index}/delete`, input)
     }
+    contracts = {
+        all: (param:string) => HttpClient.get(`/contracts?${param}`),
+        findOne: (id: number) => HttpClient.get(`/contracts/${id}`),
+        create: (input: any) => HttpClient.post('/contracts', input),
+        update: (input: any) => HttpClient.patch(`/contracts/${input.id}`, input),
+        delete: (input: {contract_id: number[]}) => {
+            const promises = input.contract_id.map(id => HttpClient.delete(`/contracts/${id}`));
+            return Promise.all(promises);
+        }
+    }
     notifications = {
         all: (param:string) => HttpClient.get(`${routes.notifications.index}/index?${param}`),
         findAllData: () => HttpClient.get(`${routes.notifications.index}/create`),

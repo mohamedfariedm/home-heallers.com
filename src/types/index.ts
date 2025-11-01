@@ -271,3 +271,63 @@ export interface notifications {
   image?:string,
   users?:any,
 }
+
+export interface Contract {
+  id: number;
+  visit_date: string;
+  last_date: string;
+  visit_time: string;
+  last_time: string;
+  service_manager_name: string;
+  last_service_manager: string;
+  company_activity: string;
+  company_location: string;
+  company_name: string;
+  manager_mobile: string;
+  manager_email: string;
+  visit_summary: string;
+  created_by?: number | null;
+  updated_by?: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ContractResponse {
+  data: Contract[];
+  links: {
+    first: string;
+    last: string;
+    prev: string | null;
+    next: string | null;
+  };
+  meta: {
+    current_page: number;
+    from: number;
+    last_page: number;
+    links: Array<{
+      url: string | null;
+      label: string;
+      active: boolean;
+    }>;
+    path: string;
+    per_page: number;
+    to: number;
+    total: number;
+  };
+  message: string;
+}
+
+export interface ContractFormInput {
+  visit_date: string;
+  last_date: string;
+  visit_time: string;
+  last_time: string;
+  service_manager_name: string;
+  last_service_manager: string;
+  company_activity: string;
+  company_location: string;
+  company_name: string;
+  manager_mobile: string;
+  manager_email: string;
+  visit_summary: string;
+}

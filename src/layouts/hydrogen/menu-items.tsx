@@ -9,6 +9,7 @@ import {
   PiPackageDuotone,
   PiChartBarDuotone,
   PiFileImageDuotone,
+  PiFileText,
   PiCurrencyDollarDuotone,
   PiSquaresFourDuotone,
   PiGridFourDuotone,
@@ -298,6 +299,12 @@ export const menuItemsHaydrogen = [
     href: routes.reservations.index,
     icon: <PiGlobe />,
     permissions: 'reservations',
+  },
+  {
+    name: 'contracts',
+    href: routes.contracts.index,
+    icon: <PiFileText />,
+    permissions: 'Contracts',
   },
 
 
