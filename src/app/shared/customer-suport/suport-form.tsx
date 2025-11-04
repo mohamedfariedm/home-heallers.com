@@ -9,8 +9,11 @@ import { useModal } from '@/app/shared/modal-views/use-modal';
 import { LeadFormInput, leadFormSchema } from '@/utils/validators/suport-form.schema';
 import { Textarea } from 'rizzui';
 import { useCreateCustomerSupport, useUpdateCustomerSupport } from '@/framework/customer-suport';
+import { useSearchParams } from 'next/navigation';
 
-export default function CreateOrUpdateLead({ initValues }: { initValues?: any }) {
+export default function CreateOrUpdateLead({ initValues,type }: { initValues?: any,type: string }) {
+
+    
   const { closeModal } = useModal();
   const [lang, setLang] = useState<'en' | 'ar'>('en');
     const { mutate: createSupport, isPending: isCreating } = useCreateCustomerSupport();
@@ -25,6 +28,7 @@ export default function CreateOrUpdateLead({ initValues }: { initValues?: any })
 
   const onSubmit: SubmitHandler<LeadFormInput> = (data) => {
     const requestBody = {
+      type,
       name: data.name,
       first_name: data.first_name,
       middle_name: data.middle_name,

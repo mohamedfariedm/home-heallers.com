@@ -15,6 +15,7 @@ import { usePatients } from "@/framework/patients"
 import { type ReservationFormInput, reservationFormSchema } from "@/utils/validators/reservation-form-schema"
 import Spinner from "@/components/ui/spinner"
 import { useCategories } from "@/framework/categories"
+import { usePermissions } from "@/context/PermissionsContext"
 
 const timePeriods = [
   { id: "morning", name: "Morning" },
@@ -37,6 +38,10 @@ const genderOptions = [
 ]
 
 export default function CreateOrUpdateReservation({ initValues }: { initValues?: any }) {
+    const { permissions } = usePermissions();
+    console.log(permissions);
+  
+    
   const { mutate: createReservation, isPending: isCreating } = useCreateReservation()
   const { mutate: updateReservation, isPending: isUpdating } = useUpdateReservation()
 
@@ -258,6 +263,20 @@ useEffect(() => {
     }
   }
 
+  // ✅ Detect if current user is an invoices assistant
+const isInvoicesAssistant = permissions?.includes("invoices_assistant");
+
+// ✅ Determine if editing is allowed
+const initialStatus = initValues?.status?.toString();
+const initialDates = initValues?.dates || [];
+
+const canEdit =
+  !isInvoicesAssistant ||
+  initialStatus === "4" ||
+  initialDates.some((d: any) => d?.status?.toString() === "4");
+
+const inputProps = { disabled: !canEdit };
+
   return (
     isPatientsLoading || isServicesLoading || isDoctorsLoading|| isCategoriesLoading ? (
       <div className="flex items-center justify-center h-64">
@@ -287,6 +306,7 @@ useEffect(() => {
                   checked={value === "guest"}
                   onChange={() => onChange("guest")}
                   className="w-4 h-4"
+                  
                 />
                 <span className="text-sm">Guest Reservation</span>
               </label>
@@ -312,6 +332,7 @@ useEffect(() => {
           <div className="grid grid-cols-2 gap-4">
             <Input
               label="Patient Name"
+              {...inputProps}
               placeholder="e.g., أحمد محمد"
               {...register("patient_name")}
               error={errors.patient_name?.message}
@@ -319,6 +340,7 @@ useEffect(() => {
             <Input
               label="Patient Email"
               type="email"
+              {...inputProps}
               placeholder="e.g., ah1med@example.com"
               {...register("patient_email")}
               error={errors.patient_email?.message}
@@ -328,13 +350,16 @@ useEffect(() => {
           <div className="grid grid-cols-2 gap-4">
             <Input
               label="National ID"
+              {...inputProps}
               placeholder="e.g., 12134567890"
               {...register("patient_national_id")}
               error={errors.patient_national_id?.message}
             />
             <div>
               <label className="text-sm text-gray-700">Gender</label>
-              <select {...register("patient_gender")} className="w-full border border-gray-300 rounded-lg p-2">
+              <select
+              {...inputProps}
+              {...register("patient_gender")} className="w-full border border-gray-300 rounded-lg p-2">
                 {genderOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
@@ -346,12 +371,14 @@ useEffect(() => {
 
           <div className="grid grid-cols-2 gap-4">
             <Input
+            {...inputProps}
               label="Mobile"
               placeholder="e.g., 05101234567"
               {...register("patient_mobile")}
               error={errors.patient_mobile?.message}
             />
             <Input
+            {...inputProps}
               label="Date of Birth"
               type="date"
               {...register("patient_date_of_birth")}
@@ -361,6 +388,7 @@ useEffect(() => {
 
           <div className="grid grid-cols-2 gap-4">
             <Input
+            {...inputProps}
               label="Country"
               placeholder="e.g., السعودية"
               {...register("patient_country")}
@@ -372,9 +400,10 @@ useEffect(() => {
         <div key="existing">
           <label className="text-sm text-gray-700">Select Existing Patient</label>
           <select
+          {...inputProps}
             {...register("patient_id")}
             className="w-full border border-gray-300 rounded-lg p-2"
-            disabled={isPatientsLoading}
+            disabled={isPatientsLoading|| !canEdit}
           >
             <option value="">{isPatientsLoading ? "Loading patients..." : "Select Patient"}</option>
             {patients?.data?.map((patient: any) => (
@@ -391,9 +420,10 @@ useEffect(() => {
         <div>
           <label className="text-sm text-gray-700">Service</label>
           <select
+          
             {...register("service_id")}
             className="w-full border border-gray-300 rounded-lg p-2"
-            disabled={isServicesLoading}
+            disabled={isServicesLoading|| !canEdit}
           >
             <option value="">{isServicesLoading ? "Loading services..." : "Select Service"}</option>
             {services?.data?.map((service: any) => (
@@ -409,7 +439,7 @@ useEffect(() => {
           <select
             {...register("doctor_id")}
             className="w-full border border-gray-300 rounded-lg p-2"
-            disabled={isDoctorsLoading}
+            disabled={isDoctorsLoading|| !canEdit}
           >
             <option value="">{isDoctorsLoading ? "Loading doctors..." : "Select Doctor"}</option>
             {doctors?.data?.map((doctor: any) => (
@@ -424,7 +454,9 @@ useEffect(() => {
 
       <div>
         <label className="text-sm text-gray-700">Category</label>
-        <select {...register("category_id")} className="w-full border border-gray-300 rounded-lg p-2">
+        <select
+        {...inputProps}
+        {...register("category_id")} className="w-full border border-gray-300 rounded-lg p-2">
           <option value="">{isCategoriesLoading ? "Loading categories..." : "Select Category"}</option>
           {categories?.data?.map((category: any) => (
             <option key={category.id} value={category.id}>
@@ -439,12 +471,14 @@ useEffect(() => {
         <h5 className="font-semibold text-sm">Address Information</h5>
         <div className="grid grid-cols-2 gap-4">
           <Input
+          {...inputProps}
             label="City"
             placeholder="e.g., الرياض"
             {...register("address_city")}
             error={errors.address_city?.message}
           />
           <Input
+          {...inputProps}
             label="State/Region"
             placeholder="e.g., منطقة الرياض"
             {...register("address_state")}
@@ -452,6 +486,7 @@ useEffect(() => {
           />
         </div>
         <Input
+        {...inputProps}
           label="Address Link (Maps)"
           type="url"
           placeholder="https://maps.google.com/?q=24.7136,46.6753"
@@ -464,18 +499,24 @@ useEffect(() => {
         <h5 className="font-semibold text-sm">Billing Information</h5>
         <div className="grid grid-cols-2 gap-4">
           <Input
+          {...inputProps}
             label="Sessions Count"
             type="tel"
             {...register("sessions_count")}
             error={errors.sessions_count?.message}
           />
-          <Input label="Sub Total" type="tel" {...register("sub_total")} error={errors.sub_total?.message} />
+          <Input
+          {...inputProps}
+          label="Sub Total" type="tel" {...register("sub_total")} error={errors.sub_total?.message} />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-          <Input label="Fees" type="tel" {...register("fees")} error={errors.fees?.message} />
+          <Input
+          {...inputProps}
+          label="Fees" type="tel" {...register("fees")} error={errors.fees?.message} />
           <div>
             <Input
+            {...inputProps}
               label="Total Amount"
               type="tel"
               {...register("total_amount")}
@@ -486,6 +527,7 @@ useEffect(() => {
         </div>
 
         <Input
+        {...inputProps}
           label="Transaction Reference"
           placeholder="e.g., GUEST123"
           {...register("transaction_reference")}
@@ -496,7 +538,9 @@ useEffect(() => {
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="text-sm text-gray-700">Status</label>
-          <select {...register("status")} className="w-full border border-gray-300 rounded-lg p-2">
+          <select
+          {...inputProps}
+          {...register("status")} className="w-full border border-gray-300 rounded-lg p-2">
             <option value="">Select Status</option>
             {statusOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -507,6 +551,7 @@ useEffect(() => {
           {errors.status && <p className="text-sm text-red-500">{errors.status.message}</p>}
         </div>
         <Input
+        {...inputProps}
           label="Pain Location"
           placeholder="e.g., ألم في الرقبة"
           {...register("pain_location")}
@@ -514,7 +559,9 @@ useEffect(() => {
         />
       </div>
 
-      <Input label="Notes" placeholder="e.g., حجز ضيف جديد" {...register("notes")} error={errors.notes?.message} />
+      <Input
+      {...inputProps}
+      label="Notes" placeholder="e.g., حجز ضيف جديد" {...register("notes")} error={errors.notes?.message} />
 
       <div className="space-y-4 border-l-4 border-orange-500 pl-4">
         <h5 className="font-semibold text-sm">Reservation Dates</h5>
@@ -523,12 +570,14 @@ useEffect(() => {
           <div key={index} className="border rounded-lg p-4 space-y-3">
             <div className="grid grid-cols-2 gap-4">
               <Input
+              {...inputProps}
                 label="Date"
                 type="date"
                 {...register(`dates.${index}.date` as const)}
                 error={errors.dates?.[index]?.date?.message}
               />
               <Input
+              {...inputProps}
                 label="Time"
                 type="time"
                 {...register(`dates.${index}.time` as const)}
@@ -540,6 +589,7 @@ useEffect(() => {
               <div>
                 <label className="text-sm text-gray-700">Time Period</label>
                 <select
+                {...inputProps}
                   {...register(`dates.${index}.time_period` as const)}
                   className="w-full border border-gray-300 rounded-lg p-2"
                 >
@@ -554,6 +604,7 @@ useEffect(() => {
               <div>
                 <label className="text-sm text-gray-700">Doctor</label>
                 <select
+                {...inputProps}
                   {...register(`dates.${index}.doctor_id` as const)}
                   className="w-full border border-gray-300 rounded-lg p-2"
                   disabled={isDoctorsLoading}
@@ -571,6 +622,7 @@ useEffect(() => {
             <div>
               <label className="text-sm text-gray-700">Status</label>
               <select
+              {...inputProps}
                 {...register(`dates.${index}.status` as const)}
                 className="w-full border border-gray-300 rounded-lg p-2"
               >
@@ -589,6 +641,7 @@ useEffect(() => {
             <Button
               type="button"
               variant="outline"
+              {...inputProps}
               size="sm"
               onClick={() => {
                 const currentStatus = watch(`dates.0.status`)
@@ -599,6 +652,7 @@ useEffect(() => {
             </Button>
             <Button
               type="button"
+              {...inputProps}
               variant="outline"
               size="sm"
               onClick={() => {
@@ -620,7 +674,7 @@ useEffect(() => {
         <Button variant="outline" onClick={closeModal}>
           Cancel
         </Button>
-        <Button type="submit" disabled={isCreating || isUpdating}>
+        <Button type="submit" disabled={isCreating || isUpdating || !canEdit }>
           {initValues ? "Update Reservation" : "Create Reservation"}
         </Button>
       </div>

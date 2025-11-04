@@ -49,7 +49,7 @@ export default function CountriesTablePage() {
       fileName="CustomerSupport/index"
       header="User,Created At"
       createName="Create Customer Support"
-      createElementButton={<CreateOrUpdateCustomerSupport />}
+      createElementButton={<CreateOrUpdateCustomerSupport type='operation' />}
     >
       {isLoading ? (
         <div className="m-auto">
@@ -58,6 +58,7 @@ export default function CountriesTablePage() {
       ) : (
         <CustomerSuportTable
           data={data?.data}
+          type='operation'
           getSelectedColumns={setSelectedColumns}
           getSelectedRowKeys={setSelectedRowKeys}
           totalItems={data?.meta?.total}
