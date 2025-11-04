@@ -10,6 +10,10 @@ type ApiDetail = {
   id: number;
   invoice_id: number;
   client_id: number | null;
+  category?: {
+    id: number;
+    name: { en: string; ar: string };
+  };
   customer_name: string;
   national_id: string | null;
   service_name: string;
@@ -25,7 +29,10 @@ type ApiInvoice = {
   id: number;
   invoice_number: string;
   invoice_date: string;
-
+category?: {
+    id: number;
+    name: { en: string; ar: string };
+  };
   discount: string;            // "20.00"
   total_before_tax: string;    // "2000.00"
   tax_total: string;           // "300.00"
@@ -110,7 +117,7 @@ console.log("Invoice Data:", invoiceData);
 
       return {
         i: idx + 1,
-        serviceLabel: `${d.service_name} (${d.service_code})`,
+        serviceLabel: `${d.category?.name?.ar||d.category?.name?.en||""}`,
         customerName: d.customer_name,
         qty,
         price,
@@ -244,9 +251,9 @@ console.log("Invoice Data:", invoiceData);
               <span>{invoiceData.invoice_date}</span>
             </div>
             <div className="flex justify-between">
-              <span className="font-medium">الخدمات:</span>
+              <span className="font-medium">الفئات:</span>
               <span>
-                {uniqueServices.length <= 1 ? uniqueServices[0] ?? '—' : `${uniqueServices.length} خدمات`}
+                {invoiceData?.category?.name?.ar || invoiceData.category?.name?.en || 'N/A'}
               </span>
             </div>
             <div className="flex justify-between bg-gray-100 px-3 py-2 rounded">
@@ -261,7 +268,7 @@ console.log("Invoice Data:", invoiceData);
           <thead>
             <tr className="bg-gray-100">
               <th className="border border-gray-300 p-3 text-right font-medium">#</th>
-              <th className="border border-gray-300 p-3 text-right font-medium">الخدمة</th>
+              <th className="border border-gray-300 p-3 text-right font-medium">اسم الفئة</th>
               <th className="border border-gray-300 p-3 text-right font-medium">اسم العميل</th>
               <th className="border border-gray-300 p-3 text-right font-medium">الكمية</th>
               <th className="border border-gray-300 p-3 text-right font-medium">سعر الوحدة</th>
