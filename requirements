@@ -1,0 +1,782 @@
+The deferred DOM Node could not be resolved to a valid node.Understand this warning
+main-app.js?v=1763051375795:1576 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+PermissionsContext.tsx:31 PermissionsProvider - Current permissions: (27) ['users', 'roles', 'permissions', 'packages', 'coupons', 'countries', 'cities', 'customer_supports', 'services', 'categories', 'nationalities', 'patients', 'Clients', 'state', 'addresses', 'doctors', 'reservations', 'news', 'attachments', 'faqs', 'blogs', 'dashboard', 'settings', 'invoices', 'Contracts', 'customer_supports_operation', 'customer_supports_marketing']
+PermissionsContext.tsx:31 PermissionsProvider - Current permissions: (27) ['users', 'roles', 'permissions', 'packages', 'coupons', 'countries', 'cities', 'customer_supports', 'services', 'categories', 'nationalities', 'patients', 'Clients', 'state', 'addresses', 'doctors', 'reservations', 'news', 'attachments', 'faqs', 'blogs', 'dashboard', 'settings', 'invoices', 'Contracts', 'customer_supports_operation', 'customer_supports_marketing']
+content_scripts.js:12 Today you opened localhost:3001 10 time(s), spending 7 m 53 s browsing it.
+content_scripts.js:12 You can disable these notifications in [Time Tracker] settings!
+PermissionsContext.tsx:19 PermissionsProvider - Session status: authenticated Session: {user: {…}}
+PermissionsContext.tsx:21 PermissionsProvider - Updating permissions: (27) ['users', 'roles', 'permissions', 'packages', 'coupons', 'countries', 'cities', 'customer_supports', 'services', 'categories', 'nationalities', 'patients', 'Clients', 'state', 'addresses', 'doctors', 'reservations', 'news', 'attachments', 'faqs', 'blogs', 'dashboard', 'settings', 'invoices', 'Contracts', 'customer_supports_operation', 'customer_supports_marketing']
+PermissionsContext.tsx:31 PermissionsProvider - Current permissions: (27) ['users', 'roles', 'permissions', 'packages', 'coupons', 'countries', 'cities', 'customer_supports', 'services', 'categories', 'nationalities', 'patients', 'Clients', 'state', 'addresses', 'doctors', 'reservations', 'news', 'attachments', 'faqs', 'blogs', 'dashboard', 'settings', 'invoices', 'Contracts', 'customer_supports_operation', 'customer_supports_marketing']
+sidebar.tsx:26 Sidebar - Session: {user: {…}}
+sidebar.tsx:27 Sidebar - Permissions: (27) ['users', 'roles', 'permissions', 'packages', 'coupons', 'countries', 'cities', 'customer_supports', 'services', 'categories', 'nationalities', 'patients', 'Clients', 'state', 'addresses', 'doctors', 'reservations', 'news', 'attachments', 'faqs', 'blogs', 'dashboard', 'settings', 'invoices', 'Contracts', 'customer_supports_operation', 'customer_supports_marketing']
+sidebar.tsx:36 Sidebar - Effective permissions: (27) ['users', 'roles', 'permissions', 'packages', 'coupons', 'countries', 'cities', 'customer_supports', 'services', 'categories', 'nationalities', 'patients', 'Clients', 'state', 'addresses', 'doctors', 'reservations', 'news', 'attachments', 'faqs', 'blogs', 'dashboard', 'settings', 'invoices', 'Contracts', 'customer_supports_operation', 'customer_supports_marketing']
+menuUtils.ts:15 User Permissions: (27) ['users', 'roles', 'permissions', 'packages', 'coupons', 'countries', 'cities', 'customer_supports', 'services', 'categories', 'nationalities', 'patients', 'Clients', 'state', 'addresses', 'doctors', 'reservations', 'news', 'attachments', 'faqs', 'blogs', 'dashboard', 'settings', 'invoices', 'Contracts', 'customer_supports_operation', 'customer_supports_marketing']
+menuUtils.ts:16 Menu Items: (44) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+2hot-reloader-client.js:210 ./src/app/shared/statistics/dashboard/filters.tsx
+Attempted import error: 'Select' is not exported from '@/components/ui/select' (imported as 'Select').
+processMessage @ hot-reloader-client.js:210
+handler @ hot-reloader-client.js:364Understand this warning
+recharts-console-error.ts:6 Warning: React.jsx: type is invalid -- expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check your code at filters.tsx:169.
+    at StatisticsFiltersComponent (webpack-internal:///(app-pages-browser)/./src/app/shared/statistics/dashboard/filters.tsx:70:11)
+    at div
+    at StatisticsDashboard (webpack-internal:///(app-pages-browser)/./src/app/shared/statistics/dashboard/index.tsx:30:82)
+    at HomePage (webpack-internal:///(app-pages-browser)/./src/app/[locale]/(hydrogen)/page.tsx:14:80)
+    at StaticGenerationSearchParamsBailoutProvider (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/static-generation-searchparams-bailout-provider.js:15:11)
+    at InnerLayoutRouter (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/layout-router.js:241:11)
+    at RedirectErrorBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/redirect-boundary.js:72:9)
+    at RedirectBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/redirect-boundary.js:80:11)
+    at NotFoundBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/not-found-boundary.js:62:11)
+    at LoadingBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/layout-router.js:338:11)
+    at ErrorBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/error-boundary.js:130:11)
+    at InnerScrollAndFocusHandler (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/layout-router.js:152:9)
+    at ScrollAndFocusHandler (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/layout-router.js:227:11)
+    at RenderFromTemplateContext (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/render-from-template-context.js:15:44)
+    at OuterLayoutRouter (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/layout-router.js:348:11)
+    at div
+    at div
+    at main
+    at HydrogenLayout (webpack-internal:///(app-pages-browser)/./src/layouts/hydrogen/layout.tsx:12:11)
+    at DefaultLayout (webpack-internal:///(app-pages-browser)/./src/app/[locale]/(hydrogen)/layout.tsx:23:11)
+    at InnerLayoutRouter (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/layout-router.js:241:11)
+    at RedirectErrorBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/redirect-boundary.js:72:9)
+    at RedirectBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/redirect-boundary.js:80:11)
+    at NotFoundErrorBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/not-found-boundary.js:54:9)
+    at NotFoundBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/not-found-boundary.js:62:11)
+    at LoadingBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/layout-router.js:338:11)
+    at ErrorBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/error-boundary.js:130:11)
+    at InnerScrollAndFocusHandler (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/l
+window.console.error @ app-index.js:33
+console.error @ hydration-error-info.js:41
+console.error @ recharts-console-error.ts:6
+printWarning @ react-jsx-dev-runtime.development.js:88
+error @ react-jsx-dev-runtime.development.js:62
+jsxWithValidation @ react-jsx-dev-runtime.development.js:1263
+StatisticsFiltersComponent @ filters.tsx:169
+renderWithHooks @ react-dom.development.js:10930
+mountIndeterminateComponent @ react-dom.development.js:16670
+beginWork$1 @ react-dom.development.js:18254
+beginWork @ react-dom.development.js:26647
+performUnitOfWork @ react-dom.development.js:25493
+workLoopSync @ react-dom.development.js:25209
+renderRootSync @ react-dom.development.js:25164
+performConcurrentWorkOnRoot @ react-dom.development.js:24288
+workLoop @ scheduler.development.js:261
+flushWork @ scheduler.development.js:230
+performWorkUntilDeadline @ scheduler.development.js:534Understand this error
+recharts-console-error.ts:6 Warning: React.jsx: type is invalid -- expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check your code at filters.tsx:188.
+    at StatisticsFiltersComponent (webpack-internal:///(app-pages-browser)/./src/app/shared/statistics/dashboard/filters.tsx:70:11)
+    at div
+    at StatisticsDashboard (webpack-internal:///(app-pages-browser)/./src/app/shared/statistics/dashboard/index.tsx:30:82)
+    at HomePage (webpack-internal:///(app-pages-browser)/./src/app/[locale]/(hydrogen)/page.tsx:14:80)
+    at StaticGenerationSearchParamsBailoutProvider (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/static-generation-searchparams-bailout-provider.js:15:11)
+    at InnerLayoutRouter (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/layout-router.js:241:11)
+    at RedirectErrorBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/redirect-boundary.js:72:9)
+    at RedirectBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/redirect-boundary.js:80:11)
+    at NotFoundBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/not-found-boundary.js:62:11)
+    at LoadingBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/layout-router.js:338:11)
+    at ErrorBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/error-boundary.js:130:11)
+    at InnerScrollAndFocusHandler (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/layout-router.js:152:9)
+    at ScrollAndFocusHandler (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/layout-router.js:227:11)
+    at RenderFromTemplateContext (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/render-from-template-context.js:15:44)
+    at OuterLayoutRouter (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/layout-router.js:348:11)
+    at div
+    at div
+    at main
+    at HydrogenLayout (webpack-internal:///(app-pages-browser)/./src/layouts/hydrogen/layout.tsx:12:11)
+    at DefaultLayout (webpack-internal:///(app-pages-browser)/./src/app/[locale]/(hydrogen)/layout.tsx:23:11)
+    at InnerLayoutRouter (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/layout-router.js:241:11)
+    at RedirectErrorBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/redirect-boundary.js:72:9)
+    at RedirectBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/redirect-boundary.js:80:11)
+    at NotFoundErrorBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/not-found-boundary.js:54:9)
+    at NotFoundBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/not-found-boundary.js:62:11)
+    at LoadingBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/layout-router.js:338:11)
+    at ErrorBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/error-boundary.js:130:11)
+    at InnerScrollAndFocusHandler (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/l
+window.console.error @ app-index.js:33
+console.error @ hydration-error-info.js:41
+console.error @ recharts-console-error.ts:6
+printWarning @ react-jsx-dev-runtime.development.js:88
+error @ react-jsx-dev-runtime.development.js:62
+jsxWithValidation @ react-jsx-dev-runtime.development.js:1263
+StatisticsFiltersComponent @ filters.tsx:188
+renderWithHooks @ react-dom.development.js:10930
+mountIndeterminateComponent @ react-dom.development.js:16670
+beginWork$1 @ react-dom.development.js:18254
+beginWork @ react-dom.development.js:26647
+performUnitOfWork @ react-dom.development.js:25493
+workLoopSync @ react-dom.development.js:25209
+renderRootSync @ react-dom.development.js:25164
+performConcurrentWorkOnRoot @ react-dom.development.js:24288
+workLoop @ scheduler.development.js:261
+flushWork @ scheduler.development.js:230
+performWorkUntilDeadline @ scheduler.development.js:534Understand this error
+react-dom.development.js:27655 Uncaught Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check the render method of `StatisticsFiltersComponent`.
+    at createFiberFromTypeAndProps (react-dom.development.js:27655:17)
+    at createFiberFromElement (react-dom.development.js:27684:15)
+    at createChild (react-dom.development.js:9015:28)
+    at reconcileChildrenArray (react-dom.development.js:9349:25)
+    at reconcileChildFibersImpl (react-dom.development.js:9767:16)
+    at reconcileChildFibers (react-dom.development.js:9821:27)
+    at reconcileChildren (react-dom.development.js:15515:28)
+    at updateHostComponent$1 (react-dom.development.js:16477:3)
+    at beginWork$1 (react-dom.development.js:18299:14)
+    at HTMLUnknownElement.callCallback (react-dom.development.js:20367:14)
+    at Object.invokeGuardedCallbackImpl (react-dom.development.js:20416:16)
+    at invokeGuardedCallback (react-dom.development.js:20491:29)
+    at beginWork (react-dom.development.js:26669:7)
+    at performUnitOfWork (react-dom.development.js:25493:12)
+    at workLoopSync (react-dom.development.js:25209:5)
+    at renderRootSync (react-dom.development.js:25164:7)
+    at performConcurrentWorkOnRoot (react-dom.development.js:24288:74)
+    at workLoop (scheduler.development.js:261:34)
+    at flushWork (scheduler.development.js:230:14)
+    at MessagePort.performWorkUntilDeadline (scheduler.development.js:534:21)
+createFiberFromTypeAndProps @ react-dom.development.js:27655
+createFiberFromElement @ react-dom.development.js:27684
+createChild @ react-dom.development.js:9015
+reconcileChildrenArray @ react-dom.development.js:9349
+reconcileChildFibersImpl @ react-dom.development.js:9767
+reconcileChildFibers @ react-dom.development.js:9821
+reconcileChildren @ react-dom.development.js:15515
+updateHostComponent$1 @ react-dom.development.js:16477
+beginWork$1 @ react-dom.development.js:18299
+callCallback @ react-dom.development.js:20367
+invokeGuardedCallbackImpl @ react-dom.development.js:20416
+invokeGuardedCallback @ react-dom.development.js:20491
+beginWork @ react-dom.development.js:26669
+performUnitOfWork @ react-dom.development.js:25493
+workLoopSync @ react-dom.development.js:25209
+renderRootSync @ react-dom.development.js:25164
+performConcurrentWorkOnRoot @ react-dom.development.js:24288
+workLoop @ scheduler.development.js:261
+flushWork @ scheduler.development.js:230
+performWorkUntilDeadline @ scheduler.development.js:534Understand this error
+2redirect-boundary.js:56 Uncaught Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check the render method of `StatisticsFiltersComponent`.
+    at createFiberFromTypeAndProps (react-dom.development.js:27655:17)
+    at createFiberFromElement (react-dom.development.js:27684:15)
+    at createChild (react-dom.development.js:9015:28)
+    at reconcileChildrenArray (react-dom.development.js:9349:25)
+    at reconcileChildFibersImpl (react-dom.development.js:9767:16)
+    at reconcileChildFibers (react-dom.development.js:9821:27)
+    at reconcileChildren (react-dom.development.js:15515:28)
+    at updateHostComponent$1 (react-dom.development.js:16477:3)
+    at beginWork$1 (react-dom.development.js:18299:14)
+    at beginWork (react-dom.development.js:26647:14)
+    at performUnitOfWork (react-dom.development.js:25493:12)
+    at workLoopSync (react-dom.development.js:25209:5)
+    at renderRootSync (react-dom.development.js:25164:7)
+    at performConcurrentWorkOnRoot (react-dom.development.js:24288:74)
+    at workLoop (scheduler.development.js:261:34)
+    at flushWork (scheduler.development.js:230:14)
+    at MessagePort.performWorkUntilDeadline (scheduler.development.js:534:21)
+createFiberFromTypeAndProps @ react-dom.development.js:27655
+createFiberFromElement @ react-dom.development.js:27684
+createChild @ react-dom.development.js:9015
+reconcileChildrenArray @ react-dom.development.js:9349
+reconcileChildFibersImpl @ react-dom.development.js:9767
+reconcileChildFibers @ react-dom.development.js:9821
+reconcileChildren @ react-dom.development.js:15515
+updateHostComponent$1 @ react-dom.development.js:16477
+beginWork$1 @ react-dom.development.js:18299
+beginWork @ react-dom.development.js:26647
+performUnitOfWork @ react-dom.development.js:25493
+workLoopSync @ react-dom.development.js:25209
+renderRootSync @ react-dom.development.js:25164
+performConcurrentWorkOnRoot @ react-dom.development.js:24288
+workLoop @ scheduler.development.js:261
+flushWork @ scheduler.development.js:230
+performWorkUntilDeadline @ scheduler.development.js:534Understand this error
+not-found-boundary.js:22 Uncaught Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check the render method of `StatisticsFiltersComponent`.
+    at createFiberFromTypeAndProps (react-dom.development.js:27655:17)
+    at createFiberFromElement (react-dom.development.js:27684:15)
+    at createChild (react-dom.development.js:9015:28)
+    at reconcileChildrenArray (react-dom.development.js:9349:25)
+    at reconcileChildFibersImpl (react-dom.development.js:9767:16)
+    at reconcileChildFibers (react-dom.development.js:9821:27)
+    at reconcileChildren (react-dom.development.js:15515:28)
+    at updateHostComponent$1 (react-dom.development.js:16477:3)
+    at beginWork$1 (react-dom.development.js:18299:14)
+    at beginWork (react-dom.development.js:26647:14)
+    at performUnitOfWork (react-dom.development.js:25493:12)
+    at workLoopSync (react-dom.development.js:25209:5)
+    at renderRootSync (react-dom.development.js:25164:7)
+    at performConcurrentWorkOnRoot (react-dom.development.js:24288:74)
+    at workLoop (scheduler.development.js:261:34)
+    at flushWork (scheduler.development.js:230:14)
+    at MessagePort.performWorkUntilDeadline (scheduler.development.js:534:21)
+createFiberFromTypeAndProps @ react-dom.development.js:27655
+createFiberFromElement @ react-dom.development.js:27684
+createChild @ react-dom.development.js:9015
+reconcileChildrenArray @ react-dom.development.js:9349
+reconcileChildFibersImpl @ react-dom.development.js:9767
+reconcileChildFibers @ react-dom.development.js:9821
+reconcileChildren @ react-dom.development.js:15515
+updateHostComponent$1 @ react-dom.development.js:16477
+beginWork$1 @ react-dom.development.js:18299
+beginWork @ react-dom.development.js:26647
+performUnitOfWork @ react-dom.development.js:25493
+workLoopSync @ react-dom.development.js:25209
+renderRootSync @ react-dom.development.js:25164
+performConcurrentWorkOnRoot @ react-dom.development.js:24288
+workLoop @ scheduler.development.js:261
+flushWork @ scheduler.development.js:230
+performWorkUntilDeadline @ scheduler.development.js:534Understand this error
+redirect-boundary.js:56 Uncaught Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check the render method of `StatisticsFiltersComponent`.
+    at createFiberFromTypeAndProps (react-dom.development.js:27655:17)
+    at createFiberFromElement (react-dom.development.js:27684:15)
+    at createChild (react-dom.development.js:9015:28)
+    at reconcileChildrenArray (react-dom.development.js:9349:25)
+    at reconcileChildFibersImpl (react-dom.development.js:9767:16)
+    at reconcileChildFibers (react-dom.development.js:9821:27)
+    at reconcileChildren (react-dom.development.js:15515:28)
+    at updateHostComponent$1 (react-dom.development.js:16477:3)
+    at beginWork$1 (react-dom.development.js:18299:14)
+    at beginWork (react-dom.development.js:26647:14)
+    at performUnitOfWork (react-dom.development.js:25493:12)
+    at workLoopSync (react-dom.development.js:25209:5)
+    at renderRootSync (react-dom.development.js:25164:7)
+    at performConcurrentWorkOnRoot (react-dom.development.js:24288:74)
+    at workLoop (scheduler.development.js:261:34)
+    at flushWork (scheduler.development.js:230:14)
+    at MessagePort.performWorkUntilDeadline (scheduler.development.js:534:21)
+createFiberFromTypeAndProps @ react-dom.development.js:27655
+createFiberFromElement @ react-dom.development.js:27684
+createChild @ react-dom.development.js:9015
+reconcileChildrenArray @ react-dom.development.js:9349
+reconcileChildFibersImpl @ react-dom.development.js:9767
+reconcileChildFibers @ react-dom.development.js:9821
+reconcileChildren @ react-dom.development.js:15515
+updateHostComponent$1 @ react-dom.development.js:16477
+beginWork$1 @ react-dom.development.js:18299
+beginWork @ react-dom.development.js:26647
+performUnitOfWork @ react-dom.development.js:25493
+workLoopSync @ react-dom.development.js:25209
+renderRootSync @ react-dom.development.js:25164
+performConcurrentWorkOnRoot @ react-dom.development.js:24288
+workLoop @ scheduler.development.js:261
+flushWork @ scheduler.development.js:230
+performWorkUntilDeadline @ scheduler.development.js:534Understand this error
+not-found-boundary.js:22 Uncaught Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check the render method of `StatisticsFiltersComponent`.
+    at createFiberFromTypeAndProps (react-dom.development.js:27655:17)
+    at createFiberFromElement (react-dom.development.js:27684:15)
+    at createChild (react-dom.development.js:9015:28)
+    at reconcileChildrenArray (react-dom.development.js:9349:25)
+    at reconcileChildFibersImpl (react-dom.development.js:9767:16)
+    at reconcileChildFibers (react-dom.development.js:9821:27)
+    at reconcileChildren (react-dom.development.js:15515:28)
+    at updateHostComponent$1 (react-dom.development.js:16477:3)
+    at beginWork$1 (react-dom.development.js:18299:14)
+    at beginWork (react-dom.development.js:26647:14)
+    at performUnitOfWork (react-dom.development.js:25493:12)
+    at workLoopSync (react-dom.development.js:25209:5)
+    at renderRootSync (react-dom.development.js:25164:7)
+    at performConcurrentWorkOnRoot (react-dom.development.js:24288:74)
+    at workLoop (scheduler.development.js:261:34)
+    at flushWork (scheduler.development.js:230:14)
+    at MessagePort.performWorkUntilDeadline (scheduler.development.js:534:21)
+createFiberFromTypeAndProps @ react-dom.development.js:27655
+createFiberFromElement @ react-dom.development.js:27684
+createChild @ react-dom.development.js:9015
+reconcileChildrenArray @ react-dom.development.js:9349
+reconcileChildFibersImpl @ react-dom.development.js:9767
+reconcileChildFibers @ react-dom.development.js:9821
+reconcileChildren @ react-dom.development.js:15515
+updateHostComponent$1 @ react-dom.development.js:16477
+beginWork$1 @ react-dom.development.js:18299
+beginWork @ react-dom.development.js:26647
+performUnitOfWork @ react-dom.development.js:25493
+workLoopSync @ react-dom.development.js:25209
+renderRootSync @ react-dom.development.js:25164
+performConcurrentWorkOnRoot @ react-dom.development.js:24288
+workLoop @ scheduler.development.js:261
+flushWork @ scheduler.development.js:230
+performWorkUntilDeadline @ scheduler.development.js:534Understand this error
+redirect-boundary.js:56 Uncaught Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check the render method of `StatisticsFiltersComponent`.
+    at createFiberFromTypeAndProps (react-dom.development.js:27655:17)
+    at createFiberFromElement (react-dom.development.js:27684:15)
+    at createChild (react-dom.development.js:9015:28)
+    at reconcileChildrenArray (react-dom.development.js:9349:25)
+    at reconcileChildFibersImpl (react-dom.development.js:9767:16)
+    at reconcileChildFibers (react-dom.development.js:9821:27)
+    at reconcileChildren (react-dom.development.js:15515:28)
+    at updateHostComponent$1 (react-dom.development.js:16477:3)
+    at beginWork$1 (react-dom.development.js:18299:14)
+    at beginWork (react-dom.development.js:26647:14)
+    at performUnitOfWork (react-dom.development.js:25493:12)
+    at workLoopSync (react-dom.development.js:25209:5)
+    at renderRootSync (react-dom.development.js:25164:7)
+    at performConcurrentWorkOnRoot (react-dom.development.js:24288:74)
+    at workLoop (scheduler.development.js:261:34)
+    at flushWork (scheduler.development.js:230:14)
+    at MessagePort.performWorkUntilDeadline (scheduler.development.js:534:21)
+createFiberFromTypeAndProps @ react-dom.development.js:27655
+createFiberFromElement @ react-dom.development.js:27684
+createChild @ react-dom.development.js:9015
+reconcileChildrenArray @ react-dom.development.js:9349
+reconcileChildFibersImpl @ react-dom.development.js:9767
+reconcileChildFibers @ react-dom.development.js:9821
+reconcileChildren @ react-dom.development.js:15515
+updateHostComponent$1 @ react-dom.development.js:16477
+beginWork$1 @ react-dom.development.js:18299
+beginWork @ react-dom.development.js:26647
+performUnitOfWork @ react-dom.development.js:25493
+workLoopSync @ react-dom.development.js:25209
+renderRootSync @ react-dom.development.js:25164
+performConcurrentWorkOnRoot @ react-dom.development.js:24288
+workLoop @ scheduler.development.js:261
+flushWork @ scheduler.development.js:230
+performWorkUntilDeadline @ scheduler.development.js:534Understand this error
+not-found-boundary.js:22 Uncaught Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check the render method of `StatisticsFiltersComponent`.
+    at createFiberFromTypeAndProps (react-dom.development.js:27655:17)
+    at createFiberFromElement (react-dom.development.js:27684:15)
+    at createChild (react-dom.development.js:9015:28)
+    at reconcileChildrenArray (react-dom.development.js:9349:25)
+    at reconcileChildFibersImpl (react-dom.development.js:9767:16)
+    at reconcileChildFibers (react-dom.development.js:9821:27)
+    at reconcileChildren (react-dom.development.js:15515:28)
+    at updateHostComponent$1 (react-dom.development.js:16477:3)
+    at beginWork$1 (react-dom.development.js:18299:14)
+    at beginWork (react-dom.development.js:26647:14)
+    at performUnitOfWork (react-dom.development.js:25493:12)
+    at workLoopSync (react-dom.development.js:25209:5)
+    at renderRootSync (react-dom.development.js:25164:7)
+    at performConcurrentWorkOnRoot (react-dom.development.js:24288:74)
+    at workLoop (scheduler.development.js:261:34)
+    at flushWork (scheduler.development.js:230:14)
+    at MessagePort.performWorkUntilDeadline (scheduler.development.js:534:21)
+createFiberFromTypeAndProps @ react-dom.development.js:27655
+createFiberFromElement @ react-dom.development.js:27684
+createChild @ react-dom.development.js:9015
+reconcileChildrenArray @ react-dom.development.js:9349
+reconcileChildFibersImpl @ react-dom.development.js:9767
+reconcileChildFibers @ react-dom.development.js:9821
+reconcileChildren @ react-dom.development.js:15515
+updateHostComponent$1 @ react-dom.development.js:16477
+beginWork$1 @ react-dom.development.js:18299
+beginWork @ react-dom.development.js:26647
+performUnitOfWork @ react-dom.development.js:25493
+workLoopSync @ react-dom.development.js:25209
+renderRootSync @ react-dom.development.js:25164
+performConcurrentWorkOnRoot @ react-dom.development.js:24288
+workLoop @ scheduler.development.js:261
+flushWork @ scheduler.development.js:230
+performWorkUntilDeadline @ scheduler.development.js:534Understand this error
+recharts-console-error.ts:6 Warning: React.jsx: type is invalid -- expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check your code at filters.tsx:169.
+    at StatisticsFiltersComponent (webpack-internal:///(app-pages-browser)/./src/app/shared/statistics/dashboard/filters.tsx:70:11)
+    at div
+    at StatisticsDashboard (webpack-internal:///(app-pages-browser)/./src/app/shared/statistics/dashboard/index.tsx:30:82)
+    at HomePage (webpack-internal:///(app-pages-browser)/./src/app/[locale]/(hydrogen)/page.tsx:14:80)
+    at StaticGenerationSearchParamsBailoutProvider (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/static-generation-searchparams-bailout-provider.js:15:11)
+    at InnerLayoutRouter (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/layout-router.js:241:11)
+    at RedirectErrorBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/redirect-boundary.js:72:9)
+    at RedirectBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/redirect-boundary.js:80:11)
+    at NotFoundBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/not-found-boundary.js:62:11)
+    at LoadingBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/layout-router.js:338:11)
+    at ErrorBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/error-boundary.js:130:11)
+    at InnerScrollAndFocusHandler (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/layout-router.js:152:9)
+    at ScrollAndFocusHandler (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/layout-router.js:227:11)
+    at RenderFromTemplateContext (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/render-from-template-context.js:15:44)
+    at OuterLayoutRouter (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/layout-router.js:348:11)
+    at div
+    at div
+    at main
+    at HydrogenLayout (webpack-internal:///(app-pages-browser)/./src/layouts/hydrogen/layout.tsx:12:11)
+    at DefaultLayout (webpack-internal:///(app-pages-browser)/./src/app/[locale]/(hydrogen)/layout.tsx:23:11)
+    at InnerLayoutRouter (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/layout-router.js:241:11)
+    at RedirectErrorBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/redirect-boundary.js:72:9)
+    at RedirectBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/redirect-boundary.js:80:11)
+    at NotFoundErrorBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/not-found-boundary.js:54:9)
+    at NotFoundBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/not-found-boundary.js:62:11)
+    at LoadingBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/layout-router.js:338:11)
+    at ErrorBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/error-boundary.js:130:11)
+    at InnerScrollAndFocusHandler (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/l
+window.console.error @ app-index.js:33
+console.error @ hydration-error-info.js:41
+console.error @ recharts-console-error.ts:6
+printWarning @ react-jsx-dev-runtime.development.js:88
+error @ react-jsx-dev-runtime.development.js:62
+jsxWithValidation @ react-jsx-dev-runtime.development.js:1263
+StatisticsFiltersComponent @ filters.tsx:169
+renderWithHooks @ react-dom.development.js:10930
+mountIndeterminateComponent @ react-dom.development.js:16670
+beginWork$1 @ react-dom.development.js:18254
+beginWork @ react-dom.development.js:26647
+performUnitOfWork @ react-dom.development.js:25493
+workLoopSync @ react-dom.development.js:25209
+renderRootSync @ react-dom.development.js:25164
+recoverFromConcurrentError @ react-dom.development.js:24381
+performConcurrentWorkOnRoot @ react-dom.development.js:24326
+workLoop @ scheduler.development.js:261
+flushWork @ scheduler.development.js:230
+performWorkUntilDeadline @ scheduler.development.js:534Understand this error
+recharts-console-error.ts:6 Warning: React.jsx: type is invalid -- expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check your code at filters.tsx:188.
+    at StatisticsFiltersComponent (webpack-internal:///(app-pages-browser)/./src/app/shared/statistics/dashboard/filters.tsx:70:11)
+    at div
+    at StatisticsDashboard (webpack-internal:///(app-pages-browser)/./src/app/shared/statistics/dashboard/index.tsx:30:82)
+    at HomePage (webpack-internal:///(app-pages-browser)/./src/app/[locale]/(hydrogen)/page.tsx:14:80)
+    at StaticGenerationSearchParamsBailoutProvider (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/static-generation-searchparams-bailout-provider.js:15:11)
+    at InnerLayoutRouter (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/layout-router.js:241:11)
+    at RedirectErrorBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/redirect-boundary.js:72:9)
+    at RedirectBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/redirect-boundary.js:80:11)
+    at NotFoundBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/not-found-boundary.js:62:11)
+    at LoadingBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/layout-router.js:338:11)
+    at ErrorBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/error-boundary.js:130:11)
+    at InnerScrollAndFocusHandler (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/layout-router.js:152:9)
+    at ScrollAndFocusHandler (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/layout-router.js:227:11)
+    at RenderFromTemplateContext (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/render-from-template-context.js:15:44)
+    at OuterLayoutRouter (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/layout-router.js:348:11)
+    at div
+    at div
+    at main
+    at HydrogenLayout (webpack-internal:///(app-pages-browser)/./src/layouts/hydrogen/layout.tsx:12:11)
+    at DefaultLayout (webpack-internal:///(app-pages-browser)/./src/app/[locale]/(hydrogen)/layout.tsx:23:11)
+    at InnerLayoutRouter (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/layout-router.js:241:11)
+    at RedirectErrorBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/redirect-boundary.js:72:9)
+    at RedirectBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/redirect-boundary.js:80:11)
+    at NotFoundErrorBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/not-found-boundary.js:54:9)
+    at NotFoundBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/not-found-boundary.js:62:11)
+    at LoadingBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/layout-router.js:338:11)
+    at ErrorBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/error-boundary.js:130:11)
+    at InnerScrollAndFocusHandler (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/l
+window.console.error @ app-index.js:33
+console.error @ hydration-error-info.js:41
+console.error @ recharts-console-error.ts:6
+printWarning @ react-jsx-dev-runtime.development.js:88
+error @ react-jsx-dev-runtime.development.js:62
+jsxWithValidation @ react-jsx-dev-runtime.development.js:1263
+StatisticsFiltersComponent @ filters.tsx:188
+renderWithHooks @ react-dom.development.js:10930
+mountIndeterminateComponent @ react-dom.development.js:16670
+beginWork$1 @ react-dom.development.js:18254
+beginWork @ react-dom.development.js:26647
+performUnitOfWork @ react-dom.development.js:25493
+workLoopSync @ react-dom.development.js:25209
+renderRootSync @ react-dom.development.js:25164
+recoverFromConcurrentError @ react-dom.development.js:24381
+performConcurrentWorkOnRoot @ react-dom.development.js:24326
+workLoop @ scheduler.development.js:261
+flushWork @ scheduler.development.js:230
+performWorkUntilDeadline @ scheduler.development.js:534Understand this error
+react-dom.development.js:27655 Uncaught Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check the render method of `StatisticsFiltersComponent`.
+    at createFiberFromTypeAndProps (react-dom.development.js:27655:17)
+    at createFiberFromElement (react-dom.development.js:27684:15)
+    at createChild (react-dom.development.js:9015:28)
+    at reconcileChildrenArray (react-dom.development.js:9349:25)
+    at reconcileChildFibersImpl (react-dom.development.js:9767:16)
+    at reconcileChildFibers (react-dom.development.js:9821:27)
+    at reconcileChildren (react-dom.development.js:15515:28)
+    at updateHostComponent$1 (react-dom.development.js:16477:3)
+    at beginWork$1 (react-dom.development.js:18299:14)
+    at HTMLUnknownElement.callCallback (react-dom.development.js:20367:14)
+    at Object.invokeGuardedCallbackImpl (react-dom.development.js:20416:16)
+    at invokeGuardedCallback (react-dom.development.js:20491:29)
+    at beginWork (react-dom.development.js:26669:7)
+    at performUnitOfWork (react-dom.development.js:25493:12)
+    at workLoopSync (react-dom.development.js:25209:5)
+    at renderRootSync (react-dom.development.js:25164:7)
+    at recoverFromConcurrentError (react-dom.development.js:24381:20)
+    at performConcurrentWorkOnRoot (react-dom.development.js:24326:26)
+    at workLoop (scheduler.development.js:261:34)
+    at flushWork (scheduler.development.js:230:14)
+    at MessagePort.performWorkUntilDeadline (scheduler.development.js:534:21)
+createFiberFromTypeAndProps @ react-dom.development.js:27655
+createFiberFromElement @ react-dom.development.js:27684
+createChild @ react-dom.development.js:9015
+reconcileChildrenArray @ react-dom.development.js:9349
+reconcileChildFibersImpl @ react-dom.development.js:9767
+reconcileChildFibers @ react-dom.development.js:9821
+reconcileChildren @ react-dom.development.js:15515
+updateHostComponent$1 @ react-dom.development.js:16477
+beginWork$1 @ react-dom.development.js:18299
+callCallback @ react-dom.development.js:20367
+invokeGuardedCallbackImpl @ react-dom.development.js:20416
+invokeGuardedCallback @ react-dom.development.js:20491
+beginWork @ react-dom.development.js:26669
+performUnitOfWork @ react-dom.development.js:25493
+workLoopSync @ react-dom.development.js:25209
+renderRootSync @ react-dom.development.js:25164
+recoverFromConcurrentError @ react-dom.development.js:24381
+performConcurrentWorkOnRoot @ react-dom.development.js:24326
+workLoop @ scheduler.development.js:261
+flushWork @ scheduler.development.js:230
+performWorkUntilDeadline @ scheduler.development.js:534Understand this error
+2redirect-boundary.js:56 Uncaught Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check the render method of `StatisticsFiltersComponent`.
+    at createFiberFromTypeAndProps (react-dom.development.js:27655:17)
+    at createFiberFromElement (react-dom.development.js:27684:15)
+    at createChild (react-dom.development.js:9015:28)
+    at reconcileChildrenArray (react-dom.development.js:9349:25)
+    at reconcileChildFibersImpl (react-dom.development.js:9767:16)
+    at reconcileChildFibers (react-dom.development.js:9821:27)
+    at reconcileChildren (react-dom.development.js:15515:28)
+    at updateHostComponent$1 (react-dom.development.js:16477:3)
+    at beginWork$1 (react-dom.development.js:18299:14)
+    at beginWork (react-dom.development.js:26647:14)
+    at performUnitOfWork (react-dom.development.js:25493:12)
+    at workLoopSync (react-dom.development.js:25209:5)
+    at renderRootSync (react-dom.development.js:25164:7)
+    at recoverFromConcurrentError (react-dom.development.js:24381:20)
+    at performConcurrentWorkOnRoot (react-dom.development.js:24326:26)
+    at workLoop (scheduler.development.js:261:34)
+    at flushWork (scheduler.development.js:230:14)
+    at MessagePort.performWorkUntilDeadline (scheduler.development.js:534:21)
+createFiberFromTypeAndProps @ react-dom.development.js:27655
+createFiberFromElement @ react-dom.development.js:27684
+createChild @ react-dom.development.js:9015
+reconcileChildrenArray @ react-dom.development.js:9349
+reconcileChildFibersImpl @ react-dom.development.js:9767
+reconcileChildFibers @ react-dom.development.js:9821
+reconcileChildren @ react-dom.development.js:15515
+updateHostComponent$1 @ react-dom.development.js:16477
+beginWork$1 @ react-dom.development.js:18299
+beginWork @ react-dom.development.js:26647
+performUnitOfWork @ react-dom.development.js:25493
+workLoopSync @ react-dom.development.js:25209
+renderRootSync @ react-dom.development.js:25164
+recoverFromConcurrentError @ react-dom.development.js:24381
+performConcurrentWorkOnRoot @ react-dom.development.js:24326
+workLoop @ scheduler.development.js:261
+flushWork @ scheduler.development.js:230
+performWorkUntilDeadline @ scheduler.development.js:534Understand this error
+not-found-boundary.js:22 Uncaught Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check the render method of `StatisticsFiltersComponent`.
+    at createFiberFromTypeAndProps (react-dom.development.js:27655:17)
+    at createFiberFromElement (react-dom.development.js:27684:15)
+    at createChild (react-dom.development.js:9015:28)
+    at reconcileChildrenArray (react-dom.development.js:9349:25)
+    at reconcileChildFibersImpl (react-dom.development.js:9767:16)
+    at reconcileChildFibers (react-dom.development.js:9821:27)
+    at reconcileChildren (react-dom.development.js:15515:28)
+    at updateHostComponent$1 (react-dom.development.js:16477:3)
+    at beginWork$1 (react-dom.development.js:18299:14)
+    at beginWork (react-dom.development.js:26647:14)
+    at performUnitOfWork (react-dom.development.js:25493:12)
+    at workLoopSync (react-dom.development.js:25209:5)
+    at renderRootSync (react-dom.development.js:25164:7)
+    at recoverFromConcurrentError (react-dom.development.js:24381:20)
+    at performConcurrentWorkOnRoot (react-dom.development.js:24326:26)
+    at workLoop (scheduler.development.js:261:34)
+    at flushWork (scheduler.development.js:230:14)
+    at MessagePort.performWorkUntilDeadline (scheduler.development.js:534:21)
+createFiberFromTypeAndProps @ react-dom.development.js:27655
+createFiberFromElement @ react-dom.development.js:27684
+createChild @ react-dom.development.js:9015
+reconcileChildrenArray @ react-dom.development.js:9349
+reconcileChildFibersImpl @ react-dom.development.js:9767
+reconcileChildFibers @ react-dom.development.js:9821
+reconcileChildren @ react-dom.development.js:15515
+updateHostComponent$1 @ react-dom.development.js:16477
+beginWork$1 @ react-dom.development.js:18299
+beginWork @ react-dom.development.js:26647
+performUnitOfWork @ react-dom.development.js:25493
+workLoopSync @ react-dom.development.js:25209
+renderRootSync @ react-dom.development.js:25164
+recoverFromConcurrentError @ react-dom.development.js:24381
+performConcurrentWorkOnRoot @ react-dom.development.js:24326
+workLoop @ scheduler.development.js:261
+flushWork @ scheduler.development.js:230
+performWorkUntilDeadline @ scheduler.development.js:534Understand this error
+redirect-boundary.js:56 Uncaught Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check the render method of `StatisticsFiltersComponent`.
+    at createFiberFromTypeAndProps (react-dom.development.js:27655:17)
+    at createFiberFromElement (react-dom.development.js:27684:15)
+    at createChild (react-dom.development.js:9015:28)
+    at reconcileChildrenArray (react-dom.development.js:9349:25)
+    at reconcileChildFibersImpl (react-dom.development.js:9767:16)
+    at reconcileChildFibers (react-dom.development.js:9821:27)
+    at reconcileChildren (react-dom.development.js:15515:28)
+    at updateHostComponent$1 (react-dom.development.js:16477:3)
+    at beginWork$1 (react-dom.development.js:18299:14)
+    at beginWork (react-dom.development.js:26647:14)
+    at performUnitOfWork (react-dom.development.js:25493:12)
+    at workLoopSync (react-dom.development.js:25209:5)
+    at renderRootSync (react-dom.development.js:25164:7)
+    at recoverFromConcurrentError (react-dom.development.js:24381:20)
+    at performConcurrentWorkOnRoot (react-dom.development.js:24326:26)
+    at workLoop (scheduler.development.js:261:34)
+    at flushWork (scheduler.development.js:230:14)
+    at MessagePort.performWorkUntilDeadline (scheduler.development.js:534:21)
+createFiberFromTypeAndProps @ react-dom.development.js:27655
+createFiberFromElement @ react-dom.development.js:27684
+createChild @ react-dom.development.js:9015
+reconcileChildrenArray @ react-dom.development.js:9349
+reconcileChildFibersImpl @ react-dom.development.js:9767
+reconcileChildFibers @ react-dom.development.js:9821
+reconcileChildren @ react-dom.development.js:15515
+updateHostComponent$1 @ react-dom.development.js:16477
+beginWork$1 @ react-dom.development.js:18299
+beginWork @ react-dom.development.js:26647
+performUnitOfWork @ react-dom.development.js:25493
+workLoopSync @ react-dom.development.js:25209
+renderRootSync @ react-dom.development.js:25164
+recoverFromConcurrentError @ react-dom.development.js:24381
+performConcurrentWorkOnRoot @ react-dom.development.js:24326
+workLoop @ scheduler.development.js:261
+flushWork @ scheduler.development.js:230
+performWorkUntilDeadline @ scheduler.development.js:534Understand this error
+not-found-boundary.js:22 Uncaught Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check the render method of `StatisticsFiltersComponent`.
+    at createFiberFromTypeAndProps (react-dom.development.js:27655:17)
+    at createFiberFromElement (react-dom.development.js:27684:15)
+    at createChild (react-dom.development.js:9015:28)
+    at reconcileChildrenArray (react-dom.development.js:9349:25)
+    at reconcileChildFibersImpl (react-dom.development.js:9767:16)
+    at reconcileChildFibers (react-dom.development.js:9821:27)
+    at reconcileChildren (react-dom.development.js:15515:28)
+    at updateHostComponent$1 (react-dom.development.js:16477:3)
+    at beginWork$1 (react-dom.development.js:18299:14)
+    at beginWork (react-dom.development.js:26647:14)
+    at performUnitOfWork (react-dom.development.js:25493:12)
+    at workLoopSync (react-dom.development.js:25209:5)
+    at renderRootSync (react-dom.development.js:25164:7)
+    at recoverFromConcurrentError (react-dom.development.js:24381:20)
+    at performConcurrentWorkOnRoot (react-dom.development.js:24326:26)
+    at workLoop (scheduler.development.js:261:34)
+    at flushWork (scheduler.development.js:230:14)
+    at MessagePort.performWorkUntilDeadline (scheduler.development.js:534:21)
+createFiberFromTypeAndProps @ react-dom.development.js:27655
+createFiberFromElement @ react-dom.development.js:27684
+createChild @ react-dom.development.js:9015
+reconcileChildrenArray @ react-dom.development.js:9349
+reconcileChildFibersImpl @ react-dom.development.js:9767
+reconcileChildFibers @ react-dom.development.js:9821
+reconcileChildren @ react-dom.development.js:15515
+updateHostComponent$1 @ react-dom.development.js:16477
+beginWork$1 @ react-dom.development.js:18299
+beginWork @ react-dom.development.js:26647
+performUnitOfWork @ react-dom.development.js:25493
+workLoopSync @ react-dom.development.js:25209
+renderRootSync @ react-dom.development.js:25164
+recoverFromConcurrentError @ react-dom.development.js:24381
+performConcurrentWorkOnRoot @ react-dom.development.js:24326
+workLoop @ scheduler.development.js:261
+flushWork @ scheduler.development.js:230
+performWorkUntilDeadline @ scheduler.development.js:534Understand this error
+redirect-boundary.js:56 Uncaught Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check the render method of `StatisticsFiltersComponent`.
+    at createFiberFromTypeAndProps (react-dom.development.js:27655:17)
+    at createFiberFromElement (react-dom.development.js:27684:15)
+    at createChild (react-dom.development.js:9015:28)
+    at reconcileChildrenArray (react-dom.development.js:9349:25)
+    at reconcileChildFibersImpl (react-dom.development.js:9767:16)
+    at reconcileChildFibers (react-dom.development.js:9821:27)
+    at reconcileChildren (react-dom.development.js:15515:28)
+    at updateHostComponent$1 (react-dom.development.js:16477:3)
+    at beginWork$1 (react-dom.development.js:18299:14)
+    at beginWork (react-dom.development.js:26647:14)
+    at performUnitOfWork (react-dom.development.js:25493:12)
+    at workLoopSync (react-dom.development.js:25209:5)
+    at renderRootSync (react-dom.development.js:25164:7)
+    at recoverFromConcurrentError (react-dom.development.js:24381:20)
+    at performConcurrentWorkOnRoot (react-dom.development.js:24326:26)
+    at workLoop (scheduler.development.js:261:34)
+    at flushWork (scheduler.development.js:230:14)
+    at MessagePort.performWorkUntilDeadline (scheduler.development.js:534:21)
+createFiberFromTypeAndProps @ react-dom.development.js:27655
+createFiberFromElement @ react-dom.development.js:27684
+createChild @ react-dom.development.js:9015
+reconcileChildrenArray @ react-dom.development.js:9349
+reconcileChildFibersImpl @ react-dom.development.js:9767
+reconcileChildFibers @ react-dom.development.js:9821
+reconcileChildren @ react-dom.development.js:15515
+updateHostComponent$1 @ react-dom.development.js:16477
+beginWork$1 @ react-dom.development.js:18299
+beginWork @ react-dom.development.js:26647
+performUnitOfWork @ react-dom.development.js:25493
+workLoopSync @ react-dom.development.js:25209
+renderRootSync @ react-dom.development.js:25164
+recoverFromConcurrentError @ react-dom.development.js:24381
+performConcurrentWorkOnRoot @ react-dom.development.js:24326
+workLoop @ scheduler.development.js:261
+flushWork @ scheduler.development.js:230
+performWorkUntilDeadline @ scheduler.development.js:534Understand this error
+not-found-boundary.js:22 Uncaught Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check the render method of `StatisticsFiltersComponent`.
+    at createFiberFromTypeAndProps (react-dom.development.js:27655:17)
+    at createFiberFromElement (react-dom.development.js:27684:15)
+    at createChild (react-dom.development.js:9015:28)
+    at reconcileChildrenArray (react-dom.development.js:9349:25)
+    at reconcileChildFibersImpl (react-dom.development.js:9767:16)
+    at reconcileChildFibers (react-dom.development.js:9821:27)
+    at reconcileChildren (react-dom.development.js:15515:28)
+    at updateHostComponent$1 (react-dom.development.js:16477:3)
+    at beginWork$1 (react-dom.development.js:18299:14)
+    at beginWork (react-dom.development.js:26647:14)
+    at performUnitOfWork (react-dom.development.js:25493:12)
+    at workLoopSync (react-dom.development.js:25209:5)
+    at renderRootSync (react-dom.development.js:25164:7)
+    at recoverFromConcurrentError (react-dom.development.js:24381:20)
+    at performConcurrentWorkOnRoot (react-dom.development.js:24326:26)
+    at workLoop (scheduler.development.js:261:34)
+    at flushWork (scheduler.development.js:230:14)
+    at MessagePort.performWorkUntilDeadline (scheduler.development.js:534:21)
+createFiberFromTypeAndProps @ react-dom.development.js:27655
+createFiberFromElement @ react-dom.development.js:27684
+createChild @ react-dom.development.js:9015
+reconcileChildrenArray @ react-dom.development.js:9349
+reconcileChildFibersImpl @ react-dom.development.js:9767
+reconcileChildFibers @ react-dom.development.js:9821
+reconcileChildren @ react-dom.development.js:15515
+updateHostComponent$1 @ react-dom.development.js:16477
+beginWork$1 @ react-dom.development.js:18299
+beginWork @ react-dom.development.js:26647
+performUnitOfWork @ react-dom.development.js:25493
+workLoopSync @ react-dom.development.js:25209
+renderRootSync @ react-dom.development.js:25164
+recoverFromConcurrentError @ react-dom.development.js:24381
+performConcurrentWorkOnRoot @ react-dom.development.js:24326
+workLoop @ scheduler.development.js:261
+flushWork @ scheduler.development.js:230
+performWorkUntilDeadline @ scheduler.development.js:534Understand this error
+recharts-console-error.ts:6 The above error occurred in the <NotFoundErrorBoundary> component:
+
+    at NotFoundErrorBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/not-found-boundary.js:54:9)
+    at NotFoundBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/not-found-boundary.js:62:11)
+    at DevRootNotFoundBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/dev-root-not-found-boundary.js:32:11)
+    at ReactDevOverlay (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/react-dev-overlay/internal/ReactDevOverlay.js:66:9)
+    at HotReload (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/react-dev-overlay/hot-reloader-client.js:297:11)
+    at Router (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/app-router.js:158:11)
+    at ErrorBoundaryHandler (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/error-boundary.js:100:9)
+    at ErrorBoundary (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/error-boundary.js:130:11)
+    at AppRouter (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/components/app-router.js:441:13)
+    at ServerRoot (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/app-index.js:127:11)
+    at RSCComponent
+    at Root (webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@14.0.1_react-dom@18.2.0_react@18.2.0__react@18.2.0/node_modules/next/dist/client/app-index.js:143:11)
+
+React will try to recreate this component tree from scratch using the error boundary you provided, ReactDevOverlay.
+
+
+Unhandled Runtime Error
+Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check the render method of `StatisticsFiltersComponent`.

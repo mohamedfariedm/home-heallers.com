@@ -1,11 +1,9 @@
 "use client";
-import FileDashboard from '@/app/shared/file/dashboard';
+import StatisticsDashboard from '@/app/shared/statistics/dashboard';
 import { useTranslation } from 'react-i18next';
 
+export default function HomePage() {
+  const { t } = useTranslation("common");
 
-
-export default function FileDashboardPage() {
-    const { t } = useTranslation("common");
-
-  return <FileDashboard />;
+  return <StatisticsDashboard />;
 }
