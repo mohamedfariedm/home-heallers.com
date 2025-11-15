@@ -23,8 +23,6 @@ export default function Sidebar({ className }: { className?: string }) {
   const locale = Cookies.get('NEXT_LOCALE') || 'en';
   const { permissions } = usePermissions();
 
-  console.log('Sidebar - Session:', session);
-  console.log('Sidebar - Permissions:', permissions);
 
   const pathName = (selectedPath: string) => {
     const segments = pathname.split('/');
@@ -33,7 +31,6 @@ export default function Sidebar({ className }: { className?: string }) {
   };
 
   const effectivePermissions = session?.user?.permissions || permissions;
-  console.log('Sidebar - Effective permissions:', effectivePermissions);
   const filteredMenuItems = filterMenuItemsByPermissions(menuItemsHaydrogen, effectivePermissions);
 
   if (status === 'loading') {

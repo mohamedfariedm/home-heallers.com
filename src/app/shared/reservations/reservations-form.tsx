@@ -55,7 +55,11 @@ export default function CreateOrUpdateReservation({ initValues }: { initValues?:
   const guest = initValues?.guest_info ?? {}
   const isGuestReservation = initValues?.is_guest === 1 || !!initValues?.guest_info
   const isExistingPatient = !!initValues?.patient?.id
-
+const feesTypeOptions = [
+  { value: "zero", label: "صفریة" },
+  { value: "exempt", label: "معافاة" },
+  { value: "percent15", label: "15%" },
+];
   const {
     register,
     formState: { errors },
@@ -79,7 +83,8 @@ export default function CreateOrUpdateReservation({ initValues }: { initValues?:
 
       // 🧩 numbers and billing
       sub_total: initValues?.sub_total?.toString() || "",
-      fees: initValues?.fees?.toString() || "",
+fees: initValues?.fees || "zero", // now fees is string type
+remaining_payment: initValues?.remaining_payment?.toString() || "",
       total_amount: initValues?.total_amount?.toString() || "",
       transaction_reference: initValues?.transaction_reference || "",
 
@@ -125,7 +130,7 @@ export default function CreateOrUpdateReservation({ initValues }: { initValues?:
   const watchSessionsCount = useWatch({ control, name: "sessions_count" })
   const watchDoctorId = useWatch({ control, name: "doctor_id" })
   const watchSubTotal = useWatch({ control, name: "sub_total" })
-  const watchFees = useWatch({ control, name: "fees" })
+const watchFeesType = useWatch({ control, name: "fees" })
   const watchTotalAmount = useWatch({ control, name: "total_amount" })
   const watchReservationStatus = useWatch({ control, name: "status" })
 console.log("errors",errors);
@@ -183,13 +188,20 @@ useEffect(() => {
   }, [watchDoctorId])
 
 useEffect(() => {
-  const subTotal = Number(watchSubTotal) || 0
-  const fees = Number(watchFees) || 0
-  const sessionsCount = Number(watchSessionsCount) || 1
-  const calculatedTotal = (subTotal * sessionsCount) + fees
+  const sub = Number(watchSubTotal) || 0;
+  const sessions = Number(watchSessionsCount) || 1;
 
-  setValue("total_amount", calculatedTotal.toString(), { shouldValidate: false })
-}, [watchSubTotal, watchFees, watchSessionsCount, setValue])
+  let calculatedFees = 0;
+
+  if (watchFeesType === "zero") calculatedFees = 0;
+  if (watchFeesType === "exempt") calculatedFees = 0;
+  if (watchFeesType === "percent15") calculatedFees = (sub * sessions) * 0.15;
+
+  const total = (sub * sessions) + calculatedFees;
+
+  setValue("total_amount", total.toString(), { shouldValidate: false });
+}, [watchFeesType, watchSubTotal, watchSessionsCount]);
+
 
 
   useEffect(() => {
@@ -221,7 +233,8 @@ useEffect(() => {
       doctor_id: Number(data.doctor_id),
       sessions_count: Number(data.sessions_count),
       sub_total: Number(data.sub_total),
-      fees: Number(data.fees),
+      fees: data.fees,
+      remaining_payment: Number(data.remaining_payment),
       total_amount: Number(data.total_amount),
       transaction_reference: data.transaction_reference,
       status: Number(data.status),
@@ -511,9 +524,21 @@ const inputProps = { disabled: !canEdit };
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-          <Input
-          {...inputProps}
-          label="Fees" type="tel" {...register("fees")} error={errors.fees?.message} />
+          <div>
+  <label className="text-sm text-gray-700">Fees Type</label>
+  <select
+    {...inputProps}
+    {...register("fees")}
+    className="w-full border border-gray-300 rounded-lg p-2"
+  >
+    {feesTypeOptions.map((item) => (
+      <option key={item.value} value={item.value}>
+        {item.label}
+      </option>
+    ))}
+  </select>
+</div>
+
           <div>
             <Input
             {...inputProps}
@@ -525,6 +550,14 @@ const inputProps = { disabled: !canEdit };
             <p className="text-xs text-gray-500 mt-1">Auto-calculated from Sub Total + Fees (editable)</p>
           </div>
         </div>
+
+<Input
+  {...inputProps}
+  label="Remaining Payment"
+  type="tel"
+  {...register("remaining_payment")}
+  error={errors.remaining_payment?.message}
+/>
 
         <Input
         {...inputProps}

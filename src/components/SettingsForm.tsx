@@ -4,7 +4,9 @@ import BannerSection from './BannerSection';
 import SocialSection from './SocialSection';
 import AppLinksSection from './AppLinksSection';
 import SEOSection from './SEOSection';
-import { Save, Settings as SettingsIcon, Image, Share2, Smartphone, Search } from 'lucide-react';
+import { Save, Settings as SettingsIcon, Image, Share2, Smartphone, Search, FileText, Shield } from 'lucide-react';
+import TermsSection from './TermsSection';
+import ConditionsSection from './ConditionsSection';
 
 interface SettingsFormProps {
   initialSettings: Settings;
@@ -16,12 +18,14 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ initialSettings, onSave }) 
   const [activeTab, setActiveTab] = useState('banners');
   const [isLoading, setIsLoading] = useState(false);
 
-  const tabs = [
-    { id: 'banners', label: 'Banners', icon: Image },
-    { id: 'social', label: 'Social Media', icon: Share2 },
-    { id: 'app-links', label: 'App Links', icon: Smartphone },
-    { id: 'seo', label: 'SEO Settings', icon: Search },
-  ];
+const tabs = [
+  { id: "banners", label: "Banners", icon: Image },
+  { id: "social", label: "Social Media", icon: Share2 },
+  { id: "app-links", label: "App Links", icon: Smartphone },
+  { id: "seo", label: "SEO Settings", icon: Search },
+  { id: 'terms', label: 'Terms & Conditions', icon: FileText },
+  { id: 'conditions', label: 'General Conditions', icon: Shield },
+];
 
   const handleSave = async () => {
     setIsLoading(true);
@@ -51,6 +55,14 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ initialSettings, onSave }) 
   const updateSEO = (seo: Record<string, SEOData>) => {
     setSettings(prev => ({ ...prev, seo }));
   };
+
+  const updateTerms = (terms: any) => {
+  setSettings(prev => ({ ...prev, terms }));
+};
+
+const updateConditions = (conditions: any) => {
+  setSettings(prev => ({ ...prev, conditions }));
+};
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -83,6 +95,11 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ initialSettings, onSave }) 
             onUpdate={updateSEO}
           />
         );
+            case "terms":
+      return <TermsSection terms={settings.terms} onUpdate={updateTerms} />;
+
+    case "conditions":
+      return <ConditionsSection conditions={settings.conditions} onUpdate={updateConditions} />;
       default:
         return null;
     }

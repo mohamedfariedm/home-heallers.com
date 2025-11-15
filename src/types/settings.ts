@@ -35,5 +35,7 @@ export interface Settings {
   social: Social;
   ios_link: string;
   android_link: string;
-  seo: Record<string, SEOData>;
+  seo: any;
+  terms: any;
+  conditions: any;
 }

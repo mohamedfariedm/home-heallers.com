@@ -71,6 +71,7 @@
     "nodemailer": "^6.9.7",
     "pretty-bytes": "^6.1.1",
     "prop-types": "^15.8.1",
+    "puppeteer": "^24.29.1",
     "qrcode.react": "^4.2.0",
     "rc-pagination": "^3.7.0",
     "rc-rate": "^2.12.0",
