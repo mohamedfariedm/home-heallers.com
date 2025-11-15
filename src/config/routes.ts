@@ -293,4 +293,7 @@ export const routes = {
   contracts: {
     index: '/contracts',
   },
+  statistics: {
+    index: '/statistics',
+  },
 };
