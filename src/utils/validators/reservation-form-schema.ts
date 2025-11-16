@@ -18,7 +18,7 @@ export const reservationFormSchema = z
     patient_city: z.string().optional(),
     patient_state: z.string().optional(),
     patient_date_of_birth: z.string().optional(),
-
+    remaining_payment: z.string().optional(),
     // Common fields
     service_id: z.string().min(1, "Service is required"),
     doctor_id: z.string().min(1, "Doctor is required"),
@@ -26,6 +26,7 @@ export const reservationFormSchema = z
     sessions_count: z.string().min(1, "Sessions count is required"),
     sub_total: z.string().min(1, "Sub total is required"),
     fees: z.string().min(1, "Fees is required"),
+    fees_type: z.string().min(1, "Fees is required"),
     total_amount: z.string().min(1, "Total amount is required"),
     transaction_reference: z.string().min(1, "Transaction reference is required"),
     status: z

@@ -56,9 +56,9 @@ export default function CreateOrUpdateReservation({ initValues }: { initValues?:
   const isGuestReservation = initValues?.is_guest === 1 || !!initValues?.guest_info
   const isExistingPatient = !!initValues?.patient?.id
 const feesTypeOptions = [
-  { value: "zero", label: "صفریة" },
-  { value: "exempt", label: "معافاة" },
-  { value: "percent15", label: "15%" },
+  { value: "صفریة", label: "صفریة" },
+  { value: "معافاة", label: "معافاة" },
+  { value: "15%", label: "15%" },
 ];
   const {
     register,
@@ -83,8 +83,9 @@ const feesTypeOptions = [
 
       // 🧩 numbers and billing
       sub_total: initValues?.sub_total?.toString() || "",
-fees: initValues?.fees || "zero", // now fees is string type
-remaining_payment: initValues?.remaining_payment?.toString() || "",
+      fees: initValues?.fees || 0, // now fees is string type
+      fees_type: initValues?.fees_type || "صفریة",
+      remaining_payment: initValues?.remaining_payment?.toString() || "",
       total_amount: initValues?.total_amount?.toString() || "",
       transaction_reference: initValues?.transaction_reference || "",
 
@@ -130,7 +131,7 @@ remaining_payment: initValues?.remaining_payment?.toString() || "",
   const watchSessionsCount = useWatch({ control, name: "sessions_count" })
   const watchDoctorId = useWatch({ control, name: "doctor_id" })
   const watchSubTotal = useWatch({ control, name: "sub_total" })
-const watchFeesType = useWatch({ control, name: "fees" })
+const watchFeesType = useWatch({ control, name: "fees_type" })
   const watchTotalAmount = useWatch({ control, name: "total_amount" })
   const watchReservationStatus = useWatch({ control, name: "status" })
 console.log("errors",errors);
@@ -193,14 +194,21 @@ useEffect(() => {
 
   let calculatedFees = 0;
 
-  if (watchFeesType === "zero") calculatedFees = 0;
-  if (watchFeesType === "exempt") calculatedFees = 0;
-  if (watchFeesType === "percent15") calculatedFees = (sub * sessions) * 0.15;
+  if (watchFeesType === "صفریة" || watchFeesType === "معافاة") {
+    calculatedFees = 0;
+  } else if (watchFeesType === "15%") {
+    calculatedFees = (sub * sessions) * 0.15;
+  }
 
   const total = (sub * sessions) + calculatedFees;
 
+  // احفظ قيمة الفيز الفعلية المحسوبة
+  setValue("fees", calculatedFees.toString(), { shouldValidate: false });
+
+  // احفظ التوتال
   setValue("total_amount", total.toString(), { shouldValidate: false });
 }, [watchFeesType, watchSubTotal, watchSessionsCount]);
+
 
 
 
@@ -233,7 +241,8 @@ useEffect(() => {
       doctor_id: Number(data.doctor_id),
       sessions_count: Number(data.sessions_count),
       sub_total: Number(data.sub_total),
-      fees: data.fees,
+      fees: Number(data.fees),
+      fees_type: data.fees_type,
       remaining_payment: Number(data.remaining_payment),
       total_amount: Number(data.total_amount),
       transaction_reference: data.transaction_reference,
@@ -528,7 +537,7 @@ const inputProps = { disabled: !canEdit };
   <label className="text-sm text-gray-700">Fees Type</label>
   <select
     {...inputProps}
-    {...register("fees")}
+    {...register("fees_type")}
     className="w-full border border-gray-300 rounded-lg p-2"
   >
     {feesTypeOptions.map((item) => (
