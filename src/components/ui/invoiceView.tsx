@@ -174,6 +174,56 @@ console.log("Invoice Data:", invoiceData);
     if (!invoiceRef.current || isGeneratingPDF) return;
     
     setIsGeneratingPDF(true);
+    
+    // Create a hidden container with fixed width for mobile compatibility
+    const hiddenContainer = document.createElement('div');
+    hiddenContainer.style.position = 'absolute';
+    hiddenContainer.style.left = '-9999px';
+    hiddenContainer.style.top = '0';
+    hiddenContainer.style.width = '800px'; // Fixed width for consistent rendering
+    hiddenContainer.style.backgroundColor = '#ffffff';
+    hiddenContainer.style.padding = '0';
+    hiddenContainer.style.margin = '0';
+    hiddenContainer.style.visibility = 'hidden';
+    hiddenContainer.style.pointerEvents = 'none';
+    hiddenContainer.style.overflow = 'visible';
+    hiddenContainer.style.direction = 'rtl'; // Match the original direction
+    
+    // Clone the invoice content
+    const clonedContent = invoiceRef.current.cloneNode(true) as HTMLElement;
+    clonedContent.style.width = '100%';
+    clonedContent.style.margin = '0';
+    clonedContent.style.padding = '0';
+    clonedContent.style.maxWidth = '100%';
+    clonedContent.style.minWidth = '100%';
+    
+    // Fix tables and other elements to prevent overflow
+    const tables = clonedContent.querySelectorAll('table');
+    tables.forEach((table) => {
+      if (table instanceof HTMLTableElement) {
+        table.style.width = '100%';
+        table.style.tableLayout = 'auto';
+        table.style.wordWrap = 'break-word';
+      }
+    });
+    
+    // Fix any overflow issues
+    const allElements = clonedContent.querySelectorAll('*');
+    allElements.forEach((el) => {
+      if (el instanceof HTMLElement) {
+        // Remove any max-width constraints that might cause issues
+        const computedStyle = window.getComputedStyle(el);
+        if (computedStyle.maxWidth && computedStyle.maxWidth !== 'none') {
+          el.style.maxWidth = '100%';
+        }
+      }
+    });
+    
+    hiddenContainer.appendChild(clonedContent);
+    document.body.appendChild(hiddenContainer);
+    
+    let targetElement: HTMLElement = hiddenContainer;
+    
     try {
       // Wait for fonts and images to load
       await new Promise((resolve) => {
@@ -187,8 +237,8 @@ console.log("Invoice Data:", invoiceData);
         }
       });
 
-      // Wait for all images to load
-      const images = invoiceRef.current.querySelectorAll('img');
+      // Wait for all images to load in cloned content
+      const images = hiddenContainer.querySelectorAll('img');
       const imagePromises = Array.from(images).map((img) => {
         if (img.complete) return Promise.resolve();
         return new Promise((resolve) => {
@@ -200,7 +250,7 @@ console.log("Invoice Data:", invoiceData);
       await Promise.all(imagePromises);
 
       // Wait for SVG elements (QR code) to render
-      const svgs = invoiceRef.current.querySelectorAll('svg');
+      const svgs = hiddenContainer.querySelectorAll('svg');
       if (svgs.length > 0) {
         await new Promise((resolve) => setTimeout(resolve, 500));
         // Ensure SVGs are fully rendered
@@ -211,7 +261,13 @@ console.log("Invoice Data:", invoiceData);
         });
       }
 
-      const canvas = await html2canvas(invoiceRef.current, {
+      // Force a reflow to ensure layout is calculated
+      void hiddenContainer.offsetHeight;
+      
+      // Wait a bit more for layout to stabilize
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      const canvas = await html2canvas(targetElement, {
         scale: 2,
         useCORS: true,
         allowTaint: false,
@@ -219,13 +275,18 @@ console.log("Invoice Data:", invoiceData);
         logging: false,
         imageTimeout: 15000,
         removeContainer: true,
-        width: invoiceRef.current.scrollWidth,
-        height: invoiceRef.current.scrollHeight,
+        width: targetElement.scrollWidth || 800,
+        height: targetElement.scrollHeight,
+        windowWidth: 800,
+        windowHeight: targetElement.scrollHeight,
         onclone: (clonedDoc) => {
           // Ensure all fonts are applied in the cloned document
           const clonedElement = clonedDoc.querySelector('[data-invoice-ref]') || clonedDoc.body;
           if (clonedElement && clonedElement instanceof HTMLElement) {
             clonedElement.style.fontFamily = 'Arial, sans-serif';
+            clonedElement.style.width = '800px';
+            clonedElement.style.maxWidth = '800px';
+            clonedElement.style.minWidth = '800px';
           }
         },
       });
@@ -342,6 +403,10 @@ console.log("Invoice Data:", invoiceData);
       console.error('Error generating PDF:', error);
       alert('حدث خطأ أثناء إنشاء PDF. يرجى المحاولة مرة أخرى.');
     } finally {
+      // Clean up: remove hidden container
+      if (hiddenContainer && hiddenContainer.parentNode) {
+        hiddenContainer.parentNode.removeChild(hiddenContainer);
+      }
       setIsGeneratingPDF(false);
     }
   };
