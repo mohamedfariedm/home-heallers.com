@@ -1,6 +1,7 @@
 import React from 'react';
-import { Social } from '../types/settings';
-import { Twitter, Facebook, Instagram, Linkedin } from 'lucide-react';
+import { Social, SocialLink } from '../types/settings';
+import { Facebook, Instagram, Linkedin, Youtube, Ghost, Music2, X } from 'lucide-react';
+import { Switch } from 'rizzui';
 
 interface SocialSectionProps {
   social: Social;
@@ -8,17 +9,21 @@ interface SocialSectionProps {
 }
 
 const SocialSection: React.FC<SocialSectionProps> = ({ social, onUpdate }) => {
-  const handleChange = (field: keyof Social, value: string) => {
-    onUpdate({ ...social, [field]: value });
+  const handleChange = (field: keyof Social, value: Partial<SocialLink>) => {
+    const current = social[field] || { url: '', show: false };
+    onUpdate({ 
+      ...social, 
+      [field]: { ...current, ...value } 
+    });
   };
 
   const socialFields = [
     { 
-      key: 'twetter' as keyof Social, 
-      label: 'Twitter', 
-      placeholder: 'Enter Twitter username or URL',
-      icon: Twitter,
-      color: 'text-blue-400'
+      key: 'x' as keyof Social, 
+      label: 'X (Twitter)', 
+      placeholder: 'Enter X (Twitter) profile URL',
+      icon: X,
+      color: 'text-black'
     },
     { 
       key: 'facebook' as keyof Social, 
@@ -40,6 +45,27 @@ const SocialSection: React.FC<SocialSectionProps> = ({ social, onUpdate }) => {
       placeholder: 'Enter LinkedIn profile URL',
       icon: Linkedin,
       color: 'text-blue-700'
+    },
+    { 
+      key: 'tiktok' as keyof Social, 
+      label: 'TikTok', 
+      placeholder: 'Enter TikTok profile URL',
+      icon: Music2,
+      color: 'text-pink-500'
+    },
+    { 
+      key: 'snapchat' as keyof Social, 
+      label: 'Snapchat', 
+      placeholder: 'Enter Snapchat profile URL',
+      icon: Ghost,
+      color: 'text-yellow-400'
+    },
+    { 
+      key: 'youtube' as keyof Social, 
+      label: 'YouTube', 
+      placeholder: 'Enter YouTube channel URL',
+      icon: Youtube,
+      color: 'text-red-600'
     }
   ];
 
@@ -53,11 +79,20 @@ const SocialSection: React.FC<SocialSectionProps> = ({ social, onUpdate }) => {
       <div className="grid gap-6">
         {socialFields.map((field) => {
           const Icon = field.icon;
+          const currentValue = social[field.key] || { url: '', show: false };
+          
           return (
             <div key={field.key} className="bg-gray-50 rounded-lg p-6 border border-gray-200">
-              <div className="flex items-center space-x-3 mb-4">
-                <Icon className={`w-6 h-6 ${field.color}`} />
-                <h3 className="text-lg font-medium text-gray-900">{field.label}</h3>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-3">
+                  <Icon className={`w-6 h-6 ${field.color}`} />
+                  <h3 className="text-lg font-medium text-gray-900">{field.label}</h3>
+                </div>
+                <Switch
+                  label="Show"
+                  checked={currentValue.show}
+                  onChange={() => handleChange(field.key, { show: !currentValue.show })}
+                />
               </div>
               
               <div className="space-y-4">
@@ -67,23 +102,23 @@ const SocialSection: React.FC<SocialSectionProps> = ({ social, onUpdate }) => {
                   </label>
                   <input
                     type="text"
-                    value={social[field.key]}
-                    onChange={(e) => handleChange(field.key, e.target.value)}
+                    value={currentValue.url || ''}
+                    onChange={(e) => handleChange(field.key, { url: e.target.value })}
                     placeholder={field.placeholder}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
                 
-                {social[field.key] && (
+                {currentValue.url && (
                   <div className="flex items-center space-x-2 text-sm text-gray-600">
                     <span>Preview:</span>
                     <a
-                      href={social[field.key].startsWith('http') ? social[field.key] : `https://${social[field.key]}`}
+                      href={currentValue.url.startsWith('http') ? currentValue.url : `https://${currentValue.url}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-blue-600 hover:text-blue-800 underline"
                     >
-                      {social[field.key]}
+                      {currentValue.url}
                     </a>
                   </div>
                 )}

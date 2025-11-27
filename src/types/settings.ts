@@ -9,11 +9,19 @@ export interface Banner {
   attachment: Attachment;
 }
 
+export interface SocialLink {
+  url: string;
+  show: boolean;
+}
+
 export interface Social {
-  twetter: string; // Note: keeping original typo from API
-  facebook: string;
-  instgram: string; // Note: keeping original typo from API
-  linked_in: string;
+  facebook: SocialLink;
+  instgram: SocialLink; // Note: keeping original typo from API
+  linked_in: SocialLink;
+  tiktok: SocialLink;
+  x: SocialLink;
+  snapchat: SocialLink;
+  youtube: SocialLink;
 }
 
 export interface SEOData {
