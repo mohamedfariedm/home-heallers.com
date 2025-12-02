@@ -443,7 +443,7 @@ console.log("Invoice Data:", invoiceData);
         <div className="flex justify-between items-start mb-8">
           <div className="text-right">
             <h1 className="text-2xl font-bold mb-2">فاتورة ضريبية مبسطة</h1>
-            <p className="text-sm text-muted-foreground">مؤسسة ابتكارات الرعاية الطبية</p>
+            <p className="text-sm text-muted-foreground">مؤسسة هوم هيلرز</p>
           </div>
           <div className="flex items-center">
             <img
