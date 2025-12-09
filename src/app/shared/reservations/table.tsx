@@ -7,7 +7,7 @@ import ControlledTable from '@/components/controlled-table';
 import { getColumns } from '@/app/shared/reservations/columns';
 import { Text } from '@/components/ui/text';
 import toast from 'react-hot-toast';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ActionIcon } from 'rizzui';
 import { PiCaretDownBold, PiCaretUpBold } from 'react-icons/pi';
 import { useDeleteReservation } from '@/framework/reservations';
@@ -54,8 +54,44 @@ export default function ReservationsTable({
 }) {
   const { mutate: deleteReservation } = useDeleteReservation();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const params = new URLSearchParams(searchParams);
-  const [pageSize, setPageSize] = useState(Number(params.get('limit')));
+  const [pageSize, setPageSize] = useState(Number(params.get('limit')) || 10);
+  const [columnFilters, setColumnFilters] = useState<Record<string, any>>({});
+
+  const handleFilterChange = (key: string, value: any) => setColumnFilters((prev) => ({ ...prev, [key]: value }));
+
+  const applyAllFilters = () => {
+    const params = new URLSearchParams(searchParams);
+
+    // clear old filters
+    for (const [key] of params.entries()) {
+      const [prefix] = key.split('_');
+      if (columnFilters[prefix]) params.delete(key);
+    }
+
+    // build clean query params
+    Object.entries(columnFilters).forEach(([key, val]) => {
+      const { c1, c2, logic } = val;
+      if (c1.value) params.set(`${key}_${c1.op}`, c1.value);
+      if (c2.value)
+        params.set(`${key}_${c2.op}_${logic === 'or' ? 'or' : 'and'}`, c2.value);
+    });
+
+    params.set('page', '1');
+    router.push(`?${params.toString()}`);
+  };
+
+  const clearAllFilters = () => {
+    const params = new URLSearchParams(searchParams);
+    Object.keys(columnFilters).forEach((key) => {
+      for (const [paramKey] of params.entries()) {
+        if (paramKey.startsWith(`${key}_`)) params.delete(paramKey);
+      }
+    });
+    router.push(`?${params.toString()}`);
+    setColumnFilters({});
+  };
 
   const filterState = {
     status: params.get("status") || '',
@@ -115,6 +151,7 @@ export default function ReservationsTable({
         onDeleteItem,
         onChecked: handleRowSelect,
         handleSelectAll,
+        onFilterChange: handleFilterChange,
       }),
     [selectedRowKeys, onHeaderCellClick, sortConfig.key, sortConfig.direction, onDeleteItem, handleRowSelect, handleSelectAll]
   );
@@ -128,6 +165,23 @@ export default function ReservationsTable({
 
   return (
     <>
+      {/* 🔹 Filter control buttons */}
+      <div className="flex justify-end gap-3 mb-3">
+        <button
+          onClick={clearAllFilters}
+          className="px-4 py-2 text-sm rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100 transition"
+        >
+          Clear Filters
+        </button>
+        <button
+          onClick={applyAllFilters}
+          className="px-4 py-2 text-sm rounded-md bg-blue-600 text-white hover:bg-blue-700 transition"
+        >
+          Apply Filters
+        </button>
+      </div>
+
+      {/* 🔹 Table */}
       <ControlledTable
         variant="modern"
         data={tableData}

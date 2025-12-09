@@ -42,7 +42,7 @@ export default function ReservationsTablePage() {
           ),
         rows: selectedRowKeys,
       }}
-      fileName="Reservations/index"
+      fileName="reservations"
       header="Client,Created At"
       createName="Create Reservation"
       createElementButton={<CreateOrUpdateReservation />}

@@ -9,6 +9,7 @@ import CreateButton from '../create-button';
 import DeletePopover from '@/app/shared/delete-popover';
 import { Badge } from '@/components/ui/badge';
 import CreateOrUpdateReservation from './reservations-form';
+import ColumnFilterPopover from '@/app/shared/customer-suport/column-filter-popover';
 
 interface Columns {
   data: any[];
@@ -18,6 +19,7 @@ interface Columns {
   onDeleteItem: (id: string[]) => void;
   onHeaderCellClick: (value: string) => void;
   onChecked?: (id: string) => void;
+  onFilterChange?: (key: string, value: any) => void;
 }
 
 export const getColumns = ({
@@ -28,6 +30,7 @@ export const getColumns = ({
   onHeaderCellClick,
   handleSelectAll,
   onChecked,
+  onFilterChange,
 }: Columns) => [
 
   {
@@ -85,7 +88,12 @@ export const getColumns = ({
   },
   // ✅ Reservation ID
   {
-    title: <HeaderCell className='whitespace-nowrap' title="Reservation ID" />,
+    title: (
+      <div className="flex items-center gap-1">
+        <HeaderCell className='whitespace-nowrap' title="Reservation ID" />
+        {onFilterChange && <ColumnFilterPopover columnKey="id" onFilterChange={onFilterChange} />}
+      </div>
+    ),
     dataIndex: 'id',
     key: 'id',
     width: 80,
@@ -94,7 +102,12 @@ export const getColumns = ({
 
   // ✅ Patient
   {
-    title: <HeaderCell title="Patient" />,
+    title: (
+      <div className="flex items-center gap-1">
+        <HeaderCell title="Patient" />
+        {onFilterChange && <ColumnFilterPopover columnKey="patient" onFilterChange={onFilterChange} />}
+      </div>
+    ),
     dataIndex: 'patient',
     key: 'patient',
     render: (_: any, row: any) => (
@@ -111,7 +124,12 @@ export const getColumns = ({
 
   // ✅ Doctor
   {
-    title: <HeaderCell title="Doctor" />,
+    title: (
+      <div className="flex items-center gap-1">
+        <HeaderCell title="Doctor" />
+        {onFilterChange && <ColumnFilterPopover columnKey="doctor" onFilterChange={onFilterChange} />}
+      </div>
+    ),
     dataIndex: 'doctor',
     key: 'doctor',
     render: (_: any, row: any) => row?.doctor?.name ?? '—',
@@ -119,7 +137,12 @@ export const getColumns = ({
 
   // ✅ Service
   {
-    title: <HeaderCell title="Service" />,
+    title: (
+      <div className="flex items-center gap-1">
+        <HeaderCell title="Service" />
+        {onFilterChange && <ColumnFilterPopover columnKey="service" onFilterChange={onFilterChange} />}
+      </div>
+    ),
     dataIndex: 'service',
     key: 'service',
     render: (_: any, row: any) =>
@@ -128,7 +151,12 @@ export const getColumns = ({
 
   // ✅ Status
   {
-    title: <HeaderCell title="Status" align="center" />,
+    title: (
+      <div className="flex items-center gap-1">
+        <HeaderCell title="Status" align="center" />
+        {onFilterChange && <ColumnFilterPopover columnKey="status_label" onFilterChange={onFilterChange} />}
+      </div>
+    ),
     dataIndex: 'status_label',
     key: 'status_label',
     align: 'center',
@@ -139,7 +167,12 @@ export const getColumns = ({
 
   // ✅ Paid
   {
-    title: <HeaderCell title="Paid" />,
+    title: (
+      <div className="flex items-center gap-1">
+        <HeaderCell title="Paid" />
+        {onFilterChange && <ColumnFilterPopover columnKey="paid" onFilterChange={onFilterChange} />}
+      </div>
+    ),
     dataIndex: 'paid',
     key: 'paid',
     render: (paid: number) => (paid ? 'Yes' : 'No'),
@@ -147,7 +180,12 @@ export const getColumns = ({
 
   // ✅ Sessions Count
   {
-    title: <HeaderCell title="Sessions" />,
+    title: (
+      <div className="flex items-center gap-1">
+        <HeaderCell title="Sessions" />
+        {onFilterChange && <ColumnFilterPopover columnKey="sessions_count" onFilterChange={onFilterChange} />}
+      </div>
+    ),
     dataIndex: 'sessions_count',
     key: 'sessions_count',
     render: (sessions_count: number) => sessions_count ?? '—',
@@ -155,7 +193,12 @@ export const getColumns = ({
 
   // ✅ Total Amount
   {
-    title: <HeaderCell title="Total Amount" />,
+    title: (
+      <div className="flex items-center gap-1">
+        <HeaderCell title="Total Amount" />
+        {onFilterChange && <ColumnFilterPopover columnKey="total_amount" onFilterChange={onFilterChange} />}
+      </div>
+    ),
     dataIndex: 'total_amount',
     key: 'total_amount',
     render: (total_amount: string) =>
@@ -164,7 +207,12 @@ export const getColumns = ({
 
   // ✅ Pain Location
   {
-    title: <HeaderCell title="Pain Location" />,
+    title: (
+      <div className="flex items-center gap-1">
+        <HeaderCell title="Pain Location" />
+        {onFilterChange && <ColumnFilterPopover columnKey="pain_location" onFilterChange={onFilterChange} />}
+      </div>
+    ),
     dataIndex: 'pain_location',
     key: 'pain_location',
     render: (pain_location: string) => pain_location ?? '—',
@@ -172,7 +220,12 @@ export const getColumns = ({
 
   // ✅ Notes
   {
-    title: <HeaderCell title="Notes" />,
+    title: (
+      <div className="flex items-center gap-1">
+        <HeaderCell title="Notes" />
+        {onFilterChange && <ColumnFilterPopover columnKey="notes" onFilterChange={onFilterChange} />}
+      </div>
+    ),
     dataIndex: 'notes',
     key: 'notes',
     render: (notes: string) => notes ?? '—',
@@ -180,7 +233,12 @@ export const getColumns = ({
 
   // ✅ Dates (Sessions)
   {
-    title: <HeaderCell title="Dates" align="center" />,
+    title: (
+      <div className="flex items-center justify-center gap-1">
+        <HeaderCell title="Dates" align="center" />
+        {onFilterChange && <ColumnFilterPopover columnKey="dates" onFilterChange={onFilterChange} />}
+      </div>
+    ),
     dataIndex: 'dates',
     key: 'dates',
     align: 'center',
@@ -225,7 +283,12 @@ export const getColumns = ({
 
   // ✅ Created At
   {
-    title: <HeaderCell className='w-[100px]' title="Created At" />,
+    title: (
+      <div className="flex items-center gap-1">
+        <HeaderCell className='w-[100px]' title="Created At" />
+        {onFilterChange && <ColumnFilterPopover columnKey="created_at" onFilterChange={onFilterChange} />}
+      </div>
+    ),
     dataIndex: 'created_at',
     key: 'created_at',
     render: (created_at: string) => created_at ?? '—',

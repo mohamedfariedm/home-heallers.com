@@ -28,13 +28,12 @@ export default function ExportButton({
   const searchParams = useSearchParams()
   const params = new URLSearchParams(searchParams)
   if(role) params.set('role', role)
-  if(type) params.set('type', type)
   const handleClick = async () => {
     const token = Cookies.get('auth_token');
     let config = {
       method: 'get',
       maxBodyLength: Infinity,
-      url: `${process.env.NEXT_PUBLIC_API_ENDPOINT}/${fileName}?export=1`,
+      url: `${process.env.NEXT_PUBLIC_API_ENDPOINT}/${fileName=="customer-supports-marketing"?"customer-supports?type=marketing&export=1":fileName=="customer-supports-operation"?"customer-supports?type=operation&export=1":`${fileName}?export=1`}`,
       headers: { 
         'Authorization':`Bearer ${token}` ,
         'Accept-Language': 'en'

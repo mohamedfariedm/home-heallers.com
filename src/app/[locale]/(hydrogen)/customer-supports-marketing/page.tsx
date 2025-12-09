@@ -46,7 +46,7 @@ export default function CountriesTablePage() {
           ),
         rows: selectedRowKeys,
       }}
-      fileName="CustomerSupport/index"
+      fileName="customer-supports-marketing"
       header="User,Created At"
       createName="Create Customer Support"
       createElementButton={<CreateOrUpdateCustomerSupport type="marketing" />}
