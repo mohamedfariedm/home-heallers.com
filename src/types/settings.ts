@@ -38,6 +38,17 @@ export interface SEOData {
   twitter_image: string;
 }
 
+export interface BusinessInfo {
+  commercial_registration: string;
+  health_license: string;
+  known_number: string;
+  whatsapp: string;
+  contact: string;
+  email: string;
+  address: string;
+  brand: string;
+}
+
 export interface Settings {
   banners: Banner[];
   social: Social;
@@ -46,4 +57,5 @@ export interface Settings {
   seo: any;
   terms: any;
   conditions: any;
+  business_info?: BusinessInfo;
 }

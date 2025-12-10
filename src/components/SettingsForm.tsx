@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { Settings, Banner, Social, SEOData } from '../types/settings';
+import { Settings, Banner, Social, SEOData, BusinessInfo } from '../types/settings';
 import BannerSection from './BannerSection';
 import SocialSection from './SocialSection';
 import AppLinksSection from './AppLinksSection';
 import SEOSection from './SEOSection';
-import { Save, Settings as SettingsIcon, Image, Share2, Smartphone, Search, FileText, Shield } from 'lucide-react';
+import { Save, Settings as SettingsIcon, Image, Share2, Smartphone, Search, FileText, Shield, Building2 } from 'lucide-react';
 import TermsSection from './TermsSection';
 import ConditionsSection from './ConditionsSection';
+import BusinessInfoSection from './BusinessInfoSection';
 
 interface SettingsFormProps {
   initialSettings: Settings;
@@ -25,6 +26,7 @@ const tabs = [
   { id: "seo", label: "SEO Settings", icon: Search },
   { id: 'terms', label: 'Terms & Conditions', icon: FileText },
   { id: 'conditions', label: 'General Conditions', icon: Shield },
+  { id: 'business-info', label: 'Business Information', icon: Building2 },
 ];
 
   const handleSave = async () => {
@@ -64,6 +66,10 @@ const updateConditions = (conditions: any) => {
   setSettings(prev => ({ ...prev, conditions }));
 };
 
+const updateBusinessInfo = (business_info: BusinessInfo) => {
+  setSettings(prev => ({ ...prev, business_info }));
+};
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'banners':
@@ -100,6 +106,23 @@ const updateConditions = (conditions: any) => {
 
     case "conditions":
       return <ConditionsSection conditions={settings.conditions} onUpdate={updateConditions} />;
+
+    case "business-info":
+      return (
+        <BusinessInfoSection
+          businessInfo={settings.business_info || {
+            commercial_registration: '',
+            health_license: '',
+            known_number: '',
+            whatsapp: '',
+            contact: '',
+            email: '',
+            address: '',
+            brand: '',
+          }}
+          onUpdate={updateBusinessInfo}
+        />
+      );
       default:
         return null;
     }
