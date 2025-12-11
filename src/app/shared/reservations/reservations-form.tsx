@@ -1,65 +1,83 @@
-"use client"
+'use client';
 
-import { useEffect } from "react"
-import { useForm, type SubmitHandler, Controller, useWatch } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { PiXBold } from "react-icons/pi"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { ActionIcon } from "rizzui"
-import { useModal } from "../modal-views/use-modal";
-import { useCreateReservation, useUpdateReservation } from "@/framework/reservations"
-import { useServices } from "@/framework/services"
-import { useDoctors } from "@/framework/doctors"
-import { usePatients } from "@/framework/patients"
-import { type ReservationFormInput, reservationFormSchema } from "@/utils/validators/reservation-form-schema"
-import Spinner from "@/components/ui/spinner"
-import { useCategories } from "@/framework/categories"
-import { usePermissions } from "@/context/PermissionsContext"
+import { useEffect } from 'react';
+import {
+  useForm,
+  type SubmitHandler,
+  Controller,
+  useWatch,
+} from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { PiXBold } from 'react-icons/pi';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { ActionIcon } from 'rizzui';
+import { useModal } from '../modal-views/use-modal';
+import {
+  useCreateReservation,
+  useUpdateReservation,
+} from '@/framework/reservations';
+import { useServices } from '@/framework/services';
+import { useDoctors } from '@/framework/doctors';
+import { usePatients } from '@/framework/patients';
+import {
+  type ReservationFormInput,
+  reservationFormSchema,
+} from '@/utils/validators/reservation-form-schema';
+import Spinner from '@/components/ui/spinner';
+import { useCategories } from '@/framework/categories';
+import { usePermissions } from '@/context/PermissionsContext';
 
 const timePeriods = [
-  { id: "morning", name: "Morning" },
-  { id: "afternoon", name: "Afternoon" },
-  { id: "evening", name: "Evening" },
-]
+  { id: 'morning', name: 'Morning' },
+  { id: 'afternoon', name: 'Afternoon' },
+  { id: 'evening', name: 'Evening' },
+];
 
 const statusOptions = [
-  { value: "1", en: "Reviewing", ar: "قيد المراجعة" },
-  { value: "2", en: "Waiting for Confirmation", ar: "في انتظار التأكيد" },
-  { value: "3", en: "Confirmed", ar: "تم التأكيد" },
-  { value: "4", en: "Canceled", ar: "تم الإلغاء" },
-  { value: "5", en: "Completed", ar: "مكتمل" },
-  { value: "6", en: "Failed", ar: "فشل" },
-]
+  { value: '1', en: 'Reviewing', ar: 'قيد المراجعة' },
+  { value: '2', en: 'WaitConfirm', ar: 'في انتظار التأكيد' },
+  { value: '3', en: 'Confirmed', ar: 'تم التأكيد' },
+  { value: '4', en: 'Canceled', ar: 'تم الإلغاء' },
+  { value: '5', en: 'Completed', ar: 'مكتمل' },
+  { value: '6', en: 'Failed', ar: 'فشل' },
+];
 
 const genderOptions = [
-  { value: "male", label: "Male" },
-  { value: "female", label: "Female" },
-]
-
-export default function CreateOrUpdateReservation({ initValues }: { initValues?: any }) {
-    const { permissions } = usePermissions();
-    console.log(permissions);
-  
-    
-  const { mutate: createReservation, isPending: isCreating } = useCreateReservation()
-  const { mutate: updateReservation, isPending: isUpdating } = useUpdateReservation()
-
-  const { data: patients, isLoading: isPatientsLoading } = usePatients("")
-  const { data: services, isLoading: isServicesLoading } = useServices("")
-  const { data: doctors, isLoading: isDoctorsLoading } = useDoctors("")
-  const { data: categories, isLoading: isCategoriesLoading } = useCategories("")
-
-  const { closeModal } = useModal()
-
-  const guest = initValues?.guest_info ?? {}
-  const isGuestReservation = initValues?.is_guest === 1 || !!initValues?.guest_info
-  const isExistingPatient = !!initValues?.patient?.id
-const feesTypeOptions = [
-  { value: "صفریة", label: "صفریة" },
-  { value: "معافاة", label: "معافاة" },
-  { value: "15%", label: "15%" },
+  { value: 'male', label: 'Male' },
+  { value: 'female', label: 'Female' },
 ];
+
+export default function CreateOrUpdateReservation({
+  initValues,
+}: {
+  initValues?: any;
+}) {
+  const { permissions } = usePermissions();
+  console.log(permissions);
+
+  const { mutate: createReservation, isPending: isCreating } =
+    useCreateReservation();
+  const { mutate: updateReservation, isPending: isUpdating } =
+    useUpdateReservation();
+
+  const { data: patients, isLoading: isPatientsLoading } = usePatients('');
+  const { data: services, isLoading: isServicesLoading } = useServices('');
+  const { data: doctors, isLoading: isDoctorsLoading } = useDoctors('');
+  const { data: categories, isLoading: isCategoriesLoading } =
+    useCategories('');
+
+  const { closeModal } = useModal();
+
+  const guest = initValues?.guest_info ?? {};
+  const isGuestReservation =
+    initValues?.is_guest === 1 || !!initValues?.guest_info;
+  const isExistingPatient = !!initValues?.patient?.id;
+  const feesTypeOptions = [
+    { value: 'صفریة', label: 'صفریة' },
+    { value: 'معافاة', label: 'معافاة' },
+    { value: '15%', label: '15%' },
+  ];
   const {
     register,
     formState: { errors },
@@ -72,167 +90,185 @@ const feesTypeOptions = [
     resolver: zodResolver(reservationFormSchema),
 
     defaultValues: {
-      reservation_type: isExistingPatient ? "existing" : "guest",
+      reservation_type: isExistingPatient ? 'existing' : 'guest',
 
       // 🧩 base IDs
-      patient_id: initValues?.patient?.id?.toString() || "",
-      doctor_id: initValues?.doctor?.id?.toString() || "",
-      service_id: initValues?.service?.id?.toString() || "",
-      category_id: initValues?.category_id?.toString() || "",
-      sessions_count: initValues?.sessions_count?.toString() || "1",
+      patient_id: initValues?.patient?.id?.toString() || '',
+      doctor_id: initValues?.doctor?.id?.toString() || '',
+      service_id: initValues?.service?.id?.toString() || '',
+      category_id: initValues?.category_id?.toString() || '',
+      sessions_count: initValues?.sessions_count?.toString() || '1',
 
       // 🧩 numbers and billing
-      sub_total: initValues?.sub_total?.toString() || "",
+      sub_total: initValues?.sub_total?.toString() || '',
       fees: initValues?.fees || 0, // now fees is string type
-      fees_type: initValues?.fees_type || "صفریة",
-      remaining_payment: initValues?.remaining_payment?.toString() || "",
-      total_amount: initValues?.total_amount?.toString() || "",
-      transaction_reference: initValues?.transaction_reference || "",
+      fees_type: initValues?.fees_type || 'صفریة',
+      remaining_payment: initValues?.remaining_payment?.toString() || '',
+      total_amount: initValues?.total_amount?.toString() || '',
+      transaction_reference: initValues?.transaction_reference || '',
 
       // 🧩 common fields
-      status: initValues?.status?.toString() || "2",
-      pain_location: initValues?.pain_location || "",
-      notes: initValues?.notes || "",
-      address_city: initValues?.address?.city?.en || initValues?.guest_info?.city || initValues?.address_city || "",
-      address_state: initValues?.address?.state?.en || initValues?.guest_info?.state || initValues?.address_state || "",
-      address_link: initValues?.address?.link || initValues?.address_link || "",
+      status: initValues?.status?.toString() || '2',
+      pain_location: initValues?.pain_location || '',
+      notes: initValues?.notes || '',
+      address_city:
+        initValues?.address?.city?.en ||
+        initValues?.guest_info?.city ||
+        initValues?.address_city ||
+        '',
+      address_state:
+        initValues?.address?.state?.en ||
+        initValues?.guest_info?.state ||
+        initValues?.address_state ||
+        '',
+      address_link: initValues?.address?.link || initValues?.address_link || '',
 
-      patient_name: guest?.name || initValues?.patient?.name?.en || initValues?.patient?.name?.ar || "",
-      patient_email: guest?.email || initValues?.patient?.email || "",
-      patient_national_id: guest?.national_id || initValues?.patient?.national_id || "",
-      patient_gender: guest?.gender || initValues?.patient?.gender || "male",
-      patient_country: guest?.country || guest?.nationality || initValues?.patient?.country?.name?.en?.en || "",
-      patient_mobile: guest?.mobile || initValues?.patient?.mobile || "",
-      patient_city: guest?.city || initValues?.patient?.city?.name?.en?.en || "",
-      patient_state: guest?.state || initValues?.patient?.state?.en || "",
-      patient_date_of_birth: guest?.date_of_birth || initValues?.patient?.date_of_birth || "",
+      patient_name:
+        guest?.name ||
+        initValues?.patient?.name?.en ||
+        initValues?.patient?.name?.ar ||
+        '',
+      patient_email: guest?.email || initValues?.patient?.email || '',
+      patient_national_id:
+        guest?.national_id || initValues?.patient?.national_id || '',
+      patient_gender: guest?.gender || initValues?.patient?.gender || 'male',
+      patient_country:
+        guest?.country ||
+        guest?.nationality ||
+        initValues?.patient?.country?.name?.en?.en ||
+        '',
+      patient_mobile: guest?.mobile || initValues?.patient?.mobile || '',
+      patient_city:
+        guest?.city || initValues?.patient?.city?.name?.en?.en || '',
+      patient_state: guest?.state || initValues?.patient?.state?.en || '',
+      patient_date_of_birth:
+        guest?.date_of_birth || initValues?.patient?.date_of_birth || '',
 
       // 🧩 nested dates handling - improved to handle both data structures
       dates: initValues?.dates?.map((d: any) => ({
-        date: d.date ? d.date.split("T")[0] : "",
-        time: d.time ? d.time.split("T")[1]?.substring(0, 5) : d.end_time?.split("T")[1]?.substring(0, 5) || "",
-        time_period: d.time_period || "morning",
-        doctor_id: d.doctor?.id?.toString() || "",
-        status: d.status || "1",
+        date: d.date ? d.date.split('T')[0] : '',
+        time: d.time
+          ? d.time.split('T')[1]?.substring(0, 5)
+          : d.end_time?.split('T')[1]?.substring(0, 5) || '',
+        time_period: d.time_period || 'morning',
+        doctor_id: d.doctor?.id?.toString() || '',
+        status: d.status || '1',
       })) || [
         {
-          date: "",
-          time: "",
-          time_period: "morning",
-          doctor_id: "",
-          status: "1",
+          date: '',
+          time: '',
+          time_period: 'morning',
+          doctor_id: '',
+          status: '1',
         },
       ],
     },
-  })
+  });
 
-  const reservationType = useWatch({ control, name: "reservation_type" })
-  const watchDates = watch("dates")
-  const watchSessionsCount = useWatch({ control, name: "sessions_count" })
-  const watchDoctorId = useWatch({ control, name: "doctor_id" })
-  const watchSubTotal = useWatch({ control, name: "sub_total" })
-const watchFeesType = useWatch({ control, name: "fees_type" })
-  const watchTotalAmount = useWatch({ control, name: "total_amount" })
-  const watchReservationStatus = useWatch({ control, name: "status" })
-console.log("errors",errors);
+  const reservationType = useWatch({ control, name: 'reservation_type' });
+  const watchDates = watch('dates');
+  const watchSessionsCount = useWatch({ control, name: 'sessions_count' });
+  const watchDoctorId = useWatch({ control, name: 'doctor_id' });
+  const watchSubTotal = useWatch({ control, name: 'sub_total' });
+  const watchFeesType = useWatch({ control, name: 'fees_type' });
+  const watchTotalAmount = useWatch({ control, name: 'total_amount' });
+  const watchReservationStatus = useWatch({ control, name: 'status' });
+  console.log('errors', errors);
 
-useEffect(() => {
-  if (watchReservationStatus && watchDates?.length > 0) {
-    const updatedDates = watchDates.map((date: any) => ({
-      ...date,
-      status: watchReservationStatus,
-    }))
-    setValue("dates", updatedDates, { shouldValidate: false })
-  }
-}, [watchReservationStatus])
+  useEffect(() => {
+    if (watchReservationStatus && watchDates?.length > 0) {
+      const updatedDates = watchDates.map((date: any) => ({
+        ...date,
+        status: watchReservationStatus,
+      }));
+      setValue('dates', updatedDates, { shouldValidate: false });
+    }
+  }, [watchReservationStatus]);
 
-  const lang: "en" | "ar" = "en"
+  const lang: 'en' | 'ar' = 'en';
 
   // Reset irrelevant fields on switch
   useEffect(() => {
-    if (reservationType === "guest") {
-      resetField("patient_id", { defaultValue: "" })
-    } else if (reservationType === "existing") {
-      resetField("patient_name", { defaultValue: "" })
-      resetField("patient_email", { defaultValue: "" })
-      resetField("patient_national_id", { defaultValue: "" })
-      resetField("patient_gender", { defaultValue: "male" })
-      resetField("patient_country", { defaultValue: "" })
-      resetField("patient_mobile", { defaultValue: "" })
-      resetField("patient_city", { defaultValue: "" })
-      resetField("patient_state", { defaultValue: "" })
-      resetField("patient_date_of_birth", { defaultValue: "" })
+    if (reservationType === 'guest') {
+      resetField('patient_id', { defaultValue: '' });
+    } else if (reservationType === 'existing') {
+      resetField('patient_name', { defaultValue: '' });
+      resetField('patient_email', { defaultValue: '' });
+      resetField('patient_national_id', { defaultValue: '' });
+      resetField('patient_gender', { defaultValue: 'male' });
+      resetField('patient_country', { defaultValue: '' });
+      resetField('patient_mobile', { defaultValue: '' });
+      resetField('patient_city', { defaultValue: '' });
+      resetField('patient_state', { defaultValue: '' });
+      resetField('patient_date_of_birth', { defaultValue: '' });
     }
-  }, [reservationType, resetField])
+  }, [reservationType, resetField]);
 
   // 🔁 sync number of date blocks
   useEffect(() => {
-    const sessionCount = Number(watchSessionsCount) || 1
+    const sessionCount = Number(watchSessionsCount) || 1;
     const newDates = Array.from({ length: sessionCount }, (_, i) => ({
-      date: watchDates?.[i]?.date || "",
-      time: watchDates?.[i]?.time || "",
-      time_period: watchDates?.[i]?.time_period || "morning",
-      doctor_id: watchDates?.[i]?.doctor_id || "",
-      status: watchDates?.[i]?.status || "1",
-    }))
-    setValue("dates", newDates, { shouldValidate: true })
-  }, [watchSessionsCount])
+      date: watchDates?.[i]?.date || '',
+      time: watchDates?.[i]?.time || '',
+      time_period: watchDates?.[i]?.time_period || 'morning',
+      doctor_id: watchDates?.[i]?.doctor_id || '',
+      status: watchDates?.[i]?.status || '1',
+    }));
+    setValue('dates', newDates, { shouldValidate: true });
+  }, [watchSessionsCount]);
 
   useEffect(() => {
     if (watchDoctorId && watchDates?.length > 0) {
       const updatedDates = watchDates.map((date: any) => ({
         ...date,
         doctor_id: watchDoctorId,
-      }))
-      setValue("dates", updatedDates, { shouldValidate: false })
+      }));
+      setValue('dates', updatedDates, { shouldValidate: false });
     }
-  }, [watchDoctorId])
+  }, [watchDoctorId]);
 
-useEffect(() => {
-  const sub = Number(watchSubTotal) || 0;
-  const sessions = Number(watchSessionsCount) || 1;
+  useEffect(() => {
+    const sub = Number(watchSubTotal) || 0;
+    const sessions = Number(watchSessionsCount) || 1;
 
-  let calculatedFees = 0;
+    let calculatedFees = 0;
 
-  if (watchFeesType === "صفریة" || watchFeesType === "معافاة") {
-    calculatedFees = 0;
-  } else if (watchFeesType === "15%") {
-    calculatedFees = (sub * sessions) * 0.15;
-  }
+    if (watchFeesType === 'صفریة' || watchFeesType === 'معافاة') {
+      calculatedFees = 0;
+    } else if (watchFeesType === '15%') {
+      calculatedFees = sub * sessions * 0.15;
+    }
 
-  const total = (sub * sessions) + calculatedFees;
+    const total = sub * sessions + calculatedFees;
 
-  // احفظ قيمة الفيز الفعلية المحسوبة
-  setValue("fees", calculatedFees.toString(), { shouldValidate: false });
+    // احفظ قيمة الفيز الفعلية المحسوبة
+    setValue('fees', calculatedFees.toString(), { shouldValidate: false });
 
-  // احفظ التوتال
-  setValue("total_amount", total.toString(), { shouldValidate: false });
-}, [watchFeesType, watchSubTotal, watchSessionsCount]);
-
-
-
+    // احفظ التوتال
+    setValue('total_amount', total.toString(), { shouldValidate: false });
+  }, [watchFeesType, watchSubTotal, watchSessionsCount]);
 
   useEffect(() => {
     if (patients?.data?.length && initValues?.patient?.id) {
-      setValue("patient_id", initValues.patient.id.toString())
+      setValue('patient_id', initValues.patient.id.toString());
     }
-  }, [patients?.data, initValues?.patient?.id, setValue])
+  }, [patients?.data, initValues?.patient?.id, setValue]);
 
   const applyStatusToAllDates = (status: string) => {
     const updatedDates = watchDates.map((date: any) => ({
       ...date,
       status,
-    }))
-    setValue("dates", updatedDates, { shouldValidate: false })
-  }
+    }));
+    setValue('dates', updatedDates, { shouldValidate: false });
+  };
 
   const applyDoctorToAllDates = (doctorId: string) => {
     const updatedDates = watchDates.map((date: any) => ({
       ...date,
       doctor_id: doctorId,
-    }))
-    setValue("dates", updatedDates, { shouldValidate: false })
-  }
+    }));
+    setValue('dates', updatedDates, { shouldValidate: false });
+  };
 
   const onSubmit: SubmitHandler<ReservationFormInput> = (data) => {
     const requestBody = {
@@ -258,10 +294,10 @@ useEffect(() => {
         time: date.time,
         time_period: date.time_period,
         doctor_id: Number(date.doctor_id),
-        status: Number(date.status) || "1",
+        status: Number(date.status) || '1',
       })),
 
-      ...(data.reservation_type === "guest"
+      ...(data.reservation_type === 'guest'
         ? {
             patient_name: data.patient_name,
             patient_email: data.patient_email,
@@ -276,38 +312,45 @@ useEffect(() => {
         : {
             patient_id: Number(data.patient_id),
           }),
-    }
+    };
 
     if (initValues) {
-      updateReservation({ reservation_id: initValues.id, ...requestBody })
+      updateReservation({ reservation_id: initValues.id, ...requestBody });
     } else {
-      createReservation(requestBody)
+      createReservation(requestBody);
     }
-  }
+  };
 
   // ✅ Detect if current user is an invoices assistant
-const isInvoicesAssistant = permissions?.includes("invoices_assistant");
+  const isInvoicesAssistant = permissions?.includes('invoices_assistant');
 
-// ✅ Determine if editing is allowed
-const initialStatus = initValues?.status?.toString();
-const initialDates = initValues?.dates || [];
+  // ✅ Determine if editing is allowed
+  const initialStatus = initValues?.status?.toString();
+  const initialDates = initValues?.dates || [];
 
-const canEdit =
-  !isInvoicesAssistant ||
-  initialStatus === "4" ||
-  initialDates.some((d: any) => d?.status?.toString() === "4");
+  const canEdit =
+    !isInvoicesAssistant ||
+    initialStatus === '4' ||
+    initialDates.some((d: any) => d?.status?.toString() === '4');
 
-const inputProps = { disabled: !canEdit };
+  const inputProps = { disabled: !canEdit };
 
-  return (
-    isPatientsLoading || isServicesLoading || isDoctorsLoading|| isCategoriesLoading ? (
-      <div className="flex items-center justify-center h-64">
-        <Spinner size="lg" />
-      </div>
-    ) : (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-grow flex-col gap-6 p-6 overflow-y-auto">
+  return isPatientsLoading ||
+    isServicesLoading ||
+    isDoctorsLoading ||
+    isCategoriesLoading ? (
+    <div className="flex h-64 items-center justify-center">
+      <Spinner size="lg" />
+    </div>
+  ) : (
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="flex flex-grow flex-col gap-6 overflow-y-auto p-6"
+    >
       <div className="flex items-center justify-between">
-        <h4 className="font-semibold text-lg">{initValues ? "Update Reservation" : "Create Reservation"}</h4>
+        <h4 className="text-lg font-semibold">
+          {initValues ? 'Update Reservation' : 'Create Reservation'}
+        </h4>
         <ActionIcon size="sm" variant="text" onClick={closeModal}>
           <PiXBold className="h-auto w-5" />
         </ActionIcon>
@@ -315,7 +358,9 @@ const inputProps = { disabled: !canEdit };
 
       {/* Reservation Type Radios - Controller ensures immediate updates */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-gray-700">Reservation Type</label>
+        <label className="text-sm font-medium text-gray-700">
+          Reservation Type
+        </label>
         <Controller
           name="reservation_type"
           control={control}
@@ -325,10 +370,9 @@ const inputProps = { disabled: !canEdit };
                 <input
                   type="radio"
                   value="guest"
-                  checked={value === "guest"}
-                  onChange={() => onChange("guest")}
-                  className="w-4 h-4"
-                  
+                  checked={value === 'guest'}
+                  onChange={() => onChange('guest')}
+                  className="h-4 w-4"
                 />
                 <span className="text-sm">Guest Reservation</span>
               </label>
@@ -336,9 +380,9 @@ const inputProps = { disabled: !canEdit };
                 <input
                   type="radio"
                   value="existing"
-                  checked={value === "existing"}
-                  onChange={() => onChange("existing")}
-                  className="w-4 h-4"
+                  checked={value === 'existing'}
+                  onChange={() => onChange('existing')}
+                  className="h-4 w-4"
                 />
                 <span className="text-sm">Existing Patient</span>
               </label>
@@ -347,16 +391,16 @@ const inputProps = { disabled: !canEdit };
         />
       </div>
 
-      {reservationType === "guest" ? (
+      {reservationType === 'guest' ? (
         // key forces a remount so the very first toggle always re-renders fresh
         <div key="guest" className="space-y-4 border-l-4 border-blue-500 pl-4">
-          <h5 className="font-semibold text-sm">Guest Patient Information</h5>
+          <h5 className="text-sm font-semibold">Guest Patient Information</h5>
           <div className="grid grid-cols-2 gap-4">
             <Input
               label="Patient Name"
               {...inputProps}
               placeholder="e.g., أحمد محمد"
-              {...register("patient_name")}
+              {...register('patient_name')}
               error={errors.patient_name?.message}
             />
             <Input
@@ -364,7 +408,7 @@ const inputProps = { disabled: !canEdit };
               type="email"
               {...inputProps}
               placeholder="e.g., ah1med@example.com"
-              {...register("patient_email")}
+              {...register('patient_email')}
               error={errors.patient_email?.message}
             />
           </div>
@@ -374,14 +418,16 @@ const inputProps = { disabled: !canEdit };
               label="National ID"
               {...inputProps}
               placeholder="e.g., 12134567890"
-              {...register("patient_national_id")}
+              {...register('patient_national_id')}
               error={errors.patient_national_id?.message}
             />
             <div>
               <label className="text-sm text-gray-700">Gender</label>
               <select
-              {...inputProps}
-              {...register("patient_gender")} className="w-full border border-gray-300 rounded-lg p-2">
+                {...inputProps}
+                {...register('patient_gender')}
+                className="w-full rounded-lg border border-gray-300 p-2"
+              >
                 {genderOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
@@ -393,48 +439,54 @@ const inputProps = { disabled: !canEdit };
 
           <div className="grid grid-cols-2 gap-4">
             <Input
-            {...inputProps}
+              {...inputProps}
               label="Mobile"
               placeholder="e.g., 05101234567"
-              {...register("patient_mobile")}
+              {...register('patient_mobile')}
               error={errors.patient_mobile?.message}
             />
             <Input
-            {...inputProps}
+              {...inputProps}
               label="Date of Birth"
               type="date"
-              {...register("patient_date_of_birth")}
+              {...register('patient_date_of_birth')}
               error={errors.patient_date_of_birth?.message}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <Input
-            {...inputProps}
+              {...inputProps}
               label="Country"
               placeholder="e.g., السعودية"
-              {...register("patient_country")}
+              {...register('patient_country')}
               error={errors.patient_country?.message}
             />
           </div>
         </div>
       ) : (
         <div key="existing">
-          <label className="text-sm text-gray-700">Select Existing Patient</label>
+          <label className="text-sm text-gray-700">
+            Select Existing Patient
+          </label>
           <select
-          {...inputProps}
-            {...register("patient_id")}
-            className="w-full border border-gray-300 rounded-lg p-2"
-            disabled={isPatientsLoading|| !canEdit}
+            {...inputProps}
+            {...register('patient_id')}
+            className="w-full rounded-lg border border-gray-300 p-2"
+            disabled={isPatientsLoading || !canEdit}
           >
-            <option value="">{isPatientsLoading ? "Loading patients..." : "Select Patient"}</option>
+            <option value="">
+              {isPatientsLoading ? 'Loading patients...' : 'Select Patient'}
+            </option>
             {patients?.data?.map((patient: any) => (
               <option key={patient.id} value={String(patient.id)}>
                 {patient.name?.en || patient.name?.ar}
               </option>
             ))}
           </select>
-          {errors.patient_id && <p className="text-sm text-red-500">{errors.patient_id.message}</p>}
+          {errors.patient_id && (
+            <p className="text-sm text-red-500">{errors.patient_id.message}</p>
+          )}
         </div>
       )}
 
@@ -442,137 +494,156 @@ const inputProps = { disabled: !canEdit };
         <div>
           <label className="text-sm text-gray-700">Service</label>
           <select
-          
-            {...register("service_id")}
-            className="w-full border border-gray-300 rounded-lg p-2"
-            disabled={isServicesLoading|| !canEdit}
+            {...register('service_id')}
+            className="w-full rounded-lg border border-gray-300 p-2"
+            disabled={isServicesLoading || !canEdit}
           >
-            <option value="">{isServicesLoading ? "Loading services..." : "Select Service"}</option>
+            <option value="">
+              {isServicesLoading ? 'Loading services...' : 'Select Service'}
+            </option>
             {services?.data?.map((service: any) => (
               <option key={service.id} value={service.id}>
                 {service.name?.en}
               </option>
             ))}
           </select>
-          {errors.service_id && <p className="text-sm text-red-500">{errors.service_id.message}</p>}
+          {errors.service_id && (
+            <p className="text-sm text-red-500">{errors.service_id.message}</p>
+          )}
         </div>
         <div>
           <label className="text-sm text-gray-700">Doctor</label>
           <select
-            {...register("doctor_id")}
-            className="w-full border border-gray-300 rounded-lg p-2"
-            disabled={isDoctorsLoading|| !canEdit}
+            {...register('doctor_id')}
+            className="w-full rounded-lg border border-gray-300 p-2"
+            disabled={isDoctorsLoading || !canEdit}
           >
-            <option value="">{isDoctorsLoading ? "Loading doctors..." : "Select Doctor"}</option>
+            <option value="">
+              {isDoctorsLoading ? 'Loading doctors...' : 'Select Doctor'}
+            </option>
             {doctors?.data?.map((doctor: any) => (
               <option key={doctor.id} value={doctor.id}>
                 {doctor.name?.en}
               </option>
             ))}
           </select>
-          {errors.doctor_id && <p className="text-sm text-red-500">{errors.doctor_id.message}</p>}
+          {errors.doctor_id && (
+            <p className="text-sm text-red-500">{errors.doctor_id.message}</p>
+          )}
         </div>
       </div>
 
       <div>
         <label className="text-sm text-gray-700">Category</label>
         <select
-        {...inputProps}
-        {...register("category_id")} className="w-full border border-gray-300 rounded-lg p-2">
-          <option value="">{isCategoriesLoading ? "Loading categories..." : "Select Category"}</option>
+          {...inputProps}
+          {...register('category_id')}
+          className="w-full rounded-lg border border-gray-300 p-2"
+        >
+          <option value="">
+            {isCategoriesLoading ? 'Loading categories...' : 'Select Category'}
+          </option>
           {categories?.data?.map((category: any) => (
             <option key={category.id} value={category.id}>
               {category.name?.en}
             </option>
           ))}
         </select>
-        {errors.category_id && <p className="text-sm text-red-500">{errors.category_id.message}</p>}
+        {errors.category_id && (
+          <p className="text-sm text-red-500">{errors.category_id.message}</p>
+        )}
       </div>
 
       <div className="space-y-4 border-l-4 border-green-500 pl-4">
-        <h5 className="font-semibold text-sm">Address Information</h5>
+        <h5 className="text-sm font-semibold">Address Information</h5>
         <div className="grid grid-cols-2 gap-4">
           <Input
-          {...inputProps}
+            {...inputProps}
             label="City"
             placeholder="e.g., الرياض"
-            {...register("address_city")}
+            {...register('address_city')}
             error={errors.address_city?.message}
           />
           <Input
-          {...inputProps}
+            {...inputProps}
             label="State/Region"
             placeholder="e.g., منطقة الرياض"
-            {...register("address_state")}
+            {...register('address_state')}
             error={errors.address_state?.message}
           />
         </div>
         <Input
-        {...inputProps}
+          {...inputProps}
           label="Address Link (Maps)"
           type="url"
           placeholder="https://maps.google.com/?q=24.7136,46.6753"
-          {...register("address_link")}
+          {...register('address_link')}
           error={errors.address_link?.message}
         />
       </div>
 
       <div className="space-y-4 border-l-4 border-purple-500 pl-4">
-        <h5 className="font-semibold text-sm">Billing Information</h5>
+        <h5 className="text-sm font-semibold">Billing Information</h5>
         <div className="grid grid-cols-2 gap-4">
           <Input
-          {...inputProps}
+            {...inputProps}
             label="Sessions Count"
             type="tel"
-            {...register("sessions_count")}
+            {...register('sessions_count')}
             error={errors.sessions_count?.message}
           />
           <Input
-          {...inputProps}
-          label="Sub Total" type="tel" {...register("sub_total")} error={errors.sub_total?.message} />
+            {...inputProps}
+            label="Sub Total"
+            type="tel"
+            {...register('sub_total')}
+            error={errors.sub_total?.message}
+          />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-  <label className="text-sm text-gray-700">Fees Type</label>
-  <select
-    {...inputProps}
-    {...register("fees_type")}
-    className="w-full border border-gray-300 rounded-lg p-2"
-  >
-    {feesTypeOptions.map((item) => (
-      <option key={item.value} value={item.value}>
-        {item.label}
-      </option>
-    ))}
-  </select>
-</div>
+            <label className="text-sm text-gray-700">Fees Type</label>
+            <select
+              {...inputProps}
+              {...register('fees_type')}
+              className="w-full rounded-lg border border-gray-300 p-2"
+            >
+              {feesTypeOptions.map((item) => (
+                <option key={item.value} value={item.value}>
+                  {item.label}
+                </option>
+              ))}
+            </select>
+          </div>
 
           <div>
             <Input
-            {...inputProps}
+              {...inputProps}
               label="Total Amount"
               type="tel"
-              {...register("total_amount")}
+              {...register('total_amount')}
               error={errors.total_amount?.message}
             />
-            <p className="text-xs text-gray-500 mt-1">Auto-calculated from Sub Total + Fees (editable)</p>
+            <p className="mt-1 text-xs text-gray-500">
+              Auto-calculated from Sub Total + Fees (editable)
+            </p>
           </div>
         </div>
 
-<Input
-  {...inputProps}
-  label="Remaining Payment"
-  type="tel"
-  {...register("remaining_payment")}
-  error={errors.remaining_payment?.message}
-/>
+        <Input
+          {...inputProps}
+          label="Remaining Payment"
+          type="tel"
+          {...register('remaining_payment')}
+          error={errors.remaining_payment?.message}
+        />
 
         <Input
-        {...inputProps}
+          {...inputProps}
           label="Transaction Reference"
           placeholder="e.g., GUEST123"
-          {...register("transaction_reference")}
+          {...register('transaction_reference')}
           error={errors.transaction_reference?.message}
         />
       </div>
@@ -581,45 +652,53 @@ const inputProps = { disabled: !canEdit };
         <div>
           <label className="text-sm text-gray-700">Status</label>
           <select
-          {...inputProps}
-          {...register("status")} className="w-full border border-gray-300 rounded-lg p-2">
+            {...inputProps}
+            {...register('status')}
+            className="w-full rounded-lg border border-gray-300 p-2"
+          >
             <option value="">Select Status</option>
             {statusOptions.map((option) => (
               <option key={option.value} value={option.value}>
-                {lang === "ar" ? option.ar : option.en}
+                {lang === 'ar' ? option.ar : option.en}
               </option>
             ))}
           </select>
-          {errors.status && <p className="text-sm text-red-500">{errors.status.message}</p>}
+          {errors.status && (
+            <p className="text-sm text-red-500">{errors.status.message}</p>
+          )}
         </div>
         <Input
-        {...inputProps}
+          {...inputProps}
           label="Pain Location"
           placeholder="e.g., ألم في الرقبة"
-          {...register("pain_location")}
+          {...register('pain_location')}
           error={errors.pain_location?.message}
         />
       </div>
 
       <Input
-      {...inputProps}
-      label="Notes" placeholder="e.g., حجز ضيف جديد" {...register("notes")} error={errors.notes?.message} />
+        {...inputProps}
+        label="Notes"
+        placeholder="e.g., حجز ضيف جديد"
+        {...register('notes')}
+        error={errors.notes?.message}
+      />
 
       <div className="space-y-4 border-l-4 border-orange-500 pl-4">
-        <h5 className="font-semibold text-sm">Reservation Dates</h5>
+        <h5 className="text-sm font-semibold">Reservation Dates</h5>
 
         {watchDates?.map((_, index) => (
-          <div key={index} className="border rounded-lg p-4 space-y-3">
+          <div key={index} className="space-y-3 rounded-lg border p-4">
             <div className="grid grid-cols-2 gap-4">
               <Input
-              {...inputProps}
+                {...inputProps}
                 label="Date"
                 type="date"
                 {...register(`dates.${index}.date` as const)}
                 error={errors.dates?.[index]?.date?.message}
               />
               <Input
-              {...inputProps}
+                {...inputProps}
                 label="Time"
                 type="time"
                 {...register(`dates.${index}.time` as const)}
@@ -631,9 +710,9 @@ const inputProps = { disabled: !canEdit };
               <div>
                 <label className="text-sm text-gray-700">Time Period</label>
                 <select
-                {...inputProps}
+                  {...inputProps}
                   {...register(`dates.${index}.time_period` as const)}
-                  className="w-full border border-gray-300 rounded-lg p-2"
+                  className="w-full rounded-lg border border-gray-300 p-2"
                 >
                   {timePeriods.map((period) => (
                     <option key={period.id} value={period.id}>
@@ -646,12 +725,14 @@ const inputProps = { disabled: !canEdit };
               <div>
                 <label className="text-sm text-gray-700">Doctor</label>
                 <select
-                {...inputProps}
+                  {...inputProps}
                   {...register(`dates.${index}.doctor_id` as const)}
-                  className="w-full border border-gray-300 rounded-lg p-2"
+                  className="w-full rounded-lg border border-gray-300 p-2"
                   disabled={isDoctorsLoading}
                 >
-                  <option value="">{isDoctorsLoading ? "Loading..." : "Select Doctor"}</option>
+                  <option value="">
+                    {isDoctorsLoading ? 'Loading...' : 'Select Doctor'}
+                  </option>
                   {doctors?.data?.map((doctor: any) => (
                     <option key={doctor.id} value={doctor.id}>
                       {doctor.name?.en}
@@ -664,13 +745,13 @@ const inputProps = { disabled: !canEdit };
             <div>
               <label className="text-sm text-gray-700">Status</label>
               <select
-              {...inputProps}
+                {...inputProps}
                 {...register(`dates.${index}.status` as const)}
-                className="w-full border border-gray-300 rounded-lg p-2"
+                className="w-full rounded-lg border border-gray-300 p-2"
               >
                 {statusOptions.map((s) => (
                   <option key={s.value} value={s.value}>
-                    {lang === "ar" ? s.ar : s.en}
+                    {lang === 'ar' ? s.ar : s.en}
                   </option>
                 ))}
               </select>
@@ -679,15 +760,15 @@ const inputProps = { disabled: !canEdit };
         ))}
 
         {watchDates?.length > 1 && (
-          <div className="flex gap-2 mt-4">
+          <div className="mt-4 flex gap-2">
             <Button
               type="button"
               variant="outline"
               {...inputProps}
               size="sm"
               onClick={() => {
-                const currentStatus = watch(`dates.0.status`)
-                applyStatusToAllDates(currentStatus)
+                const currentStatus = watch(`dates.0.status`);
+                applyStatusToAllDates(currentStatus);
               }}
             >
               Apply First Date Status to All
@@ -698,8 +779,8 @@ const inputProps = { disabled: !canEdit };
               variant="outline"
               size="sm"
               onClick={() => {
-                const currentDoctor = watch(`dates.0.doctor_id`)
-                applyDoctorToAllDates(currentDoctor)
+                const currentDoctor = watch(`dates.0.doctor_id`);
+                applyDoctorToAllDates(currentDoctor);
               }}
             >
               Apply First Date Doctor to All
@@ -707,20 +788,19 @@ const inputProps = { disabled: !canEdit };
           </div>
         )}
 
-        {errors.dates && typeof errors.dates?.message === "string" && (
+        {errors.dates && typeof errors.dates?.message === 'string' && (
           <p className="text-sm text-red-500">{errors.dates.message}</p>
         )}
       </div>
 
-      <div className="flex justify-end gap-4 mt-6">
+      <div className="mt-6 flex justify-end gap-4">
         <Button variant="outline" onClick={closeModal}>
           Cancel
         </Button>
-        <Button type="submit" disabled={isCreating || isUpdating || !canEdit }>
-          {initValues ? "Update Reservation" : "Create Reservation"}
+        <Button type="submit" disabled={isCreating || isUpdating || !canEdit}>
+          {initValues ? 'Update Reservation' : 'Create Reservation'}
         </Button>
       </div>
     </form>
-    )
-  )
+  );
 }
