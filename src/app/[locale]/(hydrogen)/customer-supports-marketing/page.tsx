@@ -35,7 +35,7 @@ export default function CountriesTablePage() {
   const [selectedRowKeys, setSelectedRowKeys] = useState<any[]>([]);
   
   return (
-    <TableLayout
+      <TableLayout
       title={pageHeader.title}
       breadcrumb={pageHeader.breadcrumb}
       data={{
@@ -50,6 +50,7 @@ export default function CountriesTablePage() {
       header="User,Created At"
       createName="Create Customer Support"
       createElementButton={<CreateOrUpdateCustomerSupport type="marketing" />}
+      importButton="customer-supports/import"
     >
       {isLoading ? (
         <div className="m-auto">

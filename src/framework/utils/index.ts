@@ -88,7 +88,13 @@ class Client {
         all: (param:string) => HttpClient.get(`${routes.customerSupport.index}?${param}`),
         create: (input: any) => HttpClient.post(`${routes.customerSupport.index}`, input),
         update: (input : any) => HttpClient.patch(`${routes.customerSupport.index}/${input.lead_id}`, input) ,
-        delete: (input: {region_id: number[]}) => HttpClient.delete(`${routes.customerSupport.index}/${input.region_id}`)
+        delete: (input: {region_id: number[]}) => HttpClient.delete(`${routes.customerSupport.index}/${input.region_id}`),
+        downloadSampleSheet: () => HttpClient.get('/customer-supports/download-sample-sheet'),
+        import: (file: FormData) => HttpClient.post('/customer-supports/import', file, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        }),
     }
     addresses = {
         all: (param:string) => HttpClient.get(`${routes.addresses.index}?${param}`),
@@ -124,7 +130,13 @@ class Client {
   all: (param: string) => HttpClient.get(`${routes.reservations.index}?${param}`),
   create: (input: any) => HttpClient.post(`${routes.reservations.index}`, input),
   update: (input: any) => HttpClient.patch(`${routes.reservations.index}/${input.reservation_id}`, input),
-  delete: (input: { reservation_id: number[] }) => HttpClient.delete(`${routes.reservations.index}/${input.reservation_id}`)
+  delete: (input: { reservation_id: number[] }) => HttpClient.delete(`${routes.reservations.index}/${input.reservation_id}`),
+  downloadSampleSheet: () => HttpClient.get('/reservations-sample-sheet'),
+  import: (file: FormData) => HttpClient.post('/reservations/import', file, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  }),
 };
     coupons = {
         all: (param:string) => HttpClient.get(`${routes.coupons.index}?${param}`),

@@ -26,6 +26,7 @@ import SimpleBar from '@/components/ui/simplebar';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import Cookies from 'js-cookie';
+import { getToken } from '@/framework/utils/get-token';
 
 type AcceptedFiles = 'img' | 'pdf' | 'csv' | 'xlsx' | 'imgAndPdf' | 'all';
 let excelFile:any="fard";
@@ -119,44 +120,58 @@ export const FileInput = ({
   }
 
   async function handleFileUpload() {
-    const token = Cookies. get('auth_token'); 
-    console.log(token);
-    
     if (files.length) {
-      const reader:any=new FileReader();
-      //@ts-ignore
-      const file:any=files[0];
-      reader.addEventListener("load",async()=>{
-        //@ts-ignore
-          excelFile=reader.result.split("data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,").join()
-          console.log(excelFile);
-          let config = {
-            method: 'post',
-            maxBodyLength: Infinity,
-            url: `https://api.energizeplus.app/api/admin/${url}`,
-            headers: { 
-              'Authorization':`Bearer ${Cookies. get('auth_token')}` , 
-            },
-            data : {"file":excelFile}
-          };
-          
-          await axios.request(config)
-          .then(() => {
-            toast.success(<Text as="b">File successfully added</Text>);
+      const file = files[0];
+      const formData = new FormData();
+      formData.append('file', file);
 
-                setTimeout(() => {
-                  closeModal();
-                }, 200);         
-               })
-          .catch((error) => {
-    toast.error(<Text as="b">Please drop your file</Text>);
-});
-      })
-      reader.readAsDataURL(file);
-      
+      try {
+        const token = getToken();
+        const baseURL = process.env.NEXT_PUBLIC_API_ENDPOINT || 'https://api.energizeplus.app/api';
+        
+        const config = {
+          method: 'post',
+          maxBodyLength: Infinity,
+          url: `${baseURL}/${url}`,
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+          data: formData
+        };
+        
+        const response = await axios.request(config);
+        
+        // Handle response based on API contract
+        if (response.data) {
+          const data = response.data;
+          if (data.status === 'success' || data.status === 'partial_success') {
+            const message = data.status === 'success' 
+              ? `Successfully imported ${data.successful_imports} row(s)`
+              : `Import completed: ${data.successful_imports} successful, ${data.failed_imports} failed`;
+            toast.success(<Text as="b">{message}</Text>);
+            
+            // Show errors if any
+            if (data.errors && data.errors.length > 0) {
+              console.warn('Import errors:', data.errors);
+            }
+          } else {
+            toast.success(<Text as="b">File successfully uploaded</Text>);
+          }
+        } else {
+          toast.success(<Text as="b">File successfully uploaded</Text>);
+        }
+
+        setTimeout(() => {
+          closeModal();
+        }, 200);
+      } catch (error: any) {
+        const errorMessage = error?.response?.data?.message || error?.message || 'Failed to upload file';
+        toast.error(<Text as="b">{errorMessage}</Text>);
+      }
+    } else {
+      toast.error(<Text as="b">Please select a file</Text>);
     }
-
-
   }
 
   return (
@@ -223,12 +238,50 @@ export const FileInput = ({
           <PiArrowLineDownBold className="me-1.5 h-[17px] w-[17px]" />
           {btnLabel}
         </Button>
-        <Button className="w-full">
+        <Button 
+          className="w-full" 
+          variant="outline"
+          onClick={async () => {
+            try {
+              const token = getToken();
+              const baseURL = process.env.NEXT_PUBLIC_API_ENDPOINT || 'https://api.energizeplus.app/api';
+              
+              // Determine the endpoint based on URL pattern
+              let endpoint = '';
+              if (url === 'reservations/import' || url.includes('reservations')) {
+                endpoint = '/reservations-sample-sheet';
+              } else if (url === 'customer-supports/import' || url.includes('customer-supports')) {
+                endpoint = '/customer-supports/download-sample-sheet';
+              } else {
+                toast.error('Unknown import type');
+                return;
+              }
+
+              const response = await axios.get(`${baseURL}${endpoint}`, {
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                },
+              });
+
+              if (response.data?.download_url) {
+                const link = document.createElement('a');
+                link.href = response.data.download_url;
+                link.download = response.data.file_name || 'sample_sheet.xlsx';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                toast.success('Sample sheet downloaded successfully');
+              } else {
+                toast.error('Failed to get download URL');
+              }
+            } catch (error: any) {
+              const errorMessage = error?.response?.data?.message || error?.message || 'Failed to download sample sheet';
+              toast.error(errorMessage);
+            }
+          }}
+        >
           <PiDownloadFill className="me-1.5 h-[17px] w-[17px]" />
-          
-          <a href ={`https://api.energizeplus.app/${url}/example.xlsx`} >
-          Download Sample 
-          </a>
+          Download Sample
         </Button>
       </div>
     </div>
@@ -244,7 +297,7 @@ export const FileInput = ({
 //     let config:any = {
 //       method: 'post',
 //       maxBodyLength: Infinity,
-//       url: 'https://api.energizeplus.app/api/admin/import_journeys',
+//       url: 'https://api.energizeplus.app/api/import_journeys',
 //       headers: { 
 //         'Authorization': 'Bearer H0TvcNlagj6BeoHz3pHNSnxOTmdpEU8N9Y6KukAkc42ebbc4', 
 //         ...data

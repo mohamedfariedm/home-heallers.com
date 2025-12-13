@@ -31,7 +31,7 @@ export default function ReservationsTablePage() {
   const [selectedRowKeys, setSelectedRowKeys] = useState<any[]>([]);
 
   return (
-    <TableLayout
+      <TableLayout
       title={pageHeader.title}
       breadcrumb={pageHeader.breadcrumb}
       data={{
@@ -46,6 +46,7 @@ export default function ReservationsTablePage() {
       header="Client,Created At"
       createName="Create Reservation"
       createElementButton={<CreateOrUpdateReservation />}
+      importButton="reservations/import"
     >
       {isLoading ? (
         <div className="m-auto">

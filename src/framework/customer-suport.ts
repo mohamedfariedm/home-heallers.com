@@ -57,3 +57,50 @@ export const useCreateCustomerSupport = () => {
       }
     })
   }
+
+  export const useDownloadCustomerSupportSampleSheet = () => {
+    return useMutation({
+      mutationFn: async () => {
+        const data = await client.customerSupport.downloadSampleSheet();
+        // Download the file
+        if (data.download_url) {
+          const link = document.createElement('a');
+          link.href = data.download_url;
+          link.download = data.file_name || 'customer_support_sample_sheet.xlsx';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }
+        return data;
+      },
+      onSuccess: () => {
+        toast.success('Sample sheet downloaded successfully');
+      },
+      onError: (error) => {
+        toast.error(`Error downloading sample sheet: ${error?.message}`);
+      }
+    });
+  }
+
+  export const useImportCustomerSupport = () => {
+    const queryClient = useQueryClient();
+    const { closeModal } = useModal();
+
+    return useMutation({
+      mutationFn: async (file: FormData) => {
+        const response = await client.customerSupport.import(file);
+        return response.data;
+      },
+      onSuccess: (data) => {
+        queryClient.invalidateQueries({ queryKey: [routes.customerSupport.index] });
+        const message = data.status === 'success' 
+          ? `Successfully imported ${data.successful_imports} customer support(s)`
+          : `Import completed: ${data.successful_imports} successful, ${data.failed_imports} failed`;
+        toast.success(message);
+        closeModal();
+      },
+      onError: (error) => {
+        toast.error(`Error importing customer support: ${error?.message}`);
+      }
+    });
+  }
