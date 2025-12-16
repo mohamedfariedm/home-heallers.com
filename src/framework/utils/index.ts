@@ -137,6 +137,7 @@ class Client {
       'Content-Type': 'multipart/form-data',
     },
   }),
+  createPaymentWhatsapp: (input: { reservation_id: number }) => HttpClient.post('/reservations/create-payment-whatsapp', input),
 };
     coupons = {
         all: (param:string) => HttpClient.get(`${routes.coupons.index}?${param}`),

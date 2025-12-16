@@ -9,7 +9,7 @@ export const userFormSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
   password_confirmation: z.string().min(6, "Confirm your password"),
   roles: z.array(z.number()).min(1, "At least one role is required"),
-  phone: z.string().optional(),
+  mobile: z.string().optional(),
 });
 
 export type UserFormInput = z.infer<typeof userFormSchema>;

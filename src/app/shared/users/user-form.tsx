@@ -45,6 +45,7 @@ export default function CreateOrUpdateUser({ initValues }: { initValues?: any })
     const requestBody = {
       name: data.name,
       email: data.email,
+      mobile: data.mobile,
       password: data.password,
       password_confirmation: data.password_confirmation,
       roles: selectedRoles.map((r) => r.value),
@@ -79,6 +80,7 @@ console.log(data);
             ar: initValues?.name?.ar || '',
           },
           email: initValues?.email || '',
+          mobile: initValues?.mobile || '',
           password: '',
           password_confirmation: '',
           roles: initValues?.Roles?.map((r: any) => r.id) || [],
@@ -130,6 +132,13 @@ console.log(errors, 'errors');
           />
 
           <Input
+            label="Mobile"
+            type="tel"
+            {...register('mobile')}
+            error={errors.mobile?.message}
+          />
+
+          <Input
             label="Password"
             {...register('password')}
             error={errors.password?.message}
@@ -152,9 +161,9 @@ console.log(errors, 'errors');
     }))}
     value={selectedRoles}
     onChange={(selected) => {
-      const value = selected || [];
-      setSelectedRoles(value);
-      setValue('roles', value.map((r) => r.value)); // 👈 Important to sync with form state
+      const value = selected ? (Array.isArray(selected) ? [...selected] : [selected]) : [];
+      setSelectedRoles(value as any[]);
+      setValue('roles', value.map((r: any) => r.value)); // 👈 Important to sync with form state
     }}
     menuPortalTarget={document.body}
     styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
