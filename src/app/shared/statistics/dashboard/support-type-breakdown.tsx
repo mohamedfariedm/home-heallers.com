@@ -1,10 +1,10 @@
 'use client';
 
 import WidgetCard from '@/components/cards/widget-card';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import cn from '@/utils/class-names';
 
-const COLORS = ['#8B5CF6', '#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
+const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#10b981'];
 
 interface SupportTypeData {
   type: string;
@@ -23,7 +23,7 @@ export default function SupportTypeBreakdown({
 }: SupportTypeBreakdownProps) {
   const data = bySupportType.map((item, index) => ({
     name: item.label,
-    count: item.count,
+    value: item.count,
     fill: COLORS[index % COLORS.length],
   }));
 
@@ -31,63 +31,55 @@ export default function SupportTypeBreakdown({
 
   return (
     <WidgetCard
-      title="Customer Support by Type"
-      description={`Total: ${totalCount} support tickets`}
-      className={cn('', className)}
+      title="Support Tickets"
+      description={`Total: ${totalCount}`}
+      className={cn('flex flex-col', className)}
     >
-      <div className="h-[300px] w-full @lg:h-[350px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-            <XAxis 
-              dataKey="name" 
-              tick={{ fontSize: 12 }}
-              stroke="#6b7280"
-            />
-            <YAxis 
-              tick={{ fontSize: 12 }}
-              stroke="#6b7280"
-            />
-            <Tooltip 
-              contentStyle={{
-                backgroundColor: '#fff',
-                border: '1px solid #e5e7eb',
-                borderRadius: '8px',
-              }}
-            />
-            <Legend />
-            <Bar 
-              dataKey="count" 
-              name="Tickets"
-              radius={[8, 8, 0, 0]}
-            >
-              {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.fill} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+      <div className="flex flex-1 flex-col items-center justify-center">
+        <div className="h-[250px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={data}
+                cx="50%"
+                cy="50%"
+                innerRadius={60}
+                outerRadius={80}
+                paddingAngle={5}
+                dataKey="value"
+                stroke="none"
+              >
+                {data.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.fill} className="stroke-white dark:stroke-gray-800" strokeWidth={2} />
+                ))}
+              </Pie>
+              <Tooltip 
+                 contentStyle={{
+                  backgroundColor: '#fff',
+                  borderRadius: '8px',
+                  border: '1px solid #e5e7eb',
+                  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                }}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
 
-      {/* Type Summary */}
-      <div className="mt-4 grid grid-cols-2 gap-3 @lg:grid-cols-3">
-        {bySupportType.map((type, index) => (
-          <div
-            key={type.type}
-            className="flex items-center gap-2 rounded-lg border border-gray-200 p-2"
-          >
-            <div
-              className="h-3 w-3 rounded-full"
-              style={{ backgroundColor: COLORS[index % COLORS.length] }}
-            />
-            <div>
-              <p className="text-xs text-gray-500">{type.label}</p>
-              <p className="text-sm font-semibold text-gray-900">{type.count}</p>
+        {/* Custom Legend */}
+        <div className="mt-4 flex w-full flex-wrap justify-center gap-3">
+          {data.map((item, index) => (
+            <div key={index} className="flex items-center gap-1.5">
+              <span 
+                className="h-2.5 w-2.5 rounded-full" 
+                style={{ backgroundColor: item.fill }}
+              />
+              <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
+                {item.name} <span className="text-gray-400">({item.value})</span>
+              </span>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </WidgetCard>
   );
 }
-

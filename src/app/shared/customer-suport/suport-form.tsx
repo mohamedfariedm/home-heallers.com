@@ -209,7 +209,29 @@ console.log(errors);
 
           <div className="grid grid-cols-2 gap-4">
             <Input label="Lead Source" {...register('lead_source')} error={errors.lead_source?.message} />
-            <Input label="Source Campaign" {...register('source_campaign')} error={errors.source_campaign?.message} />
+            <div>
+              <label className="block text-sm font-medium text-gray-900 mb-1">Source Campaign</label>
+              <select 
+                {...register('source_campaign')} 
+                className="w-full border border-gray-300 rounded-md p-2 h-10 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+              >
+                <option value="">Select Source</option>
+                <option value="google">Google</option>
+                <option value="facebook">Facebook</option>
+                <option value="instagram">Instagram</option>
+                <option value="snapchat">Snapchat</option>
+                <option value="telegram">Telegram</option>
+                <option value="twitter">Twitter</option>
+                <option value="tiktok">TikTok</option>
+                <option value="whatsapp">WhatsApp</option>
+                <option value="call">Call</option>
+                <option value="youtube">YouTube</option>
+                <option value="website">Website</option>
+                <option value="referral">Referral</option>
+                <option value="other">Other</option>
+              </select>
+              {errors.source_campaign && <p className="text-sm text-red-500 mt-1">{errors.source_campaign.message}</p>}
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

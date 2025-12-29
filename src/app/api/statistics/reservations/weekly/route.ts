@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://backend.home-healers.com';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://development.home-healers.com';
 const API_TOKEN = process.env.API_TOKEN || '458|9szzfrTT64SGn7sCy7t2NUur8xi5Ty2AP3u98JZM8a85beb6';
 
 export async function GET(request: NextRequest) {

@@ -2,14 +2,13 @@
 
 import WidgetCard from '@/components/cards/widget-card';
 import {
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend,
 } from 'recharts';
 import cn from '@/utils/class-names';
 
@@ -18,6 +17,7 @@ interface MonthlyData {
   year: number;
   month_number: number;
   total: number;
+  revenue?: number;
   by_status: Array<{
     status: number | string;
     label: string;
@@ -37,65 +37,99 @@ const getMonthName = (monthNumber: number) => {
 
 export default function MonthlyChart({ data, className }: MonthlyChartProps) {
   const chartData = data.map((item) => ({
-    name: `${getMonthName(item.month_number)} ${item.year}`,
+    name: `${getMonthName(item.month_number)}`,
+    fullDate: `${getMonthName(item.month_number)} ${item.year}`,
     reservations: item.total,
-    month: item.month,
+    revenue: item.revenue || 0,
   }));
 
   const totalReservations = data.reduce((sum, item) => sum + item.total, 0);
 
   return (
     <WidgetCard
-      title="Monthly Reservations Trend"
+      title="MonthlyTrend"
       description={`Total: ${totalReservations} reservations over ${data.length} month(s)`}
-      className={cn('', className)}
+      className={cn('min-h-[400px]', className)}
     >
-      <div className="h-[300px] w-full @lg:h-[400px]">
+      <div className="h-[300px] w-full pt-5 @lg:h-[350px]">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+          <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+            <defs>
+              <linearGradient id="colorReservations" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3}/>
+                <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
+              </linearGradient>
+              <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#10B981" stopOpacity={0.3}/>
+                <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
             <XAxis 
               dataKey="name" 
-              tick={{ fontSize: 12 }}
-              stroke="#6b7280"
+              axisLine={false}
+              tickLine={false}
+              tick={{ fontSize: 12, fill: '#6B7280' }}
+              dy={10}
             />
             <YAxis 
-              tick={{ fontSize: 12 }}
-              stroke="#6b7280"
+              yAxisId="left"
+              axisLine={false}
+              tickLine={false}
+              tick={{ fontSize: 12, fill: '#6B7280' }}
             />
-            <Tooltip
+            <YAxis 
+              yAxisId="right"
+              orientation="right"
+              axisLine={false}
+              tickLine={false}
+              tick={{ fontSize: 12, fill: '#6B7280' }}
+            />
+            <Tooltip 
               contentStyle={{
                 backgroundColor: '#fff',
                 border: '1px solid #e5e7eb',
                 borderRadius: '8px',
+                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
               }}
             />
-            <Legend />
-            <Line
+            <Area
+              yAxisId="left"
               type="monotone"
               dataKey="reservations"
               stroke="#3B82F6"
               strokeWidth={3}
+              fillOpacity={1}
+              fill="url(#colorReservations)"
               name="Reservations"
-              dot={{ fill: '#3B82F6', r: 4 }}
-              activeDot={{ r: 6 }}
             />
-          </LineChart>
+            <Area
+              yAxisId="right"
+              type="monotone"
+              dataKey="revenue"
+              stroke="#10B981"
+              strokeWidth={3}
+              fillOpacity={1}
+              fill="url(#colorRevenue)"
+              name="Revenue"
+            />
+          </AreaChart>
         </ResponsiveContainer>
       </div>
 
       {/* Monthly Summary */}
       {data.length > 0 && (
-        <div className="mt-4 rounded-lg bg-gray-50 p-4">
-          <h4 className="mb-2 text-sm font-semibold text-gray-700">Monthly Summary</h4>
-          <div className="grid grid-cols-2 gap-4 @lg:grid-cols-4">
-            {data.map((month, index) => (
-              <div key={index} className="rounded-lg bg-white p-2 shadow-sm">
-                <p className="text-xs text-gray-500">
-                  {getMonthName(month.month_number)} {month.year}
+        <div className="mt-6 border-t border-gray-100 pt-6 dark:border-gray-700">
+          <div className="grid grid-cols-2 gap-4 @lg:grid-cols-6">
+            {data.slice(-6).map((month, index) => (
+              <div key={index} className="text-center">
+                 <p className="text-xs text-gray-500">
+                  {getMonthName(month.month_number)}
                 </p>
-                <p className="text-lg font-bold text-gray-900">{month.total}</p>
-                <p className="text-xs text-gray-500">reservations</p>
+                <p className="mt-1 text-lg font-bold text-gray-900 dark:text-white">{month.total}</p>
+                 <p className="text-xs text-emerald-600 font-medium">
+                  {month.revenue?.toLocaleString() || 0}
+                </p>
               </div>
             ))}
           </div>
@@ -104,4 +138,3 @@ export default function MonthlyChart({ data, className }: MonthlyChartProps) {
     </WidgetCard>
   );
 }
-

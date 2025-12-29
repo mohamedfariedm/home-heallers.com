@@ -121,6 +121,7 @@ export const getColumns = ({
     'age',
     'gender',
     'lead_source',
+    'source_campaign',
     'mobile_phone',
     'booking_phone_number',
     'home_phone',

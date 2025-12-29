@@ -11,6 +11,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { PiXBold } from 'react-icons/pi';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import { ActionIcon } from 'rizzui';
 import { useModal } from '../modal-views/use-modal';
 import {
@@ -91,12 +92,13 @@ export default function CreateOrUpdateReservation({
 
     defaultValues: {
       reservation_type: isExistingPatient ? 'existing' : 'guest',
-
+      paid: initValues?.paid || 0,
+      source_campaign: initValues?.source_campaign || '',
       // 🧩 base IDs
       patient_id: initValues?.patient?.id?.toString() || '',
       doctor_id: initValues?.doctor?.id?.toString() || '',
       service_id: initValues?.service?.id?.toString() || '',
-      category_id: initValues?.category_id?.toString() || '',
+      category_id: initValues?.category?.id?.toString() || '',
       sessions_count: initValues?.sessions_count?.toString() || '1',
 
       // 🧩 numbers and billing
@@ -288,7 +290,8 @@ export default function CreateOrUpdateReservation({
       address_city: data.address_city,
       address_state: data.address_state,
       address_link: data.address_link,
-
+      paid: Number(data.paid),
+      source_campaign: data.source_campaign,
       dates: data.dates.map((date) => ({
         date: date.date,
         time: date.time,
@@ -646,6 +649,59 @@ export default function CreateOrUpdateReservation({
           {...register('transaction_reference')}
           error={errors.transaction_reference?.message}
         />
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              Source Campaign
+            </label>
+            <select
+              {...inputProps}
+              {...register('source_campaign')}
+              className="w-full rounded-lg border border-gray-300 p-2"
+            >
+              <option value="">Select Source</option>
+              <option value="google">Google</option>
+              <option value="facebook">Facebook</option>
+              <option value="instagram">Instagram</option>
+              <option value="snapchat">Snapchat</option>
+              <option value="telegram">Telegram</option>
+              <option value="twitter">Twitter</option>
+              <option value="tiktok">TikTok</option>
+              <option value="whatsapp">WhatsApp</option>
+              <option value="call">Call</option>
+              <option value="youtube">YouTube</option>
+              <option value="website">Website</option>
+              <option value="referral">Referral</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          <div>
+             <label className="mb-1 block text-sm font-medium text-gray-700">
+              Paid Status
+            </label>
+            <Controller
+              name="paid"
+              control={control}
+              render={({ field: { value, onChange } }) => (
+                <div className="flex items-center gap-3 pt-2">
+                  <Switch
+                    checked={Number(value) === 1}
+                    onChange={(e: any) => {
+                       // Handle both standard event and direct boolean (if rizzui changes behavior)
+                       const checked = e?.target ? e.target.checked : e;
+                       onChange(checked ? 1 : 0);
+                    }}
+                  />
+                  <span className="text-sm font-medium text-gray-700">
+                    {Number(value) === 1 ? 'Paid' : 'Unpaid'}
+                  </span>
+                </div>
+              )}
+            />
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">

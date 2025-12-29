@@ -282,6 +282,25 @@ export const getColumns = ({
     },
   },
 
+
+  // ✅ Pain Location
+  {
+    title: (
+      <div className="flex items-center gap-1">
+        <HeaderCell title="Source Campaign" />
+        {onFilterChange && (
+          <ColumnFilterPopover
+            columnKey="source_campaign"
+            onFilterChange={onFilterChange}
+          />
+        )}
+      </div>
+    ),
+    dataIndex: 'source_campaign',
+    key: 'source_campaign',
+    render: (source_campaign: string | null | undefined) => source_campaign ?? '—',
+  },
+
   // ✅ Sessions Count
   {
     title: (

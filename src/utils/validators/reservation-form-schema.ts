@@ -42,6 +42,10 @@ export const reservationFormSchema = z
     address_state: z.string().min(1, "Address state is required"),
     address_link: z.string().url().optional(),
 
+    // New fields
+    paid: z.number().optional().default(0),
+    source_campaign: z.string().optional(),
+
     dates: z
       .array(
         z.object({
