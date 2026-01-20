@@ -32,7 +32,7 @@ export const useCreateCoupons = () => {
   export const useUpdateCoupons = () => {
     const queryClient = useQueryClient();
     const { closeModal } = useModal();
-  return useMutation({
+    const {mutate, isPending} = useMutation({
       mutationFn: client.coupons.update,
       onSuccess: () => {
         queryClient.invalidateQueries({queryKey: [routes.coupons.index]})
@@ -43,6 +43,8 @@ export const useCreateCoupons = () => {
         toast.error(`Error ${error?.message}`)
       }
     })
+  
+    return { mutate, isPending}
   }
 
 

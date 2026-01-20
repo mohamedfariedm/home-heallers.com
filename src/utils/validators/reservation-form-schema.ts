@@ -24,6 +24,7 @@ export const reservationFormSchema = z
     doctor_id: z.string().min(1, "Doctor is required"),
     category_id: z.string().min(1, "Category is required"),
     sessions_count: z.string().min(1, "Sessions count is required"),
+    session_price: z.string().optional(),
     sub_total: z.string().min(1, "Sub total is required"),
     fees: z.string().min(1, "Fees is required"),
     fees_type: z.string().min(1, "Fees is required"),
@@ -49,8 +50,8 @@ export const reservationFormSchema = z
     dates: z
       .array(
         z.object({
-          date: z.string().min(1, "Date is required"),
-          time: z.string().min(1, "Time is required"),
+          date: z.string().optional(),
+          time: z.string().optional(),
           time_period: z.enum(["morning", "afternoon", "evening"]).default("morning"),
           doctor_id: z.string().optional(),
           status: z.string().optional(),

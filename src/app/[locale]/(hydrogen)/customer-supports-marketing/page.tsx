@@ -33,9 +33,9 @@ export default function CountriesTablePage() {
   const { data, isLoading } = useCustomerSupport(params.toString());
   const [selectedColumns, setSelectedColumns] = useState<any[]>([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState<any[]>([]);
-  
+
   return (
-      <TableLayout
+    <TableLayout
       title={pageHeader.title}
       breadcrumb={pageHeader.breadcrumb}
       data={{

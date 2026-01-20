@@ -69,45 +69,35 @@ export default function CreateOrUpdateCountry({ initValues }: { initValues?: any
             </Button>
           </div>
 
-          {/* Language Switch */}
-          <div className="flex gap-3">
-            <Checkbox label="English" checked={lang === 'en'} onChange={() => setLang('en')} />
-            <Checkbox label="Arabic" checked={lang === 'ar'} onChange={() => setLang('ar')} />
-          </div>
+        
 
           {/* Multilingual Name Field */}
-          {lang === 'en' ? (
             <Input
             key={"name.en"}
               label="Country Name (English)"
               {...register('name.en')}
               error={errors.name?.en?.message}
             />
-          ) : (
             <Input
             key={"name.ar"}
               label="Country Name (Arabic)"
               {...register('name.ar')}
               error={errors.name?.ar?.message}
             />
-          )}
 
           {/* Multilingual Currency Field */}
-          {lang === 'en' ? (
             <Input
             key={"currency.en"}
               label="Currency (English)"
               {...register('currency.en')}
               error={errors.currency?.en?.message}
             />
-          ) : (
             <Input
             key={"currency.ar"}
               label="Currency (Arabic)"
               {...register('currency.ar')}
               error={errors.currency?.ar?.message}
             />
-          )}
 
           {/* Status Field */}
           <div>

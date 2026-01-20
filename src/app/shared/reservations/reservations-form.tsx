@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import {
   useForm,
   type SubmitHandler,
@@ -87,6 +87,7 @@ export default function CreateOrUpdateReservation({
     setValue,
     resetField,
     watch,
+    getValues,
   } = useForm<ReservationFormInput>({
     resolver: zodResolver(reservationFormSchema),
 
@@ -102,12 +103,19 @@ export default function CreateOrUpdateReservation({
       sessions_count: initValues?.sessions_count?.toString() || '1',
 
       // 🧩 numbers and billing
+      session_price: initValues?.sub_total && initValues?.sessions_count
+        ? (Number(initValues.sub_total) / Number(initValues.sessions_count)).toString()
+        : '',
       sub_total: initValues?.sub_total?.toString() || '',
       fees: initValues?.fees || 0, // now fees is string type
       fees_type: initValues?.fees_type || 'صفریة',
       remaining_payment: initValues?.remaining_payment?.toString() || '',
       total_amount: initValues?.total_amount?.toString() || '',
-      transaction_reference: initValues?.transaction_reference || '',
+      transaction_reference:
+        initValues?.transaction_reference &&
+        ['تحويل بنكي', 'تيلر', 'كاش'].includes(initValues.transaction_reference)
+          ? initValues.transaction_reference
+          : undefined,
 
       // 🧩 common fields
       status: initValues?.status?.toString() || '2',
@@ -171,21 +179,30 @@ export default function CreateOrUpdateReservation({
   const watchDates = watch('dates');
   const watchSessionsCount = useWatch({ control, name: 'sessions_count' });
   const watchDoctorId = useWatch({ control, name: 'doctor_id' });
+  const watchSessionPrice = useWatch({ control, name: 'session_price' });
   const watchSubTotal = useWatch({ control, name: 'sub_total' });
   const watchFeesType = useWatch({ control, name: 'fees_type' });
   const watchTotalAmount = useWatch({ control, name: 'total_amount' });
   const watchReservationStatus = useWatch({ control, name: 'status' });
   console.log('errors', errors);
 
+  const prevStatusRef = useRef<string | undefined>();
   useEffect(() => {
-    if (watchReservationStatus && watchDates?.length > 0) {
-      const updatedDates = watchDates.map((date: any) => ({
-        ...date,
-        status: watchReservationStatus,
-      }));
-      setValue('dates', updatedDates, { shouldValidate: false });
+    if (
+      watchReservationStatus &&
+      watchReservationStatus !== prevStatusRef.current
+    ) {
+      prevStatusRef.current = watchReservationStatus;
+      const currentDates = getValues('dates') || [];
+      if (currentDates.length > 0) {
+        const updatedDates = currentDates.map((date: any) => ({
+          ...date,
+          status: watchReservationStatus,
+        }));
+        setValue('dates', updatedDates, { shouldValidate: false });
+      }
     }
-  }, [watchReservationStatus]);
+  }, [watchReservationStatus, setValue, getValues]);
 
   const lang: 'en' | 'ar' = 'en';
 
@@ -207,48 +224,68 @@ export default function CreateOrUpdateReservation({
   }, [reservationType, resetField]);
 
   // 🔁 sync number of date blocks
+  const prevSessionsCountRef = useRef<string | undefined>();
   useEffect(() => {
     const sessionCount = Number(watchSessionsCount) || 1;
-    const newDates = Array.from({ length: sessionCount }, (_, i) => ({
-      date: watchDates?.[i]?.date || '',
-      time: watchDates?.[i]?.time || '',
-      time_period: watchDates?.[i]?.time_period || 'morning',
-      doctor_id: watchDates?.[i]?.doctor_id || '',
-      status: watchDates?.[i]?.status || '1',
-    }));
-    setValue('dates', newDates, { shouldValidate: true });
-  }, [watchSessionsCount]);
-
-  useEffect(() => {
-    if (watchDoctorId && watchDates?.length > 0) {
-      const updatedDates = watchDates.map((date: any) => ({
-        ...date,
-        doctor_id: watchDoctorId,
+    if (watchSessionsCount !== prevSessionsCountRef.current) {
+      prevSessionsCountRef.current = watchSessionsCount;
+      const currentDates = getValues('dates') || [];
+      const newDates = Array.from({ length: sessionCount }, (_, i) => ({
+        date: currentDates[i]?.date || '',
+        time: currentDates[i]?.time || '',
+        time_period: currentDates[i]?.time_period || 'morning',
+        doctor_id: currentDates[i]?.doctor_id || '',
+        status: currentDates[i]?.status || '1',
       }));
-      setValue('dates', updatedDates, { shouldValidate: false });
+      setValue('dates', newDates, { shouldValidate: true });
     }
-  }, [watchDoctorId]);
+  }, [watchSessionsCount, setValue, getValues]);
+
+  const prevDoctorIdRef = useRef<string | undefined>();
+  useEffect(() => {
+    if (watchDoctorId && watchDoctorId !== prevDoctorIdRef.current) {
+      prevDoctorIdRef.current = watchDoctorId;
+      const currentDates = getValues('dates') || [];
+      if (currentDates.length > 0) {
+        const updatedDates = currentDates.map((date: any) => ({
+          ...date,
+          doctor_id: watchDoctorId,
+        }));
+        setValue('dates', updatedDates, { shouldValidate: false });
+      }
+    }
+  }, [watchDoctorId, setValue, getValues]);
+
+  // Calculate sub_total from session_price * sessions_count
+  useEffect(() => {
+    const sessionPrice = Number(watchSessionPrice) || 0;
+    const sessions = Number(watchSessionsCount) || 1;
+
+    if (sessionPrice > 0 && sessions > 0) {
+      const calculatedSubTotal = sessionPrice * sessions;
+      setValue('sub_total', calculatedSubTotal.toString(), { shouldValidate: false });
+    }
+  }, [watchSessionPrice, watchSessionsCount, setValue]);
 
   useEffect(() => {
     const sub = Number(watchSubTotal) || 0;
-    const sessions = Number(watchSessionsCount) || 1;
 
     let calculatedFees = 0;
 
     if (watchFeesType === 'صفریة' || watchFeesType === 'معافاة') {
       calculatedFees = 0;
     } else if (watchFeesType === '15%') {
-      calculatedFees = sub * sessions * 0.15;
+      calculatedFees = sub * 0.15;
     }
 
-    const total = sub * sessions + calculatedFees;
+    const total = sub + calculatedFees;
 
     // احفظ قيمة الفيز الفعلية المحسوبة
     setValue('fees', calculatedFees.toString(), { shouldValidate: false });
 
     // احفظ التوتال
     setValue('total_amount', total.toString(), { shouldValidate: false });
-  }, [watchFeesType, watchSubTotal, watchSessionsCount]);
+  }, [watchFeesType, watchSubTotal, setValue]);
 
   useEffect(() => {
     if (patients?.data?.length && initValues?.patient?.id) {
@@ -257,6 +294,7 @@ export default function CreateOrUpdateReservation({
   }, [patients?.data, initValues?.patient?.id, setValue]);
 
   const applyStatusToAllDates = (status: string) => {
+    if (!watchDates || watchDates.length === 0) return;
     const updatedDates = watchDates.map((date: any) => ({
       ...date,
       status,
@@ -265,6 +303,7 @@ export default function CreateOrUpdateReservation({
   };
 
   const applyDoctorToAllDates = (doctorId: string) => {
+    if (!watchDates || watchDates.length === 0) return;
     const updatedDates = watchDates.map((date: any) => ({
       ...date,
       doctor_id: doctorId,
@@ -274,17 +313,22 @@ export default function CreateOrUpdateReservation({
 
   const onSubmit: SubmitHandler<ReservationFormInput> = (data) => {
     const requestBody = {
-      service_id: Number(data.service_id),
-      category_id: Number(data.category_id),
-      doctor_id: Number(data.doctor_id),
-      sessions_count: Number(data.sessions_count),
-      sub_total: Number(data.sub_total),
-      fees: Number(data.fees),
+      service_id: data.service_id ? Number(data.service_id) : undefined,
+      category_id: data.category_id ? Number(data.category_id) : undefined,
+      doctor_id: data.doctor_id ? Number(data.doctor_id) : undefined,
+      sessions_count: data.sessions_count
+        ? Number(data.sessions_count)
+        : undefined,
+      session_price: data.session_price ? Number(data.session_price) : undefined,
+      sub_total: data.sub_total ? Number(data.sub_total) : undefined,
+      fees: data.fees ? Number(data.fees) : undefined,
       fees_type: data.fees_type,
-      remaining_payment: Number(data.remaining_payment),
-      total_amount: Number(data.total_amount),
+      remaining_payment: data.remaining_payment
+        ? Number(data.remaining_payment)
+        : undefined,
+      total_amount: data.total_amount ? Number(data.total_amount) : undefined,
       transaction_reference: data.transaction_reference,
-      status: Number(data.status),
+      status: data.status ? Number(data.status) : undefined,
       pain_location: data.pain_location,
       notes: data.notes,
       address_city: data.address_city,
@@ -292,12 +336,12 @@ export default function CreateOrUpdateReservation({
       address_link: data.address_link,
       paid: Number(data.paid),
       source_campaign: data.source_campaign,
-      dates: data.dates.map((date) => ({
+      dates: data.dates?.map((date) => ({
         date: date.date,
         time: date.time,
         time_period: date.time_period,
-        doctor_id: Number(date.doctor_id),
-        status: Number(date.status) || '1',
+        doctor_id: date.doctor_id ? Number(date.doctor_id) : undefined,
+        status: date.status ? Number(date.status) : undefined,
       })),
 
       ...(data.reservation_type === 'guest'
@@ -313,7 +357,7 @@ export default function CreateOrUpdateReservation({
             patient_date_of_birth: data.patient_date_of_birth,
           }
         : {
-            patient_id: Number(data.patient_id),
+            patient_id: data.patient_id ? Number(data.patient_id) : undefined,
           }),
     };
 
@@ -597,6 +641,15 @@ export default function CreateOrUpdateReservation({
           />
           <Input
             {...inputProps}
+            label="Session Price"
+            type="tel"
+            {...register('session_price')}
+            error={errors.session_price?.message}
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <Input
+            {...inputProps}
             label="Sub Total"
             type="tel"
             {...register('sub_total')}
@@ -642,13 +695,24 @@ export default function CreateOrUpdateReservation({
           error={errors.remaining_payment?.message}
         />
 
-        <Input
-          {...inputProps}
-          label="Transaction Reference"
-          placeholder="e.g., GUEST123"
-          {...register('transaction_reference')}
-          error={errors.transaction_reference?.message}
-        />
+        <div>
+          <label className="text-sm text-gray-700">Transaction Reference</label>
+          <select
+            {...inputProps}
+            {...register('transaction_reference')}
+            className="w-full rounded-lg border border-gray-300 p-2"
+          >
+            <option value="">Select Transaction Type</option>
+            <option value="تحويل بنكي">تحويل بنكي</option>
+            <option value="تيلر">تيلر</option>
+            <option value="كاش">كاش</option>
+          </select>
+          {errors.transaction_reference && (
+            <p className="text-sm text-red-500">
+              {errors.transaction_reference.message}
+            </p>
+          )}
+        </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
@@ -678,7 +742,7 @@ export default function CreateOrUpdateReservation({
           </div>
 
           <div>
-             <label className="mb-1 block text-sm font-medium text-gray-700">
+            <label className="mb-1 block text-sm font-medium text-gray-700">
               Paid Status
             </label>
             <Controller
@@ -689,9 +753,9 @@ export default function CreateOrUpdateReservation({
                   <Switch
                     checked={Number(value) === 1}
                     onChange={(e: any) => {
-                       // Handle both standard event and direct boolean (if rizzui changes behavior)
-                       const checked = e?.target ? e.target.checked : e;
-                       onChange(checked ? 1 : 0);
+                      // Handle both standard event and direct boolean (if rizzui changes behavior)
+                      const checked = e?.target ? e.target.checked : e;
+                      onChange(checked ? 1 : 0);
                     }}
                   />
                   <span className="text-sm font-medium text-gray-700">
@@ -715,7 +779,7 @@ export default function CreateOrUpdateReservation({
             <option value="">Select Status</option>
             {statusOptions.map((option) => (
               <option key={option.value} value={option.value}>
-                {lang === 'ar' ? option.ar : option.en}
+                {option.en}
               </option>
             ))}
           </select>
@@ -807,7 +871,7 @@ export default function CreateOrUpdateReservation({
               >
                 {statusOptions.map((s) => (
                   <option key={s.value} value={s.value}>
-                    {lang === 'ar' ? s.ar : s.en}
+                    {s.en}
                   </option>
                 ))}
               </select>
@@ -815,7 +879,7 @@ export default function CreateOrUpdateReservation({
           </div>
         ))}
 
-        {watchDates?.length > 1 && (
+        {watchDates && watchDates.length > 1 && (
           <div className="mt-4 flex gap-2">
             <Button
               type="button"
@@ -824,7 +888,9 @@ export default function CreateOrUpdateReservation({
               size="sm"
               onClick={() => {
                 const currentStatus = watch(`dates.0.status`);
-                applyStatusToAllDates(currentStatus);
+                if (currentStatus) {
+                  applyStatusToAllDates(currentStatus);
+                }
               }}
             >
               Apply First Date Status to All
@@ -836,7 +902,9 @@ export default function CreateOrUpdateReservation({
               size="sm"
               onClick={() => {
                 const currentDoctor = watch(`dates.0.doctor_id`);
-                applyDoctorToAllDates(currentDoctor);
+                if (currentDoctor) {
+                  applyDoctorToAllDates(currentDoctor);
+                }
               }}
             >
               Apply First Date Doctor to All
