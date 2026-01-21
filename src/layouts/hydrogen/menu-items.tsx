@@ -222,6 +222,20 @@ export const menuItemsHaydrogen = [
     permissions: 'users',
   },
 
+  { name: 'Contact Center' },
+  {
+    name: 'Outbound',
+    href: '/customer-supports-marketing-kanban',
+    icon: <PiPhoneCall />,
+    permissions: 'customer_supports_marketing',
+  },
+  {
+    name: 'Inbound',
+    href: '/customer-supports-operation-kanban',
+    icon: <PiHeadsetDuotone />,
+    permissions: 'customer_supports_operation',
+  },
+
   { name: 'master Mangement ' },
   {
     name: 'Countries',
@@ -259,30 +273,19 @@ export const menuItemsHaydrogen = [
     icon: <PiCreditCardDuotone />,
     permissions: 'packages',
   },
-  {
-    name: 'Operation customer supports',
-    href: '/customer-supports-operation',
-    icon: <PiPhoneCall />,
-    permissions: 'customer_supports_operation',
-  },
-  {
-    name: ' Marketing customer  supports',
-    href: '/customer-supports-marketing',
-    icon: <PiPhoneCall />,
-    permissions: 'customer_supports_marketing',
-  },
-  {
-    name: 'Marketing Customer Supports - Kanban',
-    href: '/customer-supports-marketing-kanban',
-    icon: <PiPhoneCall />,
-    permissions: 'customer_supports_marketing',
-  },
-  {
-    name: 'Operation Customer Supports - Kanban',
-    href: '/customer-supports-operation-kanban',
-    icon: <PiPhoneCall />,
-    permissions: 'customer_supports_operation',
-  },
+  // {
+  //   name: 'Operation customer supports',
+  //   href: '/customer-supports-operation',
+  //   icon: <PiPhoneCall />,
+  //   permissions: 'customer_supports_operation',
+  // },
+  // {
+  //   name: ' Marketing customer  supports',
+  //   href: '/customer-supports-marketing',
+  //   icon: <PiPhoneCall />,
+  //   permissions: 'customer_supports_marketing',
+  // },
+
   {
     name: 'Patients',
     href: routes.patients.index,

@@ -50,6 +50,7 @@ export const leadFormSchema = z.object({
   modified_on: z.string().optional(),
   created_by: z.string().optional(),
   event_agent_name: z.string().optional(),
+  communication_channel: z.string().optional(),
   created_at: z.string().optional(),
   updated_at: z.string().optional(),
 });

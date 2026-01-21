@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { useModal } from '@/app/shared/modal-views/use-modal';
 import CreateOrUpdateCustomerSupport from '@/app/shared/customer-suport/suport-form';
 import { PiPlusBold } from 'react-icons/pi';
+import KanbanFilters from '@/app/shared/customer-suport/kanban-filters';
 
 const pageHeader = {
   title: 'Marketing Customer Supports - Kanban',
@@ -44,6 +45,7 @@ export default function CustomerSupportsMarketingKanbanPage() {
   // Single page state for all columns
   const currentPage = parseInt(searchParams.get('page') || '1', 5);
   const [page, setPage] = useState(currentPage);
+  const [filters, setFilters] = useState<Record<string, any>>({});
 
   // Sync page state with URL params
   useEffect(() => {
@@ -53,41 +55,70 @@ export default function CustomerSupportsMarketingKanbanPage() {
     }
   }, [searchParams, page]);
 
+  // Initialize filters from URL params
+  useEffect(() => {
+    const initialFilters: Record<string, any> = {};
+    const filterableColumns = [
+      'name', 'offer', 'agent_name', 'status', 'reason', 'age', 'gender',
+      'lead_source', 'source_campaign', 'mobile_phone', 'booking_phone_number',
+      'home_phone', 'address_1', 'description', 'first_call_time',
+      'last_call_result', 'last_call_total_duration', 'last_phone', 'notes',
+      'ads_name', 'created_at', 'communication_channel'
+    ];
+
+    filterableColumns.forEach((key) => {
+      const params: any = {};
+      Array.from(searchParams.entries()).forEach(([paramKey, paramValue]) => {
+        if (paramKey.startsWith(`${key}_`)) {
+          const parts = paramKey.split('_');
+          if (parts.length >= 2) {
+            const op = parts.slice(1, -1).join('_');
+            if (!params.c1) {
+              params.c1 = { op, value: paramValue };
+            } else if (!params.c2) {
+              const logic = parts[parts.length - 1] === 'or' ? 'or' : 'and';
+              params.c2 = { op: op.replace(/_or$|_and$/, ''), value: paramValue };
+              params.logic = logic;
+            }
+          }
+        }
+      });
+      if (params.c1 || params.c2) {
+        initialFilters[key] = { c1: params.c1 || { op: 'equal', value: '' }, c2: params.c2 || { op: 'equal', value: '' }, logic: params.logic || 'and' };
+      }
+    });
+
+    if (Object.keys(initialFilters).length > 0) {
+      setFilters(initialFilters);
+    }
+  }, []);
+
+  // Build filter params
+  const buildFilterParams = (status: string) => {
+    const params = new URLSearchParams();
+    params.set('page', String(page));
+    params.set('limit', '5');
+    params.set('type', 'marketing');
+    params.set('status_equal', status);
+
+    // Apply filters
+    Object.entries(filters).forEach(([key, val]) => {
+      const { c1, c2, logic } = val;
+      if (c1?.value) params.set(`${key}_${c1.op}`, c1.value);
+      if (c2?.value)
+        params.set(`${key}_${c2.op}_${logic === 'or' ? 'or' : 'and'}`, c2.value);
+    });
+
+    return params.toString();
+  };
+
   // Fetch data for each column separately with the same page
-  const newParams = new URLSearchParams();
-  newParams.set('page', String(page));
-  newParams.set('limit', '5');
-  newParams.set('type', 'marketing');
-  newParams.set('status_equal', 'new');
-  const newData = useCustomerSupport(newParams.toString());
+  const newData = useCustomerSupport(buildFilterParams('new'));
 
-  const failedParams = new URLSearchParams();
-  failedParams.set('page', String(page));
-  failedParams.set('limit', '5');
-  failedParams.set('type', 'marketing');
-  failedParams.set('status_equal', 'failed');
-  const failedData = useCustomerSupport(failedParams.toString());
-
-  const successParams = new URLSearchParams();
-  successParams.set('page', String(page));
-  successParams.set('limit', '5');
-  successParams.set('type', 'marketing');
-  successParams.set('status_equal', 'success');
-  const successData = useCustomerSupport(successParams.toString());
-
-  const possibleParams = new URLSearchParams();
-  possibleParams.set('page', String(page));
-  possibleParams.set('limit', '5');
-  possibleParams.set('type', 'marketing');
-  possibleParams.set('status_equal', 'possible');
-  const possibleData = useCustomerSupport(possibleParams.toString());
-
-  const negotiationParams = new URLSearchParams();
-  negotiationParams.set('page', String(page));
-  negotiationParams.set('limit', '5');
-  negotiationParams.set('type', 'marketing');
-  negotiationParams.set('status_equal', 'negotiation');
-  const negotiationData = useCustomerSupport(negotiationParams.toString());
+  const failedData = useCustomerSupport(buildFilterParams('failed'));
+  const successData = useCustomerSupport(buildFilterParams('success'));
+  const possibleData = useCustomerSupport(buildFilterParams('possible'));
+  const negotiationData = useCustomerSupport(buildFilterParams('negotiation'));
 
   // Combine all column data
   const columnData: Record<
@@ -157,6 +188,46 @@ export default function CustomerSupportsMarketingKanbanPage() {
     });
   };
 
+  const handleFilterChange = (newFilters: Record<string, any>) => {
+    setFilters(newFilters);
+    setPage(1); // Reset to first page when filters change
+
+    // Update URL params
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('page', '1');
+
+    // Clear old filter params
+    Object.keys(filters).forEach((key) => {
+      Array.from(params.entries()).forEach(([paramKey]) => {
+        if (paramKey.startsWith(`${key}_`)) params.delete(paramKey);
+      });
+    });
+
+    // Add new filter params
+    Object.entries(newFilters).forEach(([key, val]) => {
+      const { c1, c2, logic } = val;
+      if (c1?.value) params.set(`${key}_${c1.op}`, c1.value);
+      if (c2?.value)
+        params.set(`${key}_${c2.op}_${logic === 'or' ? 'or' : 'and'}`, c2.value);
+    });
+
+    router.push(`?${params.toString()}`);
+  };
+
+  const handleClearFilters = () => {
+    // Reset local filter state
+    setFilters({});
+    setPage(1);
+
+    // Create a completely new URLSearchParams with ONLY page=1
+    // This ensures all filter params are removed
+    const params = new URLSearchParams();
+    params.set('page', '1');
+    
+    // Use replace to avoid adding to history and force a clean URL
+    router.replace(`?${params.toString()}`);
+  };
+
   // Calculate total items - use the maximum total from any column for pagination
   const totalItems = Math.max(
     newData.data?.meta?.total || 0,
@@ -175,13 +246,17 @@ export default function CustomerSupportsMarketingKanbanPage() {
   return (
     <>
       <PageHeader title={pageHeader.title} breadcrumb={pageHeader.breadcrumb}>
-        <Button
-          onClick={handleCreateClick}
-          className="mt-4 w-full @lg:mt-0 @lg:w-auto"
-        >
-          <PiPlusBold className="me-1.5 h-[17px] w-[17px]" />
-          Create New Customer Support
-        </Button>
+        <div className="mt-4 flex w-full flex-col gap-3 @lg:mt-0 @lg:flex-row @lg:items-center @lg:justify-end">
+          <KanbanFilters
+            onFilterChange={handleFilterChange}
+            onClearFilters={handleClearFilters}
+            currentFilters={filters}
+          />
+          <Button onClick={handleCreateClick} className="w-full @lg:w-auto">
+            <PiPlusBold className="me-1.5 h-[17px] w-[17px]" />
+            Create New Customer Support
+          </Button>
+        </div>
       </PageHeader>
 
       {isLoading ? (

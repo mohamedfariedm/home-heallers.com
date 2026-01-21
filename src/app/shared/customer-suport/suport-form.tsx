@@ -73,9 +73,9 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
       specialtie_2: data.specialtie_2,
       specialtie_3: data.specialtie_3,
       ads_name: data.ads_name,
-      modified_on: data.modified_on,
       created_by: data.created_by,
       event_agent_name: data.event_agent_name,
+      communication_channel: data.communication_channel,
     };
 console.log(requestBody);
 
@@ -139,9 +139,9 @@ console.log(requestBody);
           specialtie_2: initValues?.specialtie_2 || '',
           specialtie_3: initValues?.specialtie_3 || '',
           ads_name: initValues?.ads_name || '',
-          modified_on: initValues?.modified_on || '',
           created_by: initValues?.created_by || '',
           event_agent_name: initValues?.event_agent_name || '',
+          communication_channel: initValues?.communication_channel || '',
         },
       }}
       className="flex flex-grow flex-col gap-6 p-6"
@@ -204,13 +204,13 @@ console.log(errors);
               </select>
               {errors.status && <p className="text-sm text-red-500">{errors.status.message}</p>}
             </div>
-            <Input label="Reason" {...register('reason')} error={errors.reason?.message} />
+            <Input label="Chief Comment" {...register('reason')} error={errors.reason?.message} />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <Input label="Lead Source" {...register('lead_source')} error={errors.lead_source?.message} />
             <div>
-              <label className="block text-sm font-medium text-gray-900 mb-1">Source Campaign</label>
+              <label className="block text-sm font-medium text-gray-900 mb-1">Source</label>
               <select 
                 {...register('source_campaign')} 
                 className="w-full border border-gray-300 rounded-md p-2 h-10 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
@@ -223,8 +223,7 @@ console.log(errors);
                 <option value="telegram">Telegram</option>
                 <option value="twitter">Twitter</option>
                 <option value="tiktok">TikTok</option>
-                <option value="whatsapp">WhatsApp</option>
-                <option value="call">Call</option>
+                <option value="mobile_application">Mobile Application</option>
                 <option value="youtube">YouTube</option>
                 <option value="website">Website</option>
                 <option value="referral">Referral</option>
@@ -232,6 +231,20 @@ console.log(errors);
               </select>
               {errors.source_campaign && <p className="text-sm text-red-500 mt-1">{errors.source_campaign.message}</p>}
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-900 mb-1">Communication Channel</label>
+            <select 
+              {...register('communication_channel')} 
+              className="w-full border border-gray-300 rounded-md p-2 h-10 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+            >
+              <option value="">Select Communication Channel</option>
+              <option value="Call">Call</option>
+              <option value="WhatsApp">WhatsApp</option>
+              <option value="Lead Form">Lead Form</option>
+            </select>
+            {errors.communication_channel && <p className="text-sm text-red-500 mt-1">{errors.communication_channel.message}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -294,14 +307,55 @@ console.log(errors);
           <Input label="No Show Lost Reason" {...register('no_show_lost_reason')} error={errors.no_show_lost_reason?.message} />
 
           <div className="grid grid-cols-3 gap-4">
-            <Input label="Specialty 1" {...register('specialtie_1')} error={errors.specialtie_1?.message} />
-            <Input label="Specialty 2" {...register('specialtie_2')} error={errors.specialtie_2?.message} />
-            <Input label="Specialty 3" {...register('specialtie_3')} error={errors.specialtie_3?.message} />
+            <div>
+              <label className="block text-sm font-medium text-gray-900 mb-1">Specialty 1</label>
+              <select 
+                {...register('specialtie_1')} 
+                className="w-full border border-gray-300 rounded-md p-2 h-10 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+              >
+                <option value="">Select Specialty</option>
+                <option value="Physiotherapy">Physiotherapy</option>
+                <option value="Nursing visits">Nursing visits</option>
+                <option value="Doctors visits">Doctors visits</option>
+                <option value="Caregivers">Caregivers</option>
+                <option value="Extendcare">Extendcare</option>
+              </select>
+              {errors.specialtie_1 && <p className="text-sm text-red-500 mt-1">{errors.specialtie_1.message}</p>}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-900 mb-1">Specialty 2</label>
+              <select 
+                {...register('specialtie_2')} 
+                className="w-full border border-gray-300 rounded-md p-2 h-10 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+              >
+                <option value="">Select Specialty</option>
+                <option value="Physiotherapy">Physiotherapy</option>
+                <option value="Nursing visits">Nursing visits</option>
+                <option value="Doctors visits">Doctors visits</option>
+                <option value="Caregivers">Caregivers</option>
+                <option value="Extendcare">Extendcare</option>
+              </select>
+              {errors.specialtie_2 && <p className="text-sm text-red-500 mt-1">{errors.specialtie_2.message}</p>}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-900 mb-1">Specialty 3</label>
+              <select 
+                {...register('specialtie_3')} 
+                className="w-full border border-gray-300 rounded-md p-2 h-10 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+              >
+                <option value="">Select Specialty</option>
+                <option value="Physiotherapy">Physiotherapy</option>
+                <option value="Nursing visits">Nursing visits</option>
+                <option value="Doctors visits">Doctors visits</option>
+                <option value="Caregivers">Caregivers</option>
+                <option value="Extendcare">Extendcare</option>
+              </select>
+              {errors.specialtie_3 && <p className="text-sm text-red-500 mt-1">{errors.specialtie_3.message}</p>}
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div>
             <Input label="Ads Name" {...register('ads_name')} error={errors.ads_name?.message} />
-            <Input label="Modified On" type="datetime-local" {...register('modified_on')} error={errors.modified_on?.message} />
           </div>
 
           <div className="grid grid-cols-2 gap-4">

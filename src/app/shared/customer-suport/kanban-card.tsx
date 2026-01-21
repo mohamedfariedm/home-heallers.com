@@ -9,9 +9,11 @@ import {
   PiUser,
   PiCalendar,
   PiPencilSimpleBold,
+  PiEye,
 } from 'react-icons/pi';
 import { useModal } from '@/app/shared/modal-views/use-modal';
 import KanbanCardModal from './kanban-card-modal';
+import KanbanCardViewModal from './kanban-card-view-modal';
 import { useState, useRef } from 'react';
 
 interface KanbanItem {
@@ -28,6 +30,7 @@ interface KanbanItem {
   agent_name?: string;
   notes?: string;
   created_at?: string;
+  updated_at?: string;
   [key: string]: any;
 }
 
@@ -71,6 +74,15 @@ export default function KanbanCard({
     e.preventDefault();
     openModal({
       view: <KanbanCardModal item={item} />,
+      customSize: '1000px',
+    });
+  };
+
+  const handleViewClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    openModal({
+      view: <KanbanCardViewModal item={item} />,
       customSize: '1000px',
     });
   };
@@ -187,18 +199,28 @@ export default function KanbanCard({
         isDragging && 'rotate-3 shadow-xl'
       )}
     >
-      {/* Edit Button - positioned absolutely to not interfere with drag */}
-      <button
-        onClick={handleEditClick}
-        onPointerDown={(e) => e.stopPropagation()}
-        className="absolute right-2 top-2 z-10 rounded-full bg-gray-100 p-1.5 opacity-0 transition-opacity hover:bg-gray-200 group-hover:opacity-100 dark:bg-gray-700 dark:hover:bg-gray-600"
-        title="Edit"
-      >
-        <PiPencilSimpleBold className="h-4 w-4 text-gray-600 dark:text-gray-300" />
-      </button>
+      {/* Edit and View Buttons - positioned absolutely to not interfere with drag */}
+      <div className="absolute right-2 top-2 z-10 flex flex-col gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
+        <button
+          onClick={handleEditClick}
+          onPointerDown={(e) => e.stopPropagation()}
+          className="rounded-full bg-gray-100 p-1.5 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
+          title="Edit"
+        >
+          <PiPencilSimpleBold className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+        </button>
+        <button
+          onClick={handleViewClick}
+          onPointerDown={(e) => e.stopPropagation()}
+          className="rounded-full bg-gray-100 p-1.5 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
+          title="View"
+        >
+          <PiEye className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+        </button>
+      </div>
 
       {/* Card Header */}
-      <div className="mb-3 pr-8">
+      <div className="mb-3 pr-12">
         <h3 className="font-semibold text-gray-900 dark:text-gray-100">
           {item.name || 'Unnamed Customer'}
         </h3>
@@ -254,10 +276,20 @@ export default function KanbanCard({
           </div>
         )}
 
-        {item.created_at && (
-          <div className="flex items-center gap-2 text-xs text-gray-400">
-            <PiCalendar className="h-3 w-3" />
-            <span>{item.created_at}</span>
+        {(item.created_at || item.updated_at) && (
+          <div className="space-y-1 text-xs text-gray-400">
+            {item.created_at && (
+              <div className="flex items-center gap-2">
+                <PiCalendar className="h-3 w-3" />
+                <span>Created: {item.created_at}</span>
+              </div>
+            )}
+            {item.updated_at && (
+              <div className="flex items-center gap-2">
+                <PiCalendar className="h-3 w-3" />
+                <span>Modified On: {item.updated_at}</span>
+              </div>
+            )}
           </div>
         )}
       </div>
