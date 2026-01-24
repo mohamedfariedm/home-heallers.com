@@ -46,6 +46,10 @@ export const reservationFormSchema = z
     // New fields
     paid: z.number().optional().default(0),
     source_campaign: z.string().optional(),
+    
+    // Lead-related fields
+    lead_id: z.number().optional(),
+    name: z.string().optional(),
 
     dates: z
       .array(

@@ -6,6 +6,7 @@ export interface Attachment {
 
 export interface Banner {
   page: string;
+  type?: 'web' | 'mobile app';
   attachment: Attachment;
 }
 

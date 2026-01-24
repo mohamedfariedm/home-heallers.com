@@ -74,7 +74,7 @@ export default function KanbanCard({
     e.preventDefault();
     openModal({
       view: <KanbanCardModal item={item} />,
-      customSize: '1000px',
+      customSize: '90vw',
     });
   };
 
@@ -106,7 +106,7 @@ export default function KanbanCard({
         e.stopPropagation();
         openModal({
           view: <KanbanCardModal item={item} />,
-          customSize: '1200px',
+          customSize: '90vw',
         });
       }
     }
@@ -118,7 +118,7 @@ export default function KanbanCard({
     if (!isSortableDragging) {
       openModal({
         view: <KanbanCardModal item={item} />,
-        customSize: '1200px',
+        customSize: '90vw',
       });
     }
   };
