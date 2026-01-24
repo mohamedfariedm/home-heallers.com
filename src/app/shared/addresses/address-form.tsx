@@ -13,6 +13,8 @@ import { useCities } from '@/framework/cities';
 import { useStates } from '@/framework/states';
 import Select from 'react-select';
 import { Textarea } from 'rizzui';
+import toast from 'react-hot-toast';
+import { HiOutlineMapPin } from 'react-icons/hi2';
 
 export default function AddressForm({ initValues }: { initValues?: any }) {
   const { closeModal } = useModal();
@@ -27,21 +29,36 @@ export default function AddressForm({ initValues }: { initValues?: any }) {
   const [selectedCountry, setSelectedCountry] = useState<any>(null);
   const [selectedState, setSelectedState] = useState<any>(null);
   const [selectedCity, setSelectedCity] = useState<any>(null);
+  const [isGeocoding, setIsGeocoding] = useState(false);
+  const [googleMapsUrl, setGoogleMapsUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (initValues) {
-      setSelectedCountry({
-        value: initValues?.country?.id,
-        label: initValues?.country?.name?.en ?? '',
-      });
-      setSelectedState({
-        value: initValues?.state?.id,
-        label: initValues?.state?.name?.en ?? '',
-      });
-      setSelectedCity({
-        value: initValues?.city?.id,
-        label: initValues?.city?.name?.en ?? '',
-      });
+      // Set Google Maps URL if location exists
+      if (initValues?.location?.lat && initValues?.location?.long) {
+        const url = `https://www.google.com/maps/search/?api=1&query=${initValues.location.lat},${initValues.location.long}`;
+        setGoogleMapsUrl(url);
+      }
+
+      // Set selected values if they exist
+      if (initValues?.country?.id) {
+        setSelectedCountry({
+          value: initValues.country.id,
+          label: initValues.country.name?.en ?? '',
+        });
+      }
+      if (initValues?.state?.id) {
+        setSelectedState({
+          value: initValues.state.id,
+          label: initValues.state.name?.en ?? '',
+        });
+      }
+      if (initValues?.city?.id) {
+        setSelectedCity({
+          value: initValues.city.id,
+          label: initValues.city.name?.en ?? '',
+        });
+      }
     }
   }, [initValues]);
 
@@ -86,7 +103,27 @@ export default function AddressForm({ initValues }: { initValues?: any }) {
     >
       {({ register, setValue, formState: { errors } }) => (
         <>
-          <Title as="h4">{initValues ? 'Update Address' : 'Create Address'}</Title>
+          <div className="flex items-center justify-between">
+            <Title as="h4">{initValues ? 'Update Address' : 'Create Address'}</Title>
+            {googleMapsUrl && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => window.open(googleMapsUrl, '_blank')}
+                className="flex items-center gap-2"
+              >
+                <HiOutlineMapPin className="h-4 w-4" />
+                View on Google Maps
+              </Button>
+            )}
+          </div>
+          
+          {isGeocoding && (
+            <div className="text-sm text-blue-600">
+              Retrieving location data from coordinates...
+            </div>
+          )}
 
 <div>
   <label className="mb-1 block text-sm font-medium text-gray-700">Addressable Type</label>

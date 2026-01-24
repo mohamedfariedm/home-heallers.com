@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import type React from 'react';
+import { useState, useEffect } from 'react';
 import { type SubmitHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -91,19 +92,10 @@ interface Invoice {
 }
 
 // -------------------- Helpers --------------------
-const normalizeTaxPercentage = (v: unknown): string => {
-  if (v == null) return '15%';
-  const s = String(v).trim();
-  // Normalize "معافاة" to "معافاه" to match the enum
-  if (s === 'معافاة' || s === 'معافاه') return 'معافاه';
-  if (s === '0%' || s === '15%' || s === '20%') return s;
-  return '15%';
-};
-
 const taxRateFrom = (v: unknown): number => {
   if (v == null) return 0.15;
   const s = String(v).trim();
-  if (s === 'معافاه' || s === 'معافاة') return 0;
+  if (s === 'معافاه') return 0;
   if (s.endsWith('%')) {
     const n = Number(s.replace('%', '').trim());
     return isNaN(n) ? 0 : n / 100;
@@ -114,49 +106,6 @@ const taxRateFrom = (v: unknown): number => {
 };
 
 const toNum = (v: unknown) => Number(v ?? 0) || 0;
-
-// Transform backend data structure to form structure
-const transformInvoiceData = (data: any): Invoice | null => {
-  if (!data) return null;
-
-  const transformDetail = (detail: any): InvoiceDetail => {
-    // Extract category info from nested object or flat structure
-    const categoryId = Number(detail.category_id || detail.category?.id || 0);
-    const categoryName =
-      detail.category_name ||
-      detail.category?.name?.en ||
-      detail.category?.name?.ar ||
-      '';
-
-    return {
-      id: detail.id ?? null,
-      customer_name: detail.customer_name || '',
-      category_id: categoryId,
-      category_name: categoryName,
-      session_price: Number(detail.session_price || 0),
-      session_count: Number(detail.session_count || 1),
-      doctor_id: Number(detail.doctor_id || 0),
-      national_id: detail.national_id ?? null,
-      tax_percentage: normalizeTaxPercentage(detail.tax_percentage),
-    };
-  };
-
-  return {
-    id: data.id,
-    invoice_number: data.invoice_number || '',
-    invoice_date: data.invoice_date || '',
-    discount: Number(data.discount || 0),
-    total_before_tax: Number(data.total_before_tax || 0),
-    tax_total: Number(data.tax_total || 0),
-    grand_total: Number(data.grand_total || 0),
-    balance_due: Number(data.balance_due || 0),
-    status: data.status || 'قيد الانتظار',
-    notes: data.notes || '',
-    details: Array.isArray(data.details)
-      ? data.details.map(transformDetail)
-      : [],
-  };
-};
 
 // -------------------- Per-line Calculation Hook --------------------
 const useInvoiceCalculations = (
@@ -226,14 +175,6 @@ export default function InvoiceManager({
     { value: 'معافاه', label: 'معافاه' },
   ];
 
-
-  // Transform initValues from backend format to form format
-  const transformedInitValues = useMemo(() => {
-    return transformInvoiceData(initValues);
-  }, [initValues]);
-
-  console.log({initValues, transformedInitValues});
-
   // ---------- useForm ----------
   const {
     register,
@@ -246,53 +187,20 @@ export default function InvoiceManager({
     resolver: zodResolver(InvoiceFormSchema),
     defaultValues: {
       invoice_number:
-        transformedInitValues?.invoice_number ||
+        initValues?.invoice_number ||
         `INV-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`,
       invoice_date:
-        transformedInitValues?.invoice_date || new Date().toISOString().split('T')[0],
-      discount: Number(transformedInitValues?.discount || 0),
-      total_before_tax: Number(transformedInitValues?.total_before_tax || 0),
-      tax_total: Number(transformedInitValues?.tax_total || 0),
-      grand_total: Number(transformedInitValues?.grand_total || 0),
-      balance_due: Number(transformedInitValues?.balance_due || 0),
-      status: (transformedInitValues?.status || 'قيد الانتظار') as 'قيد الانتظار' | 'موافق عليه' | 'ملغاة',
-      notes: transformedInitValues?.notes || '',
-      details: (transformedInitValues?.details || []).map((d) => ({
-        ...d,
-        category_id: Number(d.category_id),
-        session_price: Number(d.session_price),
-        session_count: Number(d.session_count),
-        doctor_id: Number(d.doctor_id),
-        tax_percentage: normalizeTaxPercentage(d.tax_percentage) as '0%' | '15%' | '20%' | 'معافاه',
-      })),
-    } as InvoiceFormInput,
+        initValues?.invoice_date || new Date().toISOString().split('T')[0],
+      discount: initValues?.discount || 0,
+      total_before_tax: initValues?.total_before_tax || 0,
+      tax_total: initValues?.tax_total || 0,
+      grand_total: initValues?.grand_total || 0,
+      balance_due: initValues?.balance_due || 0,
+      status: initValues?.status || 'قيد الانتظار',
+      notes: initValues?.notes || '',
+      details: initValues?.details || [],
+    },
   });
-
-  // Reset form when transformedInitValues changes (for update mode)
-  useEffect(() => {
-    if (transformedInitValues && transformedInitValues.id) {
-      const formData = {
-        invoice_number: transformedInitValues.invoice_number,
-        invoice_date: transformedInitValues.invoice_date,
-        discount: Number(transformedInitValues.discount),
-        total_before_tax: Number(transformedInitValues.total_before_tax),
-        tax_total: Number(transformedInitValues.tax_total),
-        grand_total: Number(transformedInitValues.grand_total),
-        balance_due: Number(transformedInitValues.balance_due),
-        status: transformedInitValues.status as 'قيد الانتظار' | 'موافق عليه' | 'ملغاة',
-        notes: transformedInitValues.notes || '',
-        details: transformedInitValues.details.map((d) => ({
-          ...d,
-          category_id: Number(d.category_id),
-          session_price: Number(d.session_price),
-          session_count: Number(d.session_count),
-          doctor_id: Number(d.doctor_id),
-          tax_percentage: normalizeTaxPercentage(d.tax_percentage) as '0%' | '15%' | '20%' | 'معافاه',
-        })),
-      };
-      reset(formData as any);
-    }
-  }, [transformedInitValues, reset]);
 
   const details = watch('details') || [];
   const discount = watch('discount');
@@ -348,7 +256,7 @@ export default function InvoiceManager({
       ...d,
       category_id: d.category_id ?? 0,
       category_name: d.category_name ?? '',
-      tax_percentage: normalizeTaxPercentage(d.tax_percentage),
+      tax_percentage: d.tax_percentage || '15%',
     });
     setIsAddingNew(false);
     setEditingIndex(index);
@@ -358,35 +266,27 @@ export default function InvoiceManager({
   const handleSaveDetail = () => {
     if (!editingDetail) return;
     try {
-      const normalizedDetail = {
-        ...editingDetail,
-        tax_percentage: normalizeTaxPercentage(editingDetail.tax_percentage),
-      };
       const validatedDetail = InvoiceDetailSchema.parse({
-        ...normalizedDetail,
-        session_price: normalizedDetail.session_price,
-        session_count: normalizedDetail.session_count,
-        doctor_id: normalizedDetail.doctor_id,
-        category_id: normalizedDetail.category_id,
-        category_name: normalizedDetail.category_name,
+        ...editingDetail,
+        session_price: editingDetail.session_price,
+        session_count: editingDetail.session_count,
+        doctor_id: editingDetail.doctor_id,
+        category_id: editingDetail.category_id,
+        category_name: editingDetail.category_name,
       });
 
-      const newDetail = {
+      const newDetail: InvoiceDetail = {
         ...validatedDetail,
         id: validatedDetail.id ?? undefined,
-        category_id: Number(validatedDetail.category_id),
-        session_price: Number(validatedDetail.session_price),
-        session_count: Number(validatedDetail.session_count),
-        doctor_id: Number(validatedDetail.doctor_id),
       };
 
       if (isAddingNew) {
-        setValue('details', [...details, newDetail] as any);
+        setValue('details', [...details, newDetail]);
       } else if (editingIndex !== null) {
         const updated = details.map((d: InvoiceDetail, i: number) =>
           i === editingIndex ? newDetail : d
         );
-        setValue('details', updated as any);
+        setValue('details', updated);
       }
 
       setEditingDetail(null);
@@ -438,8 +338,8 @@ export default function InvoiceManager({
       })),
     };
 
-    if (transformedInitValues?.id) {
-      update({ ...payload, id: transformedInitValues.id });
+    if (initValues?.id) {
+      update({ ...payload, id: initValues.id });
       closeModal();
     } else {
       create(payload);
@@ -540,9 +440,9 @@ export default function InvoiceManager({
                 <CardTitle className="flex items-center justify-between text-xl">
                   <div className="flex items-center gap-3">
                     <Receipt className="h-6 w-6" />
-                    {transformedInitValues?.id ? 'Update Invoice' : 'Create New Invoice'}
+                    {initValues ? 'Update Invoice' : 'Create New Invoice'}
                   </div>
-                  {!transformedInitValues?.id && (
+                  {!initValues && (
                     <div className="flex gap-2">
                       <Button
                         onClick={loadSampleData}
@@ -1090,7 +990,7 @@ export default function InvoiceManager({
                     {isCreating || isUpdating ? (
                       <Spinner size="sm" className="mr-2" />
                     ) : null}
-                    {transformedInitValues?.id ? 'Update Invoice' : 'Create Invoice'}
+                    {initValues ? 'Update Invoice' : 'Create Invoice'}
                   </Button>
                 </div>
               </CardContent>

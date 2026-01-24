@@ -3,34 +3,29 @@ import TableLayout from '@/app/[locale]/(hydrogen)/tables/table-layout';
 import Spinner from '@/components/ui/spinner';
 import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
-import CreateOrUpdateCustomerSupport from '@/app/shared/customer-suport/suport-form';
-import CustomerSuportTable from '@/app/shared/customer-suport/table';
-import { useCustomerSupport } from '@/framework/customer-suport';
-// export const metadata = {
-//   ...metaObject('Enhanced Table'),
-// };
+import ReservationReviewsTable from '@/app/shared/reservation-reviews/table';
+import { useReservationReviews } from '@/framework/reservation-reviews';
 
 const pageHeader = {
-  title: 'Customer Support',
+  title: 'Reservation Reviews',
   breadcrumb: [
     {
       href: '/',
       name: 'Home',
     },
     {
-      name: 'Customer Support',
+      name: 'Reservation Reviews',
     },
   ],
 };
 
-export default function CountriesTablePage() {
+export default function ReservationReviewsPage() {
   const searchParams = useSearchParams();
   const params = new URLSearchParams(searchParams);
   if (!params.get('page')) params.set('page', '1');
   if (!params.get('limit')) params.set('limit', '10');
-  if (!params.get('type')) params.set('type', 'operation');
 
-  const { data, isLoading } = useCustomerSupport(params.toString());
+  const { data, isLoading } = useReservationReviews(params.toString());
   const [selectedColumns, setSelectedColumns] = useState<any[]>([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState<any[]>([]);
 
@@ -46,23 +41,19 @@ export default function CountriesTablePage() {
           ),
         rows: selectedRowKeys,
       }}
-      fileName="customer-supports-operation"
-      header="User,Created At"
-      createName="Create Customer Support"
-      createElementButton={<CreateOrUpdateCustomerSupport type="operation" />}
-      importButton="customer-supports/import"
+      fileName="reservation-reviews"
+      header="Client,Doctor,Created At"
     >
       {isLoading ? (
         <div className="m-auto">
           <Spinner size="lg" />
         </div>
       ) : (
-        <CustomerSuportTable
-          data={data?.data}
-          type="operation"
+        <ReservationReviewsTable
+          data={data?.data || []}
           getSelectedColumns={setSelectedColumns}
           getSelectedRowKeys={setSelectedRowKeys}
-          totalItems={data?.meta?.total}
+          totalItems={data?.meta?.total || 0}
         />
       )}
     </TableLayout>

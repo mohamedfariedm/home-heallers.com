@@ -19,15 +19,100 @@ const operators = [
 export default function ColumnFilterPopover({
   columnKey,
   onFilterChange,
+  initialValue,
 }: {
   columnKey: string;
   onFilterChange: (key: string, value: any) => void;
+  initialValue?: { c1?: { op: string; value: string }; c2?: { op: string; value: string }; logic?: 'and' | 'or' };
 }) {
   const [open, setOpen] = useState(false);
-  const [cond1, setCond1] = useState({ op: 'equal', value: '' });
-  const [cond2, setCond2] = useState({ op: 'equal', value: '' });
-  const [logic, setLogic] = useState<'and' | 'or'>('and');
+  const [cond1, setCond1] = useState({ 
+    op: initialValue?.c1?.op || 'equal', 
+    value: initialValue?.c1?.value || '' 
+  });
+  const [cond2, setCond2] = useState({ 
+    op: initialValue?.c2?.op || 'equal', 
+    value: initialValue?.c2?.value || '' 
+  });
+  const [logic, setLogic] = useState<'and' | 'or'>(initialValue?.logic || 'and');
   const modalRef = useRef<HTMLDivElement | null>(null);
+  const isInitializing = useRef(true);
+  const lastInitialValue = useRef<string | null>(null);
+  const prevValues = useRef<{ cond1: { op: string; value: string }; cond2: { op: string; value: string }; logic: 'and' | 'or' } | null>(null);
+  const hasMounted = useRef(false);
+  const onFilterChangeRef = useRef(onFilterChange);
+  
+  // Keep ref updated without causing re-renders
+  useEffect(() => {
+    onFilterChangeRef.current = onFilterChange;
+  }, [onFilterChange]);
+
+  // Initialize on mount
+  useEffect(() => {
+    if (!hasMounted.current) {
+      hasMounted.current = true;
+      if (initialValue) {
+        const newCond1 = { 
+          op: initialValue.c1?.op || 'equal', 
+          value: initialValue.c1?.value || '' 
+        };
+        const newCond2 = { 
+          op: initialValue.c2?.op || 'equal', 
+          value: initialValue.c2?.value || '' 
+        };
+        const newLogic = initialValue.logic || 'and';
+        
+        setCond1(newCond1);
+        setCond2(newCond2);
+        setLogic(newLogic);
+        prevValues.current = { cond1: newCond1, cond2: newCond2, logic: newLogic };
+      }
+      lastInitialValue.current = JSON.stringify(initialValue);
+      setTimeout(() => {
+        isInitializing.current = false;
+      }, 100);
+    }
+  }, []);
+
+  // Update state when initialValue changes (only if it's different and after mount)
+  useEffect(() => {
+    if (!hasMounted.current) return;
+    
+    const currentInitial = JSON.stringify(initialValue || null);
+    
+    if (currentInitial !== lastInitialValue.current) {
+      lastInitialValue.current = currentInitial;
+      isInitializing.current = true;
+      
+      if (initialValue && (initialValue.c1?.value || initialValue.c2?.value)) {
+        const newCond1 = { 
+          op: initialValue.c1?.op || 'equal', 
+          value: initialValue.c1?.value || '' 
+        };
+        const newCond2 = { 
+          op: initialValue.c2?.op || 'equal', 
+          value: initialValue.c2?.value || '' 
+        };
+        const newLogic = initialValue.logic || 'and';
+        
+        setCond1(newCond1);
+        setCond2(newCond2);
+        setLogic(newLogic);
+        prevValues.current = { cond1: newCond1, cond2: newCond2, logic: newLogic };
+      } else {
+        // Clear all values
+        const emptyCond = { op: 'equal', value: '' };
+        setCond1(emptyCond);
+        setCond2(emptyCond);
+        setLogic('and');
+        prevValues.current = { cond1: emptyCond, cond2: emptyCond, logic: 'and' };
+      }
+      
+      setTimeout(() => {
+        isInitializing.current = false;
+      }, 100);
+    }
+  }, [initialValue]);
 
   // close modal when clicking outside or pressing Esc
   useEffect(() => {
@@ -45,10 +130,11 @@ export default function ColumnFilterPopover({
     };
   }, [open]);
 
-  // notify parent on any change
-  useEffect(() => {
-    onFilterChange(columnKey, { c1: cond1, c2: cond2, logic });
-  }, [cond1, cond2, logic]);
+  // Handle save button click
+  const handleSave = () => {
+    onFilterChangeRef.current(columnKey, { c1: cond1, c2: cond2, logic });
+    setOpen(false);
+  };
 
   return (
     <>
@@ -128,7 +214,7 @@ export default function ColumnFilterPopover({
             </div>
 
             {/* Condition 2 */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 mb-4">
               <select
                 className="border border-gray-300 rounded-lg px-2 py-2 text-sm w-1/2 focus:ring-2 focus:ring-blue-500"
                 value={cond2.op}
@@ -146,6 +232,22 @@ export default function ColumnFilterPopover({
                 value={cond2.value}
                 onChange={(e) => setCond2((s) => ({ ...s, value: e.target.value }))}
               />
+            </div>
+
+            {/* Save Button */}
+            <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-gray-200">
+              <button
+                onClick={() => setOpen(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Save
+              </button>
             </div>
           </div>
         </div>

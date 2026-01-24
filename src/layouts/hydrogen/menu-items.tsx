@@ -58,12 +58,25 @@ import {
   PiGlobe,
   PiReceipt,
 } from 'react-icons/pi';
-import { IoWarningOutline,IoNotificationsSharp, IoBusiness, IoPeopleOutline, IoHelpCircleOutline, IoStarOutline, IoInformationCircleOutline, IoChatboxEllipsesOutline, IoCardOutline, IoDownloadOutline, IoMedicalOutline, IoConstructOutline, IoHelpCircle  } from "react-icons/io5";
-import { FaUserShield } from "react-icons/fa6";
-import { TbUserShield } from "react-icons/tb";
-import { RiUserStarLine } from "react-icons/ri";
+import {
+  IoWarningOutline,
+  IoNotificationsSharp,
+  IoBusiness,
+  IoPeopleOutline,
+  IoHelpCircleOutline,
+  IoStarOutline,
+  IoInformationCircleOutline,
+  IoChatboxEllipsesOutline,
+  IoCardOutline,
+  IoDownloadOutline,
+  IoMedicalOutline,
+  IoConstructOutline,
+  IoHelpCircle,
+} from 'react-icons/io5';
+import { FaUserShield } from 'react-icons/fa6';
+import { TbUserShield } from 'react-icons/tb';
+import { RiUserStarLine } from 'react-icons/ri';
 import { BsPinMapFill } from 'react-icons/bs';
-
 
 // Note: do not add href in the label object, it is rendering as label
 export const menuItemsHaydrogen = [
@@ -159,18 +172,18 @@ export const menuItemsHaydrogen = [
     permissions: 'faqs',
   },
   {
-    name: 'Blogs',
-    nameAr: 'من نحن',
-    href: '/blogs',
-    icon: <IoBusiness />,
-    permissions: 'blogs',
-  },
-  {
     name: 'Frequently Asked Questions',
     nameAr: 'من نحن',
     href: '/attachments?section_id=10',
     icon: <IoHelpCircleOutline />,
     permissions: 'attachments',
+  },
+  {
+    name: 'Blogs',
+    nameAr: 'من نحن',
+    href: '/blogs',
+    icon: <IoBusiness />,
+    permissions: 'blogs',
   },
 
   { name: 'Partners Management' },
@@ -207,6 +220,20 @@ export const menuItemsHaydrogen = [
     href: routes.users.index,
     icon: <FaUserShield />,
     permissions: 'users',
+  },
+
+  { name: 'Contact Center' },
+  {
+    name: 'Outbound',
+    href: '/customer-supports-marketing-kanban',
+    icon: <PiPhoneCall />,
+    permissions: 'customer_supports_marketing',
+  },
+  {
+    name: 'Inbound',
+    href: '/customer-supports-operation-kanban',
+    icon: <PiHeadsetDuotone />,
+    permissions: 'customer_supports_operation',
   },
 
   { name: 'master Mangement ' },
@@ -246,18 +273,19 @@ export const menuItemsHaydrogen = [
     icon: <PiCreditCardDuotone />,
     permissions: 'packages',
   },
-  {
-    name: 'Operation customer supports',
-    href:"/customer-supports-operation",
-    icon: <PiPhoneCall />,
-    permissions: 'customer_supports_operation',
-  },
-  {
-    name: ' Marketing customer  supports',
-    href: "/customer-supports-marketing",
-    icon: <PiPhoneCall />,
-    permissions: 'customer_supports_marketing',
-  },
+  // {
+  //   name: 'Operation customer supports',
+  //   href: '/customer-supports-operation',
+  //   icon: <PiPhoneCall />,
+  //   permissions: 'customer_supports_operation',
+  // },
+  // {
+  //   name: ' Marketing customer  supports',
+  //   href: '/customer-supports-marketing',
+  //   icon: <PiPhoneCall />,
+  //   permissions: 'customer_supports_marketing',
+  // },
+
   {
     name: 'Patients',
     href: routes.patients.index,
@@ -288,7 +316,7 @@ export const menuItemsHaydrogen = [
     icon: <PiHammerDuotone />,
     permissions: 'nationalities',
   },
-    {
+  {
     name: 'Invoices',
     href: routes.invoices.index,
     icon: <PiReceipt />,
@@ -301,12 +329,17 @@ export const menuItemsHaydrogen = [
     permissions: 'reservations',
   },
   {
+    name: 'Reservation Reviews',
+    href: routes.reservationReviews.index,
+    icon: <IoStarOutline />,
+    permissions: 'reservations',
+  },
+  {
     name: 'contracts',
     href: routes.contracts.index,
     icon: <PiFileText />,
     permissions: 'Contracts',
   },
-
 
   { name: 'Settings Mangement ' },
   {
@@ -314,7 +347,7 @@ export const menuItemsHaydrogen = [
     href: routes.settings.index,
     icon: <PiGearDuotone />,
     permissions: 'settings',
-  }
+  },
   // { name: 'product Mangement ' },
   // {
   //   name: 'Products',
@@ -341,4 +374,3 @@ export const menuItemsHaydrogen = [
   //   permissions: 'features_categories',
   // },
 ];
-

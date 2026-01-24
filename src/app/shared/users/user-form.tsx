@@ -13,9 +13,17 @@ import { useCreateUser, useUpdateUser } from '@/framework/users';
 import { useRoles } from '@/framework/roles';
 import Select from 'react-select';
 import Spinner from '@/components/ui/spinner';
-import { userFormSchema, UserFormInput } from '@/utils/validators/user-form.schema';
+import {
+  createUserFormSchema,
+  updateUserFormSchema,
+  UserFormInput,
+} from '@/utils/validators/user-form.schema';
 
-export default function CreateOrUpdateUser({ initValues }: { initValues?: any }) {
+export default function CreateOrUpdateUser({
+  initValues,
+}: {
+  initValues?: any;
+}) {
   const { closeModal } = useModal();
   const { mutate: createUser, isPending: isCreating } = useCreateUser();
   const { mutate: updateUser, isPending: isUpdating } = useUpdateUser();
@@ -29,28 +37,42 @@ export default function CreateOrUpdateUser({ initValues }: { initValues?: any })
   useEffect(() => {
     if (initValues?.Roles && rolesData?.data) {
       const mapped = initValues.Roles.map((r: any) => {
-        const role = rolesData.data.find((item: any) => item.id === r.id)
+        const role = rolesData.data.find((item: any) => item.id === r.id);
         return {
           value: r.id,
-          label: role?.name ?? role?.name?? 'Unnamed',
-        }
-      })
-      setSelectedRoles(mapped)
+          label: role?.name ?? role?.name ?? 'Unnamed',
+        };
+      });
+      setSelectedRoles(mapped);
     }
-  }, [initValues, lang, rolesData])
+  }, [initValues, lang, rolesData]);
 
   console.log(initValues, 'initValues');
-  
+
   const onSubmit: SubmitHandler<UserFormInput> = (data) => {
-    const requestBody = {
+    const requestBody: any = {
       name: data.name,
       email: data.email,
       mobile: data.mobile,
-      password: data.password,
-      password_confirmation: data.password_confirmation,
       roles: selectedRoles.map((r) => r.value),
     };
-console.log(data);
+
+    // Only include password fields if they have values
+    // In update mode, only include if user provided values
+    if (initValues) {
+      // Update mode: only include password if provided and not empty
+      if (data.password && data.password.trim().length > 0) {
+        requestBody.password = data.password;
+        requestBody.password_confirmation = data.password_confirmation;
+      }
+      // If password is not provided, don't include password fields at all
+    } else {
+      // Create mode: password is required (validated by schema)
+      requestBody.password = data.password;
+      requestBody.password_confirmation = data.password_confirmation;
+    }
+
+    console.log(data);
 
     if (initValues) {
       updateUser({ user_id: initValues.id, ...requestBody });
@@ -72,7 +94,9 @@ console.log(data);
   return (
     <Form<UserFormInput>
       onSubmit={onSubmit}
-      validationSchema={userFormSchema}
+      validationSchema={
+        initValues ? updateUserFormSchema : createUserFormSchema
+      }
       useFormProps={{
         defaultValues: {
           name: {
@@ -89,103 +113,110 @@ console.log(data);
       className="flex flex-grow flex-col gap-6 p-6"
     >
       {({ register, setValue, watch, formState: { errors } }) => {
-console.log(errors, 'errors');
+        console.log(errors, 'errors');
 
-        return<>
-          <div className="flex items-center justify-between">
-            <Title as="h4" className="font-semibold">
-              {initValues ? 'Update User' : 'Create User'}
-            </Title>
-            <Button onClick={closeModal}>
-              <PiXBold className="h-4 w-4" />
-            </Button>
-          </div>
+        return (
+          <>
+            <div className="flex items-center justify-between">
+              <Title as="h4" className="font-semibold">
+                {initValues ? 'Update User' : 'Create User'}
+              </Title>
+              <Button onClick={closeModal}>
+                <PiXBold className="h-4 w-4" />
+              </Button>
+            </div>
 
-          {/* Language Switch */}
-          <div className="flex gap-3">
+            {/* Language Switch */}
+            {/* <div className="flex gap-3">
             <Checkbox label="English" checked={lang === 'en'} onChange={() => setLang('en')} />
             <Checkbox label="Arabic" checked={lang === 'ar'} onChange={() => setLang('ar')} />
-          </div>
+          </div> */}
 
-          {/* Multilingual Name Field */}
-          {lang === 'en' ? (
+            {/* Multilingual Name Field */}
             <Input
-            key={"name.en"}
+              key={'name.en'}
               label="Name (English)"
               {...register('name.en')}
               error={errors.name?.en?.message}
             />
-          ) : (
             <Input
-            key={"name.ar"}
+              key={'name.ar'}
               label="Name (Arabic)"
               {...register('name.ar')}
               error={errors.name?.ar?.message}
             />
-          )}
 
-          <Input
-            label="Email"
-            type="email"
-            {...register('email')}
-            error={errors.email?.message}
-          />
+            <Input
+              label="Email"
+              type="email"
+              {...register('email')}
+              error={errors.email?.message}
+            />
 
-          <Input
-            label="Mobile"
-            type="tel"
-            {...register('mobile')}
-            error={errors.mobile?.message}
-          />
+            <Input
+              label="Mobile"
+              type="tel"
+              {...register('mobile')}
+              error={errors.mobile?.message}
+            />
 
-          <Input
-            label="Password"
-            {...register('password')}
-            error={errors.password?.message}
-          />
+            <Input
+              label="Password"
+              {...register('password')}
+              error={errors.password?.message}
+            />
 
-          <Input
-            label="Confirm Password"
-            {...register('password_confirmation')}
-            error={errors.password_confirmation?.message}
-          />
+            <Input
+              label="Confirm Password"
+              {...register('password_confirmation')}
+              error={errors.password_confirmation?.message}
+            />
 
-          {/* Role Selection */}
-          <div className="flex flex-col gap-2">
-  <label className="text-sm font-medium">Select Roles</label>
-  <Select
-    isMulti
-    options={rolesData?.data?.map((role: any) => ({
-      value: role.id,
-      label: role.name ?? role.name,
-    }))}
-    value={selectedRoles}
-    onChange={(selected) => {
-      const value = selected ? (Array.isArray(selected) ? [...selected] : [selected]) : [];
-      setSelectedRoles(value as any[]);
-      setValue('roles', value.map((r: any) => r.value)); // 👈 Important to sync with form state
-    }}
-    menuPortalTarget={document.body}
-    styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
-    placeholder="Select roles"
-  />
-  {errors?.roles?.message && (
-    <p className="text-sm text-red-500">{errors.roles.message}</p>
-  )}
-</div>
+            {/* Role Selection */}
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium">Select Roles</label>
+              <Select
+                isMulti
+                options={rolesData?.data?.map((role: any) => ({
+                  value: role.id,
+                  label: role.name ?? role.name,
+                }))}
+                value={selectedRoles}
+                onChange={(selected) => {
+                  const value = selected
+                    ? Array.isArray(selected)
+                      ? [...selected]
+                      : [selected]
+                    : [];
+                  setSelectedRoles(value as any[]);
+                  setValue(
+                    'roles',
+                    value.map((r: any) => r.value)
+                  ); // 👈 Important to sync with form state
+                }}
+                menuPortalTarget={document.body}
+                styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
+                placeholder="Select roles"
+              />
+              {errors?.roles?.message && (
+                <p className="text-sm text-red-500">{errors.roles.message}</p>
+              )}
+            </div>
 
-          <div className="flex justify-end gap-4 mt-6">
-            <Button variant="outline" onClick={closeModal}>
-              Cancel
-            </Button>
-            <Button type="submit" isLoading={loading || isCreating || isUpdating}>
-              {initValues ? 'Update User' : 'Create User'}
-            </Button>
-          </div>
-        </>
-
-      }
-      }
+            <div className="mt-6 flex justify-end gap-4">
+              <Button variant="outline" onClick={closeModal}>
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                isLoading={loading || isCreating || isUpdating}
+              >
+                {initValues ? 'Update User' : 'Create User'}
+              </Button>
+            </div>
+          </>
+        );
+      }}
     </Form>
   );
 }

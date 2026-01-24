@@ -19,7 +19,7 @@ export default function DateCell({
   timeFormat = 'h:mm A',
 }: DateCellProps) {
   return (
-    <div className={cn(className, 'grid gap-1 text-center')}>
+    <div className={cn(className, 'grid gap-1 text-start')}>
       <time
         dateTime={formatDate(date, 'YYYY-MM-DD')}
         className={cn('font-medium text-gray-700', dateClassName)}
