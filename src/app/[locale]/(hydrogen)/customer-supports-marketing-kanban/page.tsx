@@ -17,14 +17,14 @@ import { PiPlusBold } from 'react-icons/pi';
 import KanbanFilters from '@/app/shared/customer-suport/kanban-filters';
 
 const pageHeader = {
-  title: 'Marketing Customer Supports - Kanban',
+  title: 'Marketing Customer Supports',
   breadcrumb: [
     {
       href: '/',
       name: 'Home',
     },
     {
-      name: 'Marketing Customer Supports - Kanban',
+      name: 'Marketing Customer Supports',
     },
   ],
 };
