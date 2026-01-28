@@ -105,6 +105,30 @@ const taxRateFrom = (v: unknown): number => {
   return 0;
 };
 
+// Normalize any backend tax percentage value into one of the allowed enum values
+const normalizeTaxPercentage = (
+  v: unknown
+): '0%' | '15%' | '20%' | 'معافاه' => {
+  if (v == null) return '15%';
+  const s = String(v).trim();
+
+  // Already in correct format or Arabic exempt
+  if (s === '0%' || s === '15%' || s === '20%' || s === 'معافاه') {
+    return s as '0%' | '15%' | '20%' | 'معافاه';
+  }
+
+  // Common numeric backend formats like "0", "0.00", 0, 15, "15.00", etc.
+  const n = Number(s);
+  if (!isNaN(n)) {
+    if (n === 0) return '0%';
+    if (n === 15) return '15%';
+    if (n === 20) return '20%';
+  }
+
+  // Fallback to 15% if we can't understand the value
+  return '15%';
+};
+
 const toNum = (v: unknown) => Number(v ?? 0) || 0;
 
 // -------------------- Per-line Calculation Hook --------------------
@@ -175,6 +199,9 @@ export default function InvoiceManager({
     { value: 'معافاه', label: 'معافاه' },
   ];
 
+
+  console.log({initValues});
+
   // ---------- useForm ----------
   const {
     register,
@@ -191,15 +218,51 @@ export default function InvoiceManager({
         `INV-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`,
       invoice_date:
         initValues?.invoice_date || new Date().toISOString().split('T')[0],
-      discount: initValues?.discount || 0,
-      total_before_tax: initValues?.total_before_tax || 0,
-      tax_total: initValues?.tax_total || 0,
-      grand_total: initValues?.grand_total || 0,
-      balance_due: initValues?.balance_due || 0,
-      status: initValues?.status || 'قيد الانتظار',
+      discount: Number(initValues?.discount ?? 0),
+      total_before_tax: Number(initValues?.total_before_tax ?? 0),
+      tax_total: Number(initValues?.tax_total ?? 0),
+      grand_total: Number(initValues?.grand_total ?? 0),
+      balance_due: Number(initValues?.balance_due ?? 0),
+      status:
+        (initValues?.status as 'قيد الانتظار' | 'موافق عليه' | 'ملغاة') ??
+        'قيد الانتظار',
       notes: initValues?.notes || '',
-      details: initValues?.details || [],
-    },
+      // Normalize backend details into the shape expected by the form & Zod schema
+      details:
+        initValues?.details?.map((d: any) => ({
+          id: d.id,
+          customer_name:
+            d.customer_name ??
+            initValues?.customer_name ??
+            '',
+          category_id:
+            d.category_id ??
+            d.category?.id ??
+            0,
+          category_name:
+            d.category_name ??
+            d.category?.name?.en ??
+            d.category?.name?.ar ??
+            '',
+          session_price:
+            d.session_price ??
+            initValues?.details?.[0]?.session_price ??
+            0,
+          session_count:
+            d.session_count ??
+            1,
+          doctor_id:
+            d.doctor_id ??
+            initValues?.doctor_id ??
+            0,
+          national_id:
+            d.national_id ??
+            null,
+          tax_percentage: normalizeTaxPercentage(
+            d.tax_percentage
+          ),
+        })) || [],
+    } as any,
   });
 
   const details = watch('details') || [];
