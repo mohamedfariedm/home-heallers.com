@@ -6,6 +6,7 @@ import { useState } from 'react';
 import ReservationsTable from '@/app/shared/reservations/table';
 import { useReservations } from '@/framework/reservations';
 import CreateOrUpdateReservation from '@/app/shared/reservations/reservations-form';
+import ReservationStatistics from '@/app/shared/reservations/reservation-statistics';
 
 const pageHeader = {
   title: 'Reservations',
@@ -22,11 +23,16 @@ const pageHeader = {
 
 export default function ReservationsTablePage() {
   const searchParams = useSearchParams();
-  const params = new URLSearchParams(searchParams);
-  if (!params.get('page')) params.set('page', '1');
-  if (!params.get('limit')) params.set('limit', '10');
   
-  const { data, isLoading } = useReservations(params.toString());
+  // Build query string from search params
+  const queryParams = new URLSearchParams();
+  searchParams.forEach((value, key) => {
+    queryParams.set(key, value);
+  });
+  if (!queryParams.get('page')) queryParams.set('page', '1');
+  if (!queryParams.get('limit')) queryParams.set('limit', '10');
+  
+  const { data, isLoading } = useReservations(queryParams.toString());
   const [selectedColumns, setSelectedColumns] = useState<any[]>([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState<any[]>([]);
 
@@ -53,12 +59,21 @@ export default function ReservationsTablePage() {
           <Spinner size="lg" />
         </div>
       ) : (
-        <ReservationsTable
-          data={data?.data}
-          getSelectedColumns={setSelectedColumns}
-          getSelectedRowKeys={setSelectedRowKeys}
-          totalItems={data?.meta?.total}
-        />
+        <>
+          {/* Reservation Statistics */}
+          <ReservationStatistics 
+            statistics={data?.statistics} 
+            className="mb-6"
+          />
+          
+          {/* Reservations Table */}
+          <ReservationsTable
+            data={data?.data}
+            getSelectedColumns={setSelectedColumns}
+            getSelectedRowKeys={setSelectedRowKeys}
+            totalItems={data?.meta?.total}
+          />
+        </>
       )}
     </TableLayout>
   );
