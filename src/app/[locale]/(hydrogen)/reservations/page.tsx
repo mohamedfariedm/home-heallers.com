@@ -31,6 +31,7 @@ export default function ReservationsTablePage() {
   });
   if (!queryParams.get('page')) queryParams.set('page', '1');
   if (!queryParams.get('limit')) queryParams.set('limit', '10');
+  queryParams.set('include_statistics', 'true');
   
   const { data, isLoading } = useReservations(queryParams.toString());
   const [selectedColumns, setSelectedColumns] = useState<any[]>([]);
