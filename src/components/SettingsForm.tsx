@@ -25,7 +25,7 @@ const tabs = [
   { id: "social", label: "Social Media", icon: Share2 },
   { id: "app-links", label: "App Links", icon: Smartphone },
   { id: "seo", label: "SEO Settings", icon: Search },
-  { id: "landing-pages", label: "Landing Pages", icon: Globe },
+  // { id: "landing-pages", label: "Landing Pages", icon: Globe },
   { id: 'terms', label: 'Terms & Conditions', icon: FileText },
   { id: 'conditions', label: 'General Conditions', icon: Shield },
   { id: 'business-info', label: 'Business Information', icon: Building2 },
