@@ -93,7 +93,7 @@ console.log(currentFiles);
     return null;
   };
 
-  return (currentFiles.length > 0 &&
+  return (
     <div className="space-y-2">
       <label className="block text-sm font-semibold text-gray-700">{label}</label>
 
@@ -156,7 +156,7 @@ console.log(currentFiles);
                     </div>
                   )}
                 </div>
-                {onRemove &&currentFiles.length > 2 && (
+                {onRemove && currentFiles.length > 0 && (
                   <button
                     type="button"
                     onClick={() => handleRemoveFile(index)}

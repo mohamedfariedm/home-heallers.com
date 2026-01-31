@@ -348,6 +348,12 @@ export const menuItemsHaydrogen = [
     icon: <PiGearDuotone />,
     permissions: 'settings',
   },
+  {
+    name: 'Looker Studio Report',
+    href: '/looker-studio-report',
+    icon: <PiChartBarDuotone />,
+    permissions: 'settings',
+  },
   // { name: 'product Mangement ' },
   // {
   //   name: 'Products',

@@ -13,6 +13,7 @@ import CreateOrUpdateReservation from './reservations-form';
 import ColumnFilterPopover from '@/app/shared/customer-suport/column-filter-popover';
 import client from '@/framework/utils';
 import toast from 'react-hot-toast';
+import InviteDoctorsButton from './invite-doctors-button';
 
 interface Columns {
   data: any[];
@@ -111,6 +112,7 @@ export const getColumns = ({
               <ChatSolidIcon className="h-4 w-4" />
             </ActionIcon>
           </Tooltip>
+          <InviteDoctorsButton reservationId={row.id} />
           <DeletePopover
             title={`Delete Reservation`}
             description={`Are you sure you want to delete reservation #${row.id}?`}
@@ -237,6 +239,91 @@ export const getColumns = ({
         return row.service.name;
       }
       return row.service.name?.en ?? row.service.name?.ar ?? '—';
+    },
+  },
+
+  // ✅ City
+  {
+    title: (
+      <div className="flex items-center gap-1">
+        <HeaderCell title="City" />
+        {onFilterChange && (
+          <ColumnFilterPopover
+            columnKey="city"
+            onFilterChange={onFilterChange}
+          />
+        )}
+      </div>
+    ),
+    dataIndex: 'city',
+    key: 'city',
+    render: (_: any, row: any) => {
+      // Try to get city from address first, then from patient
+      let cityName = '—';
+      
+      // Check address.city
+      if (row?.address?.city) {
+        if (typeof row.address.city === 'string') {
+          cityName = row.address.city;
+        } else {
+          cityName = row.address.city?.en ?? row.address.city?.ar ?? '—';
+        }
+      }
+      
+      // If no city from address, check patient.city
+      if (cityName === '—' && row?.patient?.city?.name) {
+        if (typeof row.patient.city.name === 'string') {
+          cityName = row.patient.city.name;
+        } else {
+          cityName = row.patient.city.name?.en?.en ?? 
+                     row.patient.city.name?.en ?? 
+                     row.patient.city.name?.ar?.en ?? 
+                     row.patient.city.name?.ar ?? '—';
+        }
+      }
+      
+      return cityName;
+    },
+  },
+
+  // ✅ State
+  {
+    title: (
+      <div className="flex items-center gap-1">
+        <HeaderCell title="State" />
+        {onFilterChange && (
+          <ColumnFilterPopover
+            columnKey="state"
+            onFilterChange={onFilterChange}
+          />
+        )}
+      </div>
+    ),
+    dataIndex: 'state',
+    key: 'state',
+    render: (_: any, row: any) => {
+      // Try to get state from address first, then from patient
+      let stateName = '—';
+      
+      // Check address.state
+      if (row?.address?.state) {
+        if (typeof row.address.state === 'string') {
+          stateName = row.address.state;
+        } else {
+          stateName = row.address.state?.en ?? row.address.state?.ar ?? '—';
+        }
+      }
+      
+      // If no state from address, check patient.state
+      if (stateName === '—' && row?.patient?.state) {
+        if (typeof row.patient.state === 'string') {
+          stateName = row.patient.state;
+        } else {
+          stateName = row.patient.state?.en ?? row.patient.state?.ar ?? '—';
+        }
+      }
+      
+      return stateName;
     },
   },
 

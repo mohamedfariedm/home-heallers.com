@@ -34,6 +34,11 @@ const nextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'development.home-healers.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
         hostname: 'flagcdn.com',
       },
       {
@@ -52,6 +57,16 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'isomorphic-furyroad.s3.amazonaws.com',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        pathname: '/**',
+      },
+      {
+        protocol: 'http',
+        hostname: '127.0.0.1',
+        pathname: '/**',
       },
     ],
   },

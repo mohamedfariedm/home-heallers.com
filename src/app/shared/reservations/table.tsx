@@ -97,6 +97,8 @@ export default function ReservationsTable({
     status: params.get("status") || '',
     client: params.get("client") || '',
     service: params.get("service") || '',
+    city: params.get("city") || '',
+    state: params.get("state") || '',
   };
 
   const onHeaderCellClick = (value: string) => ({
