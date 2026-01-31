@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   useForm,
   type SubmitHandler,
@@ -11,7 +11,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { PiXBold } from 'react-icons/pi';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
 import { ActionIcon } from 'rizzui';
 import { useModal } from '../modal-views/use-modal';
 import {
@@ -51,11 +50,14 @@ const genderOptions = [
 
 export default function CreateOrUpdateReservation({
   initValues,
+  leadData,
+  onSuccess,
 }: {
   initValues?: any;
+  leadData?: any;
+  onSuccess?: () => void;
 }) {
   const { permissions } = usePermissions();
-  console.log(permissions);
 
   const { mutate: createReservation, isPending: isCreating } =
     useCreateReservation();
@@ -74,6 +76,9 @@ export default function CreateOrUpdateReservation({
   const isGuestReservation =
     initValues?.is_guest === 1 || !!initValues?.guest_info;
   const isExistingPatient = !!initValues?.patient?.id;
+  
+  // Use lead data to pre-populate fields when creating a new reservation
+  const shouldUseLeadData = !initValues && leadData;
   const feesTypeOptions = [
     { value: 'صفریة', label: 'صفریة' },
     { value: 'معافاة', label: 'معافاة' },
@@ -93,8 +98,8 @@ export default function CreateOrUpdateReservation({
 
     defaultValues: {
       reservation_type: isExistingPatient ? 'existing' : 'guest',
-      paid: initValues?.paid || 0,
-      source_campaign: initValues?.source_campaign || '',
+      paid: initValues?.paid !== undefined && initValues?.paid !== null ? Number(initValues.paid) : 0,
+      source_campaign: initValues?.source_campaign || leadData?.source_campaign || '',
       // 🧩 base IDs
       patient_id: initValues?.patient?.id?.toString() || '',
       doctor_id: initValues?.doctor?.id?.toString() || '',
@@ -120,11 +125,12 @@ export default function CreateOrUpdateReservation({
       // 🧩 common fields
       status: initValues?.status?.toString() || '2',
       pain_location: initValues?.pain_location || '',
-      notes: initValues?.notes || '',
+      notes: initValues?.notes || leadData?.notes || '',
       address_city:
         initValues?.address?.city?.en ||
         initValues?.guest_info?.city ||
         initValues?.address_city ||
+        leadData?.address_1 ||
         '',
       address_state:
         initValues?.address?.state?.en ||
@@ -133,21 +139,25 @@ export default function CreateOrUpdateReservation({
         '',
       address_link: initValues?.address?.link || initValues?.address_link || '',
 
+      // 🧩 Lead-related fields
+      lead_id: initValues?.lead_id || (shouldUseLeadData ? leadData?.id : undefined),
+      name: initValues?.name || (shouldUseLeadData ? leadData?.name : undefined),
+
       patient_name:
         guest?.name ||
         initValues?.patient?.name?.en ||
         initValues?.patient?.name?.ar ||
-        '',
+        (shouldUseLeadData ? leadData?.name : ''),
       patient_email: guest?.email || initValues?.patient?.email || '',
       patient_national_id:
         guest?.national_id || initValues?.patient?.national_id || '',
-      patient_gender: guest?.gender || initValues?.patient?.gender || 'male',
+      patient_gender: guest?.gender || initValues?.patient?.gender || (shouldUseLeadData ? leadData?.gender || 'male' : 'male'),
       patient_country:
         guest?.country ||
         guest?.nationality ||
         initValues?.patient?.country?.name?.en?.en ||
         '',
-      patient_mobile: guest?.mobile || initValues?.patient?.mobile || '',
+      patient_mobile: guest?.mobile || initValues?.patient?.mobile || (shouldUseLeadData ? leadData?.mobile_phone || leadData?.booking_phone_number : ''),
       patient_city:
         guest?.city || initValues?.patient?.city?.name?.en?.en || '',
       patient_state: guest?.state || initValues?.patient?.state?.en || '',
@@ -155,15 +165,17 @@ export default function CreateOrUpdateReservation({
         guest?.date_of_birth || initValues?.patient?.date_of_birth || '',
 
       // 🧩 nested dates handling - improved to handle both data structures
-      dates: initValues?.dates?.map((d: any) => ({
-        date: d.date ? d.date.split('T')[0] : '',
-        time: d.time
-          ? d.time.split('T')[1]?.substring(0, 5)
-          : d.end_time?.split('T')[1]?.substring(0, 5) || '',
-        time_period: d.time_period || 'morning',
-        doctor_id: d.doctor?.id?.toString() || '',
-        status: d.status || '1',
-      })) || [
+      dates: (initValues?.dates && Array.isArray(initValues.dates) && initValues.dates.length > 0)
+        ? initValues.dates.map((d: any) => ({
+            date: d?.date && typeof d.date === 'string' ? d.date.split('T')[0] : '',
+            time: d?.time && typeof d.time === 'string'
+              ? d.time.split('T')[1]?.substring(0, 5) || ''
+              : (d?.end_time && typeof d.end_time === 'string' ? d.end_time.split('T')[1]?.substring(0, 5) : '') || '',
+            time_period: d?.time_period || 'morning',
+            doctor_id: d?.doctor?.id?.toString() || '',
+            status: d?.status?.toString() || '1',
+          }))
+        : [
         {
           date: '',
           time: '',
@@ -184,7 +196,6 @@ export default function CreateOrUpdateReservation({
   const watchFeesType = useWatch({ control, name: 'fees_type' });
   const watchTotalAmount = useWatch({ control, name: 'total_amount' });
   const watchReservationStatus = useWatch({ control, name: 'status' });
-  console.log('errors', errors);
 
   const prevStatusRef = useRef<string | undefined>();
   useEffect(() => {
@@ -334,15 +345,21 @@ export default function CreateOrUpdateReservation({
       address_city: data.address_city,
       address_state: data.address_state,
       address_link: data.address_link,
-      paid: Number(data.paid),
+      paid: data.paid !== undefined && data.paid !== null ? Number(data.paid) : 0,
       source_campaign: data.source_campaign,
-      dates: data.dates?.map((date) => ({
-        date: date.date,
-        time: date.time,
-        time_period: date.time_period,
-        doctor_id: date.doctor_id ? Number(date.doctor_id) : undefined,
-        status: date.status ? Number(date.status) : undefined,
-      })),
+      dates: (data.dates && Array.isArray(data.dates) && data.dates.length > 0)
+        ? data.dates.map((date: any) => ({
+            date: date?.date || '',
+            time: date?.time || '',
+            time_period: date?.time_period || 'morning',
+            doctor_id: date?.doctor_id ? Number(date.doctor_id) : undefined,
+            status: date?.status ? Number(date.status) : undefined,
+          }))
+        : [],
+
+      // Include lead_id and name if available
+      ...(data.lead_id ? { lead_id: Number(data.lead_id) } : {}),
+      ...(data.name ? { name: data.name } : {}),
 
       ...(data.reservation_type === 'guest'
         ? {
@@ -361,10 +378,35 @@ export default function CreateOrUpdateReservation({
           }),
     };
 
-    if (initValues) {
-      updateReservation({ reservation_id: initValues.id, ...requestBody });
-    } else {
-      createReservation(requestBody);
+    try {
+      if (initValues?.id) {
+        updateReservation(
+          { reservation_id: initValues.id, ...requestBody },
+          {
+            onSuccess: () => {
+              if (onSuccess) {
+                onSuccess();
+              }
+            },
+            onError: (error) => {
+              console.error('Error updating reservation:', error);
+            },
+          }
+        );
+      } else {
+        createReservation(requestBody, {
+          onSuccess: () => {
+            if (onSuccess) {
+              onSuccess();
+            }
+          },
+          onError: (error) => {
+            console.error('Error creating reservation:', error);
+          },
+        });
+      }
+    } catch (error) {
+      console.error('Error submitting reservation form:', error);
     }
   };
 
@@ -748,21 +790,24 @@ export default function CreateOrUpdateReservation({
             <Controller
               name="paid"
               control={control}
-              render={({ field: { value, onChange } }) => (
-                <div className="flex items-center gap-3 pt-2">
-                  <Switch
-                    checked={Number(value) === 1}
-                    onChange={(e: any) => {
-                      // Handle both standard event and direct boolean (if rizzui changes behavior)
-                      const checked = e?.target ? e.target.checked : e;
-                      onChange(checked ? 1 : 0);
+              render={({ field: { value, onChange } }) => {
+                // Safely convert value to number, default to 0 if undefined/null
+                const paidValue = value !== undefined && value !== null ? Number(value) : 0;
+                
+                return (
+                  <select
+                    value={paidValue}
+                    onChange={(e) => {
+                      const newValue = Number(e.target.value);
+                      onChange(newValue);
                     }}
-                  />
-                  <span className="text-sm font-medium text-gray-700">
-                    {Number(value) === 1 ? 'Paid' : 'Unpaid'}
-                  </span>
-                </div>
-              )}
+                    className="w-full rounded-lg border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                  >
+                    <option value={0}>Unpaid</option>
+                    <option value={1}>Paid</option>
+                  </select>
+                );
+              }}
             />
           </div>
         </div>

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -7,6 +8,10 @@ import {
 } from '@dnd-kit/sortable';
 import KanbanCard from './kanban-card';
 import cn from '@/utils/class-names';
+import { ActionIcon } from '@/components/ui/action-icon';
+import { Tooltip } from '@/components/ui/tooltip';
+import ChatSolidIcon from '@/components/icons/chat-solid';
+import WhatsAppSendModal from './whatsapp-send-modal';
 
 interface KanbanItem {
   id: number;
@@ -76,6 +81,7 @@ export default function KanbanColumn({
   items,
   onStatusChange,
 }: KanbanColumnProps) {
+  const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
   const { setNodeRef, isOver } = useDroppable({
     id: column.id,
     data: {
@@ -113,6 +119,21 @@ export default function KanbanColumn({
             {items.length}
           </span>
         </div>
+        <Tooltip
+          size="sm"
+          content={() => 'Send WhatsApp Message'}
+          placement="top"
+          color="invert"
+        >
+          <ActionIcon
+            size="sm"
+            variant="text"
+            className="cursor-pointer hover:bg-white/20"
+            onClick={() => setIsWhatsAppModalOpen(true)}
+          >
+            <ChatSolidIcon className="h-4 w-4" />
+          </ActionIcon>
+        </Tooltip>
       </div>
 
       {/* Column Content - This entire area is droppable */}
@@ -134,6 +155,12 @@ export default function KanbanColumn({
           </div>
         )}
       </div>
+
+      <WhatsAppSendModal
+        isOpen={isWhatsAppModalOpen}
+        onClose={() => setIsWhatsAppModalOpen(false)}
+        status={column.status}
+      />
     </div>
   );
 }

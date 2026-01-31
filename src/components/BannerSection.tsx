@@ -24,6 +24,7 @@ const BannerSection: React.FC<BannerSectionProps> = ({ banners, onUpdate }) => {
   const addBanner = () => {
     const newBanner: Banner = {
       page: 'home',
+      type: 'web',
       attachment: {
         id: Date.now(),
         thumbnail: '',
@@ -101,6 +102,20 @@ const BannerSection: React.FC<BannerSectionProps> = ({ banners, onUpdate }) => {
 
             <div className="grid md:grid-cols-2 gap-6">
               <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Type
+                  </label>
+                  <select
+                    value={banner.type || 'web'}
+                    onChange={(e) => updateBanner(index, { ...banner, type: e.target.value as 'web' | 'mobile app' })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="web">Web</option>
+                    <option value="mobile app">Mobile App</option>
+                  </select>
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Page

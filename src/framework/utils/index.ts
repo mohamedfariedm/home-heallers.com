@@ -95,6 +95,7 @@ class Client {
                 'Content-Type': 'multipart/form-data',
             },
         }),
+        sendWhatsApp: (input: { status: string; message: string }) => HttpClient.post('/customer-supports/send-whatsapp', input),
     }
     addresses = {
         all: (param: string) => HttpClient.get(`${routes.addresses.index}?${param}`),
@@ -138,6 +139,7 @@ class Client {
             },
         }),
         createPaymentWhatsapp: (input: { reservation_id: number }) => HttpClient.post('/reservations/create-payment-whatsapp', input),
+        inviteDoctors: (input: { reservation_id: number; doctor_ids: number[] }) => HttpClient.post(`${routes.reservations.index}/invite-doctors/${input.reservation_id}`, { doctor_ids: input.doctor_ids }),
     };
     coupons = {
         all: (param: string) => HttpClient.get(`${routes.coupons.index}?${param}`),

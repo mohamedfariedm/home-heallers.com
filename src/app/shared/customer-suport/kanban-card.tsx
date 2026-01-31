@@ -10,10 +10,12 @@ import {
   PiCalendar,
   PiPencilSimpleBold,
   PiEye,
+  PiClock,
 } from 'react-icons/pi';
 import { useModal } from '@/app/shared/modal-views/use-modal';
 import KanbanCardModal from './kanban-card-modal';
 import KanbanCardViewModal from './kanban-card-view-modal';
+import ActivityLogsModal from './activity-logs-modal';
 import { useState, useRef } from 'react';
 
 interface KanbanItem {
@@ -31,6 +33,17 @@ interface KanbanItem {
   notes?: string;
   created_at?: string;
   updated_at?: string;
+  activity_logs?: Array<{
+    id: number;
+    description: string;
+    causer_name: string | null;
+    causer_id: number | null;
+    changes?: {
+      attributes?: Record<string, any>;
+      old?: Record<string, any>;
+    };
+    created_at: string;
+  }>;
   [key: string]: any;
 }
 
@@ -74,7 +87,7 @@ export default function KanbanCard({
     e.preventDefault();
     openModal({
       view: <KanbanCardModal item={item} />,
-      customSize: '1000px',
+      customSize: '90vw',
     });
   };
 
@@ -84,6 +97,20 @@ export default function KanbanCard({
     openModal({
       view: <KanbanCardViewModal item={item} />,
       customSize: '1000px',
+    });
+  };
+
+  const handleActivityLogsClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    openModal({
+      view: (
+        <ActivityLogsModal
+          activityLogs={item.activity_logs || []}
+          itemName={item.name}
+        />
+      ),
+      customSize: '900px',
     });
   };
 
@@ -106,7 +133,7 @@ export default function KanbanCard({
         e.stopPropagation();
         openModal({
           view: <KanbanCardModal item={item} />,
-          customSize: '1200px',
+          customSize: '90vw',
         });
       }
     }
@@ -118,7 +145,7 @@ export default function KanbanCard({
     if (!isSortableDragging) {
       openModal({
         view: <KanbanCardModal item={item} />,
-        customSize: '1200px',
+        customSize: '90vw',
       });
     }
   };
@@ -199,7 +226,7 @@ export default function KanbanCard({
         isDragging && 'rotate-3 shadow-xl'
       )}
     >
-      {/* Edit and View Buttons - positioned absolutely to not interfere with drag */}
+      {/* Edit, View, and Activity Logs Buttons - positioned absolutely to not interfere with drag */}
       <div className="absolute right-2 top-2 z-10 flex flex-col gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
         <button
           onClick={handleEditClick}
@@ -216,6 +243,14 @@ export default function KanbanCard({
           title="View"
         >
           <PiEye className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+        </button>
+        <button
+          onClick={handleActivityLogsClick}
+          onPointerDown={(e) => e.stopPropagation()}
+          className="rounded-full bg-gray-100 p-1.5 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
+          title="Activity Logs"
+        >
+          <PiClock className="h-4 w-4 text-gray-600 dark:text-gray-300" />
         </button>
       </div>
 

@@ -27,65 +27,69 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
   }, [initValues]);
 
   const onSubmit: SubmitHandler<LeadFormInput> = (data) => {
-    const requestBody = {
-      type,
-      name: data.name,
-      first_name: data.first_name,
-      middle_name: data.middle_name,
-      last_name: data.last_name,
-      offer: data.offer,
-      agent_name: data.agent_name,
-      status: data.status,
-      reason: data.reason,
-      age: data.age,
-      gender: data.gender,
-      lead_source: data.lead_source,
-      mobile_phone: data.mobile_phone,
-      booking_phone_number: data.booking_phone_number,
-      home_phone: data.home_phone,
-      address_1: data.address_1,
-      source_campaign: data.source_campaign,
-      activity_code: data.activity_code,
-      call_sub_result: data.call_sub_result,
-      will_call_us_again_reason: data.will_call_us_again_reason,
-      not_interested_reason: data.not_interested_reason,
-      inquiry_only_reason: data.inquiry_only_reason,
-      injection_date: data.injection_date,
-      duplicate_lead: data.duplicate_lead,
-      call_count: data.call_count,
-      modified_by: data.modified_by,
-      patient_id: data.patient_id,
-      phonecall_patient_id: data.phonecall_patient_id,
-      description: data.description,
-      first_call_time: data.first_call_time,
-      last_call_result: data.last_call_result,
-      last_call_total_duration: data.last_call_total_duration,
-      last_phone: data.last_phone,
-      last_call_created_by: data.last_call_created_by,
-      booking_count: data.booking_count,
-      reservation_date_1: data.reservation_date_1,
-      doctor1: data.doctor1,
-      notes: data.notes,
-      ads: data.ads,
-      ad_set: data.ad_set,
-      no_show_lost_reason: data.no_show_lost_reason,
-      specialtie_1: data.specialtie_1,
-      specialtie_2: data.specialtie_2,
-      specialtie_3: data.specialtie_3,
-      ads_name: data.ads_name,
-      created_by: data.created_by,
-      event_agent_name: data.event_agent_name,
-      communication_channel: data.communication_channel,
-    };
-console.log(requestBody);
+    try {
+      const requestBody = {
+        type,
+        name: data.name || '',
+        first_name: data.first_name || '',
+        middle_name: data.middle_name || '',
+        last_name: data.last_name || '',
+        offer: data.offer || '',
+        agent_name: data.agent_name || '',
+        status: data.status || '',
+        reason: data.reason || '',
+        age: data.age || '',
+        gender: data.gender || '',
+        lead_source: data.lead_source || '',
+        mobile_phone: data.mobile_phone || '',
+        booking_phone_number: data.booking_phone_number || '',
+        home_phone: data.home_phone || '',
+        address_1: data.address_1 || '',
+        source_campaign: data.source_campaign || '',
+        activity_code: data.activity_code || '',
+        call_sub_result: data.call_sub_result || '',
+        will_call_us_again_reason: data.will_call_us_again_reason || '',
+        not_interested_reason: data.not_interested_reason || '',
+        inquiry_only_reason: data.inquiry_only_reason || '',
+        injection_date: data.injection_date || null,
+        duplicate_lead: data.duplicate_lead || null,
+        call_count: data.call_count || 0,
+        modified_by: data.modified_by || '',
+        patient_id: data.patient_id || '',
+        phonecall_patient_id: data.phonecall_patient_id || '',
+        description: data.description || '',
+        first_call_time: data.first_call_time || null,
+        last_call_result: data.last_call_result || '',
+        last_call_total_duration: data.last_call_total_duration || 0,
+        last_phone: data.last_phone || '',
+        last_call_created_by: data.last_call_created_by || '',
+        booking_count: data.booking_count || 0,
+        reservation_date_1: data.reservation_date_1 || null,
+        doctor1: data.doctor1 || '',
+        notes: data.notes || '',
+        ads: data.ads || '',
+        ad_set: data.ad_set || '',
+        no_show_lost_reason: data.no_show_lost_reason || '',
+        specialtie_1: data.specialtie_1 || '',
+        specialtie_2: data.specialtie_2 || '',
+        specialtie_3: data.specialtie_3 || '',
+        ads_name: data.ads_name || '',
+        created_by: data.created_by || '',
+        event_agent_name: data.event_agent_name || '',
+        communication_channel: data.communication_channel || '',
+      };
 
-    if (initValues) {
-      updateSupport({ lead_id: initValues.id, ...requestBody });
-    } else {
-      createSupport(requestBody);
+      if (initValues?.id) {
+        updateSupport({ lead_id: initValues.id, ...requestBody });
+      } else {
+        createSupport(requestBody);
+      }
+
+      setLoading(true);
+    } catch (error) {
+      console.error('Error submitting lead form:', error);
+      setLoading(false);
     }
-
-    setLoading(true);
   };
 
 
@@ -147,9 +151,8 @@ console.log(requestBody);
       className="flex flex-grow flex-col gap-6 p-6"
     >
       {({ register, formState: { errors } }) => {
-console.log(errors);
-
-        return<>
+        return (
+          <>
           <div className="flex items-center justify-between">
             <Title as="h4" className="font-semibold">
               {initValues ? 'Update Lead' : 'Create Lead'}
@@ -371,10 +374,9 @@ console.log(errors);
               {initValues ? 'Update Lead' : 'Create Lead'}
             </Button>
           </div>
-        </>
-
-      }
-      }
+          </>
+        );
+      }}
     </Form>
   );
 }
