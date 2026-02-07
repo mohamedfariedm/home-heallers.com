@@ -94,6 +94,7 @@ export interface LandingPageSection {
     original: string;
   };
   order: number;
+  active?: boolean; // Whether the section is active (default: true)
   display_mode?: 'section' | 'slider';
   slide_type?: 'services' | 'blogs' | 'packages' | 'offers' | 'doctors' | 'faqs';
   selected_services?: number[]; // For services section or slider
@@ -102,6 +103,7 @@ export interface LandingPageSection {
   selected_offers?: number[]; // For offers slider
   selected_blogs?: number[]; // For blogs slider
   selected_faqs?: number[]; // For faqs slider
+  payment_link?: boolean; // Enable payment link for packages/offers (default: false)
   buttons?: CallToActionButton[]; // Array of CTA buttons for any section
   form_fields?: FormField[]; // For form section - array of form fields
   form_submit_text?: MultilingualText; // Submit button text for form
@@ -198,6 +200,8 @@ export interface LandingPage {
   images?: LandingPageImages;
   sections: LandingPageSection[];
   seo?: LandingPageSEO;
+  show_in_menu?: boolean; // Whether to show page in menu (default: false)
+  show_in_footer?: boolean; // Whether to show page in footer (default: false)
 }
 
 export interface Settings {

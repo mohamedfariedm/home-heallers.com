@@ -7,123 +7,217 @@ import { FileUpload } from '@/app/[locale]/(hydrogen)/attachments/components/ui/
 interface LandingPagesSectionProps {
   landingPages: LandingPage[];
   onUpdate: (pages: LandingPage[]) => void;
+  onSavePage?: (page: LandingPage) => Promise<void>; // Optional API callback for individual page saves
+  onDeletePage?: (pageId: number) => Promise<void>; // Optional API callback for page deletion
+  onSaveSection?: (pageId: number, section: any) => Promise<void>; // Optional API callback for section saves
 }
 
-const LandingPagesSection: React.FC<LandingPagesSectionProps> = ({ landingPages = [], onUpdate }) => {
+const LandingPagesSection: React.FC<LandingPagesSectionProps> = ({ 
+  landingPages = [], 
+  onUpdate,
+  onSavePage,
+  onDeletePage,
+  onSaveSection,
+}) => {
   const [selectedPage, setSelectedPage] = useState<LandingPage | null>(null);
+  const [originalPageSlug, setOriginalPageSlug] = useState<string | null>(null); // Track original slug for updates
   const [isEditing, setIsEditing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
   const addPage = () => {
-    const timestamp = Date.now();
-    const pageSlug = `page-${timestamp}`;
-    const currentDate = new Date().toISOString().split('T')[0];
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://yoursite.com';
-    const pageUrl = `${baseUrl}/${pageSlug}`;
+    try {
+      const timestamp = Date.now();
+      const pageSlug = `page-${timestamp}`;
+      const currentDate = new Date().toISOString().split('T')[0];
+      const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://yoursite.com';
+      const pageUrl = `${baseUrl}/${pageSlug}`;
 
-    // Professional SEO configuration for new page
-    const professionalSEO = {
-      meta_title: { 
-        en: 'New Landing Page - Professional Services | Your Brand', 
-        ar: 'صفحة هبوط جديدة - خدمات احترافية | علامتك التجارية' 
-      },
-      meta_description: { 
-        en: 'Discover our new landing page with professional content and services. Get started today with tailored solutions for your needs.', 
-        ar: 'اكتشف صفحة الهبوط الجديدة مع محتوى وخدمات احترافية. ابدأ اليوم مع حلول مصممة خصيصاً لاحتياجاتك.' 
-      },
-      focus_keyword: { 
-        en: 'landing page services', 
-        ar: 'خدمات صفحة الهبوط' 
-      },
-      h1_tag: { 
-        en: 'New Page Title', 
-        ar: 'عنوان الصفحة الجديدة' 
-      },
-      meta_keywords: { 
-        en: 'landing page, professional services, web design, digital marketing', 
-        ar: 'صفحة هبوط، خدمات احترافية، تصميم مواقع، تسويق رقمي' 
-      },
-      canonical_url: pageUrl,
-      meta_robots: 'index, follow',
-      og_title: { 
-        en: 'New Landing Page - Professional Services', 
-        ar: 'صفحة هبوط جديدة - خدمات احترافية' 
-      },
-      og_description: { 
-        en: 'Discover our new landing page with professional content. Get started today!', 
-        ar: 'اكتشف صفحة الهبوط الجديدة مع محتوى احترافي. ابدأ اليوم!' 
-      },
-      og_image: `${baseUrl}/images/og-default.jpg`,
-      og_type: 'website',
-      og_url: pageUrl,
-      og_site_name: 'Your Brand Name',
-      og_locale: { en: 'en_US', ar: 'ar_SA' },
-      twitter_card: 'summary_large_image',
-      twitter_title: { 
-        en: 'New Landing Page - Professional Services', 
-        ar: 'صفحة هبوط جديدة - خدمات احترافية' 
-      },
-      twitter_description: { 
-        en: 'Discover our new landing page with professional content. Get started today!', 
-        ar: 'اكتشف صفحة الهبوط الجديدة مع محتوى احترافي. ابدأ اليوم!' 
-      },
-      twitter_image: `${baseUrl}/images/twitter-default.jpg`,
-      twitter_site: '@yourbrand',
-      twitter_creator: '@yourbrand',
-      schema_type: 'WebPage',
-      author: 'Your Brand',
-      published_date: currentDate,
-      modified_date: currentDate,
-      language: 'en',
-    };
+      // Professional SEO configuration for new page
+      const professionalSEO = {
+        meta_title: { 
+          en: 'New Landing Page - Professional Services | Your Brand', 
+          ar: 'صفحة هبوط جديدة - خدمات احترافية | علامتك التجارية' 
+        },
+        meta_description: { 
+          en: 'Discover our new landing page with professional content and services. Get started today with tailored solutions for your needs.', 
+          ar: 'اكتشف صفحة الهبوط الجديدة مع محتوى وخدمات احترافية. ابدأ اليوم مع حلول مصممة خصيصاً لاحتياجاتك.' 
+        },
+        focus_keyword: { 
+          en: 'landing page services', 
+          ar: 'خدمات صفحة الهبوط' 
+        },
+        h1_tag: { 
+          en: 'New Page Title', 
+          ar: 'عنوان الصفحة الجديدة' 
+        },
+        meta_keywords: { 
+          en: 'landing page, professional services, web design, digital marketing', 
+          ar: 'صفحة هبوط، خدمات احترافية، تصميم مواقع، تسويق رقمي' 
+        },
+        canonical_url: pageUrl,
+        meta_robots: 'index, follow',
+        og_title: { 
+          en: 'New Landing Page - Professional Services', 
+          ar: 'صفحة هبوط جديدة - خدمات احترافية' 
+        },
+        og_description: { 
+          en: 'Discover our new landing page with professional content. Get started today!', 
+          ar: 'اكتشف صفحة الهبوط الجديدة مع محتوى احترافي. ابدأ اليوم!' 
+        },
+        og_image: `${baseUrl}/images/og-default.jpg`,
+        og_type: 'website',
+        og_url: pageUrl,
+        og_site_name: 'Your Brand Name',
+        og_locale: { en: 'en_US', ar: 'ar_SA' },
+        twitter_card: 'summary_large_image',
+        twitter_title: { 
+          en: 'New Landing Page - Professional Services', 
+          ar: 'صفحة هبوط جديدة - خدمات احترافية' 
+        },
+        twitter_description: { 
+          en: 'Discover our new landing page with professional content. Get started today!', 
+          ar: 'اكتشف صفحة الهبوط الجديدة مع محتوى احترافي. ابدأ اليوم!' 
+        },
+        twitter_image: `${baseUrl}/images/twitter-default.jpg`,
+        twitter_site: '@yourbrand',
+        twitter_creator: '@yourbrand',
+        schema_type: 'WebPage',
+        author: 'Your Brand',
+        published_date: currentDate,
+        modified_date: currentDate,
+        language: 'en',
+      };
 
-    const newPage: LandingPage = {
-      slug: pageSlug,
-      name: { en: 'New Page', ar: 'صفحة جديدة' },
-      title: { en: 'New Page Title', ar: 'عنوان الصفحة الجديدة' },
-      description: { en: 'Page description', ar: 'وصف الصفحة' },
-      meta_title: professionalSEO.meta_title,
-      meta_description: professionalSEO.meta_description,
-      sections: [],
-      seo: professionalSEO,
-    };
-    onUpdate([...landingPages, newPage]);
-    setSelectedPage(newPage);
-    setIsEditing(true);
-  };
-
-  const updatePage = (updatedPage: LandingPage) => {
-    const index = landingPages.findIndex(p => p.slug === updatedPage.slug);
-    if (index !== -1) {
-      const newPages = [...landingPages];
-      newPages[index] = updatedPage;
-      onUpdate(newPages);
-    } else {
-      onUpdate([...landingPages, updatedPage]);
+      const newPage: LandingPage = {
+        slug: pageSlug,
+        name: { en: 'New Page', ar: 'صفحة جديدة' },
+        title: { en: 'New Page Title', ar: 'عنوان الصفحة الجديدة' },
+        description: { en: 'Page description', ar: 'وصف الصفحة' },
+        meta_title: professionalSEO.meta_title,
+        meta_description: professionalSEO.meta_description,
+        sections: [],
+        seo: professionalSEO,
+      };
+      
+      onUpdate([...landingPages, newPage]);
+      setSelectedPage(newPage);
+      setOriginalPageSlug(newPage.slug); // Track the new page's slug
+      setIsEditing(true);
+    } catch (error) {
+      console.error('Error creating new page:', error);
+      alert('Failed to create new page. Please try again.');
     }
-    setSelectedPage(updatedPage);
   };
 
-  const deletePage = (slug: string) => {
+  const updatePage = async (updatedPage: LandingPage) => {
+    try {
+      // Ensure the page has all required fields
+      const pageToUpdate: LandingPage = {
+        ...updatedPage,
+        slug: updatedPage.slug || `page-${Date.now()}`,
+        name: updatedPage.name || { en: 'Untitled Page', ar: 'صفحة بدون عنوان' },
+        title: updatedPage.title || { en: 'Untitled Page', ar: 'صفحة بدون عنوان' },
+        description: updatedPage.description || { en: '', ar: '' },
+        meta_title: updatedPage.meta_title || { en: '', ar: '' },
+        meta_description: updatedPage.meta_description || { en: '', ar: '' },
+        sections: updatedPage.sections || [],
+      };
+
+      // If onSavePage callback is provided, call API first
+      if (onSavePage) {
+        await onSavePage(pageToUpdate);
+      }
+
+      // Use original slug to find the page (in case slug was changed during editing)
+      // If originalPageSlug is null, it means this is a new page
+      const searchSlug = originalPageSlug || pageToUpdate.slug;
+      const index = landingPages.findIndex(p => 
+        p.slug === searchSlug || 
+        (p.id && updatedPage.id && p.id === updatedPage.id)
+      );
+      
+      if (index !== -1) {
+        // Update existing page
+        const newPages = [...landingPages];
+        newPages[index] = pageToUpdate;
+        onUpdate(newPages);
+        setSelectedPage(pageToUpdate);
+        // Update original slug if it changed
+        if (pageToUpdate.slug !== searchSlug) {
+          setOriginalPageSlug(pageToUpdate.slug);
+        }
+      } else {
+        // Add new page (only if originalPageSlug is null, meaning it's truly a new page)
+        if (!originalPageSlug) {
+          const newPages = [...landingPages, pageToUpdate];
+          onUpdate(newPages);
+          setSelectedPage(pageToUpdate);
+          setOriginalPageSlug(pageToUpdate.slug);
+        } else {
+          // This shouldn't happen, but handle gracefully
+          console.warn('Page not found for update, but original slug exists. Adding as new page.');
+          const newPages = [...landingPages, pageToUpdate];
+          onUpdate(newPages);
+          setSelectedPage(pageToUpdate);
+        }
+      }
+    } catch (error) {
+      console.error('Error updating page:', error);
+      // Don't throw, just log - let the update happen locally
+    }
+  };
+
+  const deletePage = async (slug: string) => {
     if (confirm('Are you sure you want to delete this page?')) {
-      onUpdate(landingPages.filter(p => p.slug !== slug));
-      if (selectedPage?.slug === slug) {
-        setSelectedPage(null);
-        setIsEditing(false);
+      try {
+        const pageToDelete = landingPages.find(p => p.slug === slug);
+        
+        // If onDeletePage callback is provided and page has an ID, call API
+        if (onDeletePage && pageToDelete?.id) {
+          await onDeletePage(pageToDelete.id);
+        }
+
+        const updatedPages = landingPages.filter(p => p.slug !== slug);
+        onUpdate(updatedPages);
+        if (selectedPage?.slug === slug) {
+          setSelectedPage(null);
+          setOriginalPageSlug(null);
+          setIsEditing(false);
+        }
+      } catch (error) {
+        console.error('Error deleting page:', error);
+        // Still update locally even if API call fails
+        const updatedPages = landingPages.filter(p => p.slug !== slug);
+        onUpdate(updatedPages);
+        if (selectedPage?.slug === slug) {
+          setSelectedPage(null);
+          setOriginalPageSlug(null);
+          setIsEditing(false);
+        }
       }
     }
   };
 
   const duplicatePage = (page: LandingPage) => {
-    const duplicated: LandingPage = {
-      ...page,
-      slug: `${page.slug}-copy-${Date.now()}`,
-      name: {
-        en: `${page.name.en} (Copy)`,
-        ar: `${page.name.ar} (نسخة)`,
-      },
-    };
-    onUpdate([...landingPages, duplicated]);
+    try {
+      // Deep clone the page to avoid reference issues
+      const duplicated: LandingPage = {
+        ...page,
+        slug: `${page.slug}-copy-${Date.now()}`,
+        name: {
+          en: `${page.name.en} (Copy)`,
+          ar: `${page.name.ar} (نسخة)`,
+        },
+        // Deep clone sections (don't modify IDs as they should be numbers from the API)
+        sections: (page.sections || []).map((section) => ({
+          ...section,
+        })),
+      };
+      onUpdate([...landingPages, duplicated]);
+    } catch (error) {
+      console.error('Error duplicating page:', error);
+      alert('Failed to duplicate page. Please try again.');
+    }
   };
 
   const filteredPages = landingPages.filter(page =>
@@ -136,13 +230,23 @@ const LandingPagesSection: React.FC<LandingPagesSectionProps> = ({ landingPages 
     return (
       <PageEditor
         page={selectedPage}
-        onSave={(updatedPage) => {
-          updatePage(updatedPage);
-          setIsEditing(false);
+        onSave={async (updatedPage) => {
+          try {
+            await updatePage(updatedPage);
+            setIsEditing(false);
+            setSelectedPage(null);
+            setOriginalPageSlug(null); // Reset original slug
+          } catch (error) {
+            console.error('Error saving page:', error);
+            alert('Failed to save page. Please try again.');
+          }
         }}
         onCancel={() => {
           setIsEditing(false);
+          setSelectedPage(null);
+          setOriginalPageSlug(null); // Reset original slug
         }}
+        onSaveSection={onSaveSection}
       />
     );
   }
@@ -216,6 +320,7 @@ const LandingPagesSection: React.FC<LandingPagesSectionProps> = ({ landingPages 
                 <button
                   onClick={() => {
                     setSelectedPage(page);
+                    setOriginalPageSlug(page.slug); // Store original slug when starting to edit
                     setIsEditing(true);
                   }}
                   className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"

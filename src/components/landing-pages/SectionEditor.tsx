@@ -51,6 +51,8 @@ const SectionEditor: React.FC<SectionEditorProps> = ({ section, onSave, onCancel
   const [editedSection, setEditedSection] = useState<LandingPageSection>({
     ...section,
     display_mode: section.display_mode || 'section',
+    active: section.active !== undefined ? section.active : true, // Default value is true
+    payment_link: section.payment_link !== undefined ? section.payment_link : false, // Default value is false
   });
 
   // Fetch data for different slide types
@@ -254,6 +256,29 @@ const SectionEditor: React.FC<SectionEditorProps> = ({ section, onSave, onCancel
         </select>
       </div>
 
+      {/* Active Toggle */}
+      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Active
+          </label>
+          <p className="text-xs text-gray-500">Show this section on the page</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => updateField('active', !editedSection.active)}
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+            editedSection.active !== false ? 'bg-blue-600' : 'bg-gray-300'
+          }`}
+        >
+          <span
+            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+              editedSection.active !== false ? 'translate-x-6' : 'translate-x-1'
+            }`}
+          />
+        </button>
+      </div>
+
       {/* Display Mode - For all sections except banner */}
       {!isBannerSection && (
         <div>
@@ -361,6 +386,31 @@ const SectionEditor: React.FC<SectionEditorProps> = ({ section, onSave, onCancel
                 <p className="text-sm text-gray-600 mt-2">
                   {(editedSection as any)[slideTypeData.field].length} item(s) selected
                 </p>
+              )}
+              
+              {/* Payment Link Toggle - Only show for packages or offers */}
+              {(editedSection.slide_type === 'packages' || editedSection.slide_type === 'offers') && (
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg mt-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Payment Link
+                    </label>
+                    <p className="text-xs text-gray-500">Enable payment link for selected packages/offers</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => updateField('payment_link', !editedSection.payment_link)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      editedSection.payment_link ? 'bg-blue-600' : 'bg-gray-300'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        editedSection.payment_link ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
               )}
             </>
           )}

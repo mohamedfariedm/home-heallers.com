@@ -12,12 +12,14 @@ import {
   PiCaretUpBold 
 } from 'react-icons/pi';
 import cn from '@/utils/class-names';
+import { useCenters } from '@/framework/centers';
 
 export interface StatisticsFilters {
   date_from?: string;
   date_to?: string;
   doctor_id?: string;
   client_id?: string;
+  center_id?: string;
   reservation_statuses?: number[];
   customer_support_types?: string[];
   source_campaign?: string;
@@ -53,16 +55,20 @@ export default function StatisticsFiltersComponent({
   const [dateTo, setDateTo] = useState('');
   const [doctorId, setDoctorId] = useState('');
   const [clientId, setClientId] = useState('');
+  const [centerId, setCenterId] = useState('');
   const [sourceCampaign, setSourceCampaign] = useState('');
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [selectedSupportTypes, setSelectedSupportTypes] = useState<string[]>([]);
   
-  // Doctors and Clients lists
+  // Doctors, Clients, and Centers lists
   const [doctors, setDoctors] = useState<Array<{ id: number; name: { en: string; ar: string } }>>([]);
   const [clients, setClients] = useState<Array<{ id: number; name: { en: string; ar: string } }>>([]);
   const [loadingDoctors, setLoadingDoctors] = useState(false);
   const [loadingClients, setLoadingClients] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+
+  // Use centers hook
+  const { data: centersData, isLoading: loadingCenters } = useCenters('limit=1000');
 
   // Fetch doctors and clients on component mount
   useEffect(() => {
@@ -74,7 +80,7 @@ export default function StatisticsFiltersComponent({
     setLoadingDoctors(true);
     try {
       const response = await fetch('/api/doctors/list');
-      const result = await response.json();
+      const result = (await response.json()) as any;
       const doctorsData = result.data || result || [];
       
       const normalizedDoctors = doctorsData.map((doctor: any) => ({
@@ -97,7 +103,7 @@ export default function StatisticsFiltersComponent({
     setLoadingClients(true);
     try {
       const response = await fetch('/api/clients/list');
-      const result = await response.json();
+      const result = (await response.json()) as any;
       const clientsData = result.data || result || [];
       
       const normalizedClients = clientsData.map((client: any) => ({
@@ -116,6 +122,21 @@ export default function StatisticsFiltersComponent({
     }
   };
 
+  // Normalize centers data from the hook
+  const centersResponse = centersData?.data || centersData;
+  const centersArray = Array.isArray(centersResponse?.data) 
+    ? centersResponse.data 
+    : Array.isArray(centersResponse) 
+    ? centersResponse 
+    : [];
+  
+  const normalizedCenters: Array<{ id: number; name: { en: string; ar: string } }> = centersArray.map((center: any) => ({
+    id: center.id,
+    name: typeof center.name === 'object' 
+      ? { ar: center.name.ar || '', en: center.name.en || '' }
+      : { ar: '', en: center.name || '' }
+  }));
+
   const handleApplyFilters = () => {
     const filters: StatisticsFilters = {};
     
@@ -123,6 +144,7 @@ export default function StatisticsFiltersComponent({
     if (dateTo) filters.date_to = dateTo;
     if (doctorId) filters.doctor_id = doctorId;
     if (clientId) filters.client_id = clientId;
+    if (centerId) filters.center_id = centerId;
     if (sourceCampaign) filters.source_campaign = sourceCampaign;
     if (selectedStatuses.length > 0) {
       filters.reservation_statuses = selectedStatuses.map(s => parseInt(s));
@@ -139,6 +161,7 @@ export default function StatisticsFiltersComponent({
     setDateTo('');
     setDoctorId('');
     setClientId('');
+    setCenterId('');
     setSourceCampaign('');
     setSelectedStatuses([]);
     setSelectedSupportTypes([]);
@@ -184,7 +207,7 @@ export default function StatisticsFiltersComponent({
       
       <div className={cn('grid transition-all duration-300 ease-in-out', isOpen ? 'grid-rows-[1fr] opacity-100 p-5' : 'grid-rows-[0fr] opacity-0 p-0 overflow-hidden')}>
         <div className="overflow-hidden">
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-5">
         {/* Date From */}
         <div className="space-y-1.5">
           <label className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
@@ -250,6 +273,27 @@ export default function StatisticsFiltersComponent({
               }))
             ]}
             placeholder="Select Client"
+            className="w-full"
+            selectClassName="border-gray-200 dark:border-gray-700 focus:ring-blue-500 rounded-lg h-[38px]"
+          />
+        </div>
+
+        {/* Center Dropdown */}
+        <div className="space-y-1.5">
+          <label className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+            Center
+          </label>
+          <SelectBox
+            value={centerId}
+            onChange={setCenterId}
+            options={[
+              { value: '', name: loadingCenters ? 'Loading...' : 'Select Center' },
+              ...normalizedCenters.map((center: { id: number; name: { en: string; ar: string } }) => ({
+                value: String(center.id),
+                name: center.name?.ar || center.name?.en || `Center ${center.id}`
+              }))
+            ]}
+            placeholder="Select Center"
             className="w-full"
             selectClassName="border-gray-200 dark:border-gray-700 focus:ring-blue-500 rounded-lg h-[38px]"
           />

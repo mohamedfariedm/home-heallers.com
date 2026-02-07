@@ -37,6 +37,9 @@ export const routes = {
     settings: {
     index: '/settings',
   },
+  landingPages: {
+    index: '/landing-pages',
+  },
   logistics: {
     dashboard: '/logistics',
     shipmentList: '/logistics/shipments',
@@ -88,6 +91,9 @@ export const routes = {
   },
   cities: {
     index: '/cities'
+  },
+  centers: {
+    index: '/centers'
   },
   states: {
     index: '/states'

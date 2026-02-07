@@ -46,6 +46,7 @@ export const reservationFormSchema = z
     // New fields
     paid: z.number().optional().default(0),
     source_campaign: z.string().optional(),
+    center_id: z.string().optional(),
     
     // Lead-related fields
     lead_id: z.number().optional(),
@@ -78,6 +79,19 @@ export const reservationFormSchema = z
     {
       message: "Please provide required patient information",
       path: ["patient_id"],
+    },
+  )
+  .refine(
+    (data) => {
+      // If source_campaign is "center", require center_id
+      if (data.source_campaign === "center") {
+        return !!data.center_id && data.center_id.trim() !== ""
+      }
+      return true
+    },
+    {
+      message: "Center is required when Source Campaign is center",
+      path: ["center_id"],
     },
   )
 

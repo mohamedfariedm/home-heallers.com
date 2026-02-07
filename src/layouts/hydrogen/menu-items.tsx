@@ -329,6 +329,12 @@ export const menuItemsHaydrogen = [
     permissions: 'reservations',
   },
   {
+    name: 'Centers',
+    href: routes.centers.index,
+    icon: <PiBuildingsFill />,
+    permissions: 'centers',
+  },
+  {
     name: 'Reservation Reviews',
     href: routes.reservationReviews.index,
     icon: <IoStarOutline />,
@@ -346,6 +352,12 @@ export const menuItemsHaydrogen = [
     name: 'Settings',
     href: routes.settings.index,
     icon: <PiGearDuotone />,
+    permissions: 'settings',
+  },
+  {
+    name: 'Landing Pages',
+    href: routes.landingPages.index,
+    icon: <PiBrowserDuotone />,
     permissions: 'settings',
   },
   {
