@@ -463,39 +463,41 @@ export default function CreateOrUpdateReservation({
       </div>
 
       {/* Reservation Type Radios - Controller ensures immediate updates */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-gray-700">
-          Reservation Type
-        </label>
-        <Controller
-          name="reservation_type"
-          control={control}
-          render={({ field: { value, onChange } }) => (
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  value="guest"
-                  checked={value === 'guest'}
-                  onChange={() => onChange('guest')}
-                  className="h-4 w-4"
-                />
-                <span className="text-sm">Guest Reservation</span>
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  value="existing"
-                  checked={value === 'existing'}
-                  onChange={() => onChange('existing')}
-                  className="h-4 w-4"
-                />
-                <span className="text-sm">Existing Patient</span>
-              </label>
-            </div>
-          )}
-        />
-      </div>
+      {!initValues && (
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-700">
+            Reservation Type
+          </label>
+          <Controller
+            name="reservation_type"
+            control={control}
+            render={({ field: { value, onChange } }) => (
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    value="guest"
+                    checked={value === 'guest'}
+                    onChange={() => onChange('guest')}
+                    className="h-4 w-4"
+                  />
+                  <span className="text-sm">Guest Reservation</span>
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    value="existing"
+                    checked={value === 'existing'}
+                    onChange={() => onChange('existing')}
+                    className="h-4 w-4"
+                  />
+                  <span className="text-sm">Existing Patient</span>
+                </label>
+              </div>
+            )}
+          />
+        </div>
+      )}
 
       {reservationType === 'guest' ? (
         // key forces a remount so the very first toggle always re-renders fresh

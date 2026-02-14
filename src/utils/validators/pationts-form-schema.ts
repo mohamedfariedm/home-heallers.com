@@ -5,7 +5,7 @@ export const pationtFormSchema = z.object({
     en: z.string().min(1, { message: "English permission name is required" }),
     ar: z.string().min(1, { message: "Arabic permission name is required" }),
   }),
-  email: z.string().email('Invalid email address'),
+  email: z.string().email('Invalid email address').optional().or(z.literal('')),
   password: z.string().optional(),
   mobile: z.string().min(1, 'Mobile number is required'),
   code: z.string().optional(),

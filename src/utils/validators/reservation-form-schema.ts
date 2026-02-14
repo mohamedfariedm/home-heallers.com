@@ -21,7 +21,7 @@ export const reservationFormSchema = z
     remaining_payment: z.string().optional(),
     // Common fields
     service_id: z.string().min(1, "Service is required"),
-    doctor_id: z.string().min(1, "Doctor is required"),
+    doctor_id: z.string().optional(),
     category_id: z.string().min(1, "Category is required"),
     sessions_count: z.string().min(1, "Sessions count is required"),
     session_price: z.string().optional(),
@@ -47,7 +47,7 @@ export const reservationFormSchema = z
     paid: z.number().optional().default(0),
     source_campaign: z.string().optional(),
     center_id: z.string().optional(),
-    
+
     // Lead-related fields
     lead_id: z.number().optional(),
     name: z.string().optional(),
