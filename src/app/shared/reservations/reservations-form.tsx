@@ -80,6 +80,8 @@ export default function CreateOrUpdateReservation({
   const isExistingPatient = !!initValues?.patient?.id;
   
   // Use lead data to pre-populate fields when creating a new reservation
+  const hasExistingReservations = leadData?.reservations && Array.isArray(leadData.reservations) && leadData.reservations.length > 0;
+  const leadPatientId = leadData?.patient_id || leadData?.reservations?.[0]?.patient?.id;
   const shouldUseLeadData = !initValues && leadData;
   const feesTypeOptions = [
     { value: 'صفریة', label: 'صفریة' },
@@ -99,12 +101,12 @@ export default function CreateOrUpdateReservation({
     resolver: zodResolver(reservationFormSchema),
 
     defaultValues: {
-      reservation_type: isExistingPatient ? 'existing' : 'guest',
+      reservation_type: (isExistingPatient || hasExistingReservations) ? 'existing' : 'guest',
       paid: initValues?.paid !== undefined && initValues?.paid !== null ? Number(initValues.paid) : 0,
       source_campaign: initValues?.source_campaign || leadData?.source_campaign || '',
       center_id: initValues?.center_id?.toString() || '',
       // 🧩 base IDs
-      patient_id: initValues?.patient?.id?.toString() || '',
+      patient_id: initValues?.patient?.id?.toString() || leadPatientId?.toString() || '',
       doctor_id: initValues?.doctor?.id?.toString() || '',
       service_id: initValues?.service?.id?.toString() || '',
       category_id: initValues?.category?.id?.toString() || '',
@@ -463,7 +465,7 @@ export default function CreateOrUpdateReservation({
       </div>
 
       {/* Reservation Type Radios - Controller ensures immediate updates */}
-      {!initValues && (
+      {!initValues && !hasExistingReservations && (
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-700">
             Reservation Type
