@@ -154,6 +154,13 @@ class Client {
         update: (input: any) => HttpClient.patch(`${routes.cities.index}/${input.city_id}`, input),
         delete: (input: { city_id: number[] }) => HttpClient.delete(`${routes.cities.index}/${input.city_id}`)
     }
+    centers = {
+        all: (param: string) => HttpClient.get(`${routes.centers.index}?${param}`),
+        create: (input: any) => HttpClient.post(`${routes.centers.index}`, input),
+        update: (input: any) => HttpClient.put(`${routes.centers.index}/${input.id}`, input),
+        delete: (input: { id: number }) => HttpClient.delete(`${routes.centers.index}/${input.id}`),
+        findOne: (id: number) => HttpClient.get(`${routes.centers.index}/${id}`)
+    }
     states = {
         all: (param: string) => HttpClient.get(`${routes.states.index}?${param}`),
         create: (input: any) => HttpClient.post(`${routes.states.index}`, input),
@@ -432,6 +439,19 @@ class Client {
     SiteSettings = {
         all: () => HttpClient.get('/settings'),
         update: (input: any) => HttpClient.put(`/settings/1`, input),
+    };
+    LandingPages = {
+        all: () => HttpClient.get('/landing-pages'),
+        findOne: (id: number) => HttpClient.get(`/landing-pages/${id}`),
+        create: (input: any) => HttpClient.post('/landing-pages', input),
+        update: (input: { id: number; data: any }) => HttpClient.put(`/landing-pages/${input.id}`, input.data),
+        delete: (id: number) => HttpClient.delete(`/landing-pages/${id}`),
+        updateSection: (input: { pageId: number; sectionId: number; data: any }) => 
+            HttpClient.put(`/landing-pages/${input.pageId}/sections/${input.sectionId}`, input.data),
+        createSection: (input: { pageId: number; data: any }) => 
+            HttpClient.post(`/landing-pages/${input.pageId}/sections`, input.data),
+        deleteSection: (input: { pageId: number; sectionId: number }) => 
+            HttpClient.delete(`/landing-pages/${input.pageId}/sections/${input.sectionId}`),
     };
 }
 

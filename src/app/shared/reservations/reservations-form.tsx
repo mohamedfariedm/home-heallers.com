@@ -27,6 +27,7 @@ import {
 import Spinner from '@/components/ui/spinner';
 import { useCategories } from '@/framework/categories';
 import { usePermissions } from '@/context/PermissionsContext';
+import { useCenters } from '@/framework/centers';
 
 const timePeriods = [
   { id: 'morning', name: 'Morning' },
@@ -69,6 +70,7 @@ export default function CreateOrUpdateReservation({
   const { data: doctors, isLoading: isDoctorsLoading } = useDoctors('');
   const { data: categories, isLoading: isCategoriesLoading } =
     useCategories('');
+  const { data: centers, isLoading: isCentersLoading } = useCenters('');
 
   const { closeModal } = useModal();
 
@@ -100,6 +102,7 @@ export default function CreateOrUpdateReservation({
       reservation_type: isExistingPatient ? 'existing' : 'guest',
       paid: initValues?.paid !== undefined && initValues?.paid !== null ? Number(initValues.paid) : 0,
       source_campaign: initValues?.source_campaign || leadData?.source_campaign || '',
+      center_id: initValues?.center_id?.toString() || '',
       // 🧩 base IDs
       patient_id: initValues?.patient?.id?.toString() || '',
       doctor_id: initValues?.doctor?.id?.toString() || '',
@@ -196,6 +199,7 @@ export default function CreateOrUpdateReservation({
   const watchFeesType = useWatch({ control, name: 'fees_type' });
   const watchTotalAmount = useWatch({ control, name: 'total_amount' });
   const watchReservationStatus = useWatch({ control, name: 'status' });
+  const watchSourceCampaign = useWatch({ control, name: 'source_campaign' });
 
   const prevStatusRef = useRef<string | undefined>();
   useEffect(() => {
@@ -266,6 +270,17 @@ export default function CreateOrUpdateReservation({
       }
     }
   }, [watchDoctorId, setValue, getValues]);
+
+  // Clear center_id when source_campaign changes away from "center"
+  const prevSourceCampaignRef = useRef<string | undefined>();
+  useEffect(() => {
+    if (watchSourceCampaign !== prevSourceCampaignRef.current) {
+      prevSourceCampaignRef.current = watchSourceCampaign;
+      if (watchSourceCampaign !== 'center') {
+        setValue('center_id', '', { shouldValidate: false });
+      }
+    }
+  }, [watchSourceCampaign, setValue]);
 
   // Calculate sub_total from session_price * sessions_count
   useEffect(() => {
@@ -347,6 +362,7 @@ export default function CreateOrUpdateReservation({
       address_link: data.address_link,
       paid: data.paid !== undefined && data.paid !== null ? Number(data.paid) : 0,
       source_campaign: data.source_campaign,
+      center_id: data.center_id ? Number(data.center_id) : undefined,
       dates: (data.dates && Array.isArray(data.dates) && data.dates.length > 0)
         ? data.dates.map((date: any) => ({
             date: date?.date || '',
@@ -427,7 +443,8 @@ export default function CreateOrUpdateReservation({
   return isPatientsLoading ||
     isServicesLoading ||
     isDoctorsLoading ||
-    isCategoriesLoading ? (
+    isCategoriesLoading ||
+    isCentersLoading ? (
     <div className="flex h-64 items-center justify-center">
       <Spinner size="lg" />
     </div>
@@ -446,39 +463,41 @@ export default function CreateOrUpdateReservation({
       </div>
 
       {/* Reservation Type Radios - Controller ensures immediate updates */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-gray-700">
-          Reservation Type
-        </label>
-        <Controller
-          name="reservation_type"
-          control={control}
-          render={({ field: { value, onChange } }) => (
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  value="guest"
-                  checked={value === 'guest'}
-                  onChange={() => onChange('guest')}
-                  className="h-4 w-4"
-                />
-                <span className="text-sm">Guest Reservation</span>
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  value="existing"
-                  checked={value === 'existing'}
-                  onChange={() => onChange('existing')}
-                  className="h-4 w-4"
-                />
-                <span className="text-sm">Existing Patient</span>
-              </label>
-            </div>
-          )}
-        />
-      </div>
+      {!initValues && (
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-700">
+            Reservation Type
+          </label>
+          <Controller
+            name="reservation_type"
+            control={control}
+            render={({ field: { value, onChange } }) => (
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    value="guest"
+                    checked={value === 'guest'}
+                    onChange={() => onChange('guest')}
+                    className="h-4 w-4"
+                  />
+                  <span className="text-sm">Guest Reservation</span>
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    value="existing"
+                    checked={value === 'existing'}
+                    onChange={() => onChange('existing')}
+                    className="h-4 w-4"
+                  />
+                  <span className="text-sm">Existing Patient</span>
+                </label>
+              </div>
+            )}
+          />
+        </div>
+      )}
 
       {reservationType === 'guest' ? (
         // key forces a remount so the very first toggle always re-renders fresh
@@ -779,9 +798,36 @@ export default function CreateOrUpdateReservation({
               <option value="youtube">YouTube</option>
               <option value="website">Website</option>
               <option value="referral">Referral</option>
+              <option value="center">Center</option>
               <option value="other">Other</option>
             </select>
           </div>
+          
+          {watchSourceCampaign === 'center' && (
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700">
+                Center <span className="text-red-500">*</span>
+              </label>
+              <select
+                {...inputProps}
+                {...register('center_id')}
+                className="w-full rounded-lg border border-gray-300 p-2"
+                disabled={isCentersLoading || !canEdit}
+              >
+                <option value="">
+                  {isCentersLoading ? 'Loading centers...' : 'Select Center'}
+                </option>
+                {centers?.data?.map((center: any) => (
+                  <option key={center.id} value={String(center.id)}>
+                    {center.name?.en || center.name?.ar || `Center #${center.id}`}
+                  </option>
+                ))}
+              </select>
+              {errors.center_id && (
+                <p className="mt-1 text-sm text-red-500">{errors.center_id.message}</p>
+              )}
+            </div>
+          )}
 
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">

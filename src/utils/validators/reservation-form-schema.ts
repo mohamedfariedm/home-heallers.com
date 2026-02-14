@@ -21,7 +21,7 @@ export const reservationFormSchema = z
     remaining_payment: z.string().optional(),
     // Common fields
     service_id: z.string().min(1, "Service is required"),
-    doctor_id: z.string().min(1, "Doctor is required"),
+    doctor_id: z.string().optional(),
     category_id: z.string().min(1, "Category is required"),
     sessions_count: z.string().min(1, "Sessions count is required"),
     session_price: z.string().optional(),
@@ -46,7 +46,8 @@ export const reservationFormSchema = z
     // New fields
     paid: z.number().optional().default(0),
     source_campaign: z.string().optional(),
-    
+    center_id: z.string().optional(),
+
     // Lead-related fields
     lead_id: z.number().optional(),
     name: z.string().optional(),
@@ -78,6 +79,19 @@ export const reservationFormSchema = z
     {
       message: "Please provide required patient information",
       path: ["patient_id"],
+    },
+  )
+  .refine(
+    (data) => {
+      // If source_campaign is "center", require center_id
+      if (data.source_campaign === "center") {
+        return !!data.center_id && data.center_id.trim() !== ""
+      }
+      return true
+    },
+    {
+      message: "Center is required when Source Campaign is center",
+      path: ["center_id"],
     },
   )
 

@@ -38,20 +38,25 @@ const languages = [
 export default function CreateOrUpdatePationts({ initValues }: { initValues?: any }) {
   const { mutate: createSupport, isPending: isCreating } = useCreatePatients();
   const { mutate: updateSupport, isPending: isUpdating } = useUpdatePatients();
-    const [lang, setLang] = useState<"en" | "ar">("en")
+    const [lang, setLang] = useState<"en" | "ar">("ar")
+
+  React.useEffect(() => {
+    setLang("ar");
+  }, [initValues]);
+
   
       const { data: nationalities, isLoading } = useNationality("");   
       const { data: countries, isLoading: isLoadingCountries } = useCountries("");   
       const { data: cities, isLoading: isLoadingCities } = useCities("");   
   
-  const [loading, setLoading] = useState(false);
+
     const { closeModal } = useModal()
   
 
   const onSubmit: SubmitHandler<PationtsFormInput> = (data) => {
     const requestBody = {
       name: data.name,
-      email: data.email,
+      email: data.email || null,
       password: data.password || undefined,
       mobile: data.mobile,
       code: data.code || undefined,
@@ -69,12 +74,22 @@ export default function CreateOrUpdatePationts({ initValues }: { initValues?: an
     };
 
     if (initValues) {
-      updateSupport({ lead_id: initValues.id, ...requestBody });
+      updateSupport(
+        { lead_id: initValues.id, ...requestBody },
+        {
+          onSuccess: () => {
+            closeModal();
+          },
+        }
+      );
     } else {
-      createSupport(requestBody);
+      createSupport(requestBody, {
+        onSuccess: () => {
+          closeModal();
+        },
+      });
     }
 
-    setLoading(true);
   };
 
   return (
@@ -152,7 +167,7 @@ export default function CreateOrUpdatePationts({ initValues }: { initValues?: an
             />
           )}
           <div className="grid grid-cols-2 gap-4">
-            <Input label="Email" type="email" {...register('email')} error={errors.email?.message} />
+            <Input label="Email (Optional)" type="email" {...register('email')} error={errors.email?.message} autoComplete="off" />
             <Password label="Password (Optional)"  {...register('password')} error={errors.password?.message} />
           </div>
 
@@ -243,7 +258,7 @@ export default function CreateOrUpdatePationts({ initValues }: { initValues?: an
             <Button variant="outline" onClick={closeModal}>
               Cancel
             </Button>
-            <Button type="submit" isLoading={loading || isCreating || isUpdating}>
+            <Button type="submit" isLoading={isCreating || isUpdating}>
               {initValues ? 'Update patient' : 'Create patient'}
             </Button>
           </div>

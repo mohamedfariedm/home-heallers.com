@@ -11,6 +11,8 @@ import InvoiceBreakdown from './invoice-breakdown';
 import CostRatioChart from './cost-ratio-chart';
 import ReservationCampaignsChart from './reservation-campaigns';
 import SupportCampaignsChart from './support-campaigns';
+import ReservationsByCity from './reservations-by-city';
+import SessionsStatistics from './sessions-statistics';
 import { Loader } from '@/components/ui/loader';
 import { toast } from 'react-hot-toast';
 
@@ -52,6 +54,27 @@ interface AggregateData {
     confirmed_reservations_count: number;
     cost_ratio: number | null;
   }>;
+  reservations_by_city?: {
+    by_city: Array<{
+      city_id: string | null;
+      city_name: string;
+      reservations_count: number;
+      total_sessions: number;
+    }>;
+    total_cities: number;
+    total_reservations: number;
+    total_sessions: number;
+  };
+  sessions_statistics?: {
+    by_session_count: Array<{
+      sessions_count: number;
+      reservations_count: number;
+      total_sessions: number;
+    }>;
+    total_sessions: number;
+    total_reservations: number;
+  };
+  [key: string]: any; // Allow any additional fields
 }
 
 interface MonthlyData {
@@ -72,6 +95,26 @@ interface MonthlyData {
     confirmed_reservations_count: number;
     cost_ratio: number | null;
   }>;
+  reservations_by_city?: {
+    by_city: Array<{
+      city_id: string | null;
+      city_name: string;
+      reservations_count: number;
+      total_sessions: number;
+    }>;
+    total_cities: number;
+    total_reservations: number;
+    total_sessions: number;
+  };
+  sessions_statistics?: {
+    by_session_count: Array<{
+      sessions_count: number;
+      reservations_count: number;
+      total_sessions: number;
+    }>;
+    total_sessions: number;
+    total_reservations: number;
+  };
 }
 
 interface WeeklyData {
@@ -93,6 +136,35 @@ interface WeeklyData {
     confirmed_reservations_count: number;
     cost_ratio: number | null;
   }>;
+  reservations_by_city?: {
+    by_city: Array<{
+      city_id: string | null;
+      city_name: string;
+      reservations_count: number;
+      total_sessions: number;
+    }>;
+    total_cities: number;
+    total_reservations: number;
+    total_sessions: number;
+  };
+  sessions_statistics?: {
+    by_session_count: Array<{
+      sessions_count: number;
+      reservations_count: number;
+      total_sessions: number;
+    }>;
+    total_sessions: number;
+    total_reservations: number;
+  };
+  reservation_dates?: {
+    by_status: Array<{
+      status: string;
+      label: string;
+      count: number;
+    }>;
+    total: number;
+  };
+  [key: string]: any; // Allow any additional fields
 }
 
 export default function StatisticsDashboard() {
@@ -119,6 +191,7 @@ export default function StatisticsDashboard() {
       if (filters.date_to) params.append('date_to', filters.date_to);
       if (filters.doctor_id) params.append('doctor_id', filters.doctor_id);
       if (filters.client_id) params.append('client_id', filters.client_id);
+      if (filters.center_id) params.append('center_id', filters.center_id);
       if (filters.source_campaign) params.append('source_campaign', filters.source_campaign);
       
       if (filters.reservation_statuses && filters.reservation_statuses.length > 0) {
@@ -142,16 +215,18 @@ export default function StatisticsDashboard() {
 
       // Handle aggregates
       if (aggregatesRes.status === 'fulfilled' && aggregatesRes.value.ok) {
-        const data = await aggregatesRes.value.json();
-        setAggregateData(data.data || data);
+        const response = await aggregatesRes.value.json() as { data?: AggregateData } | AggregateData;
+        const data = (response as any).data || response as AggregateData;
+        setAggregateData(data);
       } else {
         console.error('Aggregates fetch failed:', aggregatesRes);
       }
 
       // Handle monthly
       if (monthlyRes.status === 'fulfilled' && monthlyRes.value.ok) {
-        const data = await monthlyRes.value.json();
-        setMonthlyData(data.data?.data || data.data || []);
+        const response = await monthlyRes.value.json() as { data?: { data?: MonthlyData[] } | MonthlyData[] } | { data?: MonthlyData[] } | MonthlyData[];
+        const data = (response as any).data?.data || (response as any).data || [];
+        setMonthlyData(data as MonthlyData[]);
       } else {
         console.error('Monthly fetch failed:', monthlyRes);
         setMonthlyData([]);
@@ -159,8 +234,9 @@ export default function StatisticsDashboard() {
 
       // Handle weekly
       if (weeklyRes.status === 'fulfilled' && weeklyRes.value.ok) {
-        const data = await weeklyRes.value.json();
-        setWeeklyData(data.data?.data || data.data || []);
+        const response = await weeklyRes.value.json() as { data?: { data?: WeeklyData[] } | WeeklyData[] } | { data?: WeeklyData[] } | WeeklyData[];
+        const data = (response as any).data?.data || (response as any).data || [];
+        setWeeklyData(data as WeeklyData[]);
       } else {
         console.error('Weekly fetch failed:', weeklyRes);
         setWeeklyData([]);
@@ -280,6 +356,183 @@ export default function StatisticsDashboard() {
               )}
             </div>
           </div>
+
+          {/* Reservations by City & Sessions Statistics Row (Aggregates) */}
+          {(aggregateData?.reservations_by_city || aggregateData?.sessions_statistics) && (
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Aggregates Statistics</h2>
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+                <div className="lg:col-span-6">
+                  {aggregateData?.reservations_by_city && aggregateData.reservations_by_city.by_city && aggregateData.reservations_by_city.by_city.length > 0 ? (
+                    <ReservationsByCity data={aggregateData.reservations_by_city} className="h-full" />
+                  ) : (
+                    <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center dark:border-gray-700 dark:bg-gray-800">
+                      <p className="text-sm text-gray-500">No reservations by city data in aggregates</p>
+                    </div>
+                  )}
+                </div>
+                <div className="lg:col-span-6">
+                  {aggregateData?.sessions_statistics && aggregateData.sessions_statistics.by_session_count && aggregateData.sessions_statistics.by_session_count.length > 0 ? (
+                    <SessionsStatistics data={aggregateData.sessions_statistics} className="h-full" />
+                  ) : (
+                    <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center dark:border-gray-700 dark:bg-gray-800">
+                      <p className="text-sm text-gray-500">No sessions statistics data in aggregates</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Monthly Aggregated: Reservations by City & Sessions Statistics */}
+          {monthlyData.length > 0 && (() => {
+            const hasMonthlyCityData = monthlyData.some(m => m.reservations_by_city?.by_city && m.reservations_by_city.by_city.length > 0);
+            const hasMonthlySessionsData = monthlyData.some(m => m.sessions_statistics?.by_session_count && m.sessions_statistics.by_session_count.length > 0);
+            
+            if (!hasMonthlyCityData && !hasMonthlySessionsData) return null;
+            // Aggregate monthly data
+            const monthlyCityData = monthlyData
+              .filter(m => m.reservations_by_city?.by_city && m.reservations_by_city.by_city.length > 0)
+              .flatMap(m => m.reservations_by_city!.by_city)
+              .reduce((acc, city) => {
+                const key = city.city_id || 'unknown';
+                if (!acc[key]) {
+                  acc[key] = { ...city, reservations_count: 0, total_sessions: 0 };
+                }
+                acc[key].reservations_count += city.reservations_count;
+                acc[key].total_sessions += city.total_sessions;
+                return acc;
+              }, {} as Record<string, { city_id: string | null; city_name: string; reservations_count: number; total_sessions: number }>);
+
+            const aggregatedMonthlyCities = Object.values(monthlyCityData);
+            const monthlyCityTotal = {
+              by_city: aggregatedMonthlyCities,
+              total_cities: aggregatedMonthlyCities.length,
+              total_reservations: aggregatedMonthlyCities.reduce((sum, c) => sum + c.reservations_count, 0),
+              total_sessions: aggregatedMonthlyCities.reduce((sum, c) => sum + c.total_sessions, 0),
+            };
+
+            const monthlySessionsData = monthlyData
+              .filter(m => m.sessions_statistics?.by_session_count && m.sessions_statistics.by_session_count.length > 0)
+              .flatMap(m => m.sessions_statistics!.by_session_count)
+              .reduce((acc, session) => {
+                const key = session.sessions_count;
+                if (!acc[key]) {
+                  acc[key] = { ...session, reservations_count: 0, total_sessions: 0 };
+                }
+                acc[key].reservations_count += session.reservations_count;
+                acc[key].total_sessions += session.total_sessions;
+                return acc;
+              }, {} as Record<number, { sessions_count: number; reservations_count: number; total_sessions: number }>);
+
+            const aggregatedMonthlySessions = Object.values(monthlySessionsData);
+            const monthlySessionsTotal = {
+              by_session_count: aggregatedMonthlySessions,
+              total_sessions: aggregatedMonthlySessions.reduce((sum, s) => sum + s.total_sessions, 0),
+              total_reservations: aggregatedMonthlySessions.reduce((sum, s) => sum + s.reservations_count, 0),
+            };
+
+            return (
+              <div className="space-y-4">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Monthly Aggregated Statistics</h2>
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+                  <div className="lg:col-span-6">
+                    {aggregatedMonthlyCities.length > 0 ? (
+                      <ReservationsByCity data={monthlyCityTotal} className="h-full" />
+                    ) : (
+                      <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center dark:border-gray-700 dark:bg-gray-800">
+                        <p className="text-sm text-gray-500">No reservations by city data in monthly statistics</p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="lg:col-span-6">
+                    {aggregatedMonthlySessions.length > 0 ? (
+                      <SessionsStatistics data={monthlySessionsTotal} className="h-full" />
+                    ) : (
+                      <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center dark:border-gray-700 dark:bg-gray-800">
+                        <p className="text-sm text-gray-500">No sessions statistics data in monthly statistics</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Weekly Aggregated: Reservations by City & Sessions Statistics */}
+          {weeklyData.length > 0 && (() => {
+            const hasWeeklyCityData = weeklyData.some(w => w.reservations_by_city?.by_city && w.reservations_by_city.by_city.length > 0);
+            const hasWeeklySessionsData = weeklyData.some(w => w.sessions_statistics?.by_session_count && w.sessions_statistics.by_session_count.length > 0);
+            
+            if (!hasWeeklyCityData && !hasWeeklySessionsData) return null;
+            // Aggregate weekly data
+            const weeklyCityData = weeklyData
+              .filter(w => w.reservations_by_city?.by_city && w.reservations_by_city.by_city.length > 0)
+              .flatMap(w => w.reservations_by_city!.by_city)
+              .reduce((acc, city) => {
+                const key = city.city_id || 'unknown';
+                if (!acc[key]) {
+                  acc[key] = { ...city, reservations_count: 0, total_sessions: 0 };
+                }
+                acc[key].reservations_count += city.reservations_count;
+                acc[key].total_sessions += city.total_sessions;
+                return acc;
+              }, {} as Record<string, { city_id: string | null; city_name: string; reservations_count: number; total_sessions: number }>);
+
+            const aggregatedWeeklyCities = Object.values(weeklyCityData);
+            const weeklyCityTotal = {
+              by_city: aggregatedWeeklyCities,
+              total_cities: aggregatedWeeklyCities.length,
+              total_reservations: aggregatedWeeklyCities.reduce((sum, c) => sum + c.reservations_count, 0),
+              total_sessions: aggregatedWeeklyCities.reduce((sum, c) => sum + c.total_sessions, 0),
+            };
+
+            const weeklySessionsData = weeklyData
+              .filter(w => w.sessions_statistics?.by_session_count && w.sessions_statistics.by_session_count.length > 0)
+              .flatMap(w => w.sessions_statistics!.by_session_count)
+              .reduce((acc, session) => {
+                const key = session.sessions_count;
+                if (!acc[key]) {
+                  acc[key] = { ...session, reservations_count: 0, total_sessions: 0 };
+                }
+                acc[key].reservations_count += session.reservations_count;
+                acc[key].total_sessions += session.total_sessions;
+                return acc;
+              }, {} as Record<number, { sessions_count: number; reservations_count: number; total_sessions: number }>);
+
+            const aggregatedWeeklySessions = Object.values(weeklySessionsData);
+            const weeklySessionsTotal = {
+              by_session_count: aggregatedWeeklySessions,
+              total_sessions: aggregatedWeeklySessions.reduce((sum, s) => sum + s.total_sessions, 0),
+              total_reservations: aggregatedWeeklySessions.reduce((sum, s) => sum + s.reservations_count, 0),
+            };
+
+            return (
+              <div className="space-y-4">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Weekly Aggregated Statistics</h2>
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+                  <div className="lg:col-span-6">
+                    {aggregatedWeeklyCities.length > 0 ? (
+                      <ReservationsByCity data={weeklyCityTotal} className="h-full" />
+                    ) : (
+                      <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center dark:border-gray-700 dark:bg-gray-800">
+                        <p className="text-sm text-gray-500">No reservations by city data in weekly statistics</p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="lg:col-span-6">
+                    {aggregatedWeeklySessions.length > 0 ? (
+                      <SessionsStatistics data={weeklySessionsTotal} className="h-full" />
+                    ) : (
+                      <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center dark:border-gray-700 dark:bg-gray-800">
+                        <p className="text-sm text-gray-500">No sessions statistics data in weekly statistics</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Empty State */}
           {aggregateData && 

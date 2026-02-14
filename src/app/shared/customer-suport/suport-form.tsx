@@ -36,7 +36,7 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
         last_name: data.last_name || '',
         offer: data.offer || '',
         agent_name: data.agent_name || '',
-        status: data.status || '',
+        status: data.status || 'new', // Default to 'new' if not provided
         reason: data.reason || '',
         age: data.age || '',
         gender: data.gender || '',
@@ -105,7 +105,7 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
           last_name: initValues?.last_name || '',
           offer: initValues?.offer || '',
           agent_name: initValues?.agent_name || '',
-          status: initValues?.status || '',
+          status: initValues?.status || 'new', // Default to 'new' when creating
           reason: initValues?.reason || '',
           age: initValues?.age || '',
           gender: initValues?.gender || '',
@@ -200,10 +200,11 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
             <div>
               <label>Status</label>
               <select {...register('status')} className="w-full border border-gray-300 rounded-lg p-2">
-                <option value="">Select Status</option>
                 <option value="new">New</option>
-                <option value="follow_up">Follow Up</option>
-                <option value="closed">Closed</option>
+                <option value="negotiation">Negotiation</option>
+                <option value="success">Success</option>
+                <option value="possible">Possible</option>
+                <option value="failed">Failed</option>
               </select>
               {errors.status && <p className="text-sm text-red-500">{errors.status.message}</p>}
             </div>
