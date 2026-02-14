@@ -93,6 +93,20 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
   };
 
 
+  // Extract Created By and Modified By from activity logs
+  const activityLogs = initValues?.activity_logs || [];
+  // Find creation log (often the last one if sorted by date desc)
+  const creationLog = [...activityLogs].reverse().find((log: any) => 
+    log.description?.toLowerCase().includes('created')
+  );
+  // Find latest update log (first one if sorted by date desc)
+  const latestUpdateLog = activityLogs.find((log: any) => 
+    log.description?.toLowerCase().includes('updated')
+  );
+
+  const createdByName = creationLog?.causer_name || initValues?.created_by || '';
+  const modifiedByName = latestUpdateLog?.causer_name || initValues?.modified_by || '';
+
   return (
     <Form<LeadFormInput>
       onSubmit={onSubmit}
@@ -123,7 +137,7 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
           injection_date: initValues?.injection_date || '',
           duplicate_lead: initValues?.duplicate_lead || '',
           call_count: initValues?.call_count || 0,
-          modified_by: initValues?.modified_by || '',
+          modified_by: modifiedByName,
           patient_id: initValues?.patient_id || '',
           phonecall_patient_id: initValues?.phonecall_patient_id || '',
           description: initValues?.description || '',
@@ -143,7 +157,7 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
           specialtie_2: initValues?.specialtie_2 || '',
           specialtie_3: initValues?.specialtie_3 || '',
           ads_name: initValues?.ads_name || '',
-          created_by: initValues?.created_by || '',
+          created_by: createdByName,
           event_agent_name: initValues?.event_agent_name || '',
           communication_channel: initValues?.communication_channel || '',
         },
@@ -211,10 +225,9 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
             <Input label="Chief Comment" {...register('reason')} error={errors.reason?.message} />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <Input label="Lead Source" {...register('lead_source')} error={errors.lead_source?.message} />
+          <div className="grid grid-cols-1 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-900 mb-1">Source</label>
+              <label className="block text-sm font-medium text-gray-900 mb-1">Source <span className="text-red-500">*</span></label>
               <select 
                 {...register('source_campaign')} 
                 className="w-full border border-gray-300 rounded-md p-2 h-10 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
@@ -238,7 +251,7 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1">Communication Channel</label>
+            <label className="block text-sm font-medium text-gray-900 mb-1">Communication Channel <span className="text-red-500">*</span></label>
             <select 
               {...register('communication_channel')} 
               className="w-full border border-gray-300 rounded-md p-2 h-10 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
@@ -270,7 +283,7 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
 
           <div className="grid grid-cols-2 gap-4">
             <Input label="Call Count" type="number" {...register('call_count')} error={errors.call_count?.message} />
-            <Input label="Modified By" {...register('modified_by')} error={errors.modified_by?.message} />
+            <Input label="Modified By" {...register('modified_by')} error={errors.modified_by?.message} disabled />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -363,7 +376,7 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <Input label="Created By" {...register('created_by')} error={errors.created_by?.message} />
+            <Input label="Created By" {...register('created_by')} error={errors.created_by?.message} disabled />
             <Input label="Event Agent Name" {...register('event_agent_name')} error={errors.event_agent_name?.message} />
           </div>
 

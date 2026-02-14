@@ -17,7 +17,8 @@ export const leadFormSchema = z.object({
   booking_phone_number: z.string().optional(),
   home_phone: z.string().optional(),
   address_1: z.string().optional(),
-  source_campaign: z.string().optional(),
+  source_campaign: z.string().min(1, 'Source is required'),
+
   activity_code: z.string().optional(),
   call_sub_result: z.string().optional(),
   will_call_us_again_reason: z.string().optional(),
@@ -50,7 +51,8 @@ export const leadFormSchema = z.object({
   modified_on: z.string().optional(),
   created_by: z.string().optional(),
   event_agent_name: z.string().optional(),
-  communication_channel: z.string().optional(),
+  communication_channel: z.string().min(1, 'Communication Channel is required'),
+
   created_at: z.string().optional(),
   updated_at: z.string().optional(),
 });
