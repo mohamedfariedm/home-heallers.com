@@ -46,3 +46,15 @@ export const useDeleteInvoices = () => {
     onError: (err: any) => toast.error(`Error: ${err.message}`),
   });
 };
+
+export const useDeleteInvoiceDetail = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: client.invoiceDetails.delete,
+    onSuccess: () => {
+      toast.success('Invoice detail deleted successfully');
+      queryClient.invalidateQueries({ queryKey: [routes.invoices.index] });
+    },
+    onError: (err: any) => toast.error(`Error: ${err.message}`),
+  });
+};

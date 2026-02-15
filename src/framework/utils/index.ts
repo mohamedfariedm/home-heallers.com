@@ -115,6 +115,9 @@ class Client {
         update: (input: any) => HttpClient.patch(`${`/invoices`}/${input.id}`, input),
         delete: (input: { region_id: number[] }) => HttpClient.delete(`${`/invoices`}/${input.region_id}`)
     }
+    invoiceDetails = {
+        delete: (id: string | number) => HttpClient.delete(`/invoice-details/${id}`),
+    }
     patients = {
         all: (param: string) => HttpClient.get(`${routes.patients.index}?${param}`),
         create: (input: any) => HttpClient.post(`${routes.patients.index}`, input),
@@ -446,11 +449,11 @@ class Client {
         create: (input: any) => HttpClient.post('/landing-pages', input),
         update: (input: { id: number; data: any }) => HttpClient.put(`/landing-pages/${input.id}`, input.data),
         delete: (id: number) => HttpClient.delete(`/landing-pages/${id}`),
-        updateSection: (input: { pageId: number; sectionId: number; data: any }) => 
+        updateSection: (input: { pageId: number; sectionId: number; data: any }) =>
             HttpClient.put(`/landing-pages/${input.pageId}/sections/${input.sectionId}`, input.data),
-        createSection: (input: { pageId: number; data: any }) => 
+        createSection: (input: { pageId: number; data: any }) =>
             HttpClient.post(`/landing-pages/${input.pageId}/sections`, input.data),
-        deleteSection: (input: { pageId: number; sectionId: number }) => 
+        deleteSection: (input: { pageId: number; sectionId: number }) =>
             HttpClient.delete(`/landing-pages/${input.pageId}/sections/${input.sectionId}`),
     };
 }

@@ -25,7 +25,7 @@ import { PiXBold } from 'react-icons/pi';
 import Spinner from '@/components/ui/spinner';
 import FormGroup from '@/components/form-group';
 import { useModal } from '../modal-views/use-modal';
-import { useCreateInvoices, useUpdateInvoices } from '@/framework/invoices';
+import { useCreateInvoices, useUpdateInvoices, useDeleteInvoiceDetail } from '@/framework/invoices';
 import { usePatients } from '@/framework/patients';
 import { useDoctors } from '@/framework/doctors';
 import { useCategories } from '@/framework/categories'; // <-- NEW
@@ -182,6 +182,7 @@ export default function InvoiceManager({
 
   const { mutate: create, isPending: isCreating } = useCreateInvoices();
   const { mutate: update, isPending: isUpdating } = useUpdateInvoices();
+  const { mutate: deleteDetail } = useDeleteInvoiceDetail();
   const { data: clientData, isLoading: clientsLoading } = usePatients('');
   const { data: doctorsData, isLoading: doctorsLoading } = useDoctors('');
   const { data: categoriesData, isLoading: categoriesLoading } =
@@ -364,6 +365,10 @@ export default function InvoiceManager({
   };
 
   const handleDeleteDetail = (index: number) => {
+    const detail = details[index];
+    if (detail && detail.id) {
+      deleteDetail(detail.id);
+    }
     setValue(
       'details',
       details.filter((_: InvoiceDetail, i: number) => i !== index)
