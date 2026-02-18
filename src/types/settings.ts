@@ -144,12 +144,12 @@ export interface LandingPageSEO {
   meta_keywords?: MultilingualText;
   focus_keyword?: MultilingualText; // Primary keyword for ranking
   h1_tag?: MultilingualText; // H1 heading for the page
-  
+
   // Technical SEO
   canonical_url?: string;
   meta_robots?: string; // index, noindex, follow, nofollow
   robots_txt?: string; // Custom robots directives
-  
+
   // Open Graph (Facebook, LinkedIn)
   og_title?: MultilingualText;
   og_description?: MultilingualText;
@@ -158,7 +158,7 @@ export interface LandingPageSEO {
   og_url?: string;
   og_site_name?: string;
   og_locale?: MultilingualText; // en_US, ar_SA, etc.
-  
+
   // Twitter Card
   twitter_card?: string; // summary, summary_large_image, app, player
   twitter_title?: MultilingualText;
@@ -166,22 +166,22 @@ export interface LandingPageSEO {
   twitter_image?: string;
   twitter_site?: string; // @username
   twitter_creator?: string; // @username
-  
+
   // Schema.org Structured Data
   schema_type?: string; // WebPage, Article, Product, Service, Organization, etc.
   schema_data?: any; // JSON-LD structured data
-  
+
   // Additional Meta Tags
   author?: string;
   published_date?: string;
   modified_date?: string;
   article_section?: MultilingualText;
   article_tags?: MultilingualText;
-  
+
   // Language & Localization
   language?: string; // en, ar
   alternate_languages?: Array<{ lang: string; url: string }>; // hreflang
-  
+
   // Advanced SEO
   breadcrumbs?: MultilingualText;
   alt_text?: MultilingualText; // For images
@@ -204,6 +204,19 @@ export interface LandingPage {
   show_in_footer?: boolean; // Whether to show page in footer (default: false)
 }
 
+export interface MediaFile {
+  id: string;
+  name: string;
+  attachment: Attachment;
+}
+
+export interface MediaFolder {
+  id: string;
+  name: string;
+  subFolders: MediaFolder[];
+  files: MediaFile[];
+}
+
 export interface Settings {
   banners: Banner[];
   social: Social;
@@ -214,4 +227,5 @@ export interface Settings {
   conditions: any;
   business_info?: BusinessInfo;
   landing_pages?: LandingPage[];
+  media_folders?: MediaFolder[];
 }

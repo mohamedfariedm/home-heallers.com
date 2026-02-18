@@ -34,8 +34,14 @@ export const routes = {
     viewTemplate: (id: string) => `/support/templates/${id}`,
     editTemplate: (id: string) => `/support/templates/${id}/edit`,
   },
-    settings: {
+  settings: {
     index: '/settings',
+  },
+  mediaFolders: {
+    index: '/media-folders',
+  },
+  mediaGallery: {
+    index: '/media-gallery',
   },
   landingPages: {
     index: '/landing-pages',
@@ -272,7 +278,7 @@ export const routes = {
     otp5: '/auth/otp-5',
   },
   signIn: '/signin',
-    pages: {
+  pages: {
     index: '/pages',
   },
   attachmentsService: {
@@ -284,16 +290,16 @@ export const routes = {
   posts: {
     index: '/posts',
   },
-    faqs: {
+  faqs: {
     index: '/faqs',
   },
-    ClientReview: {
+  ClientReview: {
     index: '/client-reviews',
   },
-    doctors: {
+  doctors: {
     index: '/doctors',
   },
-    reservations: {
+  reservations: {
     index: '/reservations',
   },
   reservationReviews: {

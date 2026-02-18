@@ -355,6 +355,18 @@ export const menuItemsHaydrogen = [
     permissions: 'settings',
   },
   {
+    name: 'Media Folders',
+    href: routes.mediaFolders.index,
+    icon: <PiFolderLockDuotone />,
+    permissions: 'settings',
+  },
+  {
+    name: 'Media Gallery',
+    href: routes.mediaGallery.index,
+    icon: <PiFileImageDuotone />,
+    permissions: 'settings',
+  },
+  {
     name: 'Landing Pages',
     href: routes.landingPages.index,
     icon: <PiBrowserDuotone />,

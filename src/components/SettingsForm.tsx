@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { Settings, Banner, Social, SEOData, BusinessInfo } from '../types/settings';
+import { Settings, Banner, Social, SEOData, BusinessInfo, MediaFolder } from '../types/settings';
 import BannerSection from './BannerSection';
 import SocialSection from './SocialSection';
 import AppLinksSection from './AppLinksSection';
 import SEOSection from './SEOSection';
-import { Save, Settings as SettingsIcon, Image, Share2, Smartphone, Search, FileText, Shield, Building2 } from 'lucide-react';
+import { Save, Settings as SettingsIcon, Image, Share2, Smartphone, Search, FileText, Shield, Building2, FolderOpen } from 'lucide-react';
 import TermsSection from './TermsSection';
 import ConditionsSection from './ConditionsSection';
 import BusinessInfoSection from './BusinessInfoSection';
+import FolderManagementSection from './FolderManagementSection';
 
 interface SettingsFormProps {
   initialSettings: Settings;
@@ -27,6 +28,7 @@ const tabs = [
   { id: 'terms', label: 'Terms & Conditions', icon: FileText },
   { id: 'conditions', label: 'General Conditions', icon: Shield },
   { id: 'business-info', label: 'Business Information', icon: Building2 },
+  // { id: 'folder-management', label: 'Folder Management', icon: FolderOpen },
 ];
 
   const handleSave = async () => {
@@ -68,6 +70,10 @@ const updateConditions = (conditions: any) => {
 
 const updateBusinessInfo = (business_info: BusinessInfo) => {
   setSettings(prev => ({ ...prev, business_info }));
+};
+
+const updateMediaFolders = (media_folders: MediaFolder[]) => {
+  setSettings(prev => ({ ...prev, media_folders }));
 };
 
   const renderTabContent = () => {
@@ -123,6 +129,13 @@ const updateBusinessInfo = (business_info: BusinessInfo) => {
           onUpdate={updateBusinessInfo}
         />
       );
+    // case 'folder-management':
+    //   return (
+    //     <FolderManagementSection
+    //       folders={settings.media_folders || []}
+    //       onUpdate={updateMediaFolders}
+    //     />
+    //   );
       default:
         return null;
     }
