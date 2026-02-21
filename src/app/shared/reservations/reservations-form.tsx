@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   useForm,
   type SubmitHandler,
@@ -28,6 +28,9 @@ import Spinner from '@/components/ui/spinner';
 import { useCategories } from '@/framework/categories';
 import { usePermissions } from '@/context/PermissionsContext';
 import { useCenters } from '@/framework/centers';
+import { useCountries } from '@/framework/countrues';
+import { useCities } from '@/framework/cities';
+import { useStates } from '@/framework/states';
 
 const timePeriods = [
   { id: 'morning', name: 'Morning' },
@@ -49,6 +52,26 @@ const genderOptions = [
   { value: 'female', label: 'Female' },
 ];
 
+/**
+ * Safely extract a display name from either a plain string or a
+ * double-nested name object: { ar: { ar: '...', en: '...' }, en: { ar: '...', en: '...' } }
+ */
+function getName(nameField: any): string {
+  if (!nameField) return '';
+  if (typeof nameField === 'string') return nameField;
+  // Try en.en → en → ar.en → ar → fallback
+  if (nameField.en) {
+    if (typeof nameField.en === 'string') return nameField.en;
+    if (typeof nameField.en?.en === 'string') return nameField.en.en;
+    if (typeof nameField.en?.ar === 'string') return nameField.en.ar;
+  }
+  if (nameField.ar) {
+    if (typeof nameField.ar === 'string') return nameField.ar;
+    if (typeof nameField.ar?.ar === 'string') return nameField.ar.ar;
+  }
+  return '';
+}
+
 export default function CreateOrUpdateReservation({
   initValues,
   leadData,
@@ -59,6 +82,62 @@ export default function CreateOrUpdateReservation({
   onSuccess?: () => void;
 }) {
   const { permissions } = usePermissions();
+
+  // ── Cascading location state ──────────────────────────────────
+  const [selectedCountryId, setSelectedCountryId] = useState<number | null>(null);
+  const [selectedCityId, setSelectedCityId] = useState<number | null>(null);
+
+  const { data: countriesData, isLoading: isCountriesLoading } = useCountries('');
+  const { data: citiesData,    isLoading: isCitiesLoading }    = useCities('');
+  const { data: statesData,    isLoading: isStatesLoading }    = useStates('');
+
+  // Only show active records
+  // Countries: status === "Published" | Cities & States: status === "1"
+  const activeCountries = (countriesData?.data ?? []).filter(
+    (c: any) => c.status === 'Published' || c.status === '1'
+  );
+  const activeCities = (citiesData?.data ?? []).filter(
+    (c: any) => c.status === '1' || c.status === 'Published'
+  );
+  const activeStates = (statesData?.data ?? []).filter(
+    (s: any) => s.status === '1' || s.status === 'Published'
+  );
+
+  // Relations are nested objects in the API:
+  //   city.country.id  (NOT city.country_id)
+  //   state.city.id    (NOT state.city_id)
+  const filteredCities = selectedCountryId
+    ? activeCities.filter((c: any) => c.country?.id === selectedCountryId)
+    : activeCities;
+
+  const filteredStates = selectedCityId
+    ? activeStates.filter((s: any) => s.city?.id === selectedCityId)
+    : activeStates;
+
+  // Pre-populate cascade IDs when editing an existing reservation.
+  // address.country is null in the API — use patient.country / patient.city instead.
+  useEffect(() => {
+    if (initValues?.patient?.country?.id) setSelectedCountryId(initValues.patient.country.id);
+    if (initValues?.patient?.city?.id)    setSelectedCityId(initValues.patient.city.id);
+  }, [initValues]);
+
+  // Once cities load, resolve address_city name → city ID for state filtering.
+  // city.name is a plain { ar, en } object (not double-nested).
+  useEffect(() => {
+    if (!citiesData?.data || selectedCityId) return;
+    const cityName =
+      initValues?.address?.city?.en ||
+      initValues?.address?.city?.ar ||
+      initValues?.patient?.city?.name?.en ||
+      '';
+    if (!cityName) return;
+    const match = activeCities.find(
+      (c: any) => c.name?.en === cityName || c.name?.ar === cityName
+    );
+    if (match) setSelectedCityId(match.id);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [citiesData]);
+  // ─────────────────────────────────────────────────────────────
 
   const { mutate: createReservation, isPending: isCreating } =
     useCreateReservation();
@@ -133,12 +212,16 @@ export default function CreateOrUpdateReservation({
       notes: initValues?.notes || leadData?.notes || '',
       address_city:
         initValues?.address?.city?.en ||
+        initValues?.address?.city?.ar ||
+        initValues?.patient?.city?.name?.en?.en ||
         initValues?.guest_info?.city ||
         initValues?.address_city ||
         leadData?.address_1 ||
         '',
       address_state:
         initValues?.address?.state?.en ||
+        initValues?.address?.state?.ar ||
+        initValues?.patient?.state?.name?.en?.en ||
         initValues?.guest_info?.state ||
         initValues?.address_state ||
         '',
@@ -150,8 +233,12 @@ export default function CreateOrUpdateReservation({
 
       patient_name:
         guest?.name ||
-        initValues?.patient?.name?.en ||
-        initValues?.patient?.name?.ar ||
+        (typeof initValues?.patient?.name?.en === 'string'
+          ? initValues?.patient?.name?.en
+          : initValues?.patient?.name?.en?.en) ||
+        (typeof initValues?.patient?.name?.ar === 'string'
+          ? initValues?.patient?.name?.ar
+          : initValues?.patient?.name?.ar?.ar) ||
         (shouldUseLeadData ? leadData?.name : ''),
       patient_email: guest?.email || initValues?.patient?.email || '',
       patient_national_id:
@@ -160,11 +247,18 @@ export default function CreateOrUpdateReservation({
       patient_country:
         guest?.country ||
         guest?.nationality ||
-        initValues?.patient?.country?.name?.en?.en ||
+        // country.name.en can be a nested object { ar:..., en:... } or a plain string
+        (typeof initValues?.patient?.country?.name?.en === 'string'
+          ? initValues?.patient?.country?.name?.en
+          : initValues?.patient?.country?.name?.en?.en) ||
         '',
       patient_mobile: guest?.mobile || initValues?.patient?.mobile || (shouldUseLeadData ? leadData?.mobile_phone || leadData?.booking_phone_number : ''),
       patient_city:
-        guest?.city || initValues?.patient?.city?.name?.en?.en || '',
+        guest?.city ||
+        (typeof initValues?.patient?.city?.name?.en === 'string'
+          ? initValues?.patient?.city?.name?.en
+          : initValues?.patient?.city?.name?.en?.en) ||
+        '',
       patient_state: guest?.state || initValues?.patient?.state?.en || '',
       patient_date_of_birth:
         guest?.date_of_birth || initValues?.patient?.date_of_birth || '',
@@ -565,13 +659,49 @@ export default function CreateOrUpdateReservation({
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <Input
-              {...inputProps}
-              label="Country"
-              placeholder="e.g., السعودية"
-              {...register('patient_country')}
-              error={errors.patient_country?.message}
-            />
+            <div>
+              <label className="text-sm text-gray-700">Country</label>
+              <Controller
+                name="patient_country"
+                control={control}
+                render={({ field: { value, onChange } }) => (
+                  <select
+                    {...inputProps}
+                    value={value || ''}
+                    onChange={(e) => {
+                      const opt = e.target.options[e.target.selectedIndex];
+                      onChange(e.target.value);
+                      setSelectedCountryId(opt.dataset.id ? Number(opt.dataset.id) : null);
+                      // Reset dependent fields
+                      setValue('address_city', '');
+                      setValue('address_state', '');
+                      setSelectedCityId(null);
+                    }}
+                    disabled={isCountriesLoading || !canEdit}
+                    className="w-full rounded-lg border border-gray-300 p-2"
+                  >
+                    <option value="">
+                      {isCountriesLoading ? 'Loading countries...' : 'Select Country'}
+                    </option>
+                    {activeCountries.map((country: any) => {
+                      const label = getName(country.name);
+                      return (
+                        <option
+                          key={country.id}
+                          value={label}
+                          data-id={country.id}
+                        >
+                          {label}
+                        </option>
+                      );
+                    })}
+                  </select>
+                )}
+              />
+              {errors.patient_country && (
+                <p className="text-sm text-red-500">{errors.patient_country.message}</p>
+              )}
+            </div>
           </div>
         </div>
       ) : (
@@ -667,20 +797,90 @@ export default function CreateOrUpdateReservation({
       <div className="space-y-4 border-l-4 border-green-500 pl-4">
         <h5 className="text-sm font-semibold">Address Information</h5>
         <div className="grid grid-cols-2 gap-4">
-          <Input
-            {...inputProps}
-            label="City"
-            placeholder="e.g., الرياض"
-            {...register('address_city')}
-            error={errors.address_city?.message}
-          />
-          <Input
-            {...inputProps}
-            label="State/Region"
-            placeholder="e.g., منطقة الرياض"
-            {...register('address_state')}
-            error={errors.address_state?.message}
-          />
+
+          {/* City — filtered by selected country */}
+          <div>
+            <label className="text-sm text-gray-700">City</label>
+            <Controller
+              name="address_city"
+              control={control}
+              render={({ field: { value, onChange } }) => (
+                <select
+                  {...inputProps}
+                  value={value || ''}
+                  onChange={(e) => {
+                    const opt = e.target.options[e.target.selectedIndex];
+                    onChange(e.target.value);
+                    setSelectedCityId(opt.dataset.id ? Number(opt.dataset.id) : null);
+                    // Reset state when city changes
+                    setValue('address_state', '');
+                  }}
+                  disabled={isCitiesLoading || !canEdit}
+                  className="w-full rounded-lg border border-gray-300 p-2"
+                >
+                  <option value="">
+                    {isCitiesLoading ? 'Loading cities...' : 'Select City'}
+                  </option>
+                  {filteredCities.map((city: any) => {
+                    const label = getName(city.name);
+                    return (
+                      <option
+                        key={city.id}
+                        value={label}
+                        data-id={city.id}
+                      >
+                        {label}
+                      </option>
+                    );
+                  })}
+                </select>
+              )}
+            />
+            {errors.address_city && (
+              <p className="text-sm text-red-500">{errors.address_city.message}</p>
+            )}
+          </div>
+
+          {/* State — filtered by selected city */}
+          <div>
+            <label className="text-sm text-gray-700">State/Region</label>
+            <Controller
+              name="address_state"
+              control={control}
+              render={({ field: { value, onChange } }) => (
+                <select
+                  {...inputProps}
+                  value={value || ''}
+                  onChange={(e) => onChange(e.target.value)}
+                  disabled={isStatesLoading || !canEdit}
+                  className="w-full rounded-lg border border-gray-300 p-2"
+                >
+                  <option value="">
+                    {isStatesLoading
+                      ? 'Loading states...'
+                      : selectedCityId
+                        ? 'Select State'
+                        : 'Select a city first'}
+                  </option>
+                  {filteredStates.map((state: any) => {
+                    const label = getName(state.name);
+                    return (
+                      <option
+                        key={state.id}
+                        value={label}
+                      >
+                        {label}
+                      </option>
+                    );
+                  })}
+                </select>
+              )}
+            />
+            {errors.address_state && (
+              <p className="text-sm text-red-500">{errors.address_state.message}</p>
+            )}
+          </div>
+
         </div>
         <Input
           {...inputProps}
