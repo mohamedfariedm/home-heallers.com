@@ -10,8 +10,8 @@ import { Button } from "@/components/ui/button"
 import { ActionIcon } from "@/components/ui/action-icon"
 import { Title } from "@/components/ui/text"
 import { useModal } from "@/app/shared/modal-views/use-modal"
-import { type CreatePermitionInput, createPermitionSchema } from "@/utils/validators/create-permition.schema"
 import { useCreateCategory, useUpdateCategory } from "@/framework/categories"
+import { createCategoriesSchema, type CreateCategoriesInput } from "@/utils/validators/create-categories.schema"
 import FormGroup from "../form-group"
 import Spinner from "@/components/ui/spinner"
 import Upload from "@/components/ui/upload"
@@ -50,17 +50,20 @@ console.log(initValues);
       .catch(() => toast.error('Please Try Again'))
       .finally(() => setLoading(false));
   };
-  const onSubmit: SubmitHandler<CreatePermitionInput> = (data) => {
+  const onSubmit: SubmitHandler<CreateCategoriesInput> = (data) => {
+    // If isImageData is explicitly null, send null. Otherwise use isImageData if it exists, or fall back to initValues?.image
+    const imageValue = isImageData === null ? null : (isImageData || initValues?.image);
+    
     if (initValues) {
       update({
         role_id: initValues?.id,
         name: data.name,
-        image: isImageData || initValues?.image,
+        image: imageValue,
       })
     } else {
       mutate({
         name: data.name,
-        image: isImageData || initValues?.image,
+        image: imageValue,
       })
     }
 
@@ -71,9 +74,9 @@ console.log(initValues);
   
 
   return (
-    <Form<CreatePermitionInput>
+    <Form<CreateCategoriesInput>
       onSubmit={onSubmit}
-      validationSchema={createPermitionSchema}
+      validationSchema={createCategoriesSchema}
       useFormProps={{
         defaultValues: {
           name: {
@@ -98,22 +101,7 @@ console.log(initValues);
             </ActionIcon>
           </div>
 
-          <div className="flex flex-wrap px-1 gap-3">
-            <Checkbox
-              key={0}
-              label={"English"}
-              checked={lang === "en"}
-              onChange={() => setLang("en")}
-            />
-            <Checkbox
-              key={1}
-              label={"Arabic"}
-              checked={lang === "ar"}
-              onChange={() => setLang("ar")}
-            />
-          </div>
 
-          {lang === "en" ? (
             <Input
             key={"name.en"}
               label="Category Name (English)"
@@ -121,7 +109,6 @@ console.log(initValues);
               {...register("name.en")}
               error={errors.name?.en?.message}
             />
-          ) : (
             <Input
             key={"name.ar"}
               label="Category Name (Arabic)"
@@ -129,7 +116,7 @@ console.log(initValues);
               {...register("name.ar")}
               error={errors.name?.ar?.message}
             />
-          )}
+            
                       <FormGroup
                         title="Image"
                         className="relative pt-7 @2xl:pt-9 @3xl:grid-cols-12 @3xl:pt-11"

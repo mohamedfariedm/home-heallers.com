@@ -10,7 +10,7 @@ import { Title } from '@/components/ui/text';
 import { useModal } from '@/app/shared/modal-views/use-modal';
 import Select from 'react-select'; // multi-select for categories
 import {  ServiceFormInput, ServiceFormSchema } from '@/utils/validators/service-form.schema'; // schema for validation
-import { Checkbox, Textarea } from 'rizzui'; // Checkbox component for language switch
+import { Textarea } from 'rizzui';
 import Spinner from '@/components/ui/spinner';
 import { useCreateServices, useUpdateServices } from '@/framework/services';
 import { useCategories } from '@/framework/categories';
@@ -28,13 +28,12 @@ export default function CreateOrUpdateServices({ initValues }: { initValues?: an
   const { mutate: updateService, isPending: isUpdating } = useUpdateServices();
   const { data: categoriesData, isLoading: isCategoriesLoading } = useCategories(""); // Get categories for dropdown
 
-  const [lang, setLang] = useState<'en' | 'ar'>('en');
   const [selectedCategory, setSelectedCategory] = useState<any>(null); // To store the selected category
   const [categoryErroes, setCategoryErrors] = useState<any>(false); // To store the selected category
   const [loading, setLoading] = useState(false);
   const [isoading, setoading] = useState(false);
   let [imageError, setImageError] = useState(0);
-  const [isImageData, setImage] = useState(initValues ? initValues?.image : null);
+  const [isImageData, setImage] = useState(initValues?.image || null);
 
   const handleFileUpload = (event: any, type: 'Image' | 'File') => {
     setoading(true);
@@ -63,29 +62,42 @@ export default function CreateOrUpdateServices({ initValues }: { initValues?: an
         setoading(false);
       });
   };
-  // Language change handler
+  // Category initialization
   useEffect(() => {
-    if (initValues) {
+    if (initValues && categoriesData?.data) {
+      const category = categoriesData.data.find((cat: any) => cat.id === initValues?.category?.id);
       setSelectedCategory({
-        value: initValues?.category.id, // Set the category based on initial values
-        label: categoriesData?.data?.find((category: any) => category.id === initValues?.category.id)?.name?.[lang] || '',
+        value: initValues?.category?.id,
+        label: category?.name?.en || category?.name?.ar || '',
       });
     }
-  }, [initValues, lang, categoriesData]);
-  useEffect(() => {
-    if (initValues) {
-      setLang(initValues?.lang || 'en');
-    }
-  }, [initValues]);
+  }, [initValues, categoriesData]);
 
   const onSubmit: SubmitHandler<ServiceFormInput> = (data) => {
+    // Validate image is required
+    const imageValue = isImageData === null ? null : (isImageData || initValues?.image);
+    
+    // Check if image exists (handle both array and object formats)
+    const hasImage = imageValue && (
+      (Array.isArray(imageValue) && imageValue.length > 0) ||
+      (!Array.isArray(imageValue) && imageValue)
+    );
+    
+    if (!hasImage) {
+      setImageError(1);
+      toast.error('Image is required');
+      return;
+    }
+    
+    setImageError(0);
+    
     const requestBody = {
       name: data.name,
       slug: data.slug,
       meta_title: data.meta_title,
       meta_description: data.meta_description,
       category_id: selectedCategory?.value, // Use selected category ID
-      image: isImageData || initValues.image,
+      image: imageValue,
       description: data.description,
     };
 console.log(selectedCategory?.value, 'selectedCategory?.value');
@@ -157,96 +169,91 @@ console.log(errors, 'errors');
             </Button>
           </div>
 
-          {/* Language Switch */}
-          <div className="flex gap-3">
-            <Checkbox label="English" checked={lang === 'en'} onChange={() => setLang('en')} />
-            <Checkbox label="Arabic" checked={lang === 'ar'} onChange={() => setLang('ar')} />
+          {/* Two Column Layout: English (Left) and Arabic (Right) */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* English Fields - Left Column */}
+            <div className="space-y-4">
+              <h5 className="font-semibold text-gray-900 mb-4">English Fields</h5>
+              <Input
+                key={"name.en"}
+                label="Service Name (English)"
+                {...register('name.en')}
+                error={errors.name?.en?.message}
+              />
+              <Input
+                key={"slug.en"}
+                label="Service Slug (English)"
+                {...register('slug.en')}
+                error={errors.slug?.en?.message}
+              />
+              <QuillEditor
+                name="description.en"
+                error={errors.description?.en?.message}
+                control={control}
+                label="Description (English)"
+                key="Description EN"
+                className="col-span-full [&_.ql-editor]:min-h-[100px]"
+                labelClassName="font-medium text-gray-700 dark:text-gray-600 mb-1.5"
+              />
+              <Input
+                key={"meta_title.en"}
+                label="Meta Title (English)"
+                {...register('meta_title.en')}
+                placeholder='Enter Meta Title'
+                error={errors.meta_title?.en?.message}
+              />
+              <Textarea
+                key={"meta_description.en"}
+                label="Meta Description (English)"
+                placeholder='Enter Meta Description'
+                {...register('meta_description.en')}
+                error={errors?.meta_description?.en?.message||""}
+              />
+            </div>
+
+            {/* Arabic Fields - Right Column */}
+            <div className="space-y-4">
+              <h5 className="font-semibold text-gray-900 mb-4">Arabic Fields</h5>
+              <Input
+                key={"name.ar"}
+                label="Service Name (Arabic)"
+                {...register('name.ar')}
+                error={errors.name?.ar?.message}
+              />
+              <Input
+                key={"slug.ar"}
+                label="Service Slug (Arabic)"
+                {...register('slug.ar')}
+                error={errors.slug?.ar?.message}
+              />
+              <QuillEditor
+                name="description.ar"
+                error={errors.description?.ar?.message}
+                control={control}
+                label="Description (Arabic)"
+                key="Description AR"
+                className="col-span-full [&_.ql-editor]:min-h-[100px]"
+                labelClassName="font-medium text-gray-700 dark:text-gray-600 mb-1.5"
+              />
+              <Input
+                key={"meta_title.ar"}
+                label="Meta Title (Arabic)"
+                placeholder='أدخل العنوان التعريفي'
+                {...register('meta_title.ar')}
+                error={errors.meta_title?.ar?.message}
+              />
+              <Textarea
+                key={"meta_description.ar"}
+                label="Meta Description (Arabic)"
+                placeholder='أدخل الوصف التعريفي'
+                {...register('meta_description.ar')}
+                error={errors?.meta_description?.ar?.message}
+              />
+            </div>
           </div>
 
-          {/* Multilingual Name Field */}
-          {lang === 'en' ? (
-            <>
-            
-            <Input
-              key={"name.en"}
-              label="Service Name (English)"
-              {...register('name.en')}
-              error={errors.name?.en?.message}
-            />
-            <Input
-              key={"slug.en"}
-              label="Service Slug (English)"
-              {...register('slug.en')}
-              error={errors.slug?.en?.message}
-            />
-            <QuillEditor
-                    name="description.en"
-                    error={errors.description?.en?.message}
-                    control={control}
-                    label="Description EN"
-                    key="Description EN"
-                    className="col-span-full [&_.ql-editor]:min-h-[100px]"
-                    labelClassName="font-medium text-gray-700 dark:text-gray-600 mb-1.5"
-                  />
-
-                  <Input
-              key={"meta_title.en"}
-              label="Meta Title (English)"
-              {...register('meta_title.en')}
-              placeholder='Enter Meta Title'
-              error={errors.meta_title?.en?.message}
-            />
-                  <Textarea
-                  key={"meta_description.en"}
-                                label="Meta Description (EN)"
-                                placeholder='Enter Meta Description'
-                                {...register('meta_description.en')}
-                                error={errors?.meta_description?.en?.message||""}
-                              />
-            
-            </>
-          ) : (
-            <>
-            <Input
-              key={"name.ar"}
-              label="Service Name (Arabic)"
-              {...register('name.ar')}
-              error={errors.name?.ar?.message}
-            />
-            <Input
-              key={"slug.ar"}
-              label="Service Slug (Arabic)"
-              {...register('slug.ar')}
-              error={errors.slug?.ar?.message}
-            />
-             <QuillEditor
-                    name="description.ar"
-                    error={errors.description?.ar?.message}
-                    control={control}
-                    label="Description AR"
-                    key="Description AR"
-                    className="col-span-full [&_.ql-editor]:min-h-[100px]"
-                    labelClassName="font-medium text-gray-700 dark:text-gray-600 mb-1.5"
-                  />
-                  <Input
-              key={"meta_title.ar"}
-              label="Meta Title (Arabic)"
-              placeholder='Enter Meta Title'
-              {...register('meta_title.ar')}
-              error={errors.meta_title?.ar?.message}
-            />
-                  <Textarea
-                  key={"meta_description.ar"}
-                                label="Meta Description (AR)"
-                                placeholder='Enter Meta Description'
-                                {...register('meta_description.ar')}
-                                error={errors?.meta_description?.ar?.message}
-                              />
-            </>
-          )}
-
                        <FormGroup
-                                               title="Image"
+                                               title="Image *"
                                                className="relative pt-7 @2xl:pt-9 @3xl:grid-cols-12 @3xl:pt-11"
                                              >
                                                {isoading && (
@@ -292,7 +299,7 @@ console.log(errors, 'errors');
             <Select
               options={categoriesData?.data?.map((category: any) => ({
                 value: category.id,
-                label: category.name?.[lang] ?? category.name?.en,
+                label: category.name?.en || category.name?.ar || 'Unnamed',
               }))}
               value={selectedCategory} // Bind selected category
               onChange={(selected) => {

@@ -49,6 +49,7 @@ export default function ServicesTablePage() {
       header="User,Created At"
       createName="Create Service"
       createElementButton={<CreateOrUpdateServices />}
+      customSize="1200px"
     >
       {isLoading ? (
         <div className="m-auto">
