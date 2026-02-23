@@ -5,22 +5,20 @@ import { PiXBold } from "react-icons/pi"
 import type { SubmitHandler } from "react-hook-form"
 import { Form } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { ActionIcon } from "@/components/ui/action-icon"
 import { Title } from "@/components/ui/text"
 import { useModal } from "@/app/shared/modal-views/use-modal"
-import { type CreatePermitionInput, createPermitionSchema } from "@/utils/validators/create-permition.schema"
+import { type CreateNationalityInput, createNationalitySchema } from "@/utils/validators/create-nationality.schema"
 import { useCreateNationality, useUpdateNationality } from "@/framework/nationality"
 export default function CreateNationality({ initValues }: { initValues?: any }) {
   const { closeModal } = useModal()
-  const [lang, setLang] = useState<"en" | "ar">("en")
   const [isLoading, setLoading] = useState(false)
   const { mutate, isPending } = useCreateNationality()
   const { mutate: update } = useUpdateNationality()
 console.log(initValues);
 
-  const onSubmit: SubmitHandler<CreatePermitionInput> = (data) => {
+  const onSubmit: SubmitHandler<CreateNationalityInput> = (data) => {
     if (initValues) {
       update({
         role_id: initValues?.id,
@@ -37,9 +35,9 @@ console.log(initValues);
   }
 
   return (
-    <Form<CreatePermitionInput>
+    <Form<CreateNationalityInput>
       onSubmit={onSubmit}
-      validationSchema={createPermitionSchema}
+      validationSchema={createNationalitySchema}
       useFormProps={{
         defaultValues: {
           name: {
@@ -61,38 +59,20 @@ console.log(initValues);
             </ActionIcon>
           </div>
 
-          <div className="flex flex-wrap px-1 gap-3">
-            <Checkbox
-              key={0}
-              label={"English"}
-              checked={lang === "en"}
-              onChange={() => setLang("en")}
-            />
-            <Checkbox
-              key={1}
-              label={"Arabic"}
-              checked={lang === "ar"}
-              onChange={() => setLang("ar")}
-            />
-          </div>
-
-          {lang === "en" ? (
-            <Input
+          <Input
             key={"name.en"}
-              label="Nationality Name (English)"
-              placeholder="Enter English name"
-              {...register("name.en")}
-              error={errors.name?.en?.message}
-            />
-          ) : (
-            <Input
+            label="Nationality Name (English)"
+            placeholder="Enter English name"
+            {...register("name.en")}
+            error={errors.name?.en?.message}
+          />
+          <Input
             key={"name.ar"}
-              label="Nationality Name (Arabic)"
-              placeholder="أدخل الاسم بالعربية"
-              {...register("name.ar")}
-              error={errors.name?.ar?.message}
-            />
-          )}
+            label="Nationality Name (Arabic)"
+            placeholder="أدخل الاسم بالعربية"
+            {...register("name.ar")}
+            error={errors.name?.ar?.message}
+          />
 
           <div className="flex items-center justify-end gap-4">
             <Button variant="outline" onClick={closeModal} className="w-full @xl:w-auto">
