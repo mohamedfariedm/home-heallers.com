@@ -7,58 +7,58 @@ import { Button } from '@/components/ui/button';
 import TopTenModal from './top-ten-modal';
 import cn from '@/utils/class-names';
 
-interface CityData {
-  city_id: string | null;
-  city_name: string;
+interface StateData {
+  state_id: string | null;
+  state_name: string;
   reservations_count: number;
   total_sessions: number;
 }
 
-interface ReservationsByCityData {
-  by_city: CityData[];
-  total_cities: number;
+interface ReservationsByStateData {
+  by_state: StateData[];
+  total_states: number;
   total_reservations: number;
   total_sessions: number;
 }
 
-interface ReservationsByCityProps {
-  data: ReservationsByCityData;
+interface ReservationsByStateProps {
+  data: ReservationsByStateData;
   className?: string;
 }
 
-export default function ReservationsByCity({ data, className }: ReservationsByCityProps) {
+export default function ReservationsByState({ data, className }: ReservationsByStateProps) {
   const [isTopTenOpen, setIsTopTenOpen] = useState(false);
   
-  if (!data || !data.by_city || data.by_city.length === 0) {
+  if (!data || !data.by_state || data.by_state.length === 0) {
     return null;
   }
 
-  const chartData = data.by_city.map((city) => ({
-    name: city.city_name || 'Unknown',
-    reservations: city.reservations_count,
-    sessions: city.total_sessions,
+  const chartData = data.by_state.map((state) => ({
+    name: state.state_name || 'Unknown',
+    reservations: state.reservations_count,
+    sessions: state.total_sessions,
   }));
 
   // Sort by reservations count descending
   chartData.sort((a, b) => b.reservations - a.reservations);
   
   // Prepare Top 10 data
-  const sortedCities = [...data.by_city].sort((a, b) => b.reservations_count - a.reservations_count);
-  const topTenItems = sortedCities.slice(0, 10).map((city) => ({
-    name: city.city_name || 'Unknown',
-    value: city.reservations_count,
-    percentage: data.total_reservations > 0 ? (city.reservations_count / data.total_reservations) * 100 : 0,
+  const sortedStates = [...data.by_state].sort((a, b) => b.reservations_count - a.reservations_count);
+  const topTenItems = sortedStates.slice(0, 10).map((state) => ({
+    name: state.state_name || 'Unknown',
+    value: state.reservations_count,
+    percentage: data.total_reservations > 0 ? (state.reservations_count / data.total_reservations) * 100 : 0,
     additionalInfo: {
-      sessions: city.total_sessions,
-      city_id: city.city_id,
+      sessions: state.total_sessions,
+      state_id: state.state_id,
     },
   }));
 
   return (
     <>
     <WidgetCard
-      title="Reservations by City"
-      description={`${data.total_cities} cities • ${data.total_reservations.toLocaleString()} reservations • ${data.total_sessions.toLocaleString()} sessions`}
+      title="Reservations by State"
+      description={`${data.total_states} states • ${data.total_reservations.toLocaleString()} reservations • ${data.total_sessions.toLocaleString()} sessions`}
       className={cn('min-h-[400px]', className)}
       action={
         <Button
@@ -114,28 +114,28 @@ export default function ReservationsByCity({ data, className }: ReservationsByCi
         </ResponsiveContainer>
       </div>
 
-      {/* City Summary with more details */}
-      {data.by_city.length > 0 && (
+      {/* State Summary with more details */}
+      {data.by_state.length > 0 && (
         <div className="mt-6 border-t border-gray-100 pt-6 dark:border-gray-700">
           <div className="mb-4">
             <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
-              Top Cities Performance
+              Top States Performance
             </h4>
           </div>
           <div className="space-y-3">
-            {sortedCities.slice(0, 5).map((city, index) => {
+            {sortedStates.slice(0, 5).map((state, index) => {
               const reservationPercentage = data.total_reservations > 0 
-                ? (city.reservations_count / data.total_reservations) * 100 
+                ? (state.reservations_count / data.total_reservations) * 100 
                 : 0;
               const sessionPercentage = data.total_sessions > 0 
-                ? (city.total_sessions / data.total_sessions) * 100 
+                ? (state.total_sessions / data.total_sessions) * 100 
                 : 0;
-              const avgSessionsPerReservation = city.reservations_count > 0
-                ? (city.total_sessions / city.reservations_count).toFixed(2)
+              const avgSessionsPerReservation = state.reservations_count > 0
+                ? (state.total_sessions / state.reservations_count).toFixed(2)
                 : '0';
               
               return (
-                <div key={city.city_id || index} className="space-y-2 p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
+                <div key={state.state_id || index} className="space-y-2 p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className={cn(
@@ -148,7 +148,7 @@ export default function ReservationsByCity({ data, className }: ReservationsByCi
                         {index + 1}
                       </span>
                       <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                        {city.city_name || 'Unknown'}
+                        {state.state_name || 'Unknown'}
                       </span>
                     </div>
                     <span className="text-xs text-gray-500 dark:text-gray-400">
@@ -160,7 +160,7 @@ export default function ReservationsByCity({ data, className }: ReservationsByCi
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-xs text-gray-600 dark:text-gray-400">Reservations</span>
                         <span className="text-xs font-semibold text-gray-900 dark:text-white">
-                          {city.reservations_count.toLocaleString()}
+                          {state.reservations_count.toLocaleString()}
                         </span>
                       </div>
                       <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden dark:bg-gray-700">
@@ -174,7 +174,7 @@ export default function ReservationsByCity({ data, className }: ReservationsByCi
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-xs text-gray-600 dark:text-gray-400">Sessions</span>
                         <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                          {city.total_sessions.toLocaleString()}
+                          {state.total_sessions.toLocaleString()}
                         </span>
                       </div>
                       <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden dark:bg-gray-700">
@@ -191,9 +191,9 @@ export default function ReservationsByCity({ data, className }: ReservationsByCi
                 </div>
               );
             })}
-            {data.by_city.length > 5 && (
+            {data.by_state.length > 5 && (
               <p className="text-xs text-gray-500 mt-2 text-center">
-                +{data.by_city.length - 5} more cities
+                +{data.by_state.length - 5} more states
               </p>
             )}
           </div>
@@ -204,7 +204,7 @@ export default function ReservationsByCity({ data, className }: ReservationsByCi
     <TopTenModal
       isOpen={isTopTenOpen}
       onClose={() => setIsTopTenOpen(false)}
-      title="Reservations by City"
+      title="Reservations by State"
       items={topTenItems}
       valueLabel="Reservations"
       showPercentage={true}
