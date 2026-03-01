@@ -38,44 +38,48 @@ export default function ReservationsTablePage() {
   const [selectedRowKeys, setSelectedRowKeys] = useState<any[]>([]);
 
   return (
+    <>
       <TableLayout
-      title={pageHeader.title}
-      breadcrumb={pageHeader.breadcrumb}
-      data={{
-        columns: selectedColumns
-          .filter((column) => column !== 'checked' && column !== 'action')
-          .map((column: String) =>
-            column.replace(/\./g, '_').replace(/\s/g, '_')
-          ),
-        rows: selectedRowKeys,
-      }}
-      fileName="reservations"
-      header="Client,Created At"
-      createName="Create Reservation"
-      createElementButton={<CreateOrUpdateReservation />}
-      importButton="reservations/import"
-    >
-      {isLoading ? (
-        <div className="m-auto">
-          <Spinner size="lg" />
-        </div>
-      ) : (
-        <>
-          {/* Reservation Statistics */}
-          <ReservationStatistics 
-            statistics={data?.statistics} 
-            className="mb-6"
-          />
-          
-          {/* Reservations Table */}
-          <ReservationsTable
-            data={data?.data}
-            getSelectedColumns={setSelectedColumns}
-            getSelectedRowKeys={setSelectedRowKeys}
-            totalItems={data?.meta?.total}
-          />
-        </>
-      )}
-    </TableLayout>
+        title={pageHeader.title}
+        breadcrumb={pageHeader.breadcrumb}
+        data={{
+          columns: selectedColumns
+            .filter((column) => column !== 'checked' && column !== 'action')
+            .map((column: String) =>
+              column.replace(/\./g, '_').replace(/\s/g, '_')
+            ),
+          rows: selectedRowKeys,
+        }}
+        fileName="reservations"
+        header="Client,Created At"
+        createName="Create Reservation"
+        createElementButton={<CreateOrUpdateReservation />}
+        importButton="reservations/import"
+      >
+
+
+        {isLoading ? (
+          <div className="m-auto">
+            <Spinner size="lg" />
+          </div>
+        ) : (
+          <>
+            {/* Reservation Statistics */}
+            <ReservationStatistics 
+              statistics={data?.statistics} 
+              className="mb-6"
+            />
+            
+            {/* Reservations Table */}
+            <ReservationsTable
+              data={data?.data}
+              getSelectedColumns={setSelectedColumns}
+              getSelectedRowKeys={setSelectedRowKeys}
+              totalItems={data?.meta?.total}
+            />
+          </>
+        )}
+      </TableLayout>
+    </>
   );
 }

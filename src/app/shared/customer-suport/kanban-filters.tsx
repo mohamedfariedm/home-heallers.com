@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { PiFunnel, PiXBold } from 'react-icons/pi';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { ActionIcon } from '@/components/ui/action-icon';
 import { Title } from '@/components/ui/text';
 import ColumnFilterPopover from './column-filter-popover';
@@ -35,18 +36,20 @@ const FILTERABLE_COLUMNS = [
   'last_phone',
   'notes',
   'ads_name',
-  'created_at',
   'communication_channel',
 ];
 
 interface KanbanFiltersProps {
-  onFilterChange: (filters: Record<string, any>) => void;
+  onFilterChange: (filters: Record<string, any>, dates?: { date_from?: string; date_to?: string }) => void;
   onClearFilters: () => void;
   currentFilters?: Record<string, any>;
+  currentDates?: { date_from?: string; date_to?: string };
 }
 
-export default function KanbanFilters({ onFilterChange, onClearFilters, currentFilters = {} }: KanbanFiltersProps) {
+export default function KanbanFilters({ onFilterChange, onClearFilters, currentFilters = {}, currentDates }: KanbanFiltersProps) {
   const [filters, setFilters] = useState<Record<string, any>>({});
+  const [dateFrom, setDateFrom] = useState(currentDates?.date_from || '');
+  const [dateTo, setDateTo] = useState(currentDates?.date_to || '');
   const [isOpen, setIsOpen] = useState(false);
   const [resetKey, setResetKey] = useState(0);
 
@@ -59,8 +62,16 @@ export default function KanbanFilters({ onFilterChange, onClearFilters, currentF
       } else {
         setFilters({});
       }
+      // Sync dates
+      if (currentDates) {
+        setDateFrom(currentDates.date_from || '');
+        setDateTo(currentDates.date_to || '');
+      } else {
+        setDateFrom('');
+        setDateTo('');
+      }
     }
-  }, [isOpen, currentFilters]);
+  }, [isOpen, currentFilters, currentDates]);
 
   const handleFilterChange = (key: string, value: any) => {
     setFilters((prev) => {
@@ -70,13 +81,15 @@ export default function KanbanFilters({ onFilterChange, onClearFilters, currentF
   };
 
   const handleApplyFilters = () => {
-    onFilterChange(filters);
+    onFilterChange(filters, { date_from: dateFrom, date_to: dateTo });
     setIsOpen(false);
   };
 
   const handleClearFilters = () => {
     // Reset all filters to completely empty
     setFilters({});
+    setDateFrom('');
+    setDateTo('');
     
     // Trigger reset of all filter popovers by changing key
     setResetKey((prev) => prev + 1);
@@ -85,17 +98,25 @@ export default function KanbanFilters({ onFilterChange, onClearFilters, currentF
     onClearFilters();
     
     // Apply empty filters immediately to clear parent state
-    onFilterChange({});
+    onFilterChange({}, { date_from: '', date_to: '' });
   };
 
-  // Check both local filters and current applied filters
+  // Check both local filters and current applied filters, including dates
   const hasActiveFilters = 
     Object.keys(filters).some((key) => filters[key]?.c1?.value || filters[key]?.c2?.value) ||
-    Object.keys(currentFilters).some((key) => currentFilters[key]?.c1?.value || currentFilters[key]?.c2?.value);
+    Object.keys(currentFilters).some((key) => currentFilters[key]?.c1?.value || currentFilters[key]?.c2?.value) ||
+    dateFrom ||
+    dateTo ||
+    currentDates?.date_from ||
+    currentDates?.date_to;
 
   const activeFilterCount = 
-    Object.keys(filters).filter((key) => filters[key]?.c1?.value || filters[key]?.c2?.value).length ||
-    Object.keys(currentFilters).filter((key) => currentFilters[key]?.c1?.value || currentFilters[key]?.c2?.value).length;
+    Object.keys(filters).filter((key) => filters[key]?.c1?.value || filters[key]?.c2?.value).length +
+    Object.keys(currentFilters).filter((key) => currentFilters[key]?.c1?.value || currentFilters[key]?.c2?.value).length +
+    (dateFrom ? 1 : 0) +
+    (dateTo ? 1 : 0) +
+    (currentDates?.date_from ? 1 : 0) +
+    (currentDates?.date_to ? 1 : 0);
 
   return (
     <>
@@ -140,6 +161,48 @@ export default function KanbanFilters({ onFilterChange, onClearFilters, currentF
 
           {/* Filter Content */}
           <div className="flex-1 overflow-y-auto px-5 py-4">
+            {/* Date Filters */}
+            <div className="mb-6 grid grid-cols-2 gap-4">
+              <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-50">
+                <div className="mb-3 flex items-center justify-between">
+                  <label className="text-sm font-semibold text-gray-900 dark:text-gray-900">
+                    Date From
+                  </label>
+                  {(dateFrom || currentDates?.date_from) && (
+                    <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-medium text-white">
+                      Active
+                    </span>
+                  )}
+                </div>
+                <Input
+                  type="date"
+                  value={dateFrom || currentDates?.date_from || ''}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                  className="w-full"
+                  inputClassName="border-gray-200 dark:border-gray-700 focus:ring-blue-500 rounded-lg h-9"
+                />
+              </div>
+              <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-50">
+                <div className="mb-3 flex items-center justify-between">
+                  <label className="text-sm font-semibold text-gray-900 dark:text-gray-900">
+                    Date To
+                  </label>
+                  {(dateTo || currentDates?.date_to) && (
+                    <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-medium text-white">
+                      Active
+                    </span>
+                  )}
+                </div>
+                <Input
+                  type="date"
+                  value={dateTo || currentDates?.date_to || ''}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  className="w-full"
+                  inputClassName="border-gray-200 dark:border-gray-700 focus:ring-blue-500 rounded-lg h-9"
+                />
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               {FILTERABLE_COLUMNS.map((columnKey) => {
                 const columnLabel = columnKey

@@ -55,14 +55,26 @@ function FilterDrawerView({
   const pathName = usePathname()
   const searchParams = useSearchParams()
   const handleShowResults = () => {
-  const keys = Object.keys(filters);
-  const params = new URLSearchParams(searchParams);
+  const keys = Object.keys(filters || {});
+  const params = new URLSearchParams(searchParams.toString());
 
   keys.forEach((key) => {
     const value = filters[key];
 
     // ✅ only include if value is not empty, null, or undefined
-    if (value !== '' && value !== null && value !== undefined) {
+    // Handle date_from and date_to specifically
+    if (key === 'date_from' || key === 'date_to') {
+      if (value !== '' && value !== null && value !== undefined) {
+        params.set(key, String(value));
+      } else {
+        params.delete(key);
+      }
+    } else if (value !== '' && value !== null && value !== undefined) {
+      // For other filters, check if it's a nested object (like column filters)
+      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+        // Skip nested filter objects - they're handled by applyAllFilters
+        return;
+      }
       params.set(key, String(value));
     } else {
       // ✅ remove empty params from URL
@@ -156,7 +168,7 @@ export default function TableFilter({
   const [showFilters, setShowFilters] = useState(true);
   const [openDrawer, setOpenDrawer] = useState(false);
   const searchParams = useSearchParams()
-  const params = new URLSearchParams(searchParams)
+  const params = new URLSearchParams(searchParams.toString())
   const { push } = useRouter()
   const pathName = usePathname()
   function handleChange(viewType: string) {
