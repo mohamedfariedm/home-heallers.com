@@ -333,22 +333,29 @@ export default function StatisticsFiltersComponent({
             Customer Support Type
           </label>
           <div className="flex flex-wrap gap-2">
-            {customerSupportTypeOptions.map((option) => (
-              <Button
-                key={option.value}
-                size="sm"
-                variant={selectedSupportTypes.includes(option.value) ? 'solid' : 'outline'}
-                onClick={() => toggleSupportType(option.value)}
-                className={cn(
-                  'rounded-full px-4 h-8 transition-all duration-200 border',
-                  selectedSupportTypes.includes(option.value)
-                    ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm hover:bg-indigo-700'
-                    : 'bg-transparent border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700'
-                )}
-              >
-                {option.label}
-              </Button>
-            ))}
+            {customerSupportTypeOptions.map((option) => {
+              const displayLabel = option.label.toLowerCase() === 'operation' 
+                ? 'inbound' 
+                : option.label.toLowerCase() === 'marketing' 
+                ? 'outbound' 
+                : option.label;
+              return (
+                <Button
+                  key={option.value}
+                  size="sm"
+                  variant={selectedSupportTypes.includes(option.value) ? 'solid' : 'outline'}
+                  onClick={() => toggleSupportType(option.value)}
+                  className={cn(
+                    'rounded-full px-4 h-8 transition-all duration-200 border',
+                    selectedSupportTypes.includes(option.value)
+                      ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm hover:bg-indigo-700'
+                      : 'bg-transparent border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700'
+                  )}
+                >
+                  {displayLabel}
+                </Button>
+              );
+            })}
           </div>
         </div>
       </div>

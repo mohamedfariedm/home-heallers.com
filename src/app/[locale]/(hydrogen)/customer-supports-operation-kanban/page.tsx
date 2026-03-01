@@ -15,6 +15,8 @@ import { useModal } from '@/app/shared/modal-views/use-modal';
 import CreateOrUpdateCustomerSupport from '@/app/shared/customer-suport/suport-form';
 import { PiPlusBold } from 'react-icons/pi';
 import KanbanFilters from '@/app/shared/customer-suport/kanban-filters';
+import KanbanStatisticsCards from '@/app/shared/customer-suport/kanban-statistics-cards';
+import ExportButton from '@/app/shared/export-button';
 
 const pageHeader = {
   title: 'Operation Customer Supports',
@@ -63,7 +65,7 @@ export default function CustomerSupportsOperationKanbanPage() {
       'lead_source', 'source_campaign', 'mobile_phone', 'booking_phone_number',
       'home_phone', 'address_1', 'description', 'first_call_time',
       'last_call_result', 'last_call_total_duration', 'last_phone', 'notes',
-      'ads_name', 'created_at', 'communication_channel'
+      'ads_name', 'communication_channel'
     ];
 
     filterableColumns.forEach((key) => {
@@ -93,13 +95,18 @@ export default function CustomerSupportsOperationKanbanPage() {
     }
   }, []);
 
-  // Build filter params
-  const buildFilterParams = (status: string) => {
+  // Build filter params - single call without status filter
+  const buildFilterParams = () => {
     const params = new URLSearchParams();
     params.set('page', String(page));
-    params.set('limit', '5');
+    params.set('limit', '25'); // Get more items to distribute across columns
     params.set('type', 'operation');
-    params.set('status_equal', status);
+
+    // Add date filters from URL params
+    const dateFrom = searchParams.get('date_from');
+    const dateTo = searchParams.get('date_to');
+    if (dateFrom) params.set('date_from', dateFrom);
+    if (dateTo) params.set('date_to', dateTo);
 
     // Apply filters
     Object.entries(filters).forEach(([key, val]) => {
@@ -112,43 +119,82 @@ export default function CustomerSupportsOperationKanbanPage() {
     return params.toString();
   };
 
-  // Fetch data for each column separately with the same page
-  const newData = useCustomerSupport(buildFilterParams('new'));
+  // Single API call to fetch all data
+  const allData = useCustomerSupport(buildFilterParams());
 
-  const failedData = useCustomerSupport(buildFilterParams('failed'));
-  const successData = useCustomerSupport(buildFilterParams('success'));
-  const possibleData = useCustomerSupport(buildFilterParams('possible'));
-  const negotiationData = useCustomerSupport(buildFilterParams('negotiation'));
+  // Helper function to normalize status (handle case variations)
+  const normalizeStatus = (status: string | null | undefined): string => {
+    if (!status) return '';
+    const normalized = status.toLowerCase().trim();
+    // Map common variations - handle both "New" and "new"
+    const statusMap: Record<string, string> = {
+      'new': 'new',
+      'negotiation': 'negotiation',
+      'success': 'success',
+      'possible': 'possible',
+      'failed': 'failed',
+    };
+    return statusMap[normalized] || normalized;
+  };
 
-  // Combine all column data
+  // Filter and group data by status on client side
+  const filterDataByStatus = (status: string) => {
+    const allItems = allData.data?.data || [];
+    return allItems.filter((item: any) => {
+      const itemStatus = normalizeStatus(item.status);
+      return itemStatus === status.toLowerCase();
+    });
+  };
+
+  // Combine all column data - filter from single API response
   const columnData: Record<
     string,
     { data: any; meta: any; isLoading: boolean }
   > = {
     new: {
-      data: newData.data,
-      meta: newData.data?.meta,
-      isLoading: newData.isLoading,
+      data: {
+        data: filterDataByStatus('new'),
+        meta: allData.data?.meta,
+        statistics: allData.data?.statistics,
+      },
+      meta: allData.data?.meta,
+      isLoading: allData.isLoading,
     },
     failed: {
-      data: failedData.data,
-      meta: failedData.data?.meta,
-      isLoading: failedData.isLoading,
+      data: {
+        data: filterDataByStatus('failed'),
+        meta: allData.data?.meta,
+        statistics: allData.data?.statistics,
+      },
+      meta: allData.data?.meta,
+      isLoading: allData.isLoading,
     },
     success: {
-      data: successData.data,
-      meta: successData.data?.meta,
-      isLoading: successData.isLoading,
+      data: {
+        data: filterDataByStatus('success'),
+        meta: allData.data?.meta,
+        statistics: allData.data?.statistics,
+      },
+      meta: allData.data?.meta,
+      isLoading: allData.isLoading,
     },
     possible: {
-      data: possibleData.data,
-      meta: possibleData.data?.meta,
-      isLoading: possibleData.isLoading,
+      data: {
+        data: filterDataByStatus('possible'),
+        meta: allData.data?.meta,
+        statistics: allData.data?.statistics,
+      },
+      meta: allData.data?.meta,
+      isLoading: allData.isLoading,
     },
     negotiation: {
-      data: negotiationData.data,
-      meta: negotiationData.data?.meta,
-      isLoading: negotiationData.isLoading,
+      data: {
+        data: filterDataByStatus('negotiation'),
+        meta: allData.data?.meta,
+        statistics: allData.data?.statistics,
+      },
+      meta: allData.data?.meta,
+      isLoading: allData.isLoading,
     },
   };
 
@@ -159,9 +205,9 @@ export default function CustomerSupportsOperationKanbanPage() {
     newStatus: string,
     oldStatus: string
   ) => {
-    // Find the item in the old status column data
-    const oldColumnData = columnData[oldStatus]?.data?.data || [];
-    const item = oldColumnData.find((item: any) => item.id === itemId);
+    // Find the item in all data
+    const allItems = allData.data?.data || [];
+    const item = allItems.find((item: any) => item.id === itemId);
 
     if (item) {
       updateCustomerSupport({
@@ -188,7 +234,7 @@ export default function CustomerSupportsOperationKanbanPage() {
     });
   };
 
-  const handleFilterChange = (newFilters: Record<string, any>) => {
+  const handleFilterChange = (newFilters: Record<string, any>, dates?: { date_from?: string; date_to?: string }) => {
     setFilters(newFilters);
     setPage(1); // Reset to first page when filters change
 
@@ -202,6 +248,20 @@ export default function CustomerSupportsOperationKanbanPage() {
         if (paramKey.startsWith(`${key}_`)) params.delete(paramKey);
       }
     });
+
+    // Clear old date params
+    params.delete('date_from');
+    params.delete('date_to');
+
+    // Add new date params
+    if (dates) {
+      if (dates.date_from) {
+        params.set('date_from', dates.date_from);
+      }
+      if (dates.date_to) {
+        params.set('date_to', dates.date_to);
+      }
+    }
 
     // Add new filter params
     Object.entries(newFilters).forEach(([key, val]) => {
@@ -228,14 +288,8 @@ export default function CustomerSupportsOperationKanbanPage() {
     router.replace(`?${params.toString()}`);
   };
 
-  // Calculate total items - use the maximum total from any column for pagination
-  const totalItems = Math.max(
-    newData.data?.meta?.total || 0,
-    failedData.data?.meta?.total || 0,
-    successData.data?.meta?.total || 0,
-    possibleData.data?.meta?.total || 0,
-    negotiationData.data?.meta?.total || 0
-  );
+  // Calculate total items from single API response
+  const totalItems = allData.data?.meta?.total || 0;
 
   // Show pagination if we have any items (even if less than 5, to show page 1 of 1)
   const needsPagination = totalItems > 0;
@@ -251,6 +305,16 @@ export default function CustomerSupportsOperationKanbanPage() {
             onFilterChange={handleFilterChange}
             onClearFilters={handleClearFilters}
             currentFilters={filters}
+            currentDates={{
+              date_from: searchParams.get('date_from') || undefined,
+              date_to: searchParams.get('date_to') || undefined,
+            }}
+          />
+          <ExportButton 
+            data={{ columns: [], rows: [] }} 
+            fileName="customer-supports-operation" 
+            header="excel"
+            type="operation"
           />
           <Button onClick={handleCreateClick} className="w-full @lg:w-auto">
             <PiPlusBold className="me-1.5 h-[17px] w-[17px]" />
@@ -265,6 +329,9 @@ export default function CustomerSupportsOperationKanbanPage() {
         </div>
       ) : (
         <div className="flex w-full flex-col">
+          {/* Statistics Cards */}
+          <KanbanStatisticsCards statistics={allData.data?.statistics} />
+          
           <div className="flex w-full gap-4 overflow-x-auto pb-4">
             <CustomerSupportKanban
               columns={STATUS_COLUMNS}

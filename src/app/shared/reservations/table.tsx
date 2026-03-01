@@ -55,20 +55,31 @@ export default function ReservationsTable({
   const { mutate: deleteReservation } = useDeleteReservation();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const params = new URLSearchParams(searchParams);
-  const [pageSize, setPageSize] = useState(Number(params.get('limit')) || 10);
+  const [pageSize, setPageSize] = useState(Number(searchParams.get('limit')) || 10);
   const [columnFilters, setColumnFilters] = useState<Record<string, any>>({});
+  const [dateFilters, setDateFilters] = useState<{ date_from?: string; date_to?: string }>({
+    date_from: searchParams.get('date_from') || undefined,
+    date_to: searchParams.get('date_to') || undefined,
+  });
 
   const handleFilterChange = (key: string, value: any) => setColumnFilters((prev) => ({ ...prev, [key]: value }));
 
+  const handleDateChange = (dates: { date_from?: string; date_to?: string }) => {
+    setDateFilters(dates);
+  };
+
   const applyAllFilters = () => {
-    const params = new URLSearchParams(searchParams);
+    const params = new URLSearchParams(searchParams.toString());
 
     // clear old filters
-    for (const [key] of params.entries()) {
+    Array.from(params.entries()).forEach(([key]) => {
       const [prefix] = key.split('_');
       if (columnFilters[prefix]) params.delete(key);
-    }
+    });
+
+    // clear old date filters
+    params.delete('date_from');
+    params.delete('date_to');
 
     // build clean query params
     Object.entries(columnFilters).forEach(([key, val]) => {
@@ -78,27 +89,41 @@ export default function ReservationsTable({
         params.set(`${key}_${c2.op}_${logic === 'or' ? 'or' : 'and'}`, c2.value);
     });
 
+    // Add date filters
+    if (dateFilters.date_from) {
+      params.set('date_from', dateFilters.date_from);
+    }
+    if (dateFilters.date_to) {
+      params.set('date_to', dateFilters.date_to);
+    }
+
     params.set('page', '1');
     router.push(`?${params.toString()}`);
   };
 
   const clearAllFilters = () => {
-    const params = new URLSearchParams(searchParams);
+    const params = new URLSearchParams(searchParams.toString());
     Object.keys(columnFilters).forEach((key) => {
-      for (const [paramKey] of params.entries()) {
+      Array.from(params.entries()).forEach(([paramKey]) => {
         if (paramKey.startsWith(`${key}_`)) params.delete(paramKey);
-      }
+      });
     });
+    
+    // Clear date filters
+    params.delete('date_from');
+    params.delete('date_to');
+    
     router.push(`?${params.toString()}`);
     setColumnFilters({});
+    setDateFilters({ date_from: undefined, date_to: undefined });
   };
 
   const filterState = {
-    status: params.get("status") || '',
-    client: params.get("client") || '',
-    service: params.get("service") || '',
-    city: params.get("city") || '',
-    state: params.get("state") || '',
+    status: searchParams.get("status") || '',
+    client: searchParams.get("client") || '',
+    service: searchParams.get("service") || '',
+    city: searchParams.get("city") || '',
+    state: searchParams.get("state") || '',
   };
 
   const onHeaderCellClick = (value: string) => ({
@@ -214,7 +239,11 @@ export default function ReservationsTable({
           columns,
           checkedColumns,
           setCheckedColumns,
-          filters
+          filters: {
+            ...filters,
+            ...(dateFilters.date_from && { date_from: dateFilters.date_from }),
+            ...(dateFilters.date_to && { date_to: dateFilters.date_to }),
+          }
         }}
         filterElement={
           <FilterElement
@@ -222,6 +251,8 @@ export default function ReservationsTable({
             filters={filters}
             updateFilter={updateFilter}
             handleReset={handleReset}
+            onDateChange={handleDateChange}
+            currentDates={dateFilters}
           />
         }
         tableFooter={

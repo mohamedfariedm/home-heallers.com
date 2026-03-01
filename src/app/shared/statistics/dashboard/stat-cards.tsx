@@ -7,6 +7,7 @@ import {
   PiFileTextBold,
   PiArrowUpRightBold,
   PiReceiptBold,
+  PiClockBold,
 } from 'react-icons/pi';
 import cn from '@/utils/class-names';
 
@@ -30,6 +31,10 @@ interface AggregateData {
     total: number;
   };
   total_revenue?: number;
+  sessions_statistics?: {
+    total_sessions: number;
+    total_reservations: number;
+  };
 }
 
 interface StatCardsProps {
@@ -124,6 +129,17 @@ export default function StatCards({ data, className }: StatCardsProps) {
       darkTextColor: 'dark:text-violet-400',
       blurColor: 'bg-violet-50/50',
       darkBlurColor: 'dark:bg-violet-900/10',
+    },
+    {
+      title: 'Total Sessions',
+      value: data.sessions_statistics?.total_sessions || 0,
+      icon: PiClockBold,
+      bgColor: 'bg-cyan-50',
+      textColor: 'text-cyan-600',
+      darkBgColor: 'dark:bg-cyan-900/20',
+      darkTextColor: 'dark:text-cyan-400',
+      blurColor: 'bg-cyan-50/50',
+      darkBlurColor: 'dark:bg-cyan-900/10',
     },
   ];
 
