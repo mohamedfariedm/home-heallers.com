@@ -328,7 +328,7 @@ export default function CustomerSupportsMarketingKanbanPage() {
           <Spinner size="lg" />
         </div>
       ) : (
-        <div className="flex w-full flex-col">
+        <div className="flex w-full flex-col gap-4">
           {/* Statistics Cards */}
           <KanbanStatisticsCards statistics={allData.data?.statistics} />
           

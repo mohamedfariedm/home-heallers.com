@@ -369,6 +369,26 @@ export const getColumns = ({
     },
   },
 
+  // ✅ Seen
+  {
+    title: (
+      <div className="flex items-center gap-1">
+        <HeaderCell title="Seen" />
+        {onFilterChange && (
+          <ColumnFilterPopover
+            columnKey="seen"
+            onFilterChange={onFilterChange}
+          />
+        )}
+      </div>
+    ),
+    dataIndex: 'seen',
+    key: 'seen',
+    render: (seen: boolean | null | undefined) => {
+      if (seen === null || seen === undefined) return '—';
+      return seen ? 'Yes' : 'No';
+    },
+  },
 
   // ✅ Pain Location
   {

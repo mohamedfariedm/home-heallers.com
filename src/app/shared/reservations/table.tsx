@@ -101,23 +101,6 @@ export default function ReservationsTable({
     router.push(`?${params.toString()}`);
   };
 
-  const clearAllFilters = () => {
-    const params = new URLSearchParams(searchParams.toString());
-    Object.keys(columnFilters).forEach((key) => {
-      Array.from(params.entries()).forEach(([paramKey]) => {
-        if (paramKey.startsWith(`${key}_`)) params.delete(paramKey);
-      });
-    });
-    
-    // Clear date filters
-    params.delete('date_from');
-    params.delete('date_to');
-    
-    router.push(`?${params.toString()}`);
-    setColumnFilters({});
-    setDateFilters({ date_from: undefined, date_to: undefined });
-  };
-
   const filterState = {
     status: searchParams.get("status") || '',
     client: searchParams.get("client") || '',
@@ -184,6 +167,34 @@ export default function ReservationsTable({
   );
 
   const { visibleColumns, checkedColumns, setCheckedColumns } = useColumn(columns);
+  
+  // Clear all filters function - defined after useTable to access handleReset and handleSearch
+  const clearAllFilters = () => {
+    const params = new URLSearchParams();
+    
+    // Keep only essential params (page and limit)
+    const currentLimit = searchParams.get('limit') || '10';
+    params.set('page', '1'); // Reset to first page
+    params.set('limit', currentLimit);
+    
+    // Clear all filter-related params by not adding them
+    // This includes:
+    // - Column filters (id_eq, patient_contains, etc.)
+    // - Date filters (date_from, date_to)
+    // - FilterState filters (status, client, service, city, state)
+    // - Any other filter params
+    
+    // Reset all state
+    setColumnFilters({});
+    setDateFilters({ date_from: undefined, date_to: undefined });
+    
+    // Reset table internal filters
+    handleReset();
+    handleSearch('');
+    
+    // Navigate to clean URL
+    router.push(`?${params.toString()}`);
+  };
   
   useEffect(() => {
     getSelectedColumns(checkedColumns);

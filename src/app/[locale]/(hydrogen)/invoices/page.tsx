@@ -7,6 +7,7 @@ import InvoiceView from '@/components/ui/invoiceView';
 import { useInvoices } from '@/framework/invoices';
 import InvoiceForm from '@/app/shared/invoices/invoices-form';
 import InvoicesTable from '@/app/shared/invoices/table';
+import InvoiceStatistics from '@/app/shared/invoices/invoice-statistics';
 
 const pageHeader = {
   title: 'invoices',
@@ -18,7 +19,12 @@ const pageHeader = {
 
 export default function InvoicesTablePage() {
   const searchParams = useSearchParams();
-  const params = new URLSearchParams(searchParams);
+  
+  // Build query string from search params
+  const params = new URLSearchParams();
+  searchParams.forEach((value, key) => {
+    params.set(key, value);
+  });
   if (!params.get('page')) params.set('page', '1');
   if (!params.get('limit')) params.set('limit', '10');
 
@@ -45,12 +51,21 @@ console.log(data);
       {isLoading ? (
         <div className="m-auto"><Spinner size="lg" /></div>
       ) : (
-        <InvoicesTable
-          data={data?.data}
-          getSelectedColumns={setSelectedColumns}
-          getSelectedRowKeys={setSelectedRowKeys}
-          totalItems={data?.meta?.total}
-        />
+        <>
+          {/* Invoice Statistics */}
+          <InvoiceStatistics 
+            statistics={data?.statistics} 
+            className="mb-6"
+          />
+          
+          {/* Invoices Table */}
+          <InvoicesTable
+            data={data?.data}
+            getSelectedColumns={setSelectedColumns}
+            getSelectedRowKeys={setSelectedRowKeys}
+            totalItems={data?.meta?.total}
+          />
+        </>
       )}
     </TableLayout>
 
