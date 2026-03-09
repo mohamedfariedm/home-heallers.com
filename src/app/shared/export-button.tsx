@@ -26,14 +26,44 @@ export default function ExportButton({
   type
 }: ExportButtonProps) {
   const searchParams = useSearchParams()
-  const params = new URLSearchParams(searchParams)
-  if(role) params.set('role', role)
+  
   const handleClick = async () => {
     const token = Cookies.get('auth_token');
+    
+    // Get all search params and remove page and limit
+    const params = new URLSearchParams();
+    // Convert ReadonlyURLSearchParams to regular object and filter out page/limit
+    for (const [key, value] of searchParams.entries()) {
+      if(key !== 'page' && key !== 'limit') {
+        params.set(key, value);
+      }
+    }
+    
+    // Add role if provided
+    if(role) params.set('role', role);
+    
+    // Add export parameter
+    params.set('export', '1');
+    
+    // Build the base URL based on fileName
+    let baseUrl = '';
+    if(fileName === 'customer-supports-marketing') {
+      baseUrl = `${process.env.NEXT_PUBLIC_API_ENDPOINT}/customer-supports`;
+      params.set('type', 'marketing');
+    } else if(fileName === 'customer-supports-operation') {
+      baseUrl = `${process.env.NEXT_PUBLIC_API_ENDPOINT}/customer-supports`;
+      params.set('type', 'operation');
+    } else {
+      baseUrl = `${process.env.NEXT_PUBLIC_API_ENDPOINT}/${fileName}`;
+    }
+    
+    // Construct the full URL with query params
+    const url = `${baseUrl}?${params.toString()}`;
+    
     let config = {
       method: 'get',
       maxBodyLength: Infinity,
-      url: `${process.env.NEXT_PUBLIC_API_ENDPOINT}/${fileName=="customer-supports-marketing"?"customer-supports?type=marketing&export=1":fileName=="customer-supports-operation"?"customer-supports?type=operation&export=1":`${fileName}?export=1`}`,
+      url: url,
       headers: { 
         'Authorization':`Bearer ${token}` ,
         'Accept-Language': 'en'

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import {
   PiCalendarCheckBold,
   PiEyeBold,
@@ -10,21 +11,78 @@ import {
   PiHourglassBold,
   PiCheckBold,
   PiWarningBold,
+  PiCurrencyDollarBold,
+  PiMoneyBold,
+  PiCreditCardBold,
+  PiUsersBold,
+  PiChartBarBold,
+  PiTagBold,
+  PiArrowRightBold,
+  PiCaretDownBold,
+  PiCaretUpBold,
 } from 'react-icons/pi';
 import cn from '@/utils/class-names';
+import { useRouter, usePathname } from 'next/navigation';
+
+interface StatusCount {
+  count?: number;
+  sessions_count?: number;
+  link?: string;
+}
 
 interface ReservationStatistics {
   by_status?: {
-    reviewing?: number;
-    waitconfirm?: number;
-    confirmed?: number;
-    canceled?: number;
-    completed?: number;
-    failed?: number;
+    reviewing?: StatusCount | number;
+    waitconfirm?: StatusCount | number;
+    confirmed?: StatusCount | number;
+    canceled?: StatusCount | number;
+    completed?: StatusCount | number;
+    failed?: StatusCount | number;
   };
   seen_count?: number;
   unseen_count?: number;
   total_count?: number;
+  paid_statistics?: {
+    count?: number;
+    total_amount?: number;
+    link?: string;
+  };
+  unpaid_statistics?: {
+    count?: number;
+    total_amount?: number;
+    link?: string;
+  };
+  remaining_payment_statistics?: {
+    count?: number;
+    total_remaining?: number;
+    link?: string;
+  };
+  by_source_campaign?: Array<{
+    source_campaign?: string;
+    reservations_count?: number;
+    sessions_count?: number;
+    link?: string;
+  }>;
+  by_service?: Array<{
+    service_id?: number;
+    service_name_ar?: string;
+    reservations_count?: number;
+    sessions_count?: number;
+    link?: string;
+  }>;
+  customers?: {
+    total_unique_customers?: {
+      count?: number;
+      link?: string;
+    };
+    multiple_bookings?: {
+      customers_count?: number;
+      total_reservations?: number;
+      total_sessions?: number;
+      reservations_link?: string;
+      clients_link?: string;
+    };
+  };
 }
 
 interface ReservationStatisticsProps {
@@ -32,26 +90,170 @@ interface ReservationStatisticsProps {
   className?: string;
 }
 
+// Helper function to get count from status (handles both old and new format)
+const getStatusCount = (status: StatusCount | number | undefined): number => {
+  if (!status) return 0;
+  if (typeof status === 'number') return status;
+  return status.count || 0;
+};
+
+// Helper function to get sessions count from status
+const getStatusSessionsCount = (status: StatusCount | number | undefined): number => {
+  if (!status) return 0;
+  if (typeof status === 'number') return 0;
+  return status.sessions_count || 0;
+};
+
+// Helper function to get link from status
+const getStatusLink = (status: StatusCount | number | undefined): string | undefined => {
+  if (!status) return undefined;
+  if (typeof status === 'number') return undefined;
+  return status.link;
+};
+
+// Helper function to convert API link to frontend query params
+const convertApiLinkToQueryParams = (apiLink: string | undefined): string => {
+  if (!apiLink) return '';
+  
+  try {
+    const url = new URL(apiLink);
+    const params = new URLSearchParams(url.search);
+    
+    // Convert API query params to frontend format
+    const frontendParams = new URLSearchParams();
+    
+    params.forEach((value, key) => {
+      // Convert API format to frontend format
+      // e.g., status_equal=1 -> status=1
+      // e.g., paid_equal=1 -> paid=1
+      // e.g., source_campaign_equal=google -> source_campaign=google
+      
+      
+        frontendParams.set(key, value);
+      
+    });
+    
+    return frontendParams.toString();
+  } catch (error) {
+    console.error('Error converting API link:', error);
+    return '';
+  }
+};
+
+// Card component
+const StatCard = ({ 
+  title, 
+  value, 
+  subtitle,
+  icon: Icon, 
+  bgColor, 
+  textColor, 
+  darkBgColor, 
+  darkTextColor, 
+  blurColor, 
+  darkBlurColor,
+  link,
+  onClick,
+  compact = false
+}: {
+  title: string;
+  value: number | string;
+  subtitle?: string;
+  icon: any;
+  bgColor: string;
+  textColor: string;
+  darkBgColor: string;
+  darkTextColor: string;
+  blurColor: string;
+  darkBlurColor: string;
+  link?: string;
+  onClick?: () => void;
+  compact?: boolean;
+}) => {
+  const router = useRouter();
+  const pathname = usePathname();
+  
+  const handleClick = () => {
+    if (link) {
+      const queryParams = convertApiLinkToQueryParams(link);
+      const url = queryParams ? `${pathname}?${queryParams}` : pathname;
+      router.push(url);
+    } else if (onClick) {
+      onClick();
+    }
+  };
+  
+  return (
+    <div 
+      className={cn(
+        "relative overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all dark:border-gray-700 dark:bg-gray-800",
+        compact ? "min-w-[120px] flex-1 p-4" : "min-w-[200px] flex-1 p-6",
+        (link || onClick) && "cursor-pointer hover:shadow-lg hover:scale-[1.02]"
+      )}
+      onClick={handleClick}
+    >
+      <div className="flex items-center">
+        <div
+          className={cn(
+            'flex items-center justify-center rounded-lg',
+            compact ? 'h-8 w-8' : 'h-12 w-12',
+            bgColor,
+            textColor,
+            darkBgColor,
+            darkTextColor
+          )}
+        >
+          <Icon className={compact ? "h-4 w-4" : "h-6 w-6"} />
+        </div>
+      </div>
+
+      <div className={compact ? "mt-2" : "mt-4"}>
+        <p className={compact ? "text-xs font-medium text-gray-500 dark:text-gray-400" : "text-sm font-medium text-gray-500 dark:text-gray-400"}>
+          {title}
+        </p>
+        <p className={cn(
+          "mt-1 font-bold text-gray-900 dark:text-white",
+          compact ? "text-xl" : "text-3xl"
+        )}>
+          {typeof value === 'number' ? value.toLocaleString() : value}
+        </p>
+        {subtitle && (
+          <p className={compact ? "mt-0.5 text-xs text-gray-500 dark:text-gray-400" : "mt-1 text-sm text-gray-500 dark:text-gray-400"}>
+            {subtitle}
+          </p>
+        )}
+      </div>
+
+      <div
+        className={cn(
+          'absolute -right-4 -top-4 -z-10 rounded-full blur-2xl',
+          compact ? 'h-16 w-16' : 'h-24 w-24',
+          blurColor,
+          darkBlurColor
+        )}
+      />
+    </div>
+  );
+};
+
 export default function ReservationStatistics({ 
   statistics, 
   className 
 }: ReservationStatisticsProps) {
-  // Static data for now - will be replaced with statistics prop in the future
-  const stats = statistics || {
-    by_status: {
-      reviewing: 1659,
-      waitconfirm: 0,
-      confirmed: 11,
-      canceled: 7,
-      completed: 9,
-      failed: 5,
-    },
-    seen_count: 1691,
-    unseen_count: 0,
-    total_count: 1691,
-  };
+  const [servicesExpanded, setServicesExpanded] = useState(false);
+  const stats = statistics || {};
 
-  const cards = [
+  // Calculate total sessions from all statuses
+  const totalSessions = 
+    getStatusSessionsCount(stats.by_status?.reviewing) +
+    getStatusSessionsCount(stats.by_status?.waitconfirm) +
+    getStatusSessionsCount(stats.by_status?.confirmed) +
+    getStatusSessionsCount(stats.by_status?.completed) +
+    getStatusSessionsCount(stats.by_status?.canceled) +
+    getStatusSessionsCount(stats.by_status?.failed);
+
+  // Row 1: Reservation by Status (with Reviewing and Total Sessions)
+  const reservationByStatusCards = [
     {
       title: 'Total Reservations',
       value: stats.total_count || 0,
@@ -62,10 +264,25 @@ export default function ReservationStatistics({
       darkTextColor: 'dark:text-blue-400',
       blurColor: 'bg-blue-50/50',
       darkBlurColor: 'dark:bg-blue-900/10',
+      compact: true,
+    },
+    {
+      title: 'Total Sessions',
+      value: totalSessions,
+      subtitle: 'Across all statuses',
+      icon: PiCalendarCheckBold,
+      bgColor: 'bg-blue-50',
+      textColor: 'text-blue-600',
+      darkBgColor: 'dark:bg-blue-900/20',
+      darkTextColor: 'dark:text-blue-400',
+      blurColor: 'bg-blue-50/50',
+      darkBlurColor: 'dark:bg-blue-900/10',
+      compact: true,
     },
     {
       title: 'Reviewing',
-      value: stats.by_status?.reviewing || 0,
+      value: getStatusCount(stats.by_status?.reviewing),
+      subtitle: `${getStatusSessionsCount(stats.by_status?.reviewing)} sessions`,
       icon: PiHourglassBold,
       bgColor: 'bg-amber-50',
       textColor: 'text-amber-600',
@@ -73,10 +290,13 @@ export default function ReservationStatistics({
       darkTextColor: 'dark:text-amber-400',
       blurColor: 'bg-amber-50/50',
       darkBlurColor: 'dark:bg-amber-900/10',
+      link: getStatusLink(stats.by_status?.reviewing),
+      compact: true,
     },
     {
       title: 'Wait Confirm',
-      value: stats.by_status?.waitconfirm || 0,
+      value: getStatusCount(stats.by_status?.waitconfirm),
+      subtitle: `${getStatusSessionsCount(stats.by_status?.waitconfirm)} sessions`,
       icon: PiClockBold,
       bgColor: 'bg-yellow-50',
       textColor: 'text-yellow-600',
@@ -84,10 +304,13 @@ export default function ReservationStatistics({
       darkTextColor: 'dark:text-yellow-400',
       blurColor: 'bg-yellow-50/50',
       darkBlurColor: 'dark:bg-yellow-900/10',
+      link: getStatusLink(stats.by_status?.waitconfirm),
+      compact: true,
     },
     {
       title: 'Confirmed',
-      value: stats.by_status?.confirmed || 0,
+      value: getStatusCount(stats.by_status?.confirmed),
+      subtitle: `${getStatusSessionsCount(stats.by_status?.confirmed)} sessions`,
       icon: PiCheckCircleBold,
       bgColor: 'bg-green-50',
       textColor: 'text-green-600',
@@ -95,10 +318,13 @@ export default function ReservationStatistics({
       darkTextColor: 'dark:text-green-400',
       blurColor: 'bg-green-50/50',
       darkBlurColor: 'dark:bg-green-900/10',
+      link: getStatusLink(stats.by_status?.confirmed),
+      compact: true,
     },
     {
       title: 'Completed',
-      value: stats.by_status?.completed || 0,
+      value: getStatusCount(stats.by_status?.completed),
+      subtitle: `${getStatusSessionsCount(stats.by_status?.completed)} sessions`,
       icon: PiCheckBold,
       bgColor: 'bg-emerald-50',
       textColor: 'text-emerald-600',
@@ -106,10 +332,13 @@ export default function ReservationStatistics({
       darkTextColor: 'dark:text-emerald-400',
       blurColor: 'bg-emerald-50/50',
       darkBlurColor: 'dark:bg-emerald-900/10',
+      link: getStatusLink(stats.by_status?.completed),
+      compact: true,
     },
     {
       title: 'Canceled',
-      value: stats.by_status?.canceled || 0,
+      value: getStatusCount(stats.by_status?.canceled),
+      subtitle: `${getStatusSessionsCount(stats.by_status?.canceled)} sessions`,
       icon: PiXCircleBold,
       bgColor: 'bg-red-50',
       textColor: 'text-red-600',
@@ -117,10 +346,13 @@ export default function ReservationStatistics({
       darkTextColor: 'dark:text-red-400',
       blurColor: 'bg-red-50/50',
       darkBlurColor: 'dark:bg-red-900/10',
+      link: getStatusLink(stats.by_status?.canceled),
+      compact: true,
     },
     {
       title: 'Failed',
-      value: stats.by_status?.failed || 0,
+      value: getStatusCount(stats.by_status?.failed),
+      subtitle: `${getStatusSessionsCount(stats.by_status?.failed)} sessions`,
       icon: PiWarningBold,
       bgColor: 'bg-orange-50',
       textColor: 'text-orange-600',
@@ -128,6 +360,55 @@ export default function ReservationStatistics({
       darkTextColor: 'dark:text-orange-400',
       blurColor: 'bg-orange-50/50',
       darkBlurColor: 'dark:bg-orange-900/10',
+      link: getStatusLink(stats.by_status?.failed),
+      compact: true,
+    },
+    
+  ];
+
+  // Row 2: Review (Paid, Unpaid, Seen, Unseen, Remaining Payment)
+  const reviewCards = [
+    {
+      title: 'Paid',
+      value: stats.paid_statistics?.count || 0,
+      subtitle: `${(stats.paid_statistics?.total_amount || 0).toLocaleString()} SAR`,
+      icon: PiCheckCircleBold,
+      bgColor: 'bg-green-50',
+      textColor: 'text-green-600',
+      darkBgColor: 'dark:bg-green-900/20',
+      darkTextColor: 'dark:text-green-400',
+      blurColor: 'bg-green-50/50',
+      darkBlurColor: 'dark:bg-green-900/10',
+      link: stats.paid_statistics?.link,
+      compact: true,
+    },
+    {
+      title: 'Unpaid',
+      value: stats.unpaid_statistics?.count || 0,
+      subtitle: `${(stats.unpaid_statistics?.total_amount || 0).toLocaleString()} SAR`,
+      icon: PiXCircleBold,
+      bgColor: 'bg-red-50',
+      textColor: 'text-red-600',
+      darkBgColor: 'dark:bg-red-900/20',
+      darkTextColor: 'dark:text-red-400',
+      blurColor: 'bg-red-50/50',
+      darkBlurColor: 'dark:bg-red-900/10',
+      link: stats.unpaid_statistics?.link,
+      compact: true,
+    },
+    {
+      title: 'Remaining Payment',
+      value: stats.remaining_payment_statistics?.count || 0,
+      subtitle: `${(stats.remaining_payment_statistics?.total_remaining || 0).toLocaleString()} SAR`,
+      icon: PiCreditCardBold,
+      bgColor: 'bg-yellow-50',
+      textColor: 'text-yellow-600',
+      darkBgColor: 'dark:bg-yellow-900/20',
+      darkTextColor: 'dark:text-yellow-400',
+      blurColor: 'bg-yellow-50/50',
+      darkBlurColor: 'dark:bg-yellow-900/10',
+      link: stats.remaining_payment_statistics?.link,
+      compact: true,
     },
     {
       title: 'Seen',
@@ -139,6 +420,7 @@ export default function ReservationStatistics({
       darkTextColor: 'dark:text-indigo-400',
       blurColor: 'bg-indigo-50/50',
       darkBlurColor: 'dark:bg-indigo-900/10',
+      compact: true,
     },
     {
       title: 'Unseen',
@@ -150,59 +432,151 @@ export default function ReservationStatistics({
       darkTextColor: 'dark:text-gray-400',
       blurColor: 'bg-gray-50/50',
       darkBlurColor: 'dark:bg-gray-900/10',
+      compact: true,
+    },
+    
+  ];
+
+  // Row 3: Source Campaigns
+  const sourceCampaignCards = (stats.by_source_campaign || []).map((campaign) => ({
+    title: campaign.source_campaign || 'Unknown',
+    value: campaign.reservations_count || 0,
+    subtitle: `${campaign.sessions_count || 0} sessions`,
+    icon: PiTagBold,
+    bgColor: 'bg-purple-50',
+    textColor: 'text-purple-600',
+    darkBgColor: 'dark:bg-purple-900/20',
+    darkTextColor: 'dark:text-purple-400',
+    blurColor: 'bg-purple-50/50',
+    darkBlurColor: 'dark:bg-purple-900/10',
+    link: campaign.link,
+    compact: true,
+  }));
+
+  // Row 3: Services
+  // Sort services by sessions_count in descending order (greater to smaller)
+  const sortedServices = [...(stats.by_service || [])].sort((a, b) => {
+    const aSessions = a.sessions_count || 0;
+    const bSessions = b.sessions_count || 0;
+    return bSessions - aSessions; // Descending order
+  });
+  
+  const allServiceCards = sortedServices.map((service) => ({
+    title: service.service_name_ar || `Service ${service.service_id}`,
+    value: `${service.reservations_count || 0}`,
+    subtitle: `${service.sessions_count || 0} sessions`,
+    icon: PiChartBarBold,
+    bgColor: 'bg-cyan-50',
+    textColor: 'text-cyan-600',
+    darkBgColor: 'dark:bg-cyan-900/20',
+    darkTextColor: 'dark:text-cyan-400',
+    blurColor: 'bg-cyan-50/50',
+    darkBlurColor: 'dark:bg-cyan-900/10',
+    link: service.link,
+    compact: true,
+  }));
+  
+  // Show only first 6 services when collapsed
+  const SERVICES_PER_ROW = 6;
+  const serviceCards = servicesExpanded 
+    ? allServiceCards 
+    : allServiceCards.slice(0, SERVICES_PER_ROW);
+
+  // Row 4: Clients
+  const totalUniqueCustomersValue: number = Number(stats.customers?.total_unique_customers?.count ?? 0);
+    
+  const clientCards = [
+    {
+      title: 'Total Unique Customers',
+      value: totalUniqueCustomersValue,
+      icon: PiUsersBold,
+      bgColor: 'bg-blue-50',
+      textColor: 'text-blue-600',
+      darkBgColor: 'dark:bg-blue-900/20',
+      darkTextColor: 'dark:text-blue-400',
+      blurColor: 'bg-blue-50/50',
+      darkBlurColor: 'dark:bg-blue-900/10',
+      link: stats.customers?.total_unique_customers?.link,
+      compact: true,
+    },
+    {
+      title: 'Multiple Bookings',
+      value: stats.customers?.multiple_bookings?.customers_count || 0,
+      subtitle: `${stats.customers?.multiple_bookings?.total_reservations || 0} reservations, ${stats.customers?.multiple_bookings?.total_sessions || 0} sessions`,
+      icon: PiCalendarCheckBold,
+      bgColor: 'bg-indigo-50',
+      textColor: 'text-indigo-600',
+      darkBgColor: 'dark:bg-indigo-900/20',
+      darkTextColor: 'dark:text-indigo-400',
+      blurColor: 'bg-indigo-50/50',
+      darkBlurColor: 'dark:bg-indigo-900/10',
+      link: stats.customers?.multiple_bookings?.reservations_link,
+      compact: true,
     },
   ];
 
+  const rows = [
+    { title: 'Reservation by Status', cards: reservationByStatusCards },
+    { title: 'Revenue', cards: reviewCards },
+    { title: 'Source Campaigns', cards: sourceCampaignCards },
+    { title: 'Services', cards: serviceCards },
+    { title: 'Clients', cards: clientCards },
+  ];
+
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const handleViewAll = () => {
+    // Navigate to reservations page without filters
+    router.push(pathname);
+    // Scroll to table after a short delay
+    setTimeout(() => {
+      const tableElement = document.querySelector('[data-table="reservations"]');
+      if (tableElement) {
+        tableElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+  };
+
   return (
-    <div className={cn('w-full space-y-4', className)}>
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-          Reservation Statistics
-        </h3>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          Overview of reservation statuses and counts
-        </p>
-      </div>
-      
-      <div className={cn('flex w-full overflow-x-auto pb-4 gap-5', className)}>
-        {cards.map((card, index) => (
-          <div
-            key={index}
-            className="min-w-[200px] flex-1 relative overflow-hidden rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
-          >
+    <div className={cn('w-full space-y-6', className)}>
+      {rows.map((row, rowIndex) => {
+        const isServicesRow = row.title === 'Services';
+        const hasMoreServices = isServicesRow && allServiceCards.length > SERVICES_PER_ROW;
+        
+        return (
+          <div key={rowIndex} className="space-y-3">
             <div className="flex items-center justify-between">
-              <div
-                className={cn(
-                  'flex h-12 w-12 items-center justify-center rounded-lg',
-                  card.bgColor,
-                  card.textColor,
-                  card.darkBgColor,
-                  card.darkTextColor
-                )}
-              >
-                <card.icon className="h-6 w-6" />
-              </div>
-            </div>
-
-            <div className="mt-4">
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                {card.title}
-              </p>
-              <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-white">
-                {card.value.toLocaleString()}
-              </p>
-            </div>
-
-            <div
-              className={cn(
-                'absolute -right-4 -top-4 -z-10 h-24 w-24 rounded-full blur-2xl',
-                card.blurColor,
-                card.darkBlurColor
+              <h4 className="text-base font-semibold text-gray-800 dark:text-gray-200">
+                {row.title}
+              </h4>
+              {isServicesRow && hasMoreServices && (
+                <button
+                  onClick={() => setServicesExpanded(!servicesExpanded)}
+                  className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                >
+                  {servicesExpanded ? (
+                    <>
+                      <span>Show Less</span>
+                      <PiCaretUpBold className="h-4 w-4" />
+                    </>
+                  ) : (
+                    <>
+                      <span>Show All ({allServiceCards.length})</span>
+                      <PiCaretDownBold className="h-4 w-4" />
+                    </>
+                  )}
+                </button>
               )}
-            />
+            </div>
+            <div className="flex flex-wrap w-full gap-3">
+              {row.cards.map((card: any, cardIndex: number) => (
+                <StatCard key={cardIndex} {...card} />
+              ))}
+            </div>
           </div>
-        ))}
-      </div>
+        );
+      })}
     </div>
   );
 }

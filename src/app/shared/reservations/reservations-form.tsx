@@ -990,6 +990,7 @@ export default function CreateOrUpdateReservation({
               <option value="">Select Source</option>
               <option value="google">Google</option>
               <option value="facebook">Facebook</option>
+              <option value="application">Application</option>
               <option value="instagram">Instagram</option>
               <option value="snapchat">Snapchat</option>
               <option value="telegram">Telegram</option>
