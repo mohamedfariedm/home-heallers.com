@@ -95,7 +95,8 @@ interface Invoice {
 const taxRateFrom = (v: unknown): number => {
   if (v == null) return 0.15;
   const s = String(v).trim();
-  if (s === 'معافاه') return 0;
+  // Handle both Arabic variations: "معافاه" and "معافاة"
+  if (s === 'معافاه' || s === 'معافاة') return 0;
   if (s.endsWith('%')) {
     const n = Number(s.replace('%', '').trim());
     return isNaN(n) ? 0 : n / 100;
@@ -112,9 +113,14 @@ const normalizeTaxPercentage = (
   if (v == null) return '15%';
   const s = String(v).trim();
 
-  // Already in correct format or Arabic exempt
-  if (s === '0%' || s === '15%' || s === '20%' || s === 'معافاه') {
-    return s as '0%' | '15%' | '20%' | 'معافاه';
+  // Handle both Arabic variations: "معافاه" and "معافاة" - normalize to "معافاه"
+  if (s === 'معافاة' || s === 'معافاه') {
+    return 'معافاه';
+  }
+
+  // Already in correct format
+  if (s === '0%' || s === '15%' || s === '20%') {
+    return s as '0%' | '15%' | '20%';
   }
 
   // Common numeric backend formats like "0", "0.00", 0, 15, "15.00", etc.
@@ -320,7 +326,7 @@ export default function InvoiceManager({
       ...d,
       category_id: d.category_id ?? 0,
       category_name: d.category_name ?? '',
-      tax_percentage: d.tax_percentage || '15%',
+      tax_percentage: normalizeTaxPercentage(d.tax_percentage),
     });
     setIsAddingNew(false);
     setEditingIndex(index);
@@ -490,6 +496,10 @@ export default function InvoiceManager({
     return String(item);
   };
 
+
+  console.log('====================================');
+console.log(editingDetail);
+console.log('====================================');
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-6">
       <div className="mx-auto max-w-7xl space-y-8">
