@@ -144,11 +144,11 @@ export default function StatCards({ data, className }: StatCardsProps) {
   ];
 
   return (
-    <div className={cn('flex w-full overflow-x-auto pb-4 gap-5', className)}>
+    <div className={cn('flex w-full flex-wrap pb-4 gap-5', className)}>
       {cards.map((card, index) => (
         <div
           key={index}
-          className="min-w-[280px] flex-1 relative overflow-hidden rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
+          className="flex-1 basis-[calc(20%-16px)] min-w-[180px] relative overflow-hidden rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
         >
           <div className="flex items-center justify-between">
             <div

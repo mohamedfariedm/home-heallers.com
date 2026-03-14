@@ -326,11 +326,11 @@ export default function StatisticsDashboard() {
                   <InvoiceBreakdown byStatus={aggregateData.invoices.by_status} className="h-full" />
                 )}
               </div>
-              <div className="lg:col-span-6">
+              {/* <div className="lg:col-span-6">
                 {aggregateData?.cost_ratio && aggregateData.cost_ratio.length > 0 && (
                   <CostRatioChart data={aggregateData.cost_ratio} className="h-full" />
                 )}
-              </div>
+              </div> */}
             </div>
           </div>
 
