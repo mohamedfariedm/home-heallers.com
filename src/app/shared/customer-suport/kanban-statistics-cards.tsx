@@ -296,6 +296,18 @@ export default function KanbanStatisticsCards({
   // State to track checked source campaigns
   const [checkedSourceCampaigns, setCheckedSourceCampaigns] = useState<Set<string>>(new Set());
   
+  // Get source campaigns data (before early return)
+  const allSourceCampaigns = statistics?.by_source_campaign || [];
+  
+  // Initialize checked state for all campaigns on first render
+  useEffect(() => {
+    if (checkedSourceCampaigns.size === 0 && allSourceCampaigns.length > 0) {
+      const initialChecked = new Set(allSourceCampaigns.map(c => c.source_campaign || ''));
+      setCheckedSourceCampaigns(initialChecked);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allSourceCampaigns.length]);
+  
   if (!statistics) return null;
 
   // Format status label (convert snake_case to Title Case)
@@ -389,16 +401,6 @@ export default function KanbanStatisticsCards({
   ];
 
   // Row 4: Source Campaigns
-  const allSourceCampaigns = statistics.by_source_campaign || [];
-  
-  // Initialize checked state for all campaigns on first render
-  useEffect(() => {
-    if (checkedSourceCampaigns.size === 0 && allSourceCampaigns.length > 0) {
-      const initialChecked = new Set(allSourceCampaigns.map(c => c.source_campaign || ''));
-      setCheckedSourceCampaigns(initialChecked);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allSourceCampaigns.length]);
 
   const allSourceCampaignCards = allSourceCampaigns
     .sort((a, b) => (b.count || 0) - (a.count || 0)) // Sort by count descending
