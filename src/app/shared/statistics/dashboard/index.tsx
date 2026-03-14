@@ -13,6 +13,8 @@ import ReservationsByCity from './reservations-by-city';
 import ReservationsByState from './reservations-by-state';
 import ReservationDates from './reservation-dates';
 import SessionsStatistics from './sessions-statistics';
+import TimeSeriesChart from './time-series-chart';
+import SingleMetricChart from './single-metric-chart';
 import { Loader } from '@/components/ui/loader';
 import { toast } from 'react-hot-toast';
 
@@ -95,6 +97,15 @@ interface AggregateData {
     }>;
     total_sessions: number;
     total_reservations: number;
+  };
+  chart_data?: {
+    group_by: 'monthly' | 'weekly' | 'daily';
+    date_from: string;
+    date_to: string;
+    reservations?: Array<{ date: string; count: number }>;
+    sessions?: Array<{ date: string; count: number }>;
+    revenue?: Array<{ date: string; amount: number }>;
+    clients?: Array<{ date: string; count: number }>;
   };
   filters_applied?: any[];
   [key: string]: any; // Allow any additional fields
@@ -230,6 +241,50 @@ export default function StatisticsDashboard() {
               )}
             </div>
           </div>
+
+          {/* Time Series Chart (Reservations, Sessions, Clients, Revenue) - Combined */}
+          {aggregateData?.chart_data && (
+            <div>
+              <TimeSeriesChart data={aggregateData.chart_data} className="h-full" />
+            </div>
+          )}
+
+          {/* Individual Metric Charts */}
+          {aggregateData?.chart_data && (
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Individual Metrics</h2>
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                {aggregateData.chart_data.reservations && aggregateData.chart_data.reservations.length > 0 && (
+                  <SingleMetricChart 
+                    data={aggregateData.chart_data} 
+                    metric="reservations" 
+                    className="h-full" 
+                  />
+                )}
+                {aggregateData.chart_data.sessions && aggregateData.chart_data.sessions.length > 0 && (
+                  <SingleMetricChart 
+                    data={aggregateData.chart_data} 
+                    metric="sessions" 
+                    className="h-full" 
+                  />
+                )}
+                {aggregateData.chart_data.clients && aggregateData.chart_data.clients.length > 0 && (
+                  <SingleMetricChart 
+                    data={aggregateData.chart_data} 
+                    metric="clients" 
+                    className="h-full" 
+                  />
+                )}
+                {aggregateData.chart_data.revenue && aggregateData.chart_data.revenue.length > 0 && (
+                  <SingleMetricChart 
+                    data={aggregateData.chart_data} 
+                    metric="revenue" 
+                    className="h-full" 
+                  />
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Reservations Timeline */}
           {aggregateData?.reservation_dates && aggregateData.reservation_dates.by_date_and_status.length > 0 && (

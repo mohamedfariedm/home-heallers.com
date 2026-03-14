@@ -57,7 +57,7 @@ export default function CustomerSupportsOperationKanbanPage() {
     }
   }, [searchParams, page]);
 
-  // Initialize filters from URL params
+  // Initialize filters from URL params - sync whenever searchParams changes
   useEffect(() => {
     const initialFilters: Record<string, any> = {};
     const filterableColumns = [
@@ -90,31 +90,24 @@ export default function CustomerSupportsOperationKanbanPage() {
       }
     });
 
-    if (Object.keys(initialFilters).length > 0) {
-      setFilters(initialFilters);
-    }
-  }, []);
+    // Always update filters to sync with URL (even if empty, to clear old filters)
+    setFilters(initialFilters);
+  }, [searchParams]);
 
   // Build filter params - single call without status filter
+  // Read directly from searchParams to ensure filters from URL (e.g., from KanbanStatisticsCards links) are included
   const buildFilterParams = () => {
     const params = new URLSearchParams();
+    
+    // Copy all search params first (this includes filters from URL)
+    searchParams.forEach((value, key) => {
+      params.set(key, value);
+    });
+    
+    // Override/ensure required params
     params.set('page', String(page));
     params.set('limit', '25'); // Get more items to distribute across columns
     params.set('type', 'operation');
-
-    // Add date filters from URL params
-    const dateFrom = searchParams.get('date_from');
-    const dateTo = searchParams.get('date_to');
-    if (dateFrom) params.set('date_from', dateFrom);
-    if (dateTo) params.set('date_to', dateTo);
-
-    // Apply filters
-    Object.entries(filters).forEach(([key, val]) => {
-      const { c1, c2, logic } = val;
-      if (c1?.value) params.set(`${key}_${c1.op}`, c1.value);
-      if (c2?.value)
-        params.set(`${key}_${c2.op}_${logic === 'or' ? 'or' : 'and'}`, c2.value);
-    });
 
     return params.toString();
   };
@@ -244,9 +237,9 @@ export default function CustomerSupportsOperationKanbanPage() {
 
     // Clear old filter params
     Object.keys(filters).forEach((key) => {
-      for (const [paramKey] of params.entries()) {
+      Array.from(params.keys()).forEach((paramKey) => {
         if (paramKey.startsWith(`${key}_`)) params.delete(paramKey);
-      }
+      });
     });
 
     // Clear old date params
