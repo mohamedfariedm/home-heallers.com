@@ -10,6 +10,7 @@ import {
   Tooltip,
   ResponsiveContainer,
   Cell,
+  Legend,
 } from 'recharts';
 import { Title } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
@@ -41,20 +42,11 @@ export default function CostRatioChart({
 }: CostRatioChartProps) {
   const [isTopTenOpen, setIsTopTenOpen] = useState(false);
   
-  // Process data and ensure cost_ratio is in percentage format (0-100)
-  // If cost_ratio is a decimal (0-1), multiply by 100; if already percentage, use as is
+  // Process data - only use support and reservations from API
   const chartData = data.map((item, index) => {
-    let costRatio = item.cost_ratio || 0;
-    // If cost_ratio is less than 1, assume it's a decimal and convert to percentage
-    // Otherwise, assume it's already a percentage
-    if (costRatio > 0 && costRatio <= 1) {
-      costRatio = costRatio * 100;
-    }
-
     return {
       name:
         item.source_campaign === 'unknown' ? 'Unknown' : item.source_campaign,
-      cost_ratio: costRatio,
       support: item.customer_support_count,
       reservations: item.confirmed_reservations_count,
       fill: COLORS[index % COLORS.length],
@@ -62,23 +54,18 @@ export default function CostRatioChart({
     };
   });
 
-  // Sort by cost_ratio descending for Top 10 (excluding null values)
+  // Sort by total (support + reservations) descending for Top 10
   const sortedData = [...data]
-    .filter(item => item.cost_ratio !== null)
     .sort((a, b) => {
-      const ratioA = (a.cost_ratio || 0) > 1 ? (a.cost_ratio || 0) : (a.cost_ratio || 0) * 100;
-      const ratioB = (b.cost_ratio || 0) > 1 ? (b.cost_ratio || 0) : (b.cost_ratio || 0) * 100;
-      return ratioB - ratioA;
+      const totalA = a.customer_support_count + a.confirmed_reservations_count;
+      const totalB = b.customer_support_count + b.confirmed_reservations_count;
+      return totalB - totalA;
     });
   
   const topTenItems = sortedData.slice(0, 10).map((item) => {
-    let costRatio = item.cost_ratio || 0;
-    if (costRatio > 0 && costRatio <= 1) {
-      costRatio = costRatio * 100;
-    }
     return {
       name: item.source_campaign === 'unknown' ? 'Unknown' : item.source_campaign,
-      value: costRatio,
+      value: item.customer_support_count + item.confirmed_reservations_count,
       percentage: 0, // Will be calculated based on max
       additionalInfo: {
         support: item.customer_support_count,
@@ -87,7 +74,9 @@ export default function CostRatioChart({
     };
   });
 
-  const maxRatio = Math.max(...topTenItems.map(item => item.value));
+  const maxValue = topTenItems.length > 0 
+    ? Math.max(...topTenItems.map(item => item.value))
+    : 0;
 
   return (
     <>
@@ -103,10 +92,10 @@ export default function CostRatioChart({
             as="h6"
             className="mb-1 font-semibold text-gray-900 dark:text-white"
           >
-            Conversion Rate by Campaign
+            Campaign Statistics
           </Title>
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            Efficiency analysis based on campaign source
+            Support tickets and reservations by campaign source
           </p>
         </div>
         <Button
@@ -123,31 +112,28 @@ export default function CostRatioChart({
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={chartData}
-            margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
+            layout="vertical"
+            margin={{ top: 20, right: 30, left: 100, bottom: 5 }}
           >
             <CartesianGrid
               strokeDasharray="3 3"
-              vertical={false}
+              horizontal={false}
               strokeOpacity={0.1}
             />
             <XAxis
+              type="number"
+              axisLine={false}
+              tickLine={false}
+              tick={{ fill: '#6b7280', fontSize: 12 }}
+              tickFormatter={(value) => value.toLocaleString()}
+            />
+            <YAxis
+              type="category"
               dataKey="name"
               axisLine={false}
               tickLine={false}
               tick={{ fill: '#6b7280', fontSize: 12 }}
-              dy={10}
-            />
-            <YAxis
-              axisLine={false}
-              tickLine={false}
-              tick={{ fill: '#6b7280', fontSize: 12 }}
-              tickFormatter={(value) => `${value.toFixed(0)}%`}
-              label={{
-                value: 'Percentage (%)',
-                angle: -90,
-                position: 'insideLeft',
-                style: { textAnchor: 'middle', fill: '#6b7280' },
-              }}
+              width={90}
             />
             <Tooltip
               cursor={{ fill: 'transparent' }}
@@ -159,24 +145,19 @@ export default function CostRatioChart({
                 padding: '12px',
               }}
               formatter={(value: number, name: string) => {
-                if (name === 'cost_ratio') {
-                  return [`${value.toFixed(2)}%`, 'Conversion Rate'];
-                }
                 if (name === 'support') {
-                  return [value, 'Customer Support'];
+                  return [value.toLocaleString(), 'Customer Support'];
                 }
                 if (name === 'reservations') {
-                  return [value, 'Confirmed Reservations'];
+                  return [value.toLocaleString(), 'Confirmed Reservations'];
                 }
-                return [value, name];
+                return [value.toLocaleString(), name];
               }}
               labelFormatter={(label) => `Campaign: ${label}`}
             />
-            <Bar dataKey="cost_ratio" radius={[4, 4, 0, 0]}>
-              {chartData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.fill} />
-              ))}
-            </Bar>
+            <Legend />
+            <Bar dataKey="support" fill="#3b82f6" radius={[0, 4, 4, 0]} name="Support Tickets" />
+            <Bar dataKey="reservations" fill="#10b981" radius={[0, 4, 4, 0]} name="Reservations" />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -184,30 +165,17 @@ export default function CostRatioChart({
       {/* Detailed Statistics */}
       <div className="mt-6 border-t border-gray-200 pt-4 dark:border-gray-700">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {sortedData.slice(0, 4).map((item, index) => {
-            let costRatio = item.cost_ratio || 0;
-            if (costRatio > 0 && costRatio <= 1) {
-              costRatio = costRatio * 100;
-            }
-            const efficiency = costRatio < 1 ? 'Excellent' : costRatio < 2 ? 'Good' : costRatio < 5 ? 'Fair' : 'Poor';
+          {sortedData.slice(0, 4).map((item) => {
+            const total = item.customer_support_count + item.confirmed_reservations_count;
             return (
               <div key={item.source_campaign} className="space-y-2 p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-semibold text-gray-900 dark:text-white">
                     {item.source_campaign === 'unknown' ? 'Unknown' : item.source_campaign}
                   </span>
-                  <span className={cn(
-                    'text-xs font-semibold px-2 py-1 rounded',
-                    efficiency === 'Excellent' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
-                    efficiency === 'Good' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' :
-                    efficiency === 'Fair' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' :
-                    'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
-                  )}>
-                    {efficiency}
-                  </span>
                 </div>
                 <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {costRatio.toFixed(2)}%
+                  {total.toLocaleString()}
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <div>
@@ -233,12 +201,12 @@ export default function CostRatioChart({
     <TopTenModal
       isOpen={isTopTenOpen}
       onClose={() => setIsTopTenOpen(false)}
-      title="Top Campaigns by Conversion Rate"
+      title="Top Campaigns by Total Count"
       items={topTenItems.map(item => ({
         ...item,
-        percentage: maxRatio > 0 ? (item.value / maxRatio) * 100 : 0,
+        percentage: maxValue > 0 ? (item.value / maxValue) * 100 : 0,
       }))}
-      valueLabel="Conversion Rate (%)"
+      valueLabel="Total Count"
       showPercentage={false}
       additionalColumns={[
         {
