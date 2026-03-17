@@ -8,6 +8,7 @@ import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -56,6 +57,7 @@ const InvoiceFormSchema = z.object({
   status: z
     .enum(['قيد الانتظار', 'موافق عليه', 'ملغاة'])
     .default('قيد الانتظار'),
+  is_paid: z.boolean().default(false),
   notes: z.string().optional(),
   details: z
     .array(InvoiceDetailSchema)
@@ -87,6 +89,7 @@ interface Invoice {
   grand_total: number | string;
   balance_due: number | string;
   status: string;
+  is_paid?: boolean;
   notes?: string;
   details: InvoiceDetail[];
 }
@@ -233,6 +236,7 @@ export default function InvoiceManager({
       status:
         (initValues?.status as 'قيد الانتظار' | 'موافق عليه' | 'ملغاة') ??
         'قيد الانتظار',
+      is_paid: initValues?.is_paid ?? false,
       notes: initValues?.notes || '',
       // Normalize backend details into the shape expected by the form & Zod schema
       details:
@@ -398,6 +402,7 @@ export default function InvoiceManager({
       grand_total: Number(data.grand_total),
       balance_due: Number(data.balance_due),
       status: data.status,
+      is_paid: data.is_paid,
       notes: data.notes,
       details: data.details.map((detail) => ({
         id: detail.id ?? undefined,
@@ -433,6 +438,7 @@ export default function InvoiceManager({
       grand_total: 819.0,
       balance_due: 819.0,
       status: 'موافق عليه',
+      is_paid: false,
       notes: 'Sample invoice for testing purposes',
       details: [
         {
@@ -600,6 +606,22 @@ console.log('====================================');
                     {errors.status && (
                       <p className="mt-1 text-sm text-red-500">
                         {errors.status.message}
+                      </p>
+                    )}
+                  </FormGroup>
+                </div>
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                  <FormGroup title="Payment Status">
+                    <div className="flex items-center gap-3">
+                      <Checkbox
+                        checked={watch('is_paid')}
+                        onChange={() => setValue('is_paid', !watch('is_paid'))}
+                        label="Paid"
+                      />
+                    </div>
+                    {errors.is_paid && (
+                      <p className="mt-1 text-sm text-red-500">
+                        {errors.is_paid.message}
                       </p>
                     )}
                   </FormGroup>

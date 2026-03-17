@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { PiXBold } from "react-icons/pi"
 import type { SubmitHandler } from "react-hook-form"
 import { Form } from "@/components/ui/form"
@@ -28,6 +28,15 @@ export default function CreateCategories({ initValues }: { initValues?: any }) {
 console.log(initValues);
   const [isImageData, setImage] = useState(initValues?.image || null);
   const [imageError, setImageError] = useState(0);
+  const [active, setActive] = useState<number>(initValues?.active !== undefined ? initValues.active : (initValues?.is_active !== undefined ? initValues.is_active : 1));
+  
+  // Update active state when initValues change
+  useEffect(() => {
+    if (initValues) {
+      const activeValue = initValues.active !== undefined ? initValues.active : (initValues.is_active !== undefined ? initValues.is_active : 1);
+      setActive(activeValue);
+    }
+  }, [initValues]);
   const handleFileUpload = (event: any, type: 'Image' | 'File') => {
     setLoading(true);
     const file = event.target.files?.[0];
@@ -59,11 +68,13 @@ console.log(initValues);
         role_id: initValues?.id,
         name: data.name,
         image: imageValue,
+        active: active,
       })
     } else {
       mutate({
         name: data.name,
         image: imageValue,
+        active: active,
       })
     }
 
@@ -157,6 +168,21 @@ console.log(initValues);
                           )}
                         </div>
                       </FormGroup>
+
+          <div className='flex flex-wrap px-1 gap-3'>
+            <Checkbox
+              key={1}
+              label={'Active'}
+              checked={active == 1}
+              onChange={() => setActive(active ? 0 : 1)}
+            />
+            <Checkbox
+              key={0}
+              label={'Inactive'}
+              checked={active == 0}
+              onChange={() => setActive(active ? 0 : 1)}
+            />
+          </div>
 
           <div className="flex items-center justify-end gap-4">
             <Button variant="outline" onClick={closeModal} className="w-full @xl:w-auto">

@@ -6,6 +6,7 @@ import { SubmitHandler } from 'react-hook-form';
 import { Form } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Title } from '@/components/ui/text';
 import { useModal } from '@/app/shared/modal-views/use-modal';
 import Select from 'react-select'; // multi-select for categories
@@ -34,6 +35,7 @@ export default function CreateOrUpdateServices({ initValues }: { initValues?: an
   const [isoading, setoading] = useState(false);
   let [imageError, setImageError] = useState(0);
   const [isImageData, setImage] = useState(initValues?.image || null);
+  const [active, setActive] = useState<number>(initValues?.active !== undefined ? initValues.active : 1);
 
   const handleFileUpload = (event: any, type: 'Image' | 'File') => {
     setoading(true);
@@ -99,6 +101,7 @@ export default function CreateOrUpdateServices({ initValues }: { initValues?: an
       category_id: selectedCategory?.value, // Use selected category ID
       image: imageValue,
       description: data.description,
+      active: active,
     };
 console.log(selectedCategory?.value, 'selectedCategory?.value');
 if (!selectedCategory?.value) {
@@ -313,6 +316,21 @@ console.log(errors, 'errors');
             {categoryErroes && (
               <p className="text-sm text-red-500">{"Category must be a valid category"}</p>
             )}
+          </div>
+
+          <div className='flex flex-wrap px-1 gap-3'>
+            <Checkbox
+              key={1}
+              label={'Active'}
+              checked={active == 1}
+              onChange={() => setActive(active ? 0 : 1)}
+            />
+            <Checkbox
+              key={0}
+              label={'Inactive'}
+              checked={active == 0}
+              onChange={() => setActive(active ? 0 : 1)}
+            />
           </div>
 
           <div className="flex justify-end gap-4 mt-6">

@@ -214,7 +214,7 @@ class Client {
     mainCategories = {
         all: (param: string) => HttpClient.get(`/categories?${param}`),
         create: (input: any) => HttpClient.post(`/categories`, input),
-        update: (input: { role_id: string, name: any, image: any }) => HttpClient.patch(`/categories/${input.role_id}`, { name: input.name, image: input.image }),
+        update: (input: { role_id: string, name: any, image: any, active?: number }) => HttpClient.patch(`/categories/${input.role_id}`, { name: input.name, image: input.image, active: input.active }),
         delete: (input: { role_id: number[] }) => HttpClient.delete(`/categories/${input.role_id}`),
     }
     journeys = {

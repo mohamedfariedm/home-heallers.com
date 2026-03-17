@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   PiCalendarCheckBold,
   PiEyeBold,
@@ -154,7 +154,10 @@ const StatCard = ({
   darkBlurColor,
   link,
   onClick,
-  compact = false
+  compact = false,
+  showCheckbox = false,
+  checked = false,
+  onCheckboxChange
 }: {
   title: string;
   value: number | string;
@@ -169,11 +172,23 @@ const StatCard = ({
   link?: string;
   onClick?: () => void;
   compact?: boolean;
+  showCheckbox?: boolean;
+  checked?: boolean;
+  onCheckboxChange?: (checked: boolean) => void;
 }) => {
   const router = useRouter();
   const pathname = usePathname();
   
-  const handleClick = () => {
+  const [isHoveringCheckbox, setIsHoveringCheckbox] = useState(false);
+
+  const handleClick = (e: React.MouseEvent) => {
+    // Don't navigate if clicking on checkbox or checkbox area
+    if (showCheckbox && (
+      (e.target as HTMLElement).closest('input[type="checkbox"]') ||
+      (e.target as HTMLElement).closest('.checkbox-area')
+    )) {
+      return;
+    }
     if (link) {
       const queryParams = convertApiLinkToQueryParams(link);
       const url = queryParams ? `${pathname}?${queryParams}` : pathname;
@@ -182,16 +197,51 @@ const StatCard = ({
       onClick();
     }
   };
+
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation();
+    if (onCheckboxChange) {
+      onCheckboxChange(e.target.checked);
+    }
+  };
+
+  const handleCheckboxAreaMouseEnter = () => {
+    setIsHoveringCheckbox(true);
+  };
+
+  const handleCheckboxAreaMouseLeave = () => {
+    setIsHoveringCheckbox(false);
+  };
+
+  const handleCardMouseLeave = () => {
+    setIsHoveringCheckbox(false);
+  };
   
   return (
     <div 
       className={cn(
         "relative overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all dark:border-gray-700 dark:bg-gray-800",
         compact ? "min-w-[120px] flex-1 p-4" : "min-w-[200px] flex-1 p-6",
-        (link || onClick) && "cursor-pointer hover:shadow-lg hover:scale-[1.02]"
+        (link || onClick) && !isHoveringCheckbox && "cursor-pointer hover:shadow-lg hover:scale-[1.02]"
       )}
       onClick={handleClick}
+      onMouseLeave={handleCardMouseLeave}
     >
+      {showCheckbox && (
+        <div 
+          className="checkbox-area absolute top-2 right-2 z-10 p-1 -m-1 cursor-default"
+          onMouseEnter={handleCheckboxAreaMouseEnter}
+          onMouseLeave={handleCheckboxAreaMouseLeave}
+        >
+          <input
+            type="checkbox"
+            checked={checked}
+            onChange={handleCheckboxChange}
+            onClick={(e) => e.stopPropagation()}
+            className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500 dark:border-gray-600 dark:bg-gray-700 cursor-pointer"
+          />
+        </div>
+      )}
       <div className="flex items-center">
         <div
           className={cn(
@@ -241,6 +291,8 @@ export default function ReservationStatistics({
   className 
 }: ReservationStatisticsProps) {
   const [servicesExpanded, setServicesExpanded] = useState(false);
+  // State to track checked source campaigns
+  const [checkedSourceCampaigns, setCheckedSourceCampaigns] = useState<Set<string>>(new Set());
   const stats = statistics || {};
 
   // Calculate total sessions from all statuses
@@ -438,20 +490,70 @@ export default function ReservationStatistics({
   ];
 
   // Row 3: Source Campaigns
-  const sourceCampaignCards = (stats.by_source_campaign || []).map((campaign) => ({
-    title: campaign.source_campaign || 'Unknown',
-    value: campaign.reservations_count || 0,
-    subtitle: `${campaign.sessions_count || 0} sessions`,
+  const allSourceCampaigns = stats.by_source_campaign || [];
+  
+  // Initialize checked state for all campaigns on first render
+  useEffect(() => {
+    if (checkedSourceCampaigns.size === 0 && allSourceCampaigns.length > 0) {
+      const initialChecked = new Set(allSourceCampaigns.map(c => c.source_campaign || ''));
+      setCheckedSourceCampaigns(initialChecked);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allSourceCampaigns.length]);
+
+  const sourceCampaignCards = allSourceCampaigns.map((campaign) => {
+    const campaignKey = campaign.source_campaign || 'Unknown';
+    const isChecked = checkedSourceCampaigns.has(campaignKey);
+    
+    return {
+      title: campaignKey,
+      value: campaign.reservations_count || 0,
+      subtitle: `${campaign.sessions_count || 0} sessions`,
+      icon: PiTagBold,
+      bgColor: 'bg-purple-50',
+      textColor: 'text-purple-600',
+      darkBgColor: 'dark:bg-purple-900/20',
+      darkTextColor: 'dark:text-purple-400',
+      blurColor: 'bg-purple-50/50',
+      darkBlurColor: 'dark:bg-purple-900/10',
+      link: campaign.link,
+      compact: true,
+      showCheckbox: true,
+      checked: isChecked,
+      campaignKey: campaignKey,
+    };
+  });
+
+  // Calculate total of checked source campaigns (reservations count)
+  const totalSourceCampaigns = sourceCampaignCards
+    .filter(card => card.checked)
+    .reduce((sum, card) => sum + (typeof card.value === 'number' ? card.value : 0), 0);
+
+  // Total Source Campaigns card
+  const totalSourceCampaignCard = {
+    title: 'Total Source Campaigns',
+    value: totalSourceCampaigns,
     icon: PiTagBold,
-    bgColor: 'bg-purple-50',
-    textColor: 'text-purple-600',
-    darkBgColor: 'dark:bg-purple-900/20',
-    darkTextColor: 'dark:text-purple-400',
-    blurColor: 'bg-purple-50/50',
-    darkBlurColor: 'dark:bg-purple-900/10',
-    link: campaign.link,
+    bgColor: 'bg-purple-100',
+    textColor: 'text-purple-700',
+    darkBgColor: 'dark:bg-purple-900/30',
+    darkTextColor: 'dark:text-purple-300',
+    blurColor: 'bg-purple-100/50',
+    darkBlurColor: 'dark:bg-purple-900/15',
     compact: true,
-  }));
+  };
+
+  const handleSourceCampaignCheckboxChange = (campaignKey: string, checked: boolean) => {
+    setCheckedSourceCampaigns(prev => {
+      const newSet = new Set(prev);
+      if (checked) {
+        newSet.add(campaignKey);
+      } else {
+        newSet.delete(campaignKey);
+      }
+      return newSet;
+    });
+  };
 
   // Row 3: Services
   // Sort services by sessions_count in descending order (greater to smaller)
@@ -570,8 +672,15 @@ export default function ReservationStatistics({
               )}
             </div>
             <div className="flex flex-wrap w-full gap-3">
+              {row.title === 'Source Campaigns' && (
+                <StatCard key="total-source-campaigns" {...totalSourceCampaignCard} />
+              )}
               {row.cards.map((card: any, cardIndex: number) => (
-                <StatCard key={cardIndex} {...card} />
+                <StatCard 
+                  key={cardIndex} 
+                  {...card}
+                  onCheckboxChange={card.campaignKey ? (checked: boolean) => handleSourceCampaignCheckboxChange(card.campaignKey, checked) : undefined}
+                />
               ))}
             </div>
           </div>
