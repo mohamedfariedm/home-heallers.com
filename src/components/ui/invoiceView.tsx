@@ -42,6 +42,7 @@ category?: {
   grand_total: string;         // "2280.00"
   balance_due: string;         // "2280.00"
   status: string;
+  is_paid?: boolean;           // payment status
   notes?: string | null;       // <-- renamed in your JSON as "notes"
   creator?: {
     id: number;
@@ -472,6 +473,12 @@ console.log("Invoice Data:", invoiceData);
             <div className="flex justify-between">
               <span className="font-medium">الحالة:</span>
               <span>{invoiceData.status}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="font-medium">حالة الدفع:</span>
+              <span className={`font-semibold ${invoiceData.is_paid ? 'text-green-600' : 'text-red-600'}`}>
+                {invoiceData.is_paid ? 'مدفوعة' : 'غير مدفوعة'}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="font-medium">رقم الفاتورة:</span>

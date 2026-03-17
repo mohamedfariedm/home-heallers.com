@@ -241,6 +241,25 @@ export const getColumns = ({
     ),
   },
   {
+    title: <HeaderCell align="center" title="Paid" />,
+    dataIndex: 'is_paid',
+    key: 'is_paid',
+    width: 80,
+    render: (_: string, row: any) => (
+      <div className="w-full text-center">
+        {row.is_paid ? (
+          <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
+            Paid
+          </span>
+        ) : (
+          <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">
+            Unpaid
+          </span>
+        )}
+      </div>
+    ),
+  },
+  {
     title: (
       <HeaderCell
         align="center"
