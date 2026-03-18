@@ -16,7 +16,7 @@ import toast from 'react-hot-toast';
 import FormGroup from '../form-group';
 import Spinner from '@/components/ui/spinner';
 import Upload from '@/components/ui/upload';
-import { useServices } from '@/framework/services';
+import { useCategories } from '@/framework/categories';
 import SelectBox, { type SelectOption } from '@/components/ui/select';
 
 const bloodGroups = [
@@ -54,7 +54,7 @@ export default function CreateOrUpdateDoctors({ initValues }: { initValues?: any
   const [lang, setLang] = useState<"en" | "ar">("en");
 
   const { data: nationalities, isLoading } = useNationality("");
-  const { data: services, isLoading: isLoadingServices } = useServices("limit=1000");
+  const { data: categories, isLoading: isLoadingCategories } = useCategories("");
 
   const [loading, setLoading] = useState(false);
   const { closeModal } = useModal();
@@ -110,7 +110,7 @@ export default function CreateOrUpdateDoctors({ initValues }: { initValues?: any
       nationality_id: Number(data.nationality_id) || undefined,
 
       // map string ids -> numbers
-      service_ids: (data.service_ids || []).map((id) => Number(id)),
+      category_ids: (data.category_ids || []).map((id) => Number(id)),
 
       national_id: data.national_id,
       country_code: data.country_code || undefined,
@@ -149,15 +149,15 @@ export default function CreateOrUpdateDoctors({ initValues }: { initValues?: any
     setLoading(true);
   };
 
-  // Build service options once per lang/services data
-  const serviceOptions: SelectOption[] = useMemo(
+  // Build category options once per lang/categories data
+  const categoryOptions: SelectOption[] = useMemo(
     () =>
-      (services?.data ?? []).map((s: any) => ({
-        value: String(s.id),
-        name: (s?.name?.[lang] ?? s?.name?.en ?? `Service ${s.id}`) as string,
-        label: (s?.name?.[lang] ?? s?.name?.en ?? `Service ${s.id}`) as string,
+      (categories?.data ?? []).map((c: any) => ({
+        value: String(c.id),
+        name: (c?.name?.[lang] ?? c?.name?.en ?? `Category ${c.id}`) as string,
+        label: (c?.name?.[lang] ?? c?.name?.en ?? `Category ${c.id}`) as string,
       })),
-    [services?.data, lang]
+    [categories?.data, lang]
   );
 
   return (
@@ -173,11 +173,11 @@ export default function CreateOrUpdateDoctors({ initValues }: { initValues?: any
           },
           email: initValues?.email || '',
 
-          // prefer service_ids; fallback to services[]
-          service_ids: Array.isArray(initValues?.service_ids)
-            ? initValues.service_ids.map((id: number | string) => String(id))
-            : Array.isArray(initValues?.services)
-              ? initValues.services.map((s: any) => String(s.id))
+          // prefer category_ids; fallback to categories[]
+          category_ids: Array.isArray(initValues?.category_ids)
+            ? initValues.category_ids.map((id: number | string) => String(id))
+            : Array.isArray(initValues?.categories)
+              ? initValues.categories.map((c: any) => String(c.id))
               : [],
 
           nationality_id: initValues?.nationality?.id?.toString() || '',
@@ -274,22 +274,22 @@ export default function CreateOrUpdateDoctors({ initValues }: { initValues?: any
           </div>
 
           <div className="grid grid-cols-1 gap-4">
-            {/* ✅ Multi-select Services using SelectBox + Controller */}
+            {/* ✅ Multi-select Categories using SelectBox + Controller */}
             <div>
               <Controller
-                name="service_ids"
+                name="category_ids"
                 control={control}
                 render={({ field: { value, onChange } }) => {
                   // value is string[] of ids; convert to array of option objects
                   const selectedOptions =
                     Array.isArray(value)
-                      ? serviceOptions.filter((opt) => value.includes(String(opt.value)))
+                      ? categoryOptions.filter((opt) => value.includes(String(opt.value)))
                       : [];
 
                   return (
                     <SelectBox
                       multiple
-                      options={serviceOptions}
+                      options={categoryOptions}
                       value={selectedOptions}
                       onChange={(opts: SelectOption[] | SelectOption) => {
                         const ids = Array.isArray(opts)
@@ -300,10 +300,10 @@ export default function CreateOrUpdateDoctors({ initValues }: { initValues?: any
                         onChange(ids);
                       }}
                       isRequired
-                      isLoading={isLoadingServices}
-                      label="Services"
-                      placeholder="Select Services"
-                      error={(errors.service_ids as any)?.message}
+                      disabled={isLoadingCategories}
+                      label="Categories"
+                      placeholder="Select Categories"
+                      error={(errors.category_ids as any)?.message}
                       // show comma-joined labels when multiple
                       displayValue={(val: any) => {
                         if (Array.isArray(val)) {
@@ -478,7 +478,7 @@ export default function CreateOrUpdateDoctors({ initValues }: { initValues?: any
               Cancel
             </Button>
             <Button
-              isLoading={isLoading || isLoadingServices || loading || isCreating || isUpdating}
+              isLoading={isLoading || isLoadingCategories || loading || isCreating || isUpdating}
               type="submit"
             >
               {initValues ? 'Update Doctor' : 'Create Doctor'}
