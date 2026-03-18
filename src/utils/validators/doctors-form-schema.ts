@@ -11,7 +11,7 @@ export const doctorFormSchema = z.object({
   nationality_id: z.string().min(1, 'Nationality is required'),
 
   // ⬇️ change from single to array
-  service_ids: z.array(z.string()).min(1, 'At least one service is required'),
+  category_ids: z.array(z.string()).min(1, 'At least one category is required'),
 
   national_id: z.string().min(1, 'National ID is required'),
   country_code: z.string().optional(),
