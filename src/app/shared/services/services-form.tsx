@@ -30,14 +30,14 @@ export default function CreateOrUpdateServices({ initValues }: { initValues?: an
   const { data: categoriesData, isLoading: isCategoriesLoading } = useCategories(""); // Get categories for dropdown
 
   const [selectedCategory, setSelectedCategory] = useState<any>(null); // To store the selected category
-  const [categoryErroes, setCategoryErrors] = useState<any>(false); // To store the selected category
   const [loading, setLoading] = useState(false);
   const [isoading, setoading] = useState(false);
   let [imageError, setImageError] = useState(0);
   const [isImageData, setImage] = useState(initValues?.image || null);
+  const [isIconData, setIcon] = useState(initValues?.icon || null);
   const [active, setActive] = useState<number>(initValues?.active !== undefined ? initValues.active : 1);
 
-  const handleFileUpload = (event: any, type: 'Image' | 'File') => {
+  const handleFileUpload = (event: any, type: 'Image' | 'Icon' | 'File') => {
     setoading(true);
     const file = event.target.files?.[0];
     const formData = new FormData();
@@ -54,6 +54,9 @@ export default function CreateOrUpdateServices({ initValues }: { initValues?: an
         if (type === 'Image') {
           setImage(response.data.data);
         }
+        if (type === 'Icon') {
+          setIcon(response.data.data);
+        }
         toast.success(`${type} Uploaded successfully`);
       })
       .catch((error) => {
@@ -68,16 +71,21 @@ export default function CreateOrUpdateServices({ initValues }: { initValues?: an
   useEffect(() => {
     if (initValues && categoriesData?.data) {
       const category = categoriesData.data.find((cat: any) => cat.id === initValues?.category?.id);
-      setSelectedCategory({
-        value: initValues?.category?.id,
-        label: category?.name?.en || category?.name?.ar || '',
-      });
+      if (initValues?.category?.id) {
+        setSelectedCategory({
+          value: initValues?.category?.id,
+          label: category?.name?.en || category?.name?.ar || '',
+        });
+      } else {
+        setSelectedCategory({ value: null, label: 'None' });
+      }
     }
   }, [initValues, categoriesData]);
 
   const onSubmit: SubmitHandler<ServiceFormInput> = (data) => {
     // Validate image is required
     const imageValue = isImageData === null ? null : (isImageData || initValues?.image);
+    const iconValue = isIconData === null ? null : (isIconData || initValues?.icon);
     
     // Check if image exists (handle both array and object formats)
     const hasImage = imageValue && (
@@ -98,23 +106,19 @@ export default function CreateOrUpdateServices({ initValues }: { initValues?: an
       slug: data.slug,
       meta_title: data.meta_title,
       meta_description: data.meta_description,
-      category_id: selectedCategory?.value, // Use selected category ID
+      category_id: (selectedCategory?.value ?? null), // allow null
       image: imageValue,
+      icon: iconValue,
       description: data.description,
       active: active,
     };
 console.log(selectedCategory?.value, 'selectedCategory?.value');
-if (!selectedCategory?.value) {
-  setCategoryErrors(true)
-    }else{
-      setCategoryErrors(false)
-      if (initValues) {
-        updateService({ service_id: initValues.id, ...requestBody });
-      } else {
-        createService(requestBody);
-      }
-      setLoading(true);
+    if (initValues) {
+      updateService({ service_id: initValues.id, ...requestBody });
+    } else {
+      createService(requestBody);
     }
+    setLoading(true);
 
   };
 
@@ -152,7 +156,7 @@ if (!selectedCategory?.value) {
             en: initValues?.description?.en || '',
             ar: initValues?.description?.ar || '',
           },
-          category_id: initValues?.category.id || 1,
+          category_id: initValues?.category?.id ?? null,
         },
       }}
       
@@ -296,26 +300,63 @@ console.log(errors, 'errors');
                                                </div>
                                              </FormGroup>
 
+                      <FormGroup
+                        title="Icon"
+                        className="relative pt-7 @2xl:pt-9 @3xl:grid-cols-12 @3xl:pt-11"
+                      >
+                        {isoading && (
+                          <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/80 rounded-md">
+                            <Spinner size="xl" />
+                          </div>
+                        )}
+                        <div className="flex flex-col gap-2">
+                          <Upload
+                            title="Icon"
+                            accept="img"
+                            onChange={(e) => {
+                              handleFileUpload(e, 'Icon');
+                            }}
+                          />
+                          {(isIconData?.[0]?.thumbnail || isIconData?.[0]?.original) && (
+                            <div className="relative flex justify-center items-center w-full mt-2">
+                              <img
+                                src={isIconData[0].thumbnail || isIconData[0].original}
+                                alt="Uploaded Icon Preview"
+                                className="w-24 h-auto rounded border border-gray-200 shadow-sm"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setIcon(null)}
+                                className="absolute -top-2 -right-2 bg-white border border-gray-300 rounded-full p-1 shadow hover:bg-red-50"
+                                title="Remove Icon"
+                              >
+                                <PiXBold className="w-4 h-4 text-red-500" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </FormGroup>
+
           {/* Categories Select */}
           <div>
             <label>Category</label>
             <Select
-              options={categoriesData?.data?.map((category: any) => ({
-                value: category.id,
-                label: category.name?.en || category.name?.ar || 'Unnamed',
-              }))}
+              options={[
+                { value: null, label: 'None' },
+                ...(categoriesData?.data?.map((category: any) => ({
+                  value: category.id,
+                  label: category.name?.en || category.name?.ar || 'Unnamed',
+                })) ?? []),
+              ]}
               value={selectedCategory} // Bind selected category
               onChange={(selected) => {
-                setValue('category_id', selected?.value);
+                setValue('category_id', selected?.value ?? null);
                 setSelectedCategory(selected); // Update selected category
               }}
               menuPortalTarget={document.body}
               styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
               placeholder="Select category"
             />
-            {categoryErroes && (
-              <p className="text-sm text-red-500">{"Category must be a valid category"}</p>
-            )}
           </div>
 
           <div className='flex flex-wrap px-1 gap-3'>

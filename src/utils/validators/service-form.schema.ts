@@ -32,7 +32,8 @@ export const ServiceFormSchema = z.object({
     en: z.string().min(1, 'meta Description EN is required'),
     ar: z.string().min(1, 'meta Description AR is required'),
   }),
-  category_id: z.number().min(1, 'Category is required').positive('Category must be a valid category'),
+  // category can be null (no category selected)
+  category_id: z.union([z.number().positive('Category must be a valid category'), z.null()]).optional(),
 });
 
 // Generate form types from zod validation schema
