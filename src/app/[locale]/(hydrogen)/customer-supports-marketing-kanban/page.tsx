@@ -39,23 +39,37 @@ const STATUS_COLUMNS = [
   { id: 'failed', label: 'Failed', status: 'failed' },
 ];
 
+const parseSafePage = (value: string | null): number => {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
+};
+
 export default function CustomerSupportsMarketingKanbanPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { openModal } = useModal();
 
   // Single page state for all columns
-  const currentPage = parseInt(searchParams.get('page') || '1', 5);
+  const currentPage = parseSafePage(searchParams.get('page'));
   const [page, setPage] = useState(currentPage);
   const [filters, setFilters] = useState<Record<string, any>>({});
 
   // Sync page state with URL params
   useEffect(() => {
-    const urlPage = parseInt(searchParams.get('page') || '1', 5);
-    if (urlPage !== page) {
-      setPage(urlPage);
+    const urlPage = parseSafePage(searchParams.get('page'));
+    setPage((prev) => (prev === urlPage ? prev : urlPage));
+  }, [searchParams]);
+
+  // Keep URL page param valid (avoid page=NaN and other invalid values)
+  useEffect(() => {
+    const rawPage = searchParams.get('page');
+    const safePage = parseSafePage(rawPage);
+    if (rawPage !== String(safePage)) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('page', String(safePage));
+      router.replace(`?${params.toString()}`);
     }
-  }, [searchParams, page]);
+  }, [searchParams, router]);
 
   // Initialize filters from URL params - sync whenever searchParams changes
   useEffect(() => {
@@ -114,6 +128,20 @@ export default function CustomerSupportsMarketingKanbanPage() {
 
   // Single API call to fetch all data
   const allData = useCustomerSupport(buildFilterParams());
+
+  // Clamp current page to backend last_page once meta is available
+  useEffect(() => {
+    const rawLastPage = allData.data?.meta?.last_page;
+    if (!rawLastPage) return;
+    const lastPage = Number(rawLastPage);
+    if (Number.isInteger(lastPage) && lastPage > 0 && page > lastPage) {
+      const safePage = lastPage;
+      setPage(safePage);
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('page', String(safePage));
+      router.replace(`?${params.toString()}`);
+    }
+  }, [allData.data?.meta?.last_page, page, searchParams, router]);
 
   // Helper function to normalize status (handle case variations)
   const normalizeStatus = (status: string | null | undefined): string => {
@@ -212,12 +240,13 @@ export default function CustomerSupportsMarketingKanbanPage() {
   };
 
   const handlePageChange = (newPage: number) => {
-    setPage(newPage);
+    const safePage = Number.isInteger(newPage) && newPage > 0 ? newPage : 1;
+    setPage(safePage);
 
     // Update URL params
     const params = new URLSearchParams(searchParams.toString());
-    params.set('page', String(newPage));
-    router.push(`?${params.toString()}`);
+    params.set('page', String(safePage));
+    router.push(`?${params.toString()}`, { scroll: false });
   };
 
   const handleCreateClick = () => {
@@ -264,7 +293,7 @@ export default function CustomerSupportsMarketingKanbanPage() {
         params.set(`${key}_${c2.op}_${logic === 'or' ? 'or' : 'and'}`, c2.value);
     });
 
-    router.push(`?${params.toString()}`);
+    router.push(`?${params.toString()}`, { scroll: false });
   };
 
   const handleClearFilters = () => {
@@ -283,6 +312,7 @@ export default function CustomerSupportsMarketingKanbanPage() {
 
   // Calculate total items from single API response
   const totalItems = allData.data?.meta?.total || 0;
+  const pageSize = Number(allData.data?.meta?.per_page || 25);
 
   // Show pagination if we have any items (even if less than 5, to show page 1 of 1)
   const needsPagination = totalItems > 0;
@@ -339,7 +369,7 @@ export default function CustomerSupportsMarketingKanbanPage() {
               <Pagination
                 total={totalItems}
                 current={page}
-                pageSize={5}
+                pageSize={pageSize}
                 onChange={handlePageChange}
                 showLessItems={true}
                 prevIconClassName="py-0 text-gray-500 !leading-[26px]"
