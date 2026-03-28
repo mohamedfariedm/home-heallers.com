@@ -259,13 +259,33 @@ export default function UpdateCreateBrand({
                 error={errors.positionAR?.message}
               />
 
-              <Input
-                label={'Rate'}
-                placeholder={'Rate'}
-                type="number"
-                {...register('rate', { valueAsNumber: true })} 
-                error={errors.rate?.message}
-              />
+              <div>
+                <label className="text-sm text-gray-700">Rate</label>
+                <Controller
+                  name="rate"
+                  control={control}
+                  render={({ field }) => (
+                    <select
+                      className="w-full border border-gray-300 rounded-lg p-2"
+                      value={field.value != null ? String(field.value) : ''}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        field.onChange(v ? parseInt(v, 10) : undefined);
+                      }}
+                    >
+                      <option value="">Select rating</option>
+                      <option value="1">1</option>
+                      <option value="2">2</option>
+                      <option value="3">3</option>
+                      <option value="4">4</option>
+                      <option value="5">5</option>
+                    </select>
+                  )}
+                />
+                {errors.rate && (
+                  <p className="text-sm text-red-500">{errors.rate.message as any}</p>
+                )}
+              </div>
 
 
               <Textarea
@@ -305,6 +325,23 @@ export default function UpdateCreateBrand({
                   </p>
                 ) : (
                   ''
+                )}
+                {(isImageData?.[0]?.thumbnail || isImageData?.[0]?.original) && (
+                  <div className="relative flex justify-center items-center w-full mt-2">
+                    <img
+                      src={isImageData[0].thumbnail || isImageData[0].original}
+                      alt="Uploaded Preview"
+                      className="w-48 h-auto rounded border border-gray-200 shadow-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setImage(null)}
+                      className="absolute -top-2 -right-2 bg-white border border-gray-300 rounded-full p-1 shadow hover:bg-red-50"
+                      title="Remove Image"
+                    >
+                      <PiXBold className="w-4 h-4 text-red-500" />
+                    </button>
+                  </div>
                 )}
               </FormGroup>
 
