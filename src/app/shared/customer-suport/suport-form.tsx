@@ -10,6 +10,8 @@ import { LeadFormInput, leadFormSchema } from '@/utils/validators/suport-form.sc
 import { Textarea } from 'rizzui';
 import { useCreateCustomerSupport, useUpdateCustomerSupport } from '@/framework/customer-suport';
 import { useSearchParams } from 'next/navigation';
+import axios from 'axios';
+import Cookies from 'js-cookie';
 
 export default function CreateOrUpdateLead({ initValues,type }: { initValues?: any,type: string }) {
 
@@ -19,12 +21,60 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
     const { mutate: createSupport, isPending: isCreating } = useCreateCustomerSupport();
     const { mutate: updateSupport, isPending: isUpdating } = useUpdateCustomerSupport();
   const [loading, setLoading] = useState(false);
+  const [packages, setPackages] = useState<any[]>([]);
+  const [packagesLoading, setPackagesLoading] = useState<boolean>(false);
+  const [selectedOffer, setSelectedOffer] = useState<string>('');
 
   useEffect(() => {
     if (initValues) {
       setLang(initValues?.lang || 'en');
+      setSelectedOffer((initValues?.offer || '').toString().trim());
     }
   }, [initValues]);
+
+  // Fetch packages for Offer select
+  useEffect(() => {
+    const fetchPackages = async () => {
+      try {
+        setPackagesLoading(true);
+        const res = await axios.get('https://development.home-healers.com/api/admin/packages', {
+          headers: {
+            Accept: 'application/json',
+            Authorization: `Bearer ${Cookies.get('auth_token')}`,
+          },
+        });
+        setPackages(res?.data?.data || []);
+      } catch (e) {
+        setPackages([]);
+      } finally {
+        setPackagesLoading(false);
+      }
+    };
+    fetchPackages();
+  }, []);
+
+  // Normalize default selected offer once packages arrive
+  useEffect(() => {
+    if (!initValues) return;
+    const raw = (initValues.offer ?? '').toString().trim();
+    if (!raw || packages.length === 0) return;
+
+    // If current selected already matches one of option values (AR name), keep it
+    const existsByAr = packages.some((p: any) => (p?.name?.ar || '').trim() === selectedOffer);
+    if (selectedOffer && existsByAr) return;
+
+    // Try match by AR
+    let match = packages.find((p: any) => (p?.name?.ar || '').trim() === raw);
+    // Try match by EN
+    if (!match) match = packages.find((p: any) => (p?.name?.en || '').trim() === raw);
+    // Try match by id if numeric
+    if (!match && !isNaN(Number(raw))) match = packages.find((p: any) => Number(p?.id) === Number(raw));
+
+    if (match) {
+      const arValue = (match?.name?.ar || '').trim();
+      setSelectedOffer(arValue);
+    }
+  }, [packages, initValues, selectedOffer]);
 
   const onSubmit: SubmitHandler<LeadFormInput> = (data) => {
     try {
@@ -206,7 +256,27 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
           <Input label="Address" {...register('address_1')} error={errors.address_1?.message} />
 
           <div className="grid grid-cols-2 gap-4">
-            <Input label="Offer" {...register('offer')} error={errors.offer?.message} />
+            <div>
+              <label className="text-sm text-gray-700">Offer</label>
+              <select
+                {...register('offer')}
+                className="w-full border border-gray-300 rounded-lg p-2"
+                disabled={packagesLoading}
+                value={selectedOffer}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setSelectedOffer(v);
+                }}
+              >
+                <option value="">{packagesLoading ? 'Loading...' : 'Select Offer (Package)'}</option>
+                {packages.map((pkg: any) => (
+                  <option key={pkg?.name?.ar} value={String(pkg?.name?.ar)}>
+                    {pkg?.name?.ar ||pkg?.name?.en ||  `Package #${pkg.id}`}
+                  </option>
+                ))}
+              </select>
+              {errors.offer && <p className="text-sm text-red-500">{errors.offer.message}</p>}
+            </div>
             <Input label="Agent Name" {...register('agent_name')} error={errors.agent_name?.message} />
           </div>
 
