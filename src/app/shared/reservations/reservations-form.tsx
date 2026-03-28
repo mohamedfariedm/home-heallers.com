@@ -31,6 +31,7 @@ import { useCenters } from '@/framework/centers';
 import { useCountries } from '@/framework/countrues';
 import { useCities } from '@/framework/cities';
 import { useStates } from '@/framework/states';
+import { Badge } from '@/components/ui/badge';
 
 const timePeriods = [
   { id: 'morning', name: 'Morning' },
@@ -50,6 +51,13 @@ const statusOptions = [
 const genderOptions = [
   { value: 'male', label: 'Male' },
   { value: 'female', label: 'Female' },
+];
+
+const customerTierOptions = [
+  { value: 'عادي', label: 'Normal (عادي)' },
+  { value: 'فضي', label: 'Silver (فضي)' },
+  { value: 'ذهبي', label: 'Gold (ذهبي)' },
+  { value: 'VIP', label: 'VIP' },
 ];
 
 /**
@@ -296,6 +304,7 @@ export default function CreateOrUpdateReservation({
   const watchTotalAmount = useWatch({ control, name: 'total_amount' });
   const watchReservationStatus = useWatch({ control, name: 'status' });
   const watchSourceCampaign = useWatch({ control, name: 'source_campaign' });
+  const watchCustomerTier = useWatch({ control, name: 'customer_tier' as any });
 
   const prevStatusRef = useRef<string | undefined>();
   useEffect(() => {
@@ -316,6 +325,37 @@ export default function CreateOrUpdateReservation({
   }, [watchReservationStatus, setValue, getValues]);
 
   const lang: 'en' | 'ar' = 'en';
+
+  // Pretty badge (same mapping as table) for live preview
+  function CustomerTierBadge({ value }: { value?: string }) {
+    const v = (value || '').trim();
+    if (!v) return null;
+    let colorClasses =
+      'bg-gradient-to-r from-gray-50 to-gray-100 text-gray-800 border border-gray-200 ring-1 ring-gray-100 shadow-sm';
+    let symbol = '🙂';
+    if (v === 'فضي') {
+      colorClasses =
+        'bg-gradient-to-r from-slate-50 to-zinc-100 text-slate-800 border border-slate-200 ring-1 ring-slate-100 shadow-sm';
+      symbol = '🥈';
+    } else if (v === 'ذهبي') {
+      colorClasses =
+        'bg-gradient-to-r from-amber-50 to-yellow-100 text-amber-900 border border-amber-200 ring-1 ring-amber-100 shadow-sm';
+      symbol = '🥇';
+    } else if (v === 'VIP') {
+      colorClasses =
+        'bg-gradient-to-r from-fuchsia-50 to-purple-100 text-purple-900 border border-purple-200 ring-1 ring-purple-100 shadow-sm';
+      symbol = '👑';
+    }
+    return (
+      <Badge
+        variant="outline"
+        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-wide ${colorClasses}`}
+      >
+        <span aria-hidden>{symbol}</span>
+        <span>{v}</span>
+      </Badge>
+    );
+  }
 
   // Reset irrelevant fields on switch
   useEffect(() => {
@@ -415,6 +455,14 @@ export default function CreateOrUpdateReservation({
     }
   }, [patients?.data, initValues?.patient?.id, setValue]);
 
+  // Initialize default customer tier (falls back to 'عادي')
+  useEffect(() => {
+    const initialTier =
+      (initValues && initValues.customer_tier) ? initValues.customer_tier : 'عادي';
+    setValue('customer_tier' as any, initialTier, { shouldValidate: false });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initValues]);
+
   const applyStatusToAllDates = (status: string) => {
     if (!watchDates || watchDates.length === 0) return;
     const updatedDates = watchDates.map((date: any) => ({
@@ -450,6 +498,7 @@ export default function CreateOrUpdateReservation({
         : undefined,
       total_amount: data.total_amount ? Number(data.total_amount) : undefined,
       transaction_reference: data.transaction_reference,
+      customer_tier: (data as any)?.customer_tier || 'عادي',
       status: data.status ? Number(data.status) : undefined,
       pain_location: data.pain_location,
       notes: data.notes,
@@ -546,7 +595,7 @@ export default function CreateOrUpdateReservation({
     </div>
   ) : (
     <form
-      onSubmit={handleSubmit(onSubmit)}
+      onSubmit={handleSubmit(onSubmit as any)}
       className="flex flex-grow flex-col gap-6 overflow-y-auto p-6"
     >
       <div className="flex items-center justify-between">
@@ -975,6 +1024,25 @@ export default function CreateOrUpdateReservation({
               {errors.transaction_reference.message}
             </p>
           )}
+        </div>
+
+        <div>
+          <label className="text-sm text-gray-700">Customer Tier</label>
+          <select
+            {...inputProps}
+            value={(watchCustomerTier as any) ?? (initValues?.customer_tier || 'عادي')}
+            onChange={(e) => setValue('customer_tier' as any, e.target.value, { shouldValidate: false })}
+            className="w-full rounded-lg border border-gray-300 p-2"
+          >
+            {customerTierOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <div className="mt-2">
+            <CustomerTierBadge value={(watchCustomerTier as any) ?? (initValues?.customer_tier || 'عادي')} />
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">

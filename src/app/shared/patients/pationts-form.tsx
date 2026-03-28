@@ -134,22 +134,9 @@ export default function CreateOrUpdatePationts({ initValues }: { initValues?: an
               <PiXBold className="h-auto w-5" />
             </ActionIcon>
           </div>
-          <div className="flex flex-wrap px-1 gap-3">
-            <Checkbox
-              key={0}
-              label={"English"}
-              checked={lang === "en"}
-              onChange={() => setLang("en")}
-            />
-            <Checkbox
-              key={1}
-              label={"Arabic"}
-              checked={lang === "ar"}
-              onChange={() => setLang("ar")}
-            />
-          </div>
 
-          {lang === "en" ? (
+
+        
             <Input
             key={"name.en"}
               label="Name (English)"
@@ -157,7 +144,7 @@ export default function CreateOrUpdatePationts({ initValues }: { initValues?: an
               {...register("name.en")}
               error={errors.name?.en?.message}
             />
-          ) : (
+
             <Input
             key={"name.ar"}
               label="Name (Arabic)"
@@ -165,7 +152,7 @@ export default function CreateOrUpdatePationts({ initValues }: { initValues?: an
               {...register("name.ar")}
               error={errors.name?.ar?.message}
             />
-          )}
+         
           <div className="grid grid-cols-2 gap-4">
             <Input label="Email (Optional)" type="email" {...register('email')} error={errors.email?.message} autoComplete="off" />
             <Password label="Password (Optional)"  {...register('password')} error={errors.password?.message} />

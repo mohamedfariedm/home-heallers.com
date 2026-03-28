@@ -369,6 +369,53 @@ export const getColumns = ({
     },
   },
 
+  // ✅ Customer Tier
+  {
+    title: (
+      <div className="flex items-center gap-1">
+        <HeaderCell title="Customer Tier" />
+        {onFilterChange && (
+          <ColumnFilterPopover
+            columnKey="customer_tier"
+            onFilterChange={onFilterChange}
+          />
+        )}
+      </div>
+    ),
+    dataIndex: 'customer_tier',
+    key: 'customer_tier',
+    render: (customer_tier: string | null | undefined) => {
+      const value = (customer_tier || '').trim();
+      if (!value) return '—';
+      let colorClasses =
+        // عادي (default)
+        'bg-gradient-to-r from-gray-50 to-gray-100 text-gray-800 border border-gray-200 ring-1 ring-gray-100 shadow-sm';
+      let symbol = '🙂';
+      if (value === 'فضي') {
+        colorClasses =
+          'bg-gradient-to-r from-slate-50 to-zinc-100 text-slate-800 border border-slate-200 ring-1 ring-slate-100 shadow-sm';
+        symbol = '🥈';
+      } else if (value === 'ذهبي') {
+        colorClasses =
+          'bg-gradient-to-r from-amber-50 to-yellow-100 text-amber-900 border border-amber-200 ring-1 ring-amber-100 shadow-sm';
+        symbol = '🥇';
+      } else if (value === 'VIP') {
+        colorClasses =
+          'bg-gradient-to-r from-fuchsia-50 to-purple-100 text-purple-900 border border-purple-200 ring-1 ring-purple-100 shadow-sm';
+        symbol = '👑';
+      }
+      return (
+        <Badge
+          variant="outline"
+          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-wide ${colorClasses}`}
+        >
+          <span aria-hidden>{symbol}</span>
+          <span>{value}</span>
+        </Badge>
+      );
+    },
+  },
+
   // ✅ Seen
   {
     title: (
