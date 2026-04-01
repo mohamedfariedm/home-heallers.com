@@ -6,9 +6,11 @@ import { ActionIcon } from '@/components/ui/action-icon';
 import { Tooltip } from '@/components/ui/tooltip';
 import TrashIcon from '@/components/icons/trash';
 import PencilIcon from '@/components/icons/pencil';
+import EyeIcon from '@/components/icons/eye';
 import CreateButton from '../create-button';
 import DeletePopover from '@/app/shared/delete-popover';
 import CreateOrUpdateCustomerSupport from './pationts-form';
+import Link from 'next/link';
 
 // Type definitions
 interface Columns {
@@ -59,6 +61,16 @@ export const getColumns = ({
     width: 20,
     render: (_: any, row: any) => (
       <div className="flex items-center gap-3">
+        <Tooltip size="sm" content={() => 'View'} placement="top" color="invert">
+          <Link
+            href={`clients/${row.id}`}
+            className="p-0 m-0 bg-transparent text-gray-700"
+          >
+            <ActionIcon tag="span" size="sm" variant="outline">
+              <EyeIcon className="h-4 w-4" />
+            </ActionIcon>
+          </Link>
+        </Tooltip>
         <Tooltip size="sm" content={() => 'Edit'} placement="top" color="invert">
           <CreateButton
             icon={

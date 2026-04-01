@@ -9,6 +9,14 @@ export function usePatients(param:string) {
   return useQuery<any, Error>({queryKey: [routes.patients.index,param], queryFn: () => client.patients.all(param)});
 };
 
+export function usePatient(id: string | number) {
+  return useQuery<any, Error>({
+    queryKey: [routes.patients.index, id],
+    queryFn: () => client.patients.findOne(Number(id)),
+    enabled: !!id,
+  });
+}
+
 export const useCreatePatients = () => {
 
     const queryClient = useQueryClient();

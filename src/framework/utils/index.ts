@@ -120,6 +120,7 @@ class Client {
     }
     patients = {
         all: (param: string) => HttpClient.get(`${routes.patients.index}?${param}`),
+        findOne: (id: number) => HttpClient.get(`${routes.patients.index}/${id}`),
         create: (input: any) => HttpClient.post(`${routes.patients.index}`, input),
         update: (input: any) => HttpClient.patch(`${routes.patients.index}/${input.lead_id}`, input),
         delete: (input: { region_id: number[] }) => HttpClient.delete(`${routes.patients.index}/${input.region_id}`)
