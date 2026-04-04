@@ -15,6 +15,15 @@ const operators = [
   { label: 'Does not end with', value: 'not_end_with' },
 ];
 
+const specialtyKeys = new Set(['specialtie_1', 'specialtie_2', 'specialtie_3']);
+const specialtyOptions = [
+  { label: 'Physiotherapy', value: 'Physiotherapy' },
+  { label: 'Nursing visits', value: 'Nursing visits' },
+  { label: 'Doctors visits', value: 'Doctors visits' },
+  { label: 'Caregivers', value: 'Caregivers' },
+  { label: 'Extendcare', value: 'Extendcare' },
+];
+
 
 export default function ColumnFilterPopover({
   columnKey,
@@ -179,12 +188,27 @@ export default function ColumnFilterPopover({
                   </option>
                 ))}
               </select>
-              <input
-                className="border border-gray-300 rounded-lg px-2 py-2 text-sm w-1/2 focus:ring-2 focus:ring-blue-500"
-                placeholder="Value"
-                value={cond1.value}
-                onChange={(e) => setCond1((s) => ({ ...s, value: e.target.value }))}
-              />
+              {specialtyKeys.has(columnKey) ? (
+                <select
+                  className="border border-gray-300 rounded-lg px-2 py-2 text-sm w-1/2 focus:ring-2 focus:ring-blue-500"
+                  value={cond1.value}
+                  onChange={(e) => setCond1((s) => ({ ...s, value: e.target.value }))}
+                >
+                  <option value="">Select specialty</option>
+                  {specialtyOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  className="border border-gray-300 rounded-lg px-2 py-2 text-sm w-1/2 focus:ring-2 focus:ring-blue-500"
+                  placeholder="Value"
+                  value={cond1.value}
+                  onChange={(e) => setCond1((s) => ({ ...s, value: e.target.value }))}
+                />
+              )}
             </div>
 
             {/* Logic */}
@@ -226,12 +250,27 @@ export default function ColumnFilterPopover({
                   </option>
                 ))}
               </select>
-              <input
-                className="border border-gray-300 rounded-lg px-2 py-2 text-sm w-1/2 focus:ring-2 focus:ring-blue-500"
-                placeholder="Value"
-                value={cond2.value}
-                onChange={(e) => setCond2((s) => ({ ...s, value: e.target.value }))}
-              />
+              {specialtyKeys.has(columnKey) ? (
+                <select
+                  className="border border-gray-300 rounded-lg px-2 py-2 text-sm w-1/2 focus:ring-2 focus:ring-blue-500"
+                  value={cond2.value}
+                  onChange={(e) => setCond2((s) => ({ ...s, value: e.target.value }))}
+                >
+                  <option value="">Select specialty</option>
+                  {specialtyOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  className="border border-gray-300 rounded-lg px-2 py-2 text-sm w-1/2 focus:ring-2 focus:ring-blue-500"
+                  placeholder="Value"
+                  value={cond2.value}
+                  onChange={(e) => setCond2((s) => ({ ...s, value: e.target.value }))}
+                />
+              )}
             </div>
 
             {/* Save Button */}

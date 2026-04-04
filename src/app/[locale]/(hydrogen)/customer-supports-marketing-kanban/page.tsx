@@ -79,28 +79,40 @@ export default function CustomerSupportsMarketingKanbanPage() {
       'lead_source', 'source_campaign', 'mobile_phone', 'booking_phone_number',
       'home_phone', 'address_1', 'description', 'first_call_time',
       'last_call_result', 'last_call_total_duration', 'last_phone', 'notes',
-      'ads_name', 'communication_channel'
+      'ads_name', 'communication_channel',
+      // Advanced specialties
+      'specialtie_1', 'specialtie_2', 'specialtie_3',
     ];
 
     filterableColumns.forEach((key) => {
       const params: any = {};
       Array.from(searchParams.entries()).forEach(([paramKey, paramValue]) => {
-        if (paramKey.startsWith(`${key}_`)) {
-          const parts = paramKey.split('_');
-          if (parts.length >= 2) {
-            const op = parts.slice(1, -1).join('_');
-            if (!params.c1) {
-              params.c1 = { op, value: paramValue };
-            } else if (!params.c2) {
-              const logic = parts[parts.length - 1] === 'or' ? 'or' : 'and';
-              params.c2 = { op: op.replace(/_or$|_and$/, ''), value: paramValue };
-              params.logic = logic;
-            }
-          }
+        if (!paramKey.startsWith(`${key}_`)) return;
+        const rest = paramKey.slice(key.length + 1); // after `${key}_`
+        let op = rest;
+        let logic: 'and' | 'or' | undefined;
+        if (/_or$/.test(rest)) {
+          op = rest.replace(/_or$/, '');
+          logic = 'or';
+        } else if (/_and$/.test(rest)) {
+          op = rest.replace(/_and$/, '');
+          logic = 'and';
+        }
+        if (!params.c1) {
+          params.c1 = { op: op || 'equal', value: paramValue };
+        } else if (!params.c2) {
+          params.c2 = { op: op || 'equal', value: paramValue };
+          params.logic = logic || params.logic || 'and';
+        } else {
+          // ignore extra conditions
         }
       });
       if (params.c1 || params.c2) {
-        initialFilters[key] = { c1: params.c1 || { op: 'equal', value: '' }, c2: params.c2 || { op: 'equal', value: '' }, logic: params.logic || 'and' };
+        initialFilters[key] = {
+          c1: params.c1 || { op: 'equal', value: '' },
+          c2: params.c2 || { op: 'equal', value: '' },
+          logic: params.logic || 'and',
+        };
       }
     });
 

@@ -168,8 +168,8 @@ export default function CreateOrUpdateDoctors({ initValues }: { initValues?: any
         defaultValues: {
           doctor_role: initValues?.doctor_role || '',
           name: {
-            en: initValues?.name?.en || "",
-            ar: initValues?.name?.ar || "",
+            en: initValues?.name?.en || initValues?.name?.ar || "",
+            ar: initValues?.name?.en || initValues?.name?.ar || "",
           },
           email: initValues?.email || '',
 
@@ -221,38 +221,17 @@ export default function CreateOrUpdateDoctors({ initValues }: { initValues?: any
             </ActionIcon>
           </div>
 
-          <div className="flex flex-wrap px-1 gap-3">
-            <Checkbox
-              key={0}
-              label={"English"}
-              checked={lang === "en"}
-              onChange={() => setLang("en")}
-            />
-            <Checkbox
-              key={1}
-              label={"Arabic"}
-              checked={lang === "ar"}
-              onChange={() => setLang("ar")}
-            />
-          </div>
 
-          {lang === "en" ? (
-            <Input
-              key={"name.en"}
-              label="Name (English)"
-              placeholder="Enter English name"
-              {...register("name.en")}
-              error={errors.name?.en?.message}
-            />
-          ) : (
-            <Input
-              key={"name.ar"}
-              label="Name (Arabic)"
-              placeholder="أدخل الاسم بالعربية"
-              {...register("name.ar")}
-              error={errors.name?.ar?.message}
-            />
-          )}
+
+          <Input
+            key={"name.unified"}
+            label="Name"
+            placeholder="Enter name"
+            {...register("name.en", {
+              onChange: (e) => setValue("name.ar", e.target.value, { shouldValidate: true }),
+            })}
+            error={errors.name?.en?.message || errors.name?.ar?.message}
+          />
 
           <div className="grid grid-cols-2 gap-4">
             <div>

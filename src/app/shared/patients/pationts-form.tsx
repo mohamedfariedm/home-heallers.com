@@ -99,8 +99,8 @@ export default function CreateOrUpdatePationts({ initValues }: { initValues?: an
       useFormProps={{
         defaultValues: {
           name: {
-            en: initValues?.name?.en || "",
-            ar: initValues?.name?.ar || "",
+            en: initValues?.name?.en || initValues?.name?.ar || "",
+            ar: initValues?.name?.en || initValues?.name?.ar || "",
           },
           email: initValues?.email || '',
           password: initValues?.password || '',
@@ -121,7 +121,7 @@ export default function CreateOrUpdatePationts({ initValues }: { initValues?: an
       }}
       className="flex flex-grow flex-col gap-6 p-6"
     >
-      {({ register, formState: { errors } }) => {
+      {({ register, formState: { errors }, setValue }) => {
         console.log("Form Errors:", errors);
         
         return(
@@ -137,21 +137,15 @@ export default function CreateOrUpdatePationts({ initValues }: { initValues?: an
 
 
         
-            <Input
-            key={"name.en"}
-              label="Name (English)"
-              placeholder="Enter English name"
-              {...register("name.en")}
-              error={errors.name?.en?.message}
-            />
-
-            <Input
-            key={"name.ar"}
-              label="Name (Arabic)"
-              placeholder="أدخل الاسم بالعربية"
-              {...register("name.ar")}
-              error={errors.name?.ar?.message}
-            />
+          <Input
+            key={"name.unified"}
+            label="Name"
+            placeholder="Enter name"
+            {...register("name.en", {
+              onChange: (e) => setValue("name.ar", e.target.value, { shouldValidate: true }),
+            })}
+            error={errors.name?.en?.message || errors.name?.ar?.message}
+          />
          
           <div className="grid grid-cols-2 gap-4">
             <Input label="Email (Optional)" type="email" {...register('email')} error={errors.email?.message} autoComplete="off" />

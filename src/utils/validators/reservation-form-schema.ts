@@ -10,7 +10,7 @@ export const reservationFormSchema = z
 
     // For guest reservations - patient details
     patient_name: z.string().optional(),
-    patient_email: z.string().optional(),
+    patient_email: z.string().email("Enter a valid email").optional(),
     patient_national_id: z.string().optional(),
     patient_gender: z.enum(["male", "female"]).optional(),
     patient_country: z.string().optional(),
@@ -65,23 +65,48 @@ export const reservationFormSchema = z
       )
       .min(1, "At least one date is required"),
   })
-  .refine(
-    (data) => {
-      // If guest reservation, require patient details
-      if (data.reservation_type === "guest") {
-        return data.patient_name && data.patient_email && data.patient_mobile
+  .superRefine((data, ctx) => {
+    // If guest reservation, require critical guest fields
+    if (data.reservation_type === "guest") {
+      if (!data.patient_name || data.patient_name.trim() === "") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Patient Name is required",
+          path: ["patient_name"],
+        });
       }
-      // If existing patient, require patient_id
-      if (data.reservation_type === "existing") {
-        return !!data.patient_id
+      if (!data.patient_email || data.patient_email.trim() === "") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Patient Email is required",
+          path: ["patient_email"],
+        });
       }
-      return true
-    },
-    {
-      message: "Please provide required patient information",
-      path: ["patient_id"],
-    },
-  )
+      if (!data.patient_mobile || data.patient_mobile.trim() === "") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Mobile is required",
+          path: ["patient_mobile"],
+        });
+      }
+      if (!data.patient_national_id || data.patient_national_id.trim() === "") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "National ID is required",
+          path: ["patient_national_id"],
+        });
+      }
+    }
+
+    // If existing patient, require patient_id
+    if (data.reservation_type === "existing" && !data.patient_id) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Patient is required",
+        path: ["patient_id"],
+      });
+    }
+  })
   .refine(
     (data) => {
       // If source_campaign is "center", require center_id

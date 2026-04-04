@@ -5,6 +5,8 @@ import {
   DragOverlay,
   closestCorners,
   closestCenter,
+  rectIntersection,
+  pointerWithin,
   KeyboardSensor,
   PointerSensor,
   useSensor,
@@ -61,11 +63,13 @@ export default function CustomerSupportKanban({
 }: CustomerSupportKanbanProps) {
   const [activeId, setActiveId] = useState<number | null>(null);
   const [oldStatusMap, setOldStatusMap] = useState<Record<number, string>>({});
+  const [movedStatusMap, setMovedStatusMap] = useState<Record<number, string>>({});
+  const [overContainerId, setOverContainerId] = useState<string | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8,
+        distance: 4,
       },
     }),
     useSensor(KeyboardSensor, {
@@ -73,8 +77,8 @@ export default function CustomerSupportKanban({
     })
   );
 
-  // Get items for each column from columnData
-  const itemsByStatus = columns.reduce(
+  // Build base items by status from server data
+  const baseItemsByStatus = columns.reduce(
     (acc, column) => {
       const data = columnData[column.status]?.data?.data || [];
       acc[column.status] = data;
@@ -82,6 +86,22 @@ export default function CustomerSupportKanban({
     },
     {} as Record<string, KanbanItem[]>
   );
+
+  // Apply optimistic moved statuses to render immediately
+  const itemsByStatus = (() => {
+    const allItems: KanbanItem[] = Object.values(baseItemsByStatus).flat();
+    const result: Record<string, KanbanItem[]> = {};
+    columns.forEach((c) => (result[c.status] = []));
+
+    allItems.forEach((item) => {
+      const override = movedStatusMap[item.id];
+      const targetStatus = (override || item.status || 'new').toString().toLowerCase();
+      const col = columns.find((c) => c.status.toLowerCase() === targetStatus)?.status || 'new';
+      result[col].push({ ...item, status: col });
+    });
+
+    return result;
+  })();
 
   // Build a map of item IDs to their current status for tracking
   useEffect(() => {
@@ -93,15 +113,39 @@ export default function CustomerSupportKanban({
       });
     });
     setOldStatusMap(statusMap);
+    // Clear optimistic moves that are now reflected in server data
+    setMovedStatusMap((prev) => {
+      const next: Record<number, string> = {};
+      Object.entries(prev).forEach(([id, status]) => {
+        if (status !== statusMap[Number(id)]) {
+          next[Number(id)] = status;
+        }
+      });
+      return next;
+    });
   }, [columnData, columns]);
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as number);
   };
 
+  const handleDragOver = (event: any) => {
+    const { over } = event;
+    if (!over) {
+      setOverContainerId(null);
+      return;
+    }
+    const containerId =
+      (over.data?.current as any)?.sortable?.containerId ||
+      (over.data?.current as any)?.containerId ||
+      (typeof over.id === 'string' ? over.id : null);
+    setOverContainerId(containerId || null);
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveId(null);
+    setOverContainerId(null);
 
     if (!over) return;
 
@@ -111,12 +155,18 @@ export default function CustomerSupportKanban({
     // Debug logging
     console.log('Drag end - over.id:', overId, 'over.data:', over.data?.current);
 
+    // Prefer containerId from SortableContext when dropping over a card
+    const containerId =
+      (over.data?.current as any)?.sortable?.containerId ||
+      (over.data?.current as any)?.containerId ||
+      null;
+
     // First, try to find if dropped directly on a column (by column.id) - exact match
-    let targetColumn = columns.find((col) => col.id === overId);
+    let targetColumn = columns.find((col) => col.id === (containerId || overId));
 
     // If not found, try matching with column status
     if (!targetColumn) {
-      targetColumn = columns.find((col) => col.status === overId);
+      targetColumn = columns.find((col) => col.status === (containerId || overId));
     }
 
     // If still not found, check if dropped on a card - find which column contains that card
@@ -186,6 +236,8 @@ export default function CustomerSupportKanban({
 
     // Check if status actually changed
     if (oldStatus.toLowerCase() !== newStatus) {
+      // Optimistically move item
+      setMovedStatusMap((prev) => ({ ...prev, [activeId]: newStatus }));
       // Call the callback to update on server
       onStatusChange(activeId, newStatus, oldStatus);
     }
@@ -203,11 +255,25 @@ export default function CustomerSupportKanban({
     .flat()
     .map((item) => item.id);
 
+  // More permissive collision detection: prefer pointer, then rects, then corners
+  const collisionDetection = (args: any) => {
+    const pointerCollisions = pointerWithin(args);
+    if (pointerCollisions.length > 0) {
+      return pointerCollisions;
+    }
+    const rectCollisions = rectIntersection(args);
+    if (rectCollisions.length > 0) {
+      return rectCollisions;
+    }
+    return closestCorners(args);
+  };
+
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCenter}
+      collisionDetection={collisionDetection}
       onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
       <div className="flex h-full gap-4">
@@ -218,6 +284,10 @@ export default function CustomerSupportKanban({
               key={column.id}
               column={column}
               items={columnItems}
+              isHighlighted={
+                !!overContainerId &&
+                (overContainerId === column.id || overContainerId === column.status)
+              }
               onStatusChange={(itemId, newStatus) =>
                 onStatusChange(itemId, newStatus, column.status)
               }

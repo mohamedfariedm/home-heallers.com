@@ -40,6 +40,7 @@ interface KanbanColumnProps {
   column: Column;
   items: KanbanItem[];
   onStatusChange: (itemId: number, newStatus: string) => void;
+  isHighlighted?: boolean;
 }
 
 const columnColors: Record<
@@ -80,6 +81,7 @@ export default function KanbanColumn({
   column,
   items,
   onStatusChange,
+  isHighlighted = false,
 }: KanbanColumnProps) {
   const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
   const { setNodeRef, isOver } = useDroppable({
@@ -100,7 +102,7 @@ export default function KanbanColumn({
         'flex h-full min-h-[600px] w-80 flex-col rounded-lg border-2 transition-colors',
         colors.border,
         colors.bg,
-        isOver && 'ring-2 ring-blue-500 ring-offset-2',
+        (isOver || isHighlighted) && 'ring-2 ring-blue-500 ring-offset-2',
         'relative'
       )}
     >
@@ -138,22 +140,23 @@ export default function KanbanColumn({
 
       {/* Column Content - This entire area is droppable */}
       <div className="flex-1 overflow-y-auto p-3">
-        {items.length > 0 ? (
-          <SortableContext
-            items={items.map((item) => item.id)}
-            strategy={verticalListSortingStrategy}
-          >
+        <SortableContext
+          id={column.id}
+          items={items.map((item) => item.id)}
+          strategy={verticalListSortingStrategy}
+        >
+          {items.length > 0 ? (
             <div className="flex flex-col gap-3">
               {items.map((item) => (
                 <KanbanCard key={item.id} item={item} />
               ))}
             </div>
-          </SortableContext>
-        ) : (
-          <div className="flex h-32 items-center justify-center text-sm text-gray-400 pointer-events-none">
-            No items
-          </div>
-        )}
+          ) : (
+            <div className="flex h-40 items-center justify-center rounded-md border-2 border-dashed border-gray-300/70 bg-white/50 text-sm text-gray-400 dark:border-gray-700/60 dark:bg-gray-900/20">
+              Drop here
+            </div>
+          )}
+        </SortableContext>
       </div>
 
       <WhatsAppSendModal

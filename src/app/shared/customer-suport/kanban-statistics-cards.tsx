@@ -127,13 +127,54 @@ const convertApiLinkToQueryParams = (apiLink: string | undefined): string => {
     
     // Convert API query params to frontend format
     const frontendParams = new URLSearchParams();
+
+    // Keys our filters system recognizes
+    const filterableKeys = new Set([
+      'name',
+      'offer',
+      'agent_name',
+      'status',
+      'reason',
+      'age',
+      'gender',
+      'lead_source',
+      'source_campaign',
+      'mobile_phone',
+      'booking_phone_number',
+      'home_phone',
+      'address_1',
+      'description',
+      'first_call_time',
+      'last_call_result',
+      'last_call_total_duration',
+      'last_phone',
+      'notes',
+      'ads_name',
+      'communication_channel',
+      'specialtie_1',
+      'specialtie_2',
+      'specialtie_3',
+    ]);
     
     params.forEach((value, key) => {
-      // Convert API format to frontend format
-      // e.g., source_campaign_equal=google -> source_campaign=google
+      const hasOperatorSuffix = /_(equal|not_equal|has|not_has|contain|not_contain|begin_with|not_begin_with|end_with|not_end_with)(_(and|or))?$/.test(
+        key
+      );
 
+      if (hasOperatorSuffix) {
+        // Already in our expected format (e.g., status_equal or status_equal_or)
         frontendParams.set(key, value);
-      
+        return;
+      }
+
+      // If key exactly matches a filterable key without operator, assume "equal"
+      if (filterableKeys.has(key)) {
+        frontendParams.set(`${key}_equal`, value);
+        return;
+      }
+
+      // Fallback: pass through unmodified
+      frontendParams.set(key, value);
     });
     
     return frontendParams.toString();

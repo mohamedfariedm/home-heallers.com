@@ -295,6 +295,7 @@ export default function CreateOrUpdateReservation({
   });
 
   const reservationType = useWatch({ control, name: 'reservation_type' });
+  const isGuestCreate = reservationType === 'guest' && !initValues;
   const watchDates = watch('dates');
   const watchSessionsCount = useWatch({ control, name: 'sessions_count' });
   const watchDoctorId = useWatch({ control, name: 'doctor_id' });
@@ -650,28 +651,39 @@ export default function CreateOrUpdateReservation({
           <h5 className="text-sm font-semibold">Guest Patient Information</h5>
           <div className="grid grid-cols-2 gap-4">
             <Input
-              label="Patient Name"
+              label={`Patient Name${isGuestCreate ? ' *' : ''}`}
               {...inputProps}
               placeholder="e.g., أحمد محمد"
-              {...register('patient_name')}
+              {...register('patient_name', {
+                required: isGuestCreate ? 'Patient Name is required' : false,
+              })}
               error={errors.patient_name?.message}
             />
             <Input
-              label="Patient Email"
+              label={`Patient Email${isGuestCreate ? ' *' : ''}`}
               type="email"
               {...inputProps}
               placeholder="e.g., ah1med@example.com"
-              {...register('patient_email')}
+              {...register('patient_email', {
+                required: isGuestCreate ? 'Patient Email is required' : false,
+                validate: (val) => {
+                  if (!isGuestCreate || !val) return true;
+                  // basic email check
+                  return /\S+@\S+\.\S+/.test(val) || 'Enter a valid email';
+                },
+              })}
               error={errors.patient_email?.message}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <Input
-              label="National ID"
+              label={`National ID${isGuestCreate ? ' *' : ''}`}
               {...inputProps}
               placeholder="e.g., 12134567890"
-              {...register('patient_national_id')}
+              {...register('patient_national_id', {
+                required: isGuestCreate ? 'National ID is required' : false,
+              })}
               error={errors.patient_national_id?.message}
             />
             <div>
@@ -693,9 +705,11 @@ export default function CreateOrUpdateReservation({
           <div className="grid grid-cols-2 gap-4">
             <Input
               {...inputProps}
-              label="Mobile"
+              label={`Mobile${isGuestCreate ? ' *' : ''}`}
               placeholder="e.g., 05101234567"
-              {...register('patient_mobile')}
+              {...register('patient_mobile', {
+                required: isGuestCreate ? 'Mobile is required' : false,
+              })}
               error={errors.patient_mobile?.message}
             />
             <Input

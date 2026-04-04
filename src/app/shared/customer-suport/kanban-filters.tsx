@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { PiFunnel, PiXBold } from 'react-icons/pi';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,6 +37,10 @@ const FILTERABLE_COLUMNS = [
   'notes',
   'ads_name',
   'communication_channel',
+  // Advanced specialties
+  'specialtie_1',
+  'specialtie_2',
+  'specialtie_3',
 ];
 
 interface KanbanFiltersProps {
@@ -101,22 +105,40 @@ export default function KanbanFilters({ onFilterChange, onClearFilters, currentF
     onFilterChange({}, { date_from: '', date_to: '' });
   };
 
-  // Check both local filters and current applied filters, including dates
-  const hasActiveFilters = 
-    Object.keys(filters).some((key) => filters[key]?.c1?.value || filters[key]?.c2?.value) ||
-    Object.keys(currentFilters).some((key) => currentFilters[key]?.c1?.value || currentFilters[key]?.c2?.value) ||
-    dateFrom ||
-    dateTo ||
-    currentDates?.date_from ||
-    currentDates?.date_to;
+  // Merge local filters with current (URL) filters to avoid double counting
+  const mergedFilters = useMemo(() => {
+    const keys = new Set<string>([
+      ...Object.keys(currentFilters || {}),
+      ...Object.keys(filters || {}),
+    ]);
+    const result: Record<string, any> = {};
+    keys.forEach((key) => {
+      const localVal = filters[key];
+      const urlVal = currentFilters[key];
+      const localActive = !!(localVal?.c1?.value || localVal?.c2?.value);
+      const urlActive = !!(urlVal?.c1?.value || urlVal?.c2?.value);
+      // Prefer local when it has values, else fallback to URL
+      result[key] = localActive ? localVal : urlActive ? urlVal : undefined;
+    });
+    return result;
+  }, [filters, currentFilters]);
 
-  const activeFilterCount = 
-    Object.keys(filters).filter((key) => filters[key]?.c1?.value || filters[key]?.c2?.value).length +
-    Object.keys(currentFilters).filter((key) => currentFilters[key]?.c1?.value || currentFilters[key]?.c2?.value).length +
-    (dateFrom ? 1 : 0) +
-    (dateTo ? 1 : 0) +
-    (currentDates?.date_from ? 1 : 0) +
-    (currentDates?.date_to ? 1 : 0);
+  const effectiveDateFrom = dateFrom || currentDates?.date_from || '';
+  const effectiveDateTo = dateTo || currentDates?.date_to || '';
+
+  const hasActiveFilters =
+    Object.keys(mergedFilters).some(
+      (key) => mergedFilters[key]?.c1?.value || mergedFilters[key]?.c2?.value
+    ) ||
+    !!effectiveDateFrom ||
+    !!effectiveDateTo;
+
+  const activeFilterCount =
+    Object.keys(mergedFilters).filter(
+      (key) => mergedFilters[key]?.c1?.value || mergedFilters[key]?.c2?.value
+    ).length +
+    (effectiveDateFrom ? 1 : 0) +
+    (effectiveDateTo ? 1 : 0);
 
   return (
     <>
@@ -267,6 +289,7 @@ export default function KanbanFilters({ onFilterChange, onClearFilters, currentF
           </div>
         </div>
       </Drawer>
+   
     </>
   );
 }
