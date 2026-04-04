@@ -369,7 +369,16 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <Input label="Last Call Duration" type="number" {...register('last_call_total_duration')} error={errors.last_call_total_duration?.message} />
+            <Input
+              label="Last Call Duration"
+              type="number"
+              min={0}
+              {...register('last_call_total_duration', {
+                min: { value: 0, message: 'Must be greater than or equal 0' },
+                valueAsNumber: true,
+              })}
+              error={errors.last_call_total_duration?.message}
+            />
             <Input label="Last Phone" {...register('last_phone')} error={errors.last_phone?.message} />
           </div>
 
@@ -454,7 +463,7 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
             <Button variant="outline" onClick={closeModal}>
               Cancel
             </Button>
-            <Button type="submit" isLoading={loading || isCreating || isUpdating}>
+            <Button type="submit" isLoading={ isCreating || isUpdating}>
               {initValues ? 'Update Lead' : 'Create Lead'}
             </Button>
           </div>

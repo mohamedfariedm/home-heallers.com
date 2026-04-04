@@ -10,7 +10,8 @@ export const reservationFormSchema = z
 
     // For guest reservations - patient details
     patient_name: z.string().optional(),
-    patient_email: z.string().email("Enter a valid email").optional(),
+    // Email will be validated conditionally in superRefine (guest only)
+    patient_email: z.string().optional(),
     patient_national_id: z.string().optional(),
     patient_gender: z.enum(["male", "female"]).optional(),
     patient_country: z.string().optional(),
@@ -82,6 +83,14 @@ export const reservationFormSchema = z
           path: ["patient_email"],
         });
       }
+      // Validate email format only when guest and provided
+      if (data.patient_email && !/^\S+@\S+\.\S+$/.test(data.patient_email)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Enter a valid email",
+          path: ["patient_email"],
+        });
+      }
       if (!data.patient_mobile || data.patient_mobile.trim() === "") {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
@@ -94,6 +103,13 @@ export const reservationFormSchema = z
           code: z.ZodIssueCode.custom,
           message: "National ID is required",
           path: ["patient_national_id"],
+        });
+      }
+      if (!data.patient_date_of_birth || data.patient_date_of_birth.trim() === "") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Date of Birth is required",
+          path: ["patient_date_of_birth"],
         });
       }
     }

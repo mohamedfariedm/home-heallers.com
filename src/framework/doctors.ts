@@ -1,21 +1,21 @@
-import { useQuery, useMutation, useQueryClient  } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import client from '@/framework/utils'
 import toast from 'react-hot-toast';
 import { useModal } from '@/app/shared/modal-views/use-modal';
 import { routes } from '@/config/routes';
 
-export function useDoctors(param:string) {
-  return useQuery<any, Error>({queryKey: [routes.doctors.index, param], queryFn: () => client.doctors.all(param)});
+export function useDoctors(param: string) {
+  return useQuery<any, Error>({ queryKey: [routes.doctors.index, param], queryFn: () => client.doctors.all(param) });
 };
 
 export const useCreateDoctors = () => {
   const queryClient = useQueryClient();
   const { closeModal } = useModal();
 
-  const {mutate, isPending} = useMutation({
+  const { mutate, isPending } = useMutation({
     mutationFn: client.doctors.create,
     onSuccess() {
-      queryClient.invalidateQueries({queryKey: [routes.doctors.index]})
+      queryClient.invalidateQueries({ queryKey: [routes.doctors.index] })
       toast.success('Doctor created successfully')
       closeModal()
     },
@@ -24,7 +24,7 @@ export const useCreateDoctors = () => {
     }
   })
 
-  return { mutate, isPending}
+  return { mutate, isPending }
 }
 
 export const useUpdateDoctors = () => {
@@ -33,7 +33,7 @@ export const useUpdateDoctors = () => {
   return useMutation({
     mutationFn: client.doctors.update,
     onSuccess: () => {
-      queryClient.invalidateQueries({queryKey: [routes.doctors.index]})
+      queryClient.invalidateQueries({ queryKey: [routes.doctors.index] })
       toast.success('Doctor updated successfully')
       closeModal()
     },
@@ -47,7 +47,7 @@ export const useDeleteDoctors = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: client.doctors.delete,
-    onSuccess: () => queryClient.invalidateQueries({queryKey: [routes.doctors.index]}),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: [routes.doctors.index] }),
     onError: (error) => {
       toast.error(`Error ${error?.message}`)
     }

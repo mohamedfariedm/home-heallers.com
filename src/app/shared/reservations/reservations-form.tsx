@@ -307,6 +307,18 @@ export default function CreateOrUpdateReservation({
   const watchSourceCampaign = useWatch({ control, name: 'source_campaign' });
   const watchCustomerTier = useWatch({ control, name: 'customer_tier' as any });
 
+  // Log validation errors whenever they change
+  useEffect(() => {
+    if (errors && Object.keys(errors).length > 0) {
+      // eslint-disable-next-line no-console
+      console.log('Reservation Form Errors:', errors);
+    }
+  }, [errors]);
+
+  const onInvalid = (formErrors: any) => {
+    // eslint-disable-next-line no-console
+    console.log('Reservation Form Submit Errors:', formErrors);
+  };
   const prevStatusRef = useRef<string | undefined>();
   useEffect(() => {
     if (
@@ -596,7 +608,7 @@ export default function CreateOrUpdateReservation({
     </div>
   ) : (
     <form
-      onSubmit={handleSubmit(onSubmit as any)}
+      onSubmit={handleSubmit(onSubmit as any, onInvalid)}
       className="flex flex-grow flex-col gap-6 overflow-y-auto p-6"
     >
       <div className="flex items-center justify-between">
@@ -660,14 +672,14 @@ export default function CreateOrUpdateReservation({
               error={errors.patient_name?.message}
             />
             <Input
-              label={`Patient Email${isGuestCreate ? ' *' : ''}`}
+              label={`Patient Email${reservationType === 'guest' ? ' *' : ''}`}
               type="email"
               {...inputProps}
               placeholder="e.g., ah1med@example.com"
               {...register('patient_email', {
-                required: isGuestCreate ? 'Patient Email is required' : false,
+                required: reservationType === 'guest' ? 'Patient Email is required' : false,
                 validate: (val) => {
-                  if (!isGuestCreate || !val) return true;
+                  if (reservationType !== 'guest' || !val) return true;
                   // basic email check
                   return /\S+@\S+\.\S+/.test(val) || 'Enter a valid email';
                 },
@@ -714,9 +726,11 @@ export default function CreateOrUpdateReservation({
             />
             <Input
               {...inputProps}
-              label="Date of Birth"
+              label={`Date of Birth${isGuestCreate ? ' *' : ''}`}
               type="date"
-              {...register('patient_date_of_birth')}
+              {...register('patient_date_of_birth', {
+                required: isGuestCreate ? 'Date of Birth is required' : false,
+              })}
               error={errors.patient_date_of_birth?.message}
             />
           </div>

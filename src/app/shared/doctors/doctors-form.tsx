@@ -146,7 +146,7 @@ export default function CreateOrUpdateDoctors({ initValues }: { initValues?: any
       createDoctor(requestBody);
     }
 
-    setLoading(true);
+    setLoading(false);
   };
 
   // Build category options once per lang/categories data
@@ -457,7 +457,7 @@ export default function CreateOrUpdateDoctors({ initValues }: { initValues?: any
               Cancel
             </Button>
             <Button
-              isLoading={isLoading || isLoadingCategories || loading || isCreating || isUpdating}
+              isLoading={isCreating || isUpdating}
               type="submit"
             >
               {initValues ? 'Update Doctor' : 'Create Doctor'}

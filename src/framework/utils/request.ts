@@ -39,11 +39,50 @@ request.interceptors.request.use(
   }
 );
 
+// Global response error handler
+request.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    try {
+      const resp = error?.response;
+      const data = resp?.data;
+
+      let message: string =
+        (typeof data?.message === 'string' && data.message) ||
+        (typeof error?.message === 'string' && error.message) ||
+        `Request failed${resp?.status ? ` (${resp.status})` : ''}`;
+
+      // Laravel-like validation errors: { errors: { field: [msg, ...] } }
+      if (data?.errors && typeof data.errors === 'object') {
+        const firstFieldErrors = Object.values<any>(data.errors).find(
+          (arr: any) => Array.isArray(arr) && arr.length > 0
+        ) as string[] | undefined;
+        if (firstFieldErrors && firstFieldErrors[0]) {
+          message = firstFieldErrors[0];
+        }
+      }
+
+      // Normalize the error message so feature hooks can toast it once
+      if (message) {
+        error.message = message;
+        if (error?.response?.data && typeof error.response.data === 'object') {
+          (error.response.data as any).message = message;
+        }
+      }
+    } catch {
+      // Best-effort normalization
+      error.message = error?.message || 'An unexpected error occurred';
+    }
+
+    return Promise.reject(error);
+  }
+);
+
 export class HttpClient {
   static async get<T>(url: string, params?: unknown) {
     const response = await request.get<T>(url, { params });
-            
-      return response.data;
+
+    return response.data;
   }
 
   static async post<T>(url: string, data?: unknown, options?: any) {
