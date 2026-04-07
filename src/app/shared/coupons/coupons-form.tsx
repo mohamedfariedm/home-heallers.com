@@ -18,7 +18,6 @@ import { Checkbox } from 'rizzui'; // Language toggle
 import Spinner from '@/components/ui/spinner';
 import { useCreateCoupons, useUpdateCoupons } from '@/framework/coupons';
 import { useDoctors } from '@/framework/doctors';
-import toast from 'react-hot-toast';
 
 export default function CreateOrUpdateCoupon({
   initValues,
@@ -92,18 +91,19 @@ export default function CreateOrUpdateCoupon({
   }, [initValues, doctorsData]);
 
   const onSubmit: SubmitHandler<CouponFormInput> = (data) => {
-    // Validate that at least one doctor is selected
-    if (selectedDoctors.length === 0) {
-      toast.error('Please select at least one doctor');
-      return;
-    }
+    const allDoctorIds =
+      doctorsData?.data?.map((d: any) => d.id) ?? [];
+    const selectedDoctorIds =
+      selectedDoctors.length > 0
+        ? selectedDoctors.map((doctor) => doctor.value)
+        : allDoctorIds;
 
     const requestBody = {
       name: data.name,
       code: data.code,
       discount: data.discount,
       type: data.type,
-      doctors: selectedDoctors.map((doctor) => doctor.value), // Extract doctor IDs
+      doctors: selectedDoctorIds,
     };
 
     if (initValues) {
@@ -224,7 +224,11 @@ export default function CreateOrUpdateCoupon({
                       : [];
                     setSelectedDoctors(value as any[]);
                     // Sync with form state for validation
-                    setValue('doctors', value, { shouldValidate: true });
+                    setValue(
+                      'doctors',
+                      value as { value: number; label: string }[],
+                      { shouldValidate: true }
+                    );
                   }}
                   menuPortalTarget={document.body}
                   styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}

@@ -8,10 +8,14 @@ export const couponFormSchema = z.object({
   code: z.string().min(1, 'Coupon code is required'), // Coupon code required
   discount: z.string().min(1, 'Discount is required').regex(/^\d+(\.\d{1,2})?$/, 'Invalid discount format'), // Validate discount format (e.g., 100.00)
   type: z.enum(['نسبه مئويه', 'عريضه'], { message: 'Invalid coupon type' }), // Added validation for type
-  doctors: z.array(z.object({
-    value: z.number(),
-    label: z.string(),
-  })).min(1, 'At least one doctor is required'), // At least one doctor is required
+  doctors: z
+    .array(
+      z.object({
+        value: z.number(),
+        label: z.string(),
+      })
+    )
+    .catch([]),
 });
 
 export type CouponFormInput = z.infer<typeof couponFormSchema>;
