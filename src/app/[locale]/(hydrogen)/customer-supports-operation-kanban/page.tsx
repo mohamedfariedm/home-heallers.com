@@ -159,13 +159,12 @@ export default function CustomerSupportsOperationKanbanPage() {
   const normalizeStatus = (status: string | null | undefined): string => {
     if (!status) return '';
     const normalized = status.toLowerCase().trim();
-    // Map common variations - handle both "New" and "new"
     const statusMap: Record<string, string> = {
-      'new': 'new',
-      'negotiation': 'negotiation',
-      'success': 'success',
-      'possible': 'possible',
-      'failed': 'failed',
+      new: 'new',
+      negotiation: 'negotiation',
+      success: 'success',
+      possible: 'possible',
+      failed: 'failed',
     };
     return statusMap[normalized] || normalized;
   };

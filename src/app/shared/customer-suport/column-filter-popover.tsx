@@ -1,6 +1,10 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
 import { PiCaretDownBold } from 'react-icons/pi';
+import {
+  getKanbanColumnSelectPlaceholder,
+  getKanbanStaticSelectOptions,
+} from './kanban-column-select-options';
 
 const operators = [
   { label: 'Equals', value: 'equal' },
@@ -15,24 +19,78 @@ const operators = [
   { label: 'Does not end with', value: 'not_end_with' },
 ];
 
-const specialtyKeys = new Set(['specialtie_1', 'specialtie_2', 'specialtie_3']);
-const specialtyOptions = [
-  { label: 'Physiotherapy', value: 'Physiotherapy' },
-  { label: 'Nursing visits', value: 'Nursing visits' },
-  { label: 'Doctors visits', value: 'Doctors visits' },
-  { label: 'Caregivers', value: 'Caregivers' },
-  { label: 'Extendcare', value: 'Extendcare' },
-];
+const selectClassName =
+  'border border-gray-300 rounded-lg px-2 py-2 text-sm w-1/2 focus:ring-2 focus:ring-blue-500';
 
+function FilterValueControl({
+  columnKey,
+  value,
+  onChange,
+  offerOptions,
+  offerOptionsLoading,
+}: {
+  columnKey: string;
+  value: string;
+  onChange: (value: string) => void;
+  offerOptions?: { label: string; value: string }[];
+  offerOptionsLoading?: boolean;
+}) {
+  const placeholder = getKanbanColumnSelectPlaceholder(columnKey);
+  const staticOptions = getKanbanStaticSelectOptions(columnKey);
+
+  if (columnKey === 'offer') {
+    return (
+      <select
+        className={selectClassName}
+        value={value}
+        disabled={offerOptionsLoading}
+        onChange={(e) => onChange(e.target.value)}
+      >
+        <option value="">{offerOptionsLoading ? 'Loading...' : placeholder}</option>
+        {(offerOptions || []).map((opt) => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
+    );
+  }
+
+  if (staticOptions) {
+    return (
+      <select className={selectClassName} value={value} onChange={(e) => onChange(e.target.value)}>
+        <option value="">{placeholder}</option>
+        {staticOptions.map((opt) => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
+    );
+  }
+
+  return (
+    <input
+      className={selectClassName}
+      placeholder="Value"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+    />
+  );
+}
 
 export default function ColumnFilterPopover({
   columnKey,
   onFilterChange,
   initialValue,
+  offerOptions,
+  offerOptionsLoading,
 }: {
   columnKey: string;
   onFilterChange: (key: string, value: any) => void;
   initialValue?: { c1?: { op: string; value: string }; c2?: { op: string; value: string }; logic?: 'and' | 'or' };
+  offerOptions?: { label: string; value: string }[];
+  offerOptionsLoading?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [cond1, setCond1] = useState({ 
@@ -188,27 +246,13 @@ export default function ColumnFilterPopover({
                   </option>
                 ))}
               </select>
-              {specialtyKeys.has(columnKey) ? (
-                <select
-                  className="border border-gray-300 rounded-lg px-2 py-2 text-sm w-1/2 focus:ring-2 focus:ring-blue-500"
-                  value={cond1.value}
-                  onChange={(e) => setCond1((s) => ({ ...s, value: e.target.value }))}
-                >
-                  <option value="">Select specialty</option>
-                  {specialtyOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <input
-                  className="border border-gray-300 rounded-lg px-2 py-2 text-sm w-1/2 focus:ring-2 focus:ring-blue-500"
-                  placeholder="Value"
-                  value={cond1.value}
-                  onChange={(e) => setCond1((s) => ({ ...s, value: e.target.value }))}
-                />
-              )}
+              <FilterValueControl
+                columnKey={columnKey}
+                value={cond1.value}
+                onChange={(v) => setCond1((s) => ({ ...s, value: v }))}
+                offerOptions={offerOptions}
+                offerOptionsLoading={offerOptionsLoading}
+              />
             </div>
 
             {/* Logic */}
@@ -250,27 +294,13 @@ export default function ColumnFilterPopover({
                   </option>
                 ))}
               </select>
-              {specialtyKeys.has(columnKey) ? (
-                <select
-                  className="border border-gray-300 rounded-lg px-2 py-2 text-sm w-1/2 focus:ring-2 focus:ring-blue-500"
-                  value={cond2.value}
-                  onChange={(e) => setCond2((s) => ({ ...s, value: e.target.value }))}
-                >
-                  <option value="">Select specialty</option>
-                  {specialtyOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <input
-                  className="border border-gray-300 rounded-lg px-2 py-2 text-sm w-1/2 focus:ring-2 focus:ring-blue-500"
-                  placeholder="Value"
-                  value={cond2.value}
-                  onChange={(e) => setCond2((s) => ({ ...s, value: e.target.value }))}
-                />
-              )}
+              <FilterValueControl
+                columnKey={columnKey}
+                value={cond2.value}
+                onChange={(v) => setCond2((s) => ({ ...s, value: v }))}
+                offerOptions={offerOptions}
+                offerOptionsLoading={offerOptionsLoading}
+              />
             </div>
 
             {/* Save Button */}

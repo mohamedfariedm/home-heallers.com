@@ -9,6 +9,7 @@ import { Title } from '@/components/ui/text';
 import ColumnFilterPopover from './column-filter-popover';
 import cn from '@/utils/class-names';
 import dynamic from 'next/dynamic';
+import { usePackages } from '@/framework/packages';
 
 const Drawer = dynamic(
   () => import('@/components/ui/drawer').then((module) => ({ default: module.Drawer })),
@@ -51,6 +52,18 @@ interface KanbanFiltersProps {
 }
 
 export default function KanbanFilters({ onFilterChange, onClearFilters, currentFilters = {}, currentDates }: KanbanFiltersProps) {
+  const { data: packagesData, isLoading: offerOptionsLoading } = usePackages('limit=1000');
+  const offerOptions = useMemo(() => {
+    const list = packagesData?.data ?? [];
+    return (list as any[]).map((pkg) => {
+      const ar = String(pkg?.name?.ar || '').trim();
+      const en = String(pkg?.name?.en || '').trim();
+      const value = ar || en || String(pkg?.id ?? '');
+      const label = ar || en || `Package #${pkg?.id}`;
+      return { value, label };
+    }).filter((o) => o.value);
+  }, [packagesData]);
+
   const [filters, setFilters] = useState<Record<string, any>>({});
   const [dateFrom, setDateFrom] = useState(currentDates?.date_from || '');
   const [dateTo, setDateTo] = useState(currentDates?.date_to || '');
@@ -258,6 +271,8 @@ export default function KanbanFilters({ onFilterChange, onClearFilters, currentF
                         columnKey={columnKey}
                         onFilterChange={handleFilterChange}
                         initialValue={resetKey > 0 ? undefined : (filters[columnKey] || currentFilters[columnKey] || undefined)}
+                        offerOptions={offerOptions}
+                        offerOptionsLoading={offerOptionsLoading}
                       />
                     </div>
                   </div>
