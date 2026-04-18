@@ -299,6 +299,12 @@ export const menuItemsHaydrogen = [
     permissions: 'doctors',
   },
   {
+    name: 'Groups',
+    href: routes.groups.index,
+    icon: <PiStackDuotone />,
+    permissions: 'groups',
+  },
+  {
     name: 'categories',
     href: routes.mainCategories.index,
     icon: <PiListChecks />,
@@ -370,6 +376,12 @@ export const menuItemsHaydrogen = [
     name: 'Landing Pages',
     href: routes.landingPages.index,
     icon: <PiBrowserDuotone />,
+    permissions: 'settings',
+  },
+  {
+    name: 'Landing Page Generator',
+    href: routes.landingBuilder.index,
+    icon: <PiMagicWandDuotone />,
     permissions: 'settings',
   },
   {

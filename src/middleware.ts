@@ -19,21 +19,28 @@ function getLocale(request: NextRequest): string | undefined {
 }
 
 export async function middleware(request: NextRequest) {
-  //   const url = request.nextUrl.clone()
-  // console.log('middleware before: ', request.url, request.cookies.get('auth_token'), url.origin )
-  if((request.cookies.get('auth_token')?.value == '' || !request?.cookies.get('auth_token'))&& !request.url.includes('auth')){
+  const { pathname } = request.nextUrl
+  const hasToken =
+    request.cookies.get('auth_token')?.value &&
+    request.cookies.get('auth_token')?.value !== ''
+  const isAuthRoute = pathname.includes('/auth')
+  const isLandingBuilder = pathname.includes('landing-builder')
+
+  if (!hasToken && !isAuthRoute && !isLandingBuilder) {
     const url = request.nextUrl.clone()
-    // console.log('middleware: ', request.url, request.cookies.get('auth_token') )
     return NextResponse.redirect(`${url.origin}/auth/login`)
   }
-  const { pathname } = request.nextUrl
+
   const pathnameHasLocale = i18nConfig.locales.some(
-    (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
+    (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`,
   )
-  if (pathnameHasLocale) return
+  if (pathnameHasLocale) {
+    return NextResponse.next()
+  }
+
   const locale = getLocale(request)
   request.nextUrl.pathname = `/${locale}${pathname}`
-return NextResponse.redirect(request.nextUrl)
+  return NextResponse.redirect(request.nextUrl)
   
   // return i18nRouter(request, i18nConfig);
 }

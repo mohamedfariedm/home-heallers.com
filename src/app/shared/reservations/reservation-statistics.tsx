@@ -16,6 +16,7 @@ import {
   PiCreditCardBold,
   PiUsersBold,
   PiChartBarBold,
+  PiGridFourBold,
   PiTagBold,
   PiArrowRightBold,
   PiCaretDownBold,
@@ -66,6 +67,14 @@ interface ReservationStatistics {
   by_service?: Array<{
     service_id?: number;
     service_name_ar?: string;
+    reservations_count?: number;
+    sessions_count?: number;
+    link?: string;
+  }>;
+  by_category?: Array<{
+    category_id?: number;
+    category_name_ar?: string;
+    category_name_en?: string;
     reservations_count?: number;
     sessions_count?: number;
     link?: string;
@@ -291,6 +300,7 @@ export default function ReservationStatistics({
   className 
 }: ReservationStatisticsProps) {
   const [servicesExpanded, setServicesExpanded] = useState(false);
+  const [categoriesExpanded, setCategoriesExpanded] = useState(false);
   // State to track checked source campaigns
   const [checkedSourceCampaigns, setCheckedSourceCampaigns] = useState<Set<string>>(new Set());
   const stats = statistics || {};
@@ -584,6 +594,36 @@ export default function ReservationStatistics({
     ? allServiceCards 
     : allServiceCards.slice(0, SERVICES_PER_ROW);
 
+  // Categories (same pattern as Services)
+  const sortedCategories = [...(stats.by_category || [])].sort((a, b) => {
+    const aSessions = a.sessions_count || 0;
+    const bSessions = b.sessions_count || 0;
+    return bSessions - aSessions;
+  });
+
+  const allCategoryCards = sortedCategories.map((category) => ({
+    title:
+      category.category_name_ar ||
+      category.category_name_en ||
+      `Category ${category.category_id}`,
+    value: `${category.reservations_count || 0}`,
+    subtitle: `${category.sessions_count || 0} sessions`,
+    icon: PiGridFourBold,
+    bgColor: 'bg-teal-50',
+    textColor: 'text-teal-600',
+    darkBgColor: 'dark:bg-teal-900/20',
+    darkTextColor: 'dark:text-teal-400',
+    blurColor: 'bg-teal-50/50',
+    darkBlurColor: 'dark:bg-teal-900/10',
+    link: category.link,
+    compact: true,
+  }));
+
+  const CATEGORIES_PER_ROW = 6;
+  const categoryCards = categoriesExpanded
+    ? allCategoryCards
+    : allCategoryCards.slice(0, CATEGORIES_PER_ROW);
+
   // Row 4: Clients
   const totalUniqueCustomersValue: number = Number(stats.customers?.total_unique_customers?.count ?? 0);
     
@@ -622,6 +662,7 @@ export default function ReservationStatistics({
     { title: 'Revenue', cards: reviewCards },
     { title: 'Source Campaigns', cards: sourceCampaignCards },
     { title: 'Services', cards: serviceCards },
+    { title: 'Categories', cards: categoryCards },
     { title: 'Clients', cards: clientCards },
   ];
 
@@ -645,7 +686,10 @@ export default function ReservationStatistics({
       {rows.map((row, rowIndex) => {
         const isServicesRow = row.title === 'Services';
         const hasMoreServices = isServicesRow && allServiceCards.length > SERVICES_PER_ROW;
-        
+        const isCategoriesRow = row.title === 'Categories';
+        const hasMoreCategories =
+          isCategoriesRow && allCategoryCards.length > CATEGORIES_PER_ROW;
+
         return (
           <div key={rowIndex} className="space-y-3">
             <div className="flex items-center justify-between">
@@ -665,6 +709,24 @@ export default function ReservationStatistics({
                   ) : (
                     <>
                       <span>Show All ({allServiceCards.length})</span>
+                      <PiCaretDownBold className="h-4 w-4" />
+                    </>
+                  )}
+                </button>
+              )}
+              {isCategoriesRow && hasMoreCategories && (
+                <button
+                  onClick={() => setCategoriesExpanded(!categoriesExpanded)}
+                  className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                >
+                  {categoriesExpanded ? (
+                    <>
+                      <span>Show Less</span>
+                      <PiCaretUpBold className="h-4 w-4" />
+                    </>
+                  ) : (
+                    <>
+                      <span>Show All ({allCategoryCards.length})</span>
                       <PiCaretDownBold className="h-4 w-4" />
                     </>
                   )}

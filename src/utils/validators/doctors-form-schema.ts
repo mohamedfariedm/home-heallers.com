@@ -13,6 +13,9 @@ export const doctorFormSchema = z.object({
   // ⬇️ change from single to array
   category_ids: z.array(z.string()).min(1, 'At least one category is required'),
 
+  /** Admin API: optional; sent as integer[] — [] clears memberships on update */
+  group_ids: z.array(z.string()).optional().default([]),
+
   national_id: z.string().min(1, 'National ID is required'),
   country_code: z.string().optional(),
   mobile_number: z.string().min(1, 'Mobile number is required'),

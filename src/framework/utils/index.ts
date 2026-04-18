@@ -131,6 +131,16 @@ class Client {
         update: (input: any) => HttpClient.patch(`${routes.doctors.index}/${input.doctor_id}`, input),
         delete: (input: { doctor_id: number[] }) => HttpClient.delete(`${routes.doctors.index}/${input.doctor_id}`)
     }
+    groups = {
+        all: (param: string) => HttpClient.get(`${routes.groups.index}?${param}`),
+        findOne: (id: number) => HttpClient.get(`${routes.groups.index}/${id}`),
+        create: (input: any) => HttpClient.post(`${routes.groups.index}`, input),
+        update: (input: { group_id: number; name?: string; doctor_ids?: number[] }) => {
+            const { group_id, ...payload } = input;
+            return HttpClient.patch(`${routes.groups.index}/${group_id}`, payload);
+        },
+        delete: (input: { group_id: number }) => HttpClient.delete(`${routes.groups.index}/${input.group_id}`),
+    }
     reservations = {
         all: (param: string) => HttpClient.get(`${routes.reservations.index}?${param}`),
         create: (input: any) => HttpClient.post(`${routes.reservations.index}`, input),

@@ -46,6 +46,9 @@ export const routes = {
   landingPages: {
     index: '/landing-pages',
   },
+  landingBuilder: {
+    index: '/landing-builder',
+  },
   logistics: {
     dashboard: '/logistics',
     shipmentList: '/logistics/shipments',
@@ -298,6 +301,9 @@ export const routes = {
   },
   doctors: {
     index: '/doctors',
+  },
+  groups: {
+    index: '/groups',
   },
   reservations: {
     index: '/reservations',

@@ -17,6 +17,7 @@ import FormGroup from '../form-group';
 import Spinner from '@/components/ui/spinner';
 import Upload from '@/components/ui/upload';
 import { useCategories } from '@/framework/categories';
+import { useGroups } from '@/framework/groups';
 import SelectBox, { type SelectOption } from '@/components/ui/select';
 
 const bloodGroups = [
@@ -55,6 +56,7 @@ export default function CreateOrUpdateDoctors({ initValues }: { initValues?: any
 
   const { data: nationalities, isLoading } = useNationality("");
   const { data: categories, isLoading: isLoadingCategories } = useCategories("");
+  const { data: groupsData, isLoading: isLoadingGroups } = useGroups('');
 
   const [loading, setLoading] = useState(false);
   const { closeModal } = useModal();
@@ -111,6 +113,7 @@ export default function CreateOrUpdateDoctors({ initValues }: { initValues?: any
 
       // map string ids -> numbers
       category_ids: (data.category_ids || []).map((id) => Number(id)),
+      group_ids: (data.group_ids || []).map((id) => Number(id)),
 
       national_id: data.national_id,
       country_code: data.country_code || undefined,
@@ -160,6 +163,21 @@ export default function CreateOrUpdateDoctors({ initValues }: { initValues?: any
     [categories?.data, lang]
   );
 
+  const groupList = useMemo(() => {
+    const raw = groupsData?.data;
+    return Array.isArray(raw) ? raw : [];
+  }, [groupsData?.data]);
+
+  const groupOptions: SelectOption[] = useMemo(
+    () =>
+      groupList.map((g: { id: number; name: string }) => ({
+        value: String(g.id),
+        name: g.name,
+        label: g.name,
+      })),
+    [groupList]
+  );
+
   return (
     <Form<DoctorFormInput>
       onSubmit={onSubmit}
@@ -178,6 +196,12 @@ export default function CreateOrUpdateDoctors({ initValues }: { initValues?: any
             ? initValues.category_ids.map((id: number | string) => String(id))
             : Array.isArray(initValues?.categories)
               ? initValues.categories.map((c: any) => String(c.id))
+              : [],
+
+          group_ids: Array.isArray(initValues?.group_ids)
+            ? initValues.group_ids.map((id: number | string) => String(id))
+            : Array.isArray(initValues?.groups)
+              ? initValues.groups.map((g: { id: number }) => String(g.id))
               : [],
 
           nationality_id: initValues?.nationality?.id?.toString() || '',
@@ -290,6 +314,48 @@ export default function CreateOrUpdateDoctors({ initValues }: { initValues?: any
                           return val.map((o: any) => o?.label ?? o?.name ?? o?.value).join(', ');
                         }
                         // single fallback (not used when multiple=true, but safe)
+                        if (val?.label) return val.label;
+                        if (val?.name) return val.name;
+                        return val ?? '';
+                      }}
+                    />
+                  );
+                }}
+              />
+            </div>
+
+            <div>
+              <Controller
+                name="group_ids"
+                control={control}
+                render={({ field: { value, onChange } }) => {
+                  const selectedOptions =
+                    Array.isArray(value)
+                      ? groupOptions.filter((opt) => value.includes(String(opt.value)))
+                      : [];
+
+                  return (
+                    <SelectBox
+                      multiple
+                      options={groupOptions}
+                      value={selectedOptions}
+                      onChange={(opts: SelectOption[] | SelectOption) => {
+                        const ids = Array.isArray(opts)
+                          ? opts.map((o) => String(o.value))
+                          : opts
+                            ? [String((opts as SelectOption).value)]
+                            : [];
+                        onChange(ids);
+                      }}
+                      disabled={isLoadingGroups}
+                      label="Groups (optional)"
+                      placeholder="Select groups"
+                      error={(errors.group_ids as any)?.message}
+                      displayValue={(val: any) => {
+                        if (Array.isArray(val)) {
+                          if (val.length === 0) return '';
+                          return val.map((o: any) => o?.label ?? o?.name ?? o?.value).join(', ');
+                        }
                         if (val?.label) return val.label;
                         if (val?.name) return val.name;
                         return val ?? '';

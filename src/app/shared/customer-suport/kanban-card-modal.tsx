@@ -2,15 +2,18 @@
 
 import { useState, useEffect } from 'react';
 import { Tabs, TabList, Tab, TabPanels, TabPanel } from '@/components/ui/tabs';
-import { ActionIcon } from 'rizzui';
 import { PiXBold, PiUser, PiCalendarCheck } from 'react-icons/pi';
 import { useModal } from '@/app/shared/modal-views/use-modal';
 import CreateOrUpdateCustomerSupport from './suport-form';
 import CreateOrUpdateReservation from '@/app/shared/reservations/reservations-form';
-import { useReservations } from '@/framework/reservations';
 import Spinner from '@/components/ui/spinner';
 import client from '@/framework/utils';
 import cn from '@/utils/class-names';
+import { ActionIcon } from '@/components/ui/action-icon';
+import { Tooltip } from '@/components/ui/tooltip';
+import ChatSolidIcon from '@/components/icons/chat-solid';
+import InviteDoctorsButton from '@/app/shared/reservations/invite-doctors-button';
+import toast from 'react-hot-toast';
 
 interface KanbanCardModalProps {
   item: any;
@@ -119,6 +122,20 @@ export default function KanbanCardModal({ item }: KanbanCardModalProps) {
     setIsCreatingNew(false);
   };
 
+  const sendPaymentWhatsapp = async (reservationId: number) => {
+    try {
+      await client.reservations.createPaymentWhatsapp({
+        reservation_id: reservationId,
+      });
+      toast.success('Payment WhatsApp message sent successfully');
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message ||
+          'Failed to send payment WhatsApp message'
+      );
+    }
+  };
+
   return (
     <div className="m-auto w-full h-[90vh] max-h-[90vh] flex flex-col rounded-lg bg-white shadow-xl dark:bg-gray-50">
       {/* Header */}
@@ -199,13 +216,40 @@ export default function KanbanCardModal({ item }: KanbanCardModalProps) {
                 </div>
               ) : selectedReservation || isCreatingNew ? (
                 <div className="space-y-4">
-                  <button
-                    onClick={handleBackToList}
-                    className="flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors mb-4"
-                  >
-                    <PiXBold className="h-4 w-4 rotate-45" />
-                    <span>Back to Reservations List</span>
-                  </button>
+                  <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                    <button
+                      type="button"
+                      onClick={handleBackToList}
+                      className="flex items-center gap-2 text-blue-600 transition-colors hover:text-blue-800"
+                    >
+                      <PiXBold className="h-4 w-4 rotate-45" />
+                      <span>Back to Reservations List</span>
+                    </button>
+                    {selectedReservation?.id && !isCreatingNew && (
+                      <div className="flex items-center gap-2">
+                        <Tooltip
+                          size="sm"
+                          content={() => 'Send Payment WhatsApp'}
+                          placement="top"
+                          color="invert"
+                        >
+                          <ActionIcon
+                            size="sm"
+                            variant="outline"
+                            className="cursor-pointer hover:text-gray-700"
+                            onClick={() =>
+                              sendPaymentWhatsapp(Number(selectedReservation.id))
+                            }
+                          >
+                            <ChatSolidIcon className="h-4 w-4" />
+                          </ActionIcon>
+                        </Tooltip>
+                        <InviteDoctorsButton
+                          reservationId={Number(selectedReservation.id)}
+                        />
+                      </div>
+                    )}
+                  </div>
                   <div className="rounded-lg border border-gray-200 bg-gray-50/50 p-6 dark:border-gray-700 dark:bg-gray-100/50">
                     <CreateOrUpdateReservation 
                       initValues={selectedReservation || null} 
@@ -249,11 +293,14 @@ export default function KanbanCardModal({ item }: KanbanCardModalProps) {
                       {reservations.map((reservation) => (
                         <div
                           key={reservation.id}
-                          onClick={() => handleSelectReservation(reservation)}
-                          className="bg-white rounded-lg border border-gray-200 p-4 hover:border-blue-500 hover:shadow-md transition-all cursor-pointer"
+                          className="rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-blue-500 hover:shadow-md"
                         >
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
+                          <div className="flex items-start justify-between gap-3">
+                            <button
+                              type="button"
+                              className="min-w-0 flex-1 cursor-pointer text-left"
+                              onClick={() => handleSelectReservation(reservation)}
+                            >
                               <div className="flex items-center gap-3 mb-2">
                                 <span className="font-semibold text-gray-900">
                                   Reservation #{reservation.id}
@@ -309,11 +356,33 @@ export default function KanbanCardModal({ item }: KanbanCardModalProps) {
                               <div className="mt-2 text-xs text-gray-500">
                                 Created: {reservation.created_at || 'N/A'}
                               </div>
-                            </div>
-                            <div className="ml-4">
-                              <button className="text-blue-600 hover:text-blue-800 transition-colors">
-                                <PiCalendarCheck className="h-5 w-5" />
-                              </button>
+                            </button>
+                            <div
+                              className="flex shrink-0 items-center gap-2"
+                              onClick={(e) => e.stopPropagation()}
+                              onKeyDown={(e) => e.stopPropagation()}
+                              role="presentation"
+                            >
+                              <Tooltip
+                                size="sm"
+                                content={() => 'Send Payment WhatsApp'}
+                                placement="top"
+                                color="invert"
+                              >
+                                <ActionIcon
+                                  size="sm"
+                                  variant="outline"
+                                  className="cursor-pointer hover:text-gray-700"
+                                  onClick={() =>
+                                    sendPaymentWhatsapp(Number(reservation.id))
+                                  }
+                                >
+                                  <ChatSolidIcon className="h-4 w-4" />
+                                </ActionIcon>
+                              </Tooltip>
+                              <InviteDoctorsButton
+                                reservationId={Number(reservation.id)}
+                              />
                             </div>
                           </div>
                         </div>
