@@ -1,13 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getToken } from 'next-auth/jwt';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://development.home-healers.com';
-const API_TOKEN = process.env.API_TOKEN || '458|9szzfrTT64SGn7sCy7t2NUur8xi5Ty2AP3u98JZM8a85beb6';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 // Force dynamic rendering since we use request.url
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
+    const authToken = await getToken({
+      req: request,
+      secret: process.env.NEXTAUTH_SECRET,
+    });
+
+    const accessToken = authToken?.token as string | undefined;
+    if (!accessToken) {
+      return NextResponse.json(
+        { error: 'Unauthorized', message: 'Missing authentication token' },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     
     // Build backend API URL with query parameters
@@ -25,7 +38,7 @@ export async function GET(request: NextRequest) {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
-        'Authorization': `Bearer ${API_TOKEN}`,
+        'Authorization': `Bearer ${accessToken}`,
         'language': 'en',
         'Content-Type': 'application/json',
       },

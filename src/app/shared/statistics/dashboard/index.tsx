@@ -116,6 +116,39 @@ export default function StatisticsDashboard() {
   const [aggregateData, setAggregateData] = useState<AggregateData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [permissions, setPermissions] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    try {
+      const permissionsRaw = window.localStorage.getItem('permissions');
+      if (!permissionsRaw) return;
+
+      const parsed = JSON.parse(permissionsRaw);
+      if (Array.isArray(parsed)) {
+        setPermissions(parsed.filter((permission): permission is string => typeof permission === 'string'));
+      }
+    } catch (storageError) {
+      console.error('Failed to parse permissions from localStorage:', storageError);
+    }
+  }, []);
+
+  const hasPermission = (permission: string) => permissions.includes(permission);
+  const showIndividualMetricsSection =
+    hasPermission('dashboard.reservations_trend') ||
+    hasPermission('dashboard.sessions_trend') ||
+    hasPermission('dashboard.clients_trend') ||
+    hasPermission('dashboard.revenue_trend');
+  const showLocationSection =
+    hasPermission('dashboard.reservations_by_state') ||
+    hasPermission('dashboard.top_states_performance');
+  const showFinancialSection =
+    hasPermission('dashboard.invoice_status') ||
+    hasPermission('dashboard.campaign_statistics');
+  const showCampaignSection =
+    hasPermission('dashboard.reservations_by_campaign') ||
+    hasPermission('dashboard.support_tickets_by_campaign');
 
   useEffect(() => {
     fetchStatistics();
@@ -226,56 +259,56 @@ export default function StatisticsDashboard() {
       ) : (
         <div className="space-y-6">
           {/* Stat Cards */}
-          <StatCards data={aggregateData} />
+          <StatCards data={aggregateData} hasPermission={hasPermission} />
 
           {/* Overview Section: Status & Support Breakdowns */}
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
             <div className="lg:col-span-6">
-              {aggregateData?.reservations && aggregateData.reservations.by_status.length > 0 && (
+              {hasPermission('dashboard.reservations_by_status') && aggregateData?.reservations && aggregateData.reservations.by_status.length > 0 && (
                 <StatusBreakdown byStatus={aggregateData.reservations.by_status} className="h-full" />
               )}
             </div>
             <div className="lg:col-span-6">
-              {aggregateData?.customer_support && aggregateData.customer_support.by_type.length > 0 && (
+              {hasPermission('dashboard.support_tickets_by_type') && aggregateData?.customer_support && aggregateData.customer_support.by_type.length > 0 && (
                 <SupportTypeBreakdown bySupportType={aggregateData.customer_support.by_type} className="h-full" />
               )}
             </div>
           </div>
 
           {/* Time Series Chart (Reservations, Sessions, Clients, Revenue) - Combined */}
-          {aggregateData?.chart_data && (
+          {hasPermission('dashboard.daily_trends') && aggregateData?.chart_data && (
             <div>
               <TimeSeriesChart data={aggregateData.chart_data} className="h-full" />
             </div>
           )}
 
           {/* Individual Metric Charts */}
-          {aggregateData?.chart_data && (
+          {aggregateData?.chart_data && showIndividualMetricsSection && (
             <div className="space-y-4">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Individual Metrics</h2>
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                {aggregateData.chart_data.reservations && aggregateData.chart_data.reservations.length > 0 && (
+                {hasPermission('dashboard.reservations_trend') && aggregateData.chart_data.reservations && aggregateData.chart_data.reservations.length > 0 && (
                   <SingleMetricChart 
                     data={aggregateData.chart_data} 
                     metric="reservations" 
                     className="h-full" 
                   />
                 )}
-                {aggregateData.chart_data.sessions && aggregateData.chart_data.sessions.length > 0 && (
+                {hasPermission('dashboard.sessions_trend') && aggregateData.chart_data.sessions && aggregateData.chart_data.sessions.length > 0 && (
                   <SingleMetricChart 
                     data={aggregateData.chart_data} 
                     metric="sessions" 
                     className="h-full" 
                   />
                 )}
-                {aggregateData.chart_data.clients && aggregateData.chart_data.clients.length > 0 && (
+                {hasPermission('dashboard.clients_trend') && aggregateData.chart_data.clients && aggregateData.chart_data.clients.length > 0 && (
                   <SingleMetricChart 
                     data={aggregateData.chart_data} 
                     metric="clients" 
                     className="h-full" 
                   />
                 )}
-                {aggregateData.chart_data.revenue && aggregateData.chart_data.revenue.length > 0 && (
+                {hasPermission('dashboard.revenue_trend') && aggregateData.chart_data.revenue && aggregateData.chart_data.revenue.length > 0 && (
                   <SingleMetricChart 
                     data={aggregateData.chart_data} 
                     metric="revenue" 
@@ -287,69 +320,75 @@ export default function StatisticsDashboard() {
           )}
 
           {/* Reservations Timeline */}
-          {aggregateData?.reservation_dates && aggregateData.reservation_dates.by_date_and_status.length > 0 && (
+          {hasPermission('dashboard.reservations_trend') && aggregateData?.reservation_dates && aggregateData.reservation_dates.by_date_and_status.length > 0 && (
             <div>
               <ReservationDates data={aggregateData.reservation_dates} className="h-full" />
             </div>
           )}
 
           {/* Location Statistics: City & State */}
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Location Statistics</h2>
-            <div className="grid grid-cols-1 gap-6">
-              {aggregateData?.reservations_by_city && aggregateData.reservations_by_city.by_city && aggregateData.reservations_by_city.by_city.length > 0 && (
-                <div className="lg:col-span-6">
-                  <ReservationsByCity data={aggregateData.reservations_by_city} className="h-full" />
-                </div>
-              )}
-              {aggregateData?.reservations_by_state && aggregateData.reservations_by_state.by_state && aggregateData.reservations_by_state.by_state.length > 0 && (
-                <div className="lg:col-span-6">
-                  <ReservationsByState data={aggregateData.reservations_by_state} className="h-full" />
-                </div>
-              )}
+          {showLocationSection && (
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Location Statistics</h2>
+              <div className="grid grid-cols-1 gap-6">
+                {hasPermission('dashboard.reservations_by_state') && aggregateData?.reservations_by_city && aggregateData.reservations_by_city.by_city && aggregateData.reservations_by_city.by_city.length > 0 && (
+                  <div className="lg:col-span-6">
+                    <ReservationsByCity data={aggregateData.reservations_by_city} className="h-full" />
+                  </div>
+                )}
+                {hasPermission('dashboard.top_states_performance') && aggregateData?.reservations_by_state && aggregateData.reservations_by_state.by_state && aggregateData.reservations_by_state.by_state.length > 0 && (
+                  <div className="lg:col-span-6">
+                    <ReservationsByState data={aggregateData.reservations_by_state} className="h-full" />
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Sessions Statistics */}
-          {aggregateData?.sessions_statistics && aggregateData.sessions_statistics.by_session_count && aggregateData.sessions_statistics.by_session_count.length > 0 && (
+          {hasPermission('dashboard.sessions_statistics') && aggregateData?.sessions_statistics && aggregateData.sessions_statistics.by_session_count && aggregateData.sessions_statistics.by_session_count.length > 0 && (
             <div>
               <SessionsStatistics data={aggregateData.sessions_statistics} className="h-full" />
             </div>
           )}
 
           {/* Financial & Performance Metrics */}
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Financial & Performance Metrics</h2>
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-              <div className="lg:col-span-6">
-                {aggregateData?.invoices && aggregateData.invoices.by_status.length > 0 && (
-                  <InvoiceBreakdown byStatus={aggregateData.invoices.by_status} className="h-full" />
-                )}
-              </div>
-              <div className="lg:col-span-6">
-                {aggregateData?.cost_ratio && aggregateData.cost_ratio.length > 0 && (
-                  <CostRatioChart data={aggregateData.cost_ratio} className="h-full" />
-                )}
+          {showFinancialSection && (
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Financial & Performance Metrics</h2>
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+                <div className="lg:col-span-6">
+                  {hasPermission('dashboard.invoice_status') && aggregateData?.invoices && aggregateData.invoices.by_status.length > 0 && (
+                    <InvoiceBreakdown byStatus={aggregateData.invoices.by_status} className="h-full" />
+                  )}
+                </div>
+                <div className="lg:col-span-6">
+                  {hasPermission('dashboard.campaign_statistics') && aggregateData?.cost_ratio && aggregateData.cost_ratio.length > 0 && (
+                    <CostRatioChart data={aggregateData.cost_ratio} className="h-full" />
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Campaign Analysis */}
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Campaign Analysis</h2>
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-              <div className="lg:col-span-6">
-                {aggregateData?.reservations && aggregateData.reservations.by_status.length > 0 && (
-                  <ReservationCampaignsChart data={aggregateData.reservations.by_status} className="h-full" />
-                )}
-              </div>
-              <div className="lg:col-span-6">
-                {aggregateData?.customer_support && aggregateData.customer_support.by_type.length > 0 && (
-                  <SupportCampaignsChart data={aggregateData.customer_support.by_type} className="h-full" />
-                )}
+          {showCampaignSection && (
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Campaign Analysis</h2>
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+                <div className="lg:col-span-6">
+                  {hasPermission('dashboard.reservations_by_campaign') && aggregateData?.reservations && aggregateData.reservations.by_status.length > 0 && (
+                    <ReservationCampaignsChart data={aggregateData.reservations.by_status} className="h-full" />
+                  )}
+                </div>
+                <div className="lg:col-span-6">
+                  {hasPermission('dashboard.support_tickets_by_campaign') && aggregateData?.customer_support && aggregateData.customer_support.by_type.length > 0 && (
+                    <SupportCampaignsChart data={aggregateData.customer_support.by_type} className="h-full" />
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Empty State */}
           {aggregateData && 

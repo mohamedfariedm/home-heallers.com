@@ -40,13 +40,15 @@ interface AggregateData {
 interface StatCardsProps {
   data: AggregateData | null;
   className?: string;
+  hasPermission?: (permission: string) => boolean;
 }
 
-export default function StatCards({ data, className }: StatCardsProps) {
+export default function StatCards({ data, className, hasPermission }: StatCardsProps) {
   if (!data) return null;
 
   const cards = [
     {
+      permission: 'dashboard.total_reservations',
       title: 'Total Reservations',
       value: data.reservations?.total || 0,
       icon: PiCalendarCheckBold,
@@ -58,6 +60,7 @@ export default function StatCards({ data, className }: StatCardsProps) {
       darkBlurColor: 'dark:bg-blue-900/10',
     },
     {
+      permission: 'dashboard.support_tickets',
       title: 'Support Tickets',
       value: data.customer_support?.total || 0,
       icon: PiFileTextBold,
@@ -69,6 +72,7 @@ export default function StatCards({ data, className }: StatCardsProps) {
       darkBlurColor: 'dark:bg-indigo-900/10',
     },
     {
+      permission: 'dashboard.total_invoices',
       title: 'Total Invoices',
       value: data.invoices?.total || 0,
       icon: PiReceiptBold,
@@ -80,6 +84,7 @@ export default function StatCards({ data, className }: StatCardsProps) {
       darkBlurColor: 'dark:bg-purple-900/10',
     },
     {
+      permission: 'dashboard.total_revenue',
       title: 'Total Revenue',
       value: data.total_revenue?.toLocaleString() || 0,
       icon: PiReceiptBold,
@@ -91,6 +96,7 @@ export default function StatCards({ data, className }: StatCardsProps) {
       darkBlurColor: 'dark:bg-emerald-900/10',
     },
     {
+      permission: 'dashboard.active_doctors',
       title: 'Active Doctors',
       value: data.doctors?.total || 0,
       icon: PiUserCircleBold,
@@ -102,6 +108,7 @@ export default function StatCards({ data, className }: StatCardsProps) {
       darkBlurColor: 'dark:bg-orange-900/10',
     },
     {
+      permission: 'dashboard.total_clients',
       title: 'Total Clients',
       value: data.clients?.total || 0,
       icon: PiUsersBold,
@@ -113,6 +120,7 @@ export default function StatCards({ data, className }: StatCardsProps) {
       darkBlurColor: 'dark:bg-pink-900/10',
     },
     {
+      permission: 'dashboard.conversion_rate',
       title: 'Conversion Rate',
       value: (() => {
         const total = data.reservations?.total || 0;
@@ -131,6 +139,7 @@ export default function StatCards({ data, className }: StatCardsProps) {
       darkBlurColor: 'dark:bg-violet-900/10',
     },
     {
+      permission: 'dashboard.total_sessions',
       title: 'Total Sessions',
       value: data.sessions_statistics?.total_sessions || 0,
       icon: PiClockBold,
@@ -145,7 +154,9 @@ export default function StatCards({ data, className }: StatCardsProps) {
 
   return (
     <div className={cn('flex w-full flex-wrap pb-4 gap-5', className)}>
-      {cards.map((card, index) => (
+      {cards
+        .filter((card) => (hasPermission ? hasPermission(card.permission) : true))
+        .map((card, index) => (
         <div
           key={index}
           className="flex-1 basis-[calc(20%-16px)] min-w-[180px] relative overflow-hidden rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800"

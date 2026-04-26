@@ -301,9 +301,28 @@ export default function ReservationStatistics({
 }: ReservationStatisticsProps) {
   const [servicesExpanded, setServicesExpanded] = useState(false);
   const [categoriesExpanded, setCategoriesExpanded] = useState(false);
+  const [permissions, setPermissions] = useState<string[]>([]);
   // State to track checked source campaigns
   const [checkedSourceCampaigns, setCheckedSourceCampaigns] = useState<Set<string>>(new Set());
   const stats = statistics || {};
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    try {
+      const permissionsRaw = window.localStorage.getItem('permissions');
+      if (!permissionsRaw) return;
+
+      const parsed = JSON.parse(permissionsRaw);
+      if (Array.isArray(parsed)) {
+        setPermissions(parsed.filter((permission): permission is string => typeof permission === 'string'));
+      }
+    } catch (storageError) {
+      console.error('Failed to parse permissions from localStorage:', storageError);
+    }
+  }, []);
+
+  const hasPermission = (permission: string) => permissions.includes(permission);
 
   // Calculate total sessions from all statuses
   const totalSessions = 
@@ -659,7 +678,7 @@ export default function ReservationStatistics({
 
   const rows = [
     { title: 'Reservation by Status', cards: reservationByStatusCards },
-    { title: 'Revenue', cards: reviewCards },
+    ...(hasPermission('dashboard.total_revenue') ? [{ title: 'Revenue', cards: reviewCards }] : []),
     { title: 'Source Campaigns', cards: sourceCampaignCards },
     { title: 'Services', cards: serviceCards },
     { title: 'Categories', cards: categoryCards },
