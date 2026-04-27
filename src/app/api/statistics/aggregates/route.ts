@@ -8,12 +8,20 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
+    const authorizationHeader = request.headers.get('authorization');
+    const bearerToken = authorizationHeader?.startsWith('Bearer ')
+      ? authorizationHeader.slice(7).trim()
+      : undefined;
+    const cookieToken = request.cookies.get('auth_token')?.value;
+
+    // Fallback for flows that rely on next-auth session token.
     const authToken = await getToken({
       req: request,
       secret: process.env.NEXTAUTH_SECRET,
     });
+    const nextAuthAccessToken = authToken?.token as string | undefined;
 
-    const accessToken = authToken?.token as string | undefined;
+    const accessToken = bearerToken || cookieToken || nextAuthAccessToken;
     if (!accessToken) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Missing authentication token' },
