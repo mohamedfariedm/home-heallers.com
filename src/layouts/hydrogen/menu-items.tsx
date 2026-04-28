@@ -364,19 +364,19 @@ export const menuItemsHaydrogen = [
     name: 'Media Folders',
     href: routes.mediaFolders.index,
     icon: <PiFolderLockDuotone />,
-    permissions: 'settings',
+    permissions: 'media_folders',
   },
   {
     name: 'Media Gallery',
     href: routes.mediaGallery.index,
     icon: <PiFileImageDuotone />,
-    permissions: 'settings',
+    permissions: 'media_gallery',
   },
   {
     name: 'Landing Pages',
     href: routes.landingPages.index,
     icon: <PiBrowserDuotone />,
-    permissions: 'settings',
+    permissions: 'landing_pages',
   },
   // {
   //   name: 'Landing Page Generator',
@@ -388,7 +388,7 @@ export const menuItemsHaydrogen = [
     name: 'Looker Studio Report',
     href: '/looker-studio-report',
     icon: <PiChartBarDuotone />,
-    permissions: 'settings',
+    permissions: 'looker_studio_report',
   },
   // { name: 'product Mangement ' },
   // {
