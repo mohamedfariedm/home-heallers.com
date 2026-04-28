@@ -15,6 +15,40 @@ import client from '@/framework/utils';
 import toast from 'react-hot-toast';
 import InviteDoctorsButton from './invite-doctors-button';
 
+const truncateText = (value: string, max = 80) => {
+  if (value.length <= max) return value;
+  return `${value.slice(0, max).trimEnd()}...`;
+};
+
+const formatSessionLabel = (session: any) => {
+  let start = '—';
+  let end = '—';
+  let day = '—';
+
+  try {
+    if (session?.start_time) {
+      start = new Date(session.start_time).toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    }
+    if (session?.end_time) {
+      end = new Date(session.end_time).toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    }
+    if (session?.date) {
+      day = new Date(session.date).toLocaleDateString();
+    }
+  } catch (error) {
+    console.warn('Invalid date format:', session);
+  }
+
+  const timePeriod = session?.time_period ?? '—';
+  return `${day} (${timePeriod}) ${start} - ${end}`;
+};
+
 interface Columns {
   data: any[];
   sortConfig?: any;
@@ -530,7 +564,35 @@ export const getColumns = ({
     ),
     dataIndex: 'notes',
     key: 'notes',
-    render: (notes: string | null | undefined) => notes ?? '—',
+    width: 260,
+    render: (notes: string | null | undefined) => {
+      if (!notes || !notes.trim()) return '—';
+
+      const normalizedNotes = notes.trim();
+      const preview = truncateText(normalizedNotes, 90);
+      const isTruncated = preview !== normalizedNotes;
+
+      if (!isTruncated) {
+        return (
+          <span className="block max-w-[240px] truncate text-sm text-gray-700">
+            {preview}
+          </span>
+        );
+      }
+
+      return (
+        <Tooltip
+          size="sm"
+          placement="top"
+          color="invert"
+          content={() => normalizedNotes}
+        >
+          <span className="block max-w-[240px] truncate text-sm text-gray-700">
+            {preview}
+          </span>
+        </Tooltip>
+      );
+    },
   },
 
   // ✅ Dates (Sessions)
@@ -549,53 +611,44 @@ export const getColumns = ({
     dataIndex: 'dates',
     key: 'dates',
     align: 'center',
+    width: 280,
     render: (_: any, row: any) => {
       const sessions = row?.dates;
       if (!sessions || !Array.isArray(sessions) || sessions.length === 0)
         return '—';
 
+      const visibleSessions = sessions.slice(0, 2);
+      const remainingSessionsCount = sessions.length - visibleSessions.length;
+      const allSessionsText = sessions.map(formatSessionLabel).join('\n');
+
       return (
-        <div className="flex w-[200px] flex-col gap-1">
-          {sessions.map((date: any, index: number) => {
-            let start = '—';
-            let end = '—';
-            let day = '—';
-
-            try {
-              if (date?.start_time) {
-                start = new Date(date.start_time).toLocaleTimeString([], {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                });
-              }
-              if (date?.end_time) {
-                end = new Date(date.end_time).toLocaleTimeString([], {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                });
-              }
-              if (date?.date) {
-                day = new Date(date.date).toLocaleDateString();
-              }
-            } catch (error) {
-              // Handle invalid date strings
-              console.warn('Invalid date format:', date);
-            }
-
-            const timePeriod = date?.time_period ?? '—';
-
-            return (
-              <div
-                key={`${index}-${date?.id ?? index}`}
-                className="text-sm text-gray-700"
+        <Tooltip
+          size="sm"
+          placement="top"
+          color="invert"
+          content={() => (
+            <div className="max-w-[420px] whitespace-pre-line text-left">
+              {allSessionsText}
+            </div>
+          )}
+        >
+          <div className="flex max-w-[260px] flex-col items-center gap-1">
+            {visibleSessions.map((session: any, index: number) => (
+              <span
+                key={`${index}-${session?.id ?? index}`}
+                className="w-full truncate rounded-md bg-gray-50 px-2 py-1 text-xs text-gray-700"
               >
-                <span className="font-medium">{day}</span> ({timePeriod})
-                <br />
-                {start} → {end}
-              </div>
-            );
-          })}
-        </div>
+                {formatSessionLabel(session)}
+              </span>
+            ))}
+            {remainingSessionsCount > 0 && (
+              <span className="text-xs font-medium text-gray-500">
+                +{remainingSessionsCount} more session
+                {remainingSessionsCount > 1 ? 's' : ''}
+              </span>
+            )}
+          </div>
+        </Tooltip>
       );
     },
   },
