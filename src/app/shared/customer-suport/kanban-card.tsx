@@ -50,11 +50,17 @@ interface KanbanItem {
 interface KanbanCardProps {
   item: KanbanItem;
   isDragging?: boolean;
+  canEdit?: boolean;
+  canViewDetails?: boolean;
+  canViewActivityLogs?: boolean;
 }
 
 export default function KanbanCard({
   item,
   isDragging = false,
+  canEdit = true,
+  canViewDetails = true,
+  canViewActivityLogs = true,
 }: KanbanCardProps) {
   const { openModal } = useModal();
   const [hasMoved, setHasMoved] = useState(false);
@@ -131,10 +137,17 @@ export default function KanbanCard({
       // Only open modal if it was a quick click with minimal movement
       if (deltaX < 5 && deltaY < 5 && timeDelta < 300) {
         e.stopPropagation();
-        openModal({
-          view: <KanbanCardModal item={item} />,
-          customSize: '90vw',
-        });
+        if (canEdit) {
+          openModal({
+            view: <KanbanCardModal item={item} />,
+            customSize: '90vw',
+          });
+        } else if (canViewDetails) {
+          openModal({
+            view: <KanbanCardViewModal item={item} />,
+            customSize: '1000px',
+          });
+        }
       }
     }
   };
@@ -143,9 +156,10 @@ export default function KanbanCard({
   const handleDoubleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!isSortableDragging) {
+      if (!canEdit && !canViewDetails) return;
       openModal({
-        view: <KanbanCardModal item={item} />,
-        customSize: '90vw',
+        view: canEdit ? <KanbanCardModal item={item} /> : <KanbanCardViewModal item={item} />,
+        customSize: canEdit ? '90vw' : '1000px',
       });
     }
   };
@@ -227,32 +241,40 @@ export default function KanbanCard({
       )}
     >
       {/* Edit, View, and Activity Logs Buttons - positioned absolutely to not interfere with drag */}
-      <div className="absolute right-2 top-2 z-10 flex flex-col gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
-        <button
-          onClick={handleEditClick}
-          onPointerDown={(e) => e.stopPropagation()}
-          className="rounded-full bg-gray-100 p-1.5 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
-          title="Edit"
-        >
-          <PiPencilSimpleBold className="h-4 w-4 text-gray-600 dark:text-gray-300" />
-        </button>
-        <button
-          onClick={handleViewClick}
-          onPointerDown={(e) => e.stopPropagation()}
-          className="rounded-full bg-gray-100 p-1.5 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
-          title="View"
-        >
-          <PiEye className="h-4 w-4 text-gray-600 dark:text-gray-300" />
-        </button>
-        <button
-          onClick={handleActivityLogsClick}
-          onPointerDown={(e) => e.stopPropagation()}
-          className="rounded-full bg-gray-100 p-1.5 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
-          title="Activity Logs"
-        >
-          <PiClock className="h-4 w-4 text-gray-600 dark:text-gray-300" />
-        </button>
-      </div>
+      {(canEdit || canViewDetails || canViewActivityLogs) && (
+        <div className="absolute right-2 top-2 z-10 flex flex-col gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
+          {canEdit && (
+            <button
+              onClick={handleEditClick}
+              onPointerDown={(e) => e.stopPropagation()}
+              className="rounded-full bg-gray-100 p-1.5 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
+              title="Edit"
+            >
+              <PiPencilSimpleBold className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+            </button>
+          )}
+          {canViewDetails && (
+            <button
+              onClick={handleViewClick}
+              onPointerDown={(e) => e.stopPropagation()}
+              className="rounded-full bg-gray-100 p-1.5 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
+              title="View"
+            >
+              <PiEye className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+            </button>
+          )}
+          {canViewActivityLogs && (
+            <button
+              onClick={handleActivityLogsClick}
+              onPointerDown={(e) => e.stopPropagation()}
+              className="rounded-full bg-gray-100 p-1.5 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
+              title="Activity Logs"
+            >
+              <PiClock className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Card Header */}
       <div className="mb-3 pr-12">

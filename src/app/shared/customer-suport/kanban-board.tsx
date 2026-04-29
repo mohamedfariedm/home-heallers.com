@@ -54,12 +54,22 @@ interface CustomerSupportKanbanProps {
     newStatus: string,
     oldStatus: string
   ) => void;
+  canMoveStatus?: boolean;
+  canSendWhatsapp?: boolean;
+  canEdit?: boolean;
+  canViewDetails?: boolean;
+  canViewActivityLogs?: boolean;
 }
 
 export default function CustomerSupportKanban({
   columns,
   columnData,
   onStatusChange,
+  canMoveStatus = true,
+  canSendWhatsapp = true,
+  canEdit = true,
+  canViewDetails = true,
+  canViewActivityLogs = true,
 }: CustomerSupportKanbanProps) {
   const [activeId, setActiveId] = useState<number | null>(null);
   const [oldStatusMap, setOldStatusMap] = useState<Record<number, string>>({});
@@ -236,6 +246,7 @@ export default function CustomerSupportKanban({
 
     // Check if status actually changed
     if (oldStatus.toLowerCase() !== newStatus) {
+      if (!canMoveStatus) return;
       // Optimistically move item
       setMovedStatusMap((prev) => ({ ...prev, [activeId]: newStatus }));
       // Call the callback to update on server
@@ -288,6 +299,10 @@ export default function CustomerSupportKanban({
                 !!overContainerId &&
                 (overContainerId === column.id || overContainerId === column.status)
               }
+              canSendWhatsapp={canSendWhatsapp}
+              canEdit={canEdit}
+              canViewDetails={canViewDetails}
+              canViewActivityLogs={canViewActivityLogs}
               onStatusChange={(itemId, newStatus) =>
                 onStatusChange(itemId, newStatus, column.status)
               }

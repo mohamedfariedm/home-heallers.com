@@ -227,13 +227,13 @@ export const menuItemsHaydrogen = [
     name: 'Outbound',
     href: '/customer-supports-marketing-kanban',
     icon: <PiPhoneCall />,
-    permissions: 'customer_supports_marketing',
+    permissions: 'customer_supports_outbound',
   },
   {
     name: 'Inbound',
     href: '/customer-supports-operation-kanban',
     icon: <PiHeadsetDuotone />,
-    permissions: 'customer_supports_operation',
+    permissions: 'customer_supports_inbound',
   },
 
   { name: 'master Mangement ' },

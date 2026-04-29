@@ -58,6 +58,10 @@ interface Columns {
   onHeaderCellClick: (value: string) => void;
   onChecked?: (id: string) => void;
   onFilterChange?: (key: string, value: any) => void;
+  canEdit?: boolean;
+  canDelete?: boolean;
+  canInviteDoctors?: boolean;
+  canSendPaymentWhatsapp?: boolean;
 }
 
 export const getColumns = ({
@@ -69,6 +73,10 @@ export const getColumns = ({
   handleSelectAll,
   onChecked,
   onFilterChange,
+  canEdit = false,
+  canDelete = false,
+  canInviteDoctors = false,
+  canSendPaymentWhatsapp = false,
 }: Columns) => [
   {
     title: (
@@ -92,7 +100,8 @@ export const getColumns = ({
       />
     ),
   },
-  {
+  ...(canEdit || canDelete || canInviteDoctors || canSendPaymentWhatsapp
+    ? [{
     title: <></>,
     dataIndex: 'actions',
     key: 'actions',
@@ -114,56 +123,63 @@ export const getColumns = ({
 
       return (
         <div className="flex items-center gap-3">
-          <Tooltip
-            size="sm"
-            content={() => 'Edit'}
-            placement="top"
-            color="invert"
-          >
-            <CreateButton
-              icon={
-                <ActionIcon tag="span" size="sm" variant="outline">
-                  <PencilIcon className="h-4 w-4" />
-                </ActionIcon>
-              }
-              view={<CreateOrUpdateReservation initValues={row} />}
-              label=""
-              className="m-0 bg-transparent p-0 text-gray-700"
-            />
-          </Tooltip>
-          <Tooltip
-            size="sm"
-            content={() => 'Send Payment WhatsApp'}
-            placement="top"
-            color="invert"
-          >
-            <ActionIcon
+          {canEdit && (
+            <Tooltip
               size="sm"
-              variant="outline"
-              className="cursor-pointer hover:text-gray-700"
-              onClick={handleWhatsAppPayment}
+              content={() => 'Edit'}
+              placement="top"
+              color="invert"
             >
-              <ChatSolidIcon className="h-4 w-4" />
-            </ActionIcon>
-          </Tooltip>
-          <InviteDoctorsButton reservationId={row.id} />
-          <DeletePopover
-            title={`Delete Reservation`}
-            description={`Are you sure you want to delete reservation #${row.id}?`}
-            onDelete={() => onDeleteItem([row.id])}
-          >
-            <ActionIcon
+              <CreateButton
+                icon={
+                  <ActionIcon tag="span" size="sm" variant="outline">
+                    <PencilIcon className="h-4 w-4" />
+                  </ActionIcon>
+                }
+                view={<CreateOrUpdateReservation initValues={row} />}
+                label=""
+                className="m-0 bg-transparent p-0 text-gray-700"
+              />
+            </Tooltip>
+          )}
+          {canSendPaymentWhatsapp && (
+            <Tooltip
               size="sm"
-              variant="outline"
-              className="hover:text-gray-700"
+              content={() => 'Send Payment WhatsApp'}
+              placement="top"
+              color="invert"
             >
-              <TrashIcon className="h-4 w-4" />
-            </ActionIcon>
-          </DeletePopover>
+              <ActionIcon
+                size="sm"
+                variant="outline"
+                className="cursor-pointer hover:text-gray-700"
+                onClick={handleWhatsAppPayment}
+              >
+                <ChatSolidIcon className="h-4 w-4" />
+              </ActionIcon>
+            </Tooltip>
+          )}
+          {canInviteDoctors && <InviteDoctorsButton reservationId={row.id} />}
+          {canDelete && (
+            <DeletePopover
+              title={`Delete Reservation`}
+              description={`Are you sure you want to delete reservation #${row.id}?`}
+              onDelete={() => onDeleteItem([row.id])}
+            >
+              <ActionIcon
+                size="sm"
+                variant="outline"
+                className="hover:text-gray-700"
+              >
+                <TrashIcon className="h-4 w-4" />
+              </ActionIcon>
+            </DeletePopover>
+          )}
         </div>
       );
     },
-  },
+  }]
+    : []),
   // ✅ Reservation ID
   {
     title: (

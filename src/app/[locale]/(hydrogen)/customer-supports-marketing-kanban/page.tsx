@@ -17,16 +17,18 @@ import { PiPlusBold } from 'react-icons/pi';
 import KanbanFilters from '@/app/shared/customer-suport/kanban-filters';
 import KanbanStatisticsCards from '@/app/shared/customer-suport/kanban-statistics-cards';
 import ExportButton from '@/app/shared/export-button';
+import { usePermissions } from '@/context/PermissionsContext';
+import { resolveCustomerSupportKanbanPermissions } from '@/app/shared/customer-suport/permissions';
 
 const pageHeader = {
-  title: 'Marketing Customer Supports',
+  title: 'Outbound Customer Supports',
   breadcrumb: [
     {
       href: '/',
       name: 'Home',
     },
     {
-      name: 'Marketing Customer Supports',
+      name: 'Outbound Customer Supports',
     },
   ],
 };
@@ -48,6 +50,11 @@ export default function CustomerSupportsMarketingKanbanPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { openModal } = useModal();
+  const { permissions } = usePermissions();
+  const kanbanPermissions = resolveCustomerSupportKanbanPermissions(
+    permissions,
+    'marketing'
+  );
 
   // Single page state for all columns
   const currentPage = parseSafePage(searchParams.get('page'));
@@ -237,6 +244,7 @@ export default function CustomerSupportsMarketingKanbanPage() {
     newStatus: string,
     oldStatus: string
   ) => {
+    if (!kanbanPermissions.moveStatus) return;
     // Find the item in all data
     const allItems = allData.data?.data || [];
     const item = allItems.find((item: any) => item.id === itemId);
@@ -261,6 +269,7 @@ export default function CustomerSupportsMarketingKanbanPage() {
   };
 
   const handleCreateClick = () => {
+    if (!kanbanPermissions.create) return;
     openModal({
       view: <CreateOrUpdateCustomerSupport type="marketing" />,
       customSize: '900px',
@@ -333,27 +342,39 @@ export default function CustomerSupportsMarketingKanbanPage() {
 
   return (
     <>
+      {!kanbanPermissions.view ? (
+        <div className="rounded-md border border-gray-200 bg-white p-6 text-sm text-gray-600 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300">
+          You do not have permission to view this page.
+        </div>
+      ) : (
+        <>
       <PageHeader title={pageHeader.title} breadcrumb={pageHeader.breadcrumb}>
         <div className="mt-4 flex w-full flex-col gap-3 @lg:mt-0 @lg:flex-row @lg:items-center @lg:justify-end">
-          <KanbanFilters
-            onFilterChange={handleFilterChange}
-            onClearFilters={handleClearFilters}
-            currentFilters={filters}
-            currentDates={{
-              date_from: searchParams.get('date_from') || undefined,
-              date_to: searchParams.get('date_to') || undefined,
-            }}
-          />
-          <ExportButton 
-            data={{ columns: [], rows: [] }} 
-            fileName="customer-supports-marketing" 
-            header="excel"
-            type="marketing"
-          />
-          <Button onClick={handleCreateClick} className="w-full @lg:w-auto">
-            <PiPlusBold className="me-1.5 h-[17px] w-[17px]" />
-            Create New Customer Support
-          </Button>
+          {kanbanPermissions.filter && (
+            <KanbanFilters
+              onFilterChange={handleFilterChange}
+              onClearFilters={handleClearFilters}
+              currentFilters={filters}
+              currentDates={{
+                date_from: searchParams.get('date_from') || undefined,
+                date_to: searchParams.get('date_to') || undefined,
+              }}
+            />
+          )}
+          {kanbanPermissions.export && (
+            <ExportButton
+              data={{ columns: [], rows: [] }}
+              fileName="customer-supports-marketing"
+              header="excel"
+              type="marketing"
+            />
+          )}
+          {kanbanPermissions.create && (
+            <Button onClick={handleCreateClick} className="w-full @lg:w-auto">
+              <PiPlusBold className="me-1.5 h-[17px] w-[17px]" />
+              Create New Customer Support
+            </Button>
+          )}
         </div>
       </PageHeader>
 
@@ -371,6 +392,11 @@ export default function CustomerSupportsMarketingKanbanPage() {
               columns={STATUS_COLUMNS}
               columnData={columnData}
               onStatusChange={handleStatusChange}
+              canMoveStatus={kanbanPermissions.moveStatus}
+              canSendWhatsapp={kanbanPermissions.sendWhatsapp}
+              canEdit={kanbanPermissions.update}
+              canViewDetails={kanbanPermissions.viewDetails}
+              canViewActivityLogs={kanbanPermissions.viewActivityLogs}
             />
           </div>
 
@@ -389,6 +415,8 @@ export default function CustomerSupportsMarketingKanbanPage() {
             </div>
           )}
         </div>
+      )}
+      </>
       )}
     </>
   );

@@ -45,12 +45,20 @@ export default function ReservationsTable({
   data = [], 
   getSelectedColumns, 
   getSelectedRowKeys, 
-  totalItems 
+  totalItems,
+  canEdit = false,
+  canDelete = false,
+  canInviteDoctors = false,
+  canSendPaymentWhatsapp = false,
 }: { 
   data: any[], 
   getSelectedColumns: React.Dispatch<React.SetStateAction<any[]>>, 
   getSelectedRowKeys: React.Dispatch<React.SetStateAction<any[]>>, 
-  totalItems: number 
+  totalItems: number,
+  canEdit?: boolean,
+  canDelete?: boolean,
+  canInviteDoctors?: boolean,
+  canSendPaymentWhatsapp?: boolean,
 }) {
   const { mutate: deleteReservation } = useDeleteReservation();
   const searchParams = useSearchParams();
@@ -162,8 +170,12 @@ export default function ReservationsTable({
         onChecked: handleRowSelect,
         handleSelectAll,
         onFilterChange: handleFilterChange,
+        canEdit,
+        canDelete,
+        canInviteDoctors,
+        canSendPaymentWhatsapp,
       }),
-    [selectedRowKeys, onHeaderCellClick, sortConfig.key, sortConfig.direction, onDeleteItem, handleRowSelect, handleSelectAll]
+    [selectedRowKeys, onHeaderCellClick, sortConfig.key, sortConfig.direction, onDeleteItem, handleRowSelect, handleSelectAll, canEdit, canDelete, canInviteDoctors, canSendPaymentWhatsapp]
   );
 
   const { visibleColumns, checkedColumns, setCheckedColumns } = useColumn(columns);
@@ -267,13 +279,15 @@ export default function ReservationsTable({
           />
         }
         tableFooter={
-          <TableFooter
-            checkedItems={selectedRowKeys}
-            handleDelete={(ids: string[]) => {
-              setSelectedRowKeys([]);
-              handleDelete(ids);
-            }}
-          />
+          canDelete ? (
+            <TableFooter
+              checkedItems={selectedRowKeys}
+              handleDelete={(ids: string[]) => {
+                setSelectedRowKeys([]);
+                handleDelete(ids);
+              }}
+            />
+          ) : undefined
         }
         className="overflow-hidden rounded-md border border-gray-200 text-sm shadow-sm [&_.rc-table-placeholder_.rc-table-expanded-row-fixed>div]:h-60 [&_.rc-table-placeholder_.rc-table-expanded-row-fixed>div]:justify-center [&_.rc-table-row:last-child_td.rc-table-cell]:border-b-0 [&_thead.rc-table-thead]:border-t-0"
       />

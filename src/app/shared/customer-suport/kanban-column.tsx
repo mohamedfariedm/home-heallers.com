@@ -41,6 +41,10 @@ interface KanbanColumnProps {
   items: KanbanItem[];
   onStatusChange: (itemId: number, newStatus: string) => void;
   isHighlighted?: boolean;
+  canSendWhatsapp?: boolean;
+  canEdit?: boolean;
+  canViewDetails?: boolean;
+  canViewActivityLogs?: boolean;
 }
 
 const columnColors: Record<
@@ -82,6 +86,10 @@ export default function KanbanColumn({
   items,
   onStatusChange,
   isHighlighted = false,
+  canSendWhatsapp = true,
+  canEdit = true,
+  canViewDetails = true,
+  canViewActivityLogs = true,
 }: KanbanColumnProps) {
   const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
   const { setNodeRef, isOver } = useDroppable({
@@ -121,21 +129,23 @@ export default function KanbanColumn({
             {items.length}
           </span>
         </div>
-        <Tooltip
-          size="sm"
-          content={() => 'Send WhatsApp Message'}
-          placement="top"
-          color="invert"
-        >
-          <ActionIcon
+        {canSendWhatsapp && (
+          <Tooltip
             size="sm"
-            variant="text"
-            className="cursor-pointer hover:bg-white/20"
-            onClick={() => setIsWhatsAppModalOpen(true)}
+            content={() => 'Send WhatsApp Message'}
+            placement="top"
+            color="invert"
           >
-            <ChatSolidIcon className="h-4 w-4" />
-          </ActionIcon>
-        </Tooltip>
+            <ActionIcon
+              size="sm"
+              variant="text"
+              className="cursor-pointer hover:bg-white/20"
+              onClick={() => setIsWhatsAppModalOpen(true)}
+            >
+              <ChatSolidIcon className="h-4 w-4" />
+            </ActionIcon>
+          </Tooltip>
+        )}
       </div>
 
       {/* Column Content - This entire area is droppable */}
@@ -148,7 +158,13 @@ export default function KanbanColumn({
           {items.length > 0 ? (
             <div className="flex flex-col gap-3">
               {items.map((item) => (
-                <KanbanCard key={item.id} item={item} />
+                <KanbanCard
+                  key={item.id}
+                  item={item}
+                  canEdit={canEdit}
+                  canViewDetails={canViewDetails}
+                  canViewActivityLogs={canViewActivityLogs}
+                />
               ))}
             </div>
           ) : (
@@ -159,11 +175,13 @@ export default function KanbanColumn({
         </SortableContext>
       </div>
 
-      <WhatsAppSendModal
-        isOpen={isWhatsAppModalOpen}
-        onClose={() => setIsWhatsAppModalOpen(false)}
-        status={column.status}
-      />
+      {canSendWhatsapp && (
+        <WhatsAppSendModal
+          isOpen={isWhatsAppModalOpen}
+          onClose={() => setIsWhatsAppModalOpen(false)}
+          status={column.status}
+        />
+      )}
     </div>
   );
 }
