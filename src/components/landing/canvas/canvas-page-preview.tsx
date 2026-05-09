@@ -3,6 +3,7 @@
 import {
   createElement,
   Fragment,
+  useRef,
   useState,
   type CSSProperties,
   type KeyboardEvent,
@@ -15,12 +16,14 @@ import type {
   CanvasCardBlock,
   CanvasCopyBlock,
   CanvasFooterBlock,
+  CanvasFormBlock,
   CanvasGridBlock,
   CanvasNavbarBlock,
   CanvasPage,
   CanvasSection,
   CanvasTextBlock,
 } from '@/types/landing-canvas';
+import type { LandingLocaleConfig } from '@/types/landing-project';
 import { CanvasThemeRoot } from './canvas-theme';
 import { CanvasFloatingDockView } from './canvas-floating-dock';
 import cn from '@/utils/class-names';
@@ -54,6 +57,17 @@ const flexAlign = {
 const btnBase =
   'inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-sm font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2';
 
+function sectionAnchorId(name: string, explicit?: string): string {
+  const seed = (explicit ?? name)
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+  return seed || 'section';
+}
+
 function buttonClass(variant: 'primary' | 'secondary' | 'outline'): string {
   if (variant === 'primary') {
     return cn(
@@ -79,6 +93,9 @@ type BlockOpts = {
   selectedId: string | null;
   onSelect: (id: string) => void;
   editable: boolean;
+  locales?: LandingLocaleConfig[];
+  currentLocale?: string;
+  onLocaleChange?: (locale: string) => void;
 };
 
 /** Footer grid: `@lg`/`@xl` follow preview width (container), not browser viewport. */
@@ -210,6 +227,7 @@ function NavbarBlockView({
 }) {
   const { selectedId, onSelect, editable } = opts;
   const [mobileOpen, setMobileOpen] = useState(false);
+  const headerRef = useRef<HTMLElement | null>(null);
   const navClick = (e: MouseEvent) => {
     if (!editable) return;
     e.stopPropagation();
@@ -219,8 +237,56 @@ function NavbarBlockView({
     if (editable) e.preventDefault();
   };
 
+  const navigateToHref = (e: MouseEvent, href: string, closeMobile = false) => {
+    if (editable) {
+      e.preventDefault();
+      return;
+    }
+    if (!href.startsWith('#')) return;
+    e.preventDefault();
+    const id = href.slice(1);
+    if (!id) return;
+    const target = document.getElementById(id);
+    if (!target) return;
+    const stickyOffset = block.sticky ? (headerRef.current?.getBoundingClientRect().height ?? 0) : 0;
+    const top = target.getBoundingClientRect().top + window.scrollY - stickyOffset - 8;
+    window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+    if (closeMobile) setMobileOpen(false);
+  };
+
   const linkClass =
     'block rounded-lg px-2 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 hover:text-[color:var(--lp-primary)] dark:text-zinc-200 dark:hover:bg-zinc-800 @lg:inline @lg:px-0 @lg:py-0 @lg:hover:bg-transparent';
+  const localeOptions = opts.locales?.length ? opts.locales : null;
+  const showLocaleSwitcher = Boolean(localeOptions && block.showLanguageSwitcher);
+  const localeSelect = showLocaleSwitcher ? (
+    <select
+      value={opts.currentLocale}
+      onClick={(e) => e.stopPropagation()}
+      onChange={(e) => {
+        opts.onLocaleChange?.(e.target.value);
+      }}
+      className="outline-none"
+      style={{
+        background: block.languageSwitcherBg,
+        color: block.languageSwitcherTextColor,
+        border: `1px solid ${block.languageSwitcherBorderColor}`,
+        borderRadius: block.languageSwitcherBorderRadius,
+        paddingTop: block.languageSwitcherPaddingY,
+        paddingBottom: block.languageSwitcherPaddingY,
+        paddingLeft: block.languageSwitcherPaddingX,
+        paddingRight: block.languageSwitcherPaddingX,
+        fontSize: block.languageSwitcherFontSize,
+        minWidth: block.languageSwitcherMinWidth,
+      }}
+      aria-label="Language"
+    >
+      {localeOptions.map((loc) => (
+        <option key={loc.code} value={loc.code}>
+          {`${loc.flag ?? '🏳️'} ${loc.label || loc.code.toUpperCase()}`}
+        </option>
+      ))}
+    </select>
+  ) : null;
 
   const renderCta = (compact: boolean) =>
     block.showCta ? (
@@ -242,6 +308,7 @@ function NavbarBlockView({
         ) : (
           <a
             href={block.ctaHref}
+            onClick={(e) => navigateToHref(e, block.ctaHref)}
             className={cn(
               buttonClass('primary'),
               compact ? 'flex w-full justify-center px-4 py-2.5 text-sm' : 'px-4 py-2 text-sm',
@@ -255,6 +322,7 @@ function NavbarBlockView({
 
   return (
     <header
+      ref={headerRef}
       className={cn(
         'w-full',
         block.sticky && 'sticky top-0 z-10 backdrop-blur-md',
@@ -293,6 +361,9 @@ function NavbarBlockView({
             </span>
           )}
         </div>
+        <div className="hidden shrink-0 items-center gap-3 @lg:flex" onClick={(e) => e.stopPropagation()}>
+          {showLocaleSwitcher && block.languageSwitcherPosition === 'before-links' ? localeSelect : null}
+        </div>
         <nav
           className="mx-2 hidden min-w-0 flex-1 flex-wrap items-center justify-center gap-y-1 @lg:flex"
           style={{ gap: block.linkGap }}
@@ -302,7 +373,10 @@ function NavbarBlockView({
             <a
               key={l.id}
               href={editable ? '#' : l.href}
-              onClick={linkProps}
+              onClick={(e) => {
+                linkProps(e);
+                navigateToHref(e, l.href);
+              }}
               className="whitespace-nowrap text-sm font-medium text-zinc-700 transition hover:text-[color:var(--lp-primary)] dark:text-zinc-200"
             >
               {l.label}
@@ -310,6 +384,8 @@ function NavbarBlockView({
           ))}
         </nav>
         <div className="hidden shrink-0 items-center gap-3 @lg:flex" onClick={(e) => e.stopPropagation()}>
+          {showLocaleSwitcher && block.languageSwitcherPosition === 'after-links' ? localeSelect : null}
+          {showLocaleSwitcher && block.languageSwitcherPosition === 'beside-cta' ? localeSelect : null}
           {block.showCta ? renderCta(false) : null}
         </div>
         <button
@@ -337,7 +413,8 @@ function NavbarBlockView({
                 href={editable ? '#' : l.href}
                 onClick={(e) => {
                   linkProps(e);
-                  setMobileOpen(false);
+                  navigateToHref(e, l.href, true);
+                  if (!l.href.startsWith('#')) setMobileOpen(false);
                 }}
                 className={linkClass}
               >
@@ -345,6 +422,38 @@ function NavbarBlockView({
               </a>
             ))}
           </nav>
+          {showLocaleSwitcher ? (
+            <div className="mt-2">
+              <select
+                value={opts.currentLocale}
+                onClick={(e) => e.stopPropagation()}
+                onChange={(e) => {
+                  opts.onLocaleChange?.(e.target.value);
+                  setMobileOpen(false);
+                }}
+                className="w-full outline-none"
+                style={{
+                  background: block.languageSwitcherBg,
+                  color: block.languageSwitcherTextColor,
+                  border: `1px solid ${block.languageSwitcherBorderColor}`,
+                  borderRadius: block.languageSwitcherBorderRadius,
+                  paddingTop: block.languageSwitcherPaddingY,
+                  paddingBottom: block.languageSwitcherPaddingY,
+                  paddingLeft: block.languageSwitcherPaddingX,
+                  paddingRight: block.languageSwitcherPaddingX,
+                  fontSize: block.languageSwitcherFontSize,
+                  minWidth: block.languageSwitcherMinWidth,
+                }}
+                aria-label="Language"
+              >
+                {localeOptions.map((loc) => (
+                  <option key={loc.code} value={loc.code}>
+                    {`${loc.flag ?? '🏳️'} ${loc.label || loc.code.toUpperCase()}`}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : null}
           {block.showCta ? <div className="mt-2">{renderCta(true)}</div> : null}
         </div>
       ) : null}
@@ -481,6 +590,9 @@ function renderBlock(
     selectedId: string | null;
     onSelect: (id: string) => void;
     editable: boolean;
+    locales?: LandingLocaleConfig[];
+    currentLocale?: string;
+    onLocaleChange?: (locale: string) => void;
   },
 ): ReactElement {
   const { selectedId, onSelect, editable } = opts;
@@ -638,6 +750,10 @@ function renderBlock(
     );
   }
 
+  if (block.type === 'form') {
+    return <FormBlockView key={block.id} block={block} opts={opts} ring={ring} />;
+  }
+
   const dirClass =
     block.direction === 'row'
       ? 'flex-col min-[480px]:flex-row'
@@ -677,6 +793,135 @@ function renderBlock(
       style={{ gap: block.gap, width: block.width }}
     >
       {block.children.map((c) => renderBlock(c, opts))}
+    </div>
+  );
+}
+
+function FormBlockView({
+  block,
+  opts,
+  ring,
+}: {
+  block: CanvasFormBlock;
+  opts: BlockOpts;
+  ring: string;
+}) {
+  const { selectedId, onSelect, editable } = opts;
+  const [status, setStatus] = useState('');
+
+  const handleSubmit = (e: MouseEvent<HTMLButtonElement>) => {
+    if (editable) {
+      e.preventDefault();
+      e.stopPropagation();
+      onSelect(block.id);
+      return;
+    }
+    if (block.actionType === 'url' && block.actionValue.trim()) {
+      window.open(block.actionValue, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    if (block.actionType === 'email') {
+      window.location.href = `mailto:${block.actionValue}`;
+      return;
+    }
+    if (block.actionType === 'tel') {
+      window.location.href = `tel:${block.actionValue}`;
+      return;
+    }
+    setStatus(block.successMessage || 'Submitted');
+  };
+
+  return (
+    <div
+      role={editable ? 'button' : undefined}
+      tabIndex={editable ? 0 : undefined}
+      onClick={
+        editable
+          ? (e) => {
+              e.stopPropagation();
+              onSelect(block.id);
+            }
+          : undefined
+      }
+      onKeyDown={
+        editable
+          ? (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onSelect(block.id);
+              }
+            }
+          : undefined
+      }
+      className={cn('w-full', editable && 'cursor-pointer rounded-xl', editable && selectedId === block.id && ring)}
+      style={{
+        width: block.width,
+        maxWidth: block.maxWidth,
+        background: block.background,
+        borderRadius: block.borderRadius,
+        borderWidth: block.borderWidth,
+        borderStyle: 'solid',
+        borderColor: block.borderColor,
+        padding: block.padding,
+      }}
+    >
+      <div className="flex flex-col" style={{ gap: block.gap }}>
+        {block.title.trim() ? <h3 className="text-xl font-semibold text-zinc-900 dark:text-white">{block.title}</h3> : null}
+        {block.description.trim() ? (
+          <p className="text-sm text-zinc-600 dark:text-zinc-300">{block.description}</p>
+        ) : null}
+        {block.fields.map((field) => (
+          <label key={field.id} className="space-y-1">
+            <span className="text-sm font-medium text-zinc-700 dark:text-zinc-200">
+              {field.label}
+              {field.required ? ' *' : ''}
+            </span>
+            {field.type === 'textarea' ? (
+              <textarea
+                name={field.name}
+                required={field.required}
+                placeholder={field.placeholder}
+                className="min-h-[96px] w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+                onClick={(e) => editable && e.stopPropagation()}
+              />
+            ) : field.type === 'select' ? (
+              <select
+                name={field.name}
+                required={field.required}
+                className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+                onClick={(e) => editable && e.stopPropagation()}
+                defaultValue=""
+              >
+                <option value="" disabled>
+                  {field.placeholder || 'Select an option'}
+                </option>
+                {field.options.map((opt, index) => (
+                  <option key={`${field.id}-opt-${index}`} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                name={field.name}
+                type={field.type}
+                required={field.required}
+                placeholder={field.placeholder}
+                className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+                onClick={(e) => editable && e.stopPropagation()}
+              />
+            )}
+          </label>
+        ))}
+        <button
+          type="button"
+          className={cn(buttonClass('primary'), 'w-full')}
+          onClick={handleSubmit}
+        >
+          {block.submitLabel}
+        </button>
+        {status ? <p className="text-xs text-emerald-600">{status}</p> : null}
+      </div>
     </div>
   );
 }
@@ -956,6 +1201,9 @@ function renderSection(
     selectedId: string | null;
     onSelect: (id: string) => void;
     editable: boolean;
+    locales?: LandingLocaleConfig[];
+    currentLocale?: string;
+    onLocaleChange?: (locale: string) => void;
   },
 ) {
   const { selectedId, onSelect, editable } = opts;
@@ -964,6 +1212,7 @@ function renderSection(
     <section
       key={section.id}
       data-lp-canvas={section.id}
+      id={sectionAnchorId(section.name, section.anchorId)}
       className={cn(
         'w-full',
         secSelected && 'ring-2 ring-indigo-500 ring-inset',
@@ -1001,6 +1250,9 @@ type Props = {
   canvas: CanvasPage;
   previewDark: boolean;
   previewDir?: 'ltr' | 'rtl';
+  availableLocales?: LandingLocaleConfig[];
+  currentLocale?: string;
+  onLocaleChange?: (locale: string) => void;
   selectedId?: string | null;
   onSelect?: (id: string) => void;
   editable?: boolean;
@@ -1021,8 +1273,18 @@ export function CanvasPagePreview({
   className,
   onAppendSection,
   onInsertSectionAfter,
+  availableLocales,
+  currentLocale,
+  onLocaleChange,
 }: Props) {
-  const opts = { selectedId, onSelect, editable };
+  const opts = {
+    selectedId,
+    onSelect,
+    editable,
+    locales: availableLocales,
+    currentLocale,
+    onLocaleChange,
+  };
 
   return (
     <CanvasThemeRoot

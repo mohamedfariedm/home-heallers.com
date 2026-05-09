@@ -18,6 +18,13 @@ import { ImageDropField } from './image-drop-field';
 
 const inputClass =
   'w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-950 dark:text-white';
+const colorSwatchClass =
+  'h-10 w-12 cursor-pointer rounded-lg border border-zinc-200 bg-white p-1 dark:border-zinc-700 dark:bg-zinc-950';
+
+function toPickerColor(value?: string): string {
+  const v = (value ?? '').trim();
+  return /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(v) ? v : '#000000';
+}
 
 function Field({
   label,
@@ -172,11 +179,19 @@ export function CardBlockInspector({
         </Field>
       </div>
       <Field label="Background">
-        <input
-          className={inputClass}
-          value={block.background}
-          onChange={(e) => patch({ background: e.target.value })}
-        />
+        <div className="flex items-center gap-2">
+          <input
+            type="color"
+            className={colorSwatchClass}
+            value={toPickerColor(block.background)}
+            onChange={(e) => patch({ background: e.target.value })}
+          />
+          <input
+            className={inputClass}
+            value={block.background}
+            onChange={(e) => patch({ background: e.target.value })}
+          />
+        </div>
       </Field>
       <Field label="Box shadow (CSS or none)">
         <input
@@ -210,11 +225,19 @@ export function CardBlockInspector({
       </div>
       <div className="grid grid-cols-2 gap-3">
         <Field label="Border color">
-          <input
-            className={inputClass}
-            value={block.borderColor}
-            onChange={(e) => patch({ borderColor: e.target.value })}
-          />
+          <div className="flex items-center gap-2">
+            <input
+              type="color"
+              className={colorSwatchClass}
+              value={toPickerColor(block.borderColor)}
+              onChange={(e) => patch({ borderColor: e.target.value })}
+            />
+            <input
+              className={inputClass}
+              value={block.borderColor}
+              onChange={(e) => patch({ borderColor: e.target.value })}
+            />
+          </div>
         </Field>
         <Field label="Border radius">
           <input
@@ -352,19 +375,35 @@ export function CardBlockInspector({
       </div>
       <div className="grid grid-cols-2 gap-3">
         <Field label="Title color">
-          <input
-            className={inputClass}
-            value={block.titleColor ?? ''}
-            onChange={(e) => patch({ titleColor: e.target.value || undefined })}
-            placeholder="#0f172a"
-          />
+          <div className="flex items-center gap-2">
+            <input
+              type="color"
+              className={colorSwatchClass}
+              value={toPickerColor(block.titleColor)}
+              onChange={(e) => patch({ titleColor: e.target.value || undefined })}
+            />
+            <input
+              className={inputClass}
+              value={block.titleColor ?? ''}
+              onChange={(e) => patch({ titleColor: e.target.value || undefined })}
+              placeholder="#0f172a"
+            />
+          </div>
         </Field>
         <Field label="Body color">
-          <input
-            className={inputClass}
-            value={block.bodyColor ?? ''}
-            onChange={(e) => patch({ bodyColor: e.target.value || undefined })}
-          />
+          <div className="flex items-center gap-2">
+            <input
+              type="color"
+              className={colorSwatchClass}
+              value={toPickerColor(block.bodyColor)}
+              onChange={(e) => patch({ bodyColor: e.target.value || undefined })}
+            />
+            <input
+              className={inputClass}
+              value={block.bodyColor ?? ''}
+              onChange={(e) => patch({ bodyColor: e.target.value || undefined })}
+            />
+          </div>
         </Field>
       </div>
       <p className="text-xs font-semibold text-zinc-700 dark:text-zinc-200">Published card</p>

@@ -72,6 +72,16 @@ export type CanvasNavbarBlock = {
   maxWidth: string;
   minHeight: string;
   linkGap: string;
+  languageSwitcherBg: string;
+  languageSwitcherTextColor: string;
+  languageSwitcherBorderColor: string;
+  languageSwitcherBorderRadius: string;
+  languageSwitcherPaddingY: string;
+  languageSwitcherPaddingX: string;
+  languageSwitcherFontSize: string;
+  languageSwitcherMinWidth: string;
+  showLanguageSwitcher: boolean;
+  languageSwitcherPosition: 'before-links' | 'after-links' | 'beside-cta';
 };
 
 export type CanvasFooterLink = {
@@ -112,6 +122,41 @@ export type CanvasImageBlock = {
 };
 
 export type CanvasButtonVariant = 'primary' | 'secondary' | 'outline';
+
+export type CanvasFormFieldType = 'text' | 'email' | 'tel' | 'number' | 'textarea' | 'select';
+
+export type CanvasFormField = {
+  id: string;
+  name: string;
+  label: string;
+  placeholder: string;
+  type: CanvasFormFieldType;
+  required: boolean;
+  options: string[];
+};
+
+export type CanvasFormActionType = 'url' | 'email' | 'tel';
+
+export type CanvasFormBlock = {
+  type: 'form';
+  id: string;
+  title: string;
+  description: string;
+  actionType: CanvasFormActionType;
+  actionValue: string;
+  submitLabel: string;
+  successMessage: string;
+  method: 'GET' | 'POST';
+  width: string;
+  maxWidth: string;
+  padding: string;
+  gap: string;
+  background: string;
+  borderRadius: string;
+  borderWidth: string;
+  borderColor: string;
+  fields: CanvasFormField[];
+};
 
 export type CanvasButtonBlock = {
   type: 'button';
@@ -220,6 +265,7 @@ export type CanvasBlock =
   | CanvasCopyBlock
   | CanvasImageBlock
   | CanvasButtonBlock
+  | CanvasFormBlock
   | CanvasStackBlock
   | CanvasGridBlock
   | CanvasCardBlock
@@ -229,6 +275,7 @@ export type CanvasBlock =
 export type CanvasSection = {
   id: string;
   name: string;
+  anchorId?: string;
   background: string;
   paddingY: string;
   paddingX: string;
@@ -262,14 +309,6 @@ export type CanvasPage = {
   sections: CanvasSection[];
   floatingDock: CanvasFloatingDock;
 };
-
-export function isCanvasStackBlock(b: CanvasBlock): b is CanvasStackBlock {
-  return b.type === 'stack';
-}
-
-export function isCanvasGridBlock(b: CanvasBlock): b is CanvasGridBlock {
-  return b.type === 'grid';
-}
 
 export function hasNestedBlockChildren(
   b: CanvasBlock,

@@ -7,16 +7,19 @@ import type { LandingProjectState } from '@/types/landing-project';
 import {
   newPageDoc,
   duplicateLandingPage,
+  ensureUniqueSlug,
   getPageCanvasEn,
+  slugifyName,
 } from '@/lib/landing-builder/project-storage';
 import { mergeCanvasPage, starterCanvasPage } from '@/lib/landing-builder/canvas-defaults';
-import type { CanvasBlock, CanvasPage } from '@/types/landing-canvas';
-import { hasNestedBlockChildren } from '@/types/landing-canvas';
+import { hasNestedBlockChildren, type CanvasBlock, type CanvasPage } from '@/types/landing-canvas';
 import cn from '@/utils/class-names';
 
 type Props = {
   project: LandingProjectState;
   onChange: (next: LandingProjectState) => void;
+  onOpenPage?: (slug: string) => void;
+  onPreviewPage?: (slug: string) => void;
 };
 
 function formatDate(iso: string) {
@@ -42,12 +45,18 @@ function countBlocks(canvas: CanvasPage) {
   return n;
 }
 
-export function ProjectPageList({ project, onChange }: Props) {
+export function ProjectPageList({ project, onChange, onOpenPage, onPreviewPage }: Props) {
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState('New page');
   const [startMode, setStartMode] = useState<'blank' | 'starter'>('blank');
 
   const open = (id: string) => {
+    const page = project.pages.find((p) => p.id === id);
+    if (!page) return;
+    if (onOpenPage) {
+      onOpenPage(page.slug);
+      return;
+    }
     onChange({ ...project, activePageId: id });
   };
 
@@ -56,6 +65,7 @@ export function ProjectPageList({ project, onChange }: Props) {
     const canvas =
       startMode === 'blank' ? mergeCanvasPage({}) : mergeCanvasPage(starterCanvasPage());
     const doc = newPageDoc(name, canvas);
+    doc.slug = ensureUniqueSlug(slugifyName(name), project.pages);
     onChange({
       ...project,
       pages: [...project.pages, doc],
@@ -70,6 +80,7 @@ export function ProjectPageList({ project, onChange }: Props) {
     const src = project.pages.find((p) => p.id === id);
     if (!src) return;
     const doc = duplicateLandingPage(src, `${src.name} (copy)`);
+    doc.slug = ensureUniqueSlug(doc.slug, [...project.pages, doc], doc.id);
     onChange({
       ...project,
       pages: [...project.pages, doc],
@@ -188,6 +199,9 @@ export function ProjectPageList({ project, onChange }: Props) {
                   {getPageCanvasEn(p).sections.length} sections · {countBlocks(getPageCanvasEn(p))}{' '}
                   blocks
                 </p>
+                <p className="mt-0.5 pl-6 text-[11px] font-mono text-zinc-400">
+                  /landing-builder/{p.slug}
+                </p>
               </button>
               <div className="flex shrink-0 flex-wrap gap-2 pl-6 sm:pl-0">
                 <button
@@ -196,6 +210,13 @@ export function ProjectPageList({ project, onChange }: Props) {
                   className="rounded-xl bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-white dark:bg-white dark:text-zinc-900"
                 >
                   Open
+                </button>
+                <button
+                  type="button"
+                  onClick={() => (onPreviewPage ? onPreviewPage(p.slug) : undefined)}
+                  className="rounded-xl border border-zinc-200 px-3 py-1.5 text-xs font-medium dark:border-zinc-600"
+                >
+                  Preview
                 </button>
                 <button
                   type="button"

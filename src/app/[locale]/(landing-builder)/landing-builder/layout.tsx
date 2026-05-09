@@ -3,9 +3,5 @@ export default function LandingBuilderLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <div className="h-[100dvh] overflow-hidden bg-zinc-100 dark:bg-zinc-950">
-      {children}
-    </div>
-  );
+  return <div className="min-h-[100dvh] bg-zinc-100 dark:bg-zinc-950">{children}</div>;
 }

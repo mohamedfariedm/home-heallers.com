@@ -35,17 +35,9 @@ import {
   reorderSections,
 } from '@/lib/landing-builder/canvas-mutators';
 import {
-  defaultButtonBlock,
-  defaultCardBlock,
-  defaultCopyBlock,
-  defaultFooterBlock,
-  defaultGridBlock,
-  defaultImageBlock,
-  defaultNavbarBlock,
   defaultSection,
-  defaultStackBlock,
-  defaultTextBlock,
 } from '@/lib/landing-builder/canvas-defaults';
+import { SECTION_BLOCK_PRESETS } from '@/lib/landing-builder/block-presets';
 import cn from '@/utils/class-names';
 
 type RowProps = {
@@ -134,6 +126,7 @@ function labelForBlock(b: CanvasBlock): string {
   if (b.type === 'footer') return 'Footer';
   if (b.type === 'image') return 'Image';
   if (b.type === 'button') return `Button — ${b.label}`;
+  if (b.type === 'form') return `Form — ${b.title || 'Untitled form'}`;
   if (b.type === 'card') return `Card — ${b.title.slice(0, 20) || '(empty)'}`;
   if (b.type === 'grid')
     return `Grid — ${b.columnsSmall ?? 1} / ${b.columns} cols (sm / lg+)`;
@@ -237,6 +230,7 @@ function SectionCard({
 
   const append = (block: CanvasBlock) => {
     onChange(appendBlockToContainer(canvas, sectionKey, block));
+    onSelect(block.id);
   };
 
   return (
@@ -293,15 +287,13 @@ function SectionCard({
             depth={0}
           />
           <div className="flex flex-wrap gap-1.5">
-            <MiniAdd label="Copy" onClick={() => append(defaultCopyBlock())} />
-            <MiniAdd label="Text" onClick={() => append(defaultTextBlock())} />
-            <MiniAdd label="Image" onClick={() => append(defaultImageBlock())} />
-            <MiniAdd label="Button" onClick={() => append(defaultButtonBlock())} />
-            <MiniAdd label="Row" onClick={() => append(defaultStackBlock())} />
-            <MiniAdd label="Grid×3" onClick={() => append(defaultGridBlock(3))} />
-            <MiniAdd label="Card" onClick={() => append(defaultCardBlock())} />
-            <MiniAdd label="Navbar" onClick={() => append(defaultNavbarBlock())} />
-            <MiniAdd label="Footer" onClick={() => append(defaultFooterBlock())} />
+            {SECTION_BLOCK_PRESETS.map((preset) => (
+              <MiniAdd
+                key={preset.key}
+                label={preset.label}
+                onClick={() => append(preset.create())}
+              />
+            ))}
           </div>
         </div>
       ) : null}

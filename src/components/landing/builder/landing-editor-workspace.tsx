@@ -20,10 +20,16 @@ import {
   Search,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import type { CanvasPage } from '@/types/landing-canvas';
-import type { LandingProjectState, LandingPageDocument, LandingLocale } from '@/types/landing-project';
+import type { CanvasBlock, CanvasPage } from '@/types/landing-canvas';
+import type {
+  LandingProjectState,
+  LandingPageDocument,
+  LandingLocale,
+  LandingLocaleConfig,
+} from '@/types/landing-project';
 import { mergeLandingPageSeo, type LandingPageSeo } from '@/types/landing-seo';
 import {
+  defaultFormBlock,
   defaultSection,
   mergeCanvasPage,
   starterCanvasPage,
@@ -44,6 +50,7 @@ import cn from '@/utils/class-names';
 type Props = {
   page: LandingPageDocument;
   setProject: React.Dispatch<React.SetStateAction<LandingProjectState>>;
+  onExit?: () => void;
 };
 
 function flushCanvasLocales(
@@ -52,15 +59,189 @@ function flushCanvasLocales(
   locale: LandingLocale,
   canvas: CanvasPage,
 ): LandingProjectState {
+  const syncBlockContentWithPrimary = (
+    target: CanvasBlock,
+    oldPrimary: CanvasBlock | undefined,
+    newPrimary: CanvasBlock | undefined,
+  ): CanvasBlock => {
+    let next = target;
+    if (oldPrimary && newPrimary && oldPrimary.type === target.type && newPrimary.type === target.type) {
+      if (target.type === 'text') {
+        const oldText = oldPrimary as Extract<CanvasBlock, { type: 'text' }>;
+        const newText = newPrimary as Extract<CanvasBlock, { type: 'text' }>;
+        if (target.content === oldText.content) next = { ...target, content: newText.content };
+      } else if (target.type === 'copy') {
+        const oldCopy = oldPrimary as Extract<CanvasBlock, { type: 'copy' }>;
+        const newCopy = newPrimary as Extract<CanvasBlock, { type: 'copy' }>;
+        next = {
+          ...target,
+          eyebrow: target.eyebrow === oldCopy.eyebrow ? newCopy.eyebrow : target.eyebrow,
+          headline: target.headline === oldCopy.headline ? newCopy.headline : target.headline,
+          subheadline:
+            target.subheadline === oldCopy.subheadline ? newCopy.subheadline : target.subheadline,
+          body: target.body === oldCopy.body ? newCopy.body : target.body,
+        };
+      } else if (target.type === 'button') {
+        const oldButton = oldPrimary as Extract<CanvasBlock, { type: 'button' }>;
+        const newButton = newPrimary as Extract<CanvasBlock, { type: 'button' }>;
+        if (target.label === oldButton.label) next = { ...target, label: newButton.label };
+      } else if (target.type === 'form') {
+        const oldForm = oldPrimary as Extract<CanvasBlock, { type: 'form' }>;
+        const newForm = newPrimary as Extract<CanvasBlock, { type: 'form' }>;
+        next = {
+          ...target,
+          title: target.title === oldForm.title ? newForm.title : target.title,
+          description:
+            target.description === oldForm.description ? newForm.description : target.description,
+          submitLabel:
+            target.submitLabel === oldForm.submitLabel ? newForm.submitLabel : target.submitLabel,
+          successMessage:
+            target.successMessage === oldForm.successMessage
+              ? newForm.successMessage
+              : target.successMessage,
+          fields: target.fields.map((field, i) => {
+            const oldField = oldForm.fields[i];
+            const newField = newForm.fields[i];
+            if (!oldField || !newField) return field;
+            return {
+              ...field,
+              label: field.label === oldField.label ? newField.label : field.label,
+              placeholder:
+                field.placeholder === oldField.placeholder ? newField.placeholder : field.placeholder,
+            };
+          }),
+        };
+      } else if (target.type === 'navbar') {
+        const oldNavbar = oldPrimary as Extract<CanvasBlock, { type: 'navbar' }>;
+        const newNavbar = newPrimary as Extract<CanvasBlock, { type: 'navbar' }>;
+        next = {
+          ...target,
+          logoText: target.logoText === oldNavbar.logoText ? newNavbar.logoText : target.logoText,
+          ctaLabel: target.ctaLabel === oldNavbar.ctaLabel ? newNavbar.ctaLabel : target.ctaLabel,
+          links: target.links.map((link, i) => {
+            const oldLink = oldNavbar.links[i];
+            const newLink = newNavbar.links[i];
+            if (!oldLink || !newLink) return link;
+            return {
+              ...link,
+              label: link.label === oldLink.label ? newLink.label : link.label,
+            };
+          }),
+        };
+      } else if (target.type === 'footer') {
+        const oldFooter = oldPrimary as Extract<CanvasBlock, { type: 'footer' }>;
+        const newFooter = newPrimary as Extract<CanvasBlock, { type: 'footer' }>;
+        next = {
+          ...target,
+          copyright:
+            target.copyright === oldFooter.copyright ? newFooter.copyright : target.copyright,
+          tagline: target.tagline === oldFooter.tagline ? newFooter.tagline : target.tagline,
+          columns: target.columns.map((col, i) => {
+            const oldCol = oldFooter.columns[i];
+            const newCol = newFooter.columns[i];
+            if (!oldCol || !newCol) return col;
+            return {
+              ...col,
+              title: col.title === oldCol.title ? newCol.title : col.title,
+              links: col.links.map((l, linkIndex) => {
+                const oldLink = oldCol.links[linkIndex];
+                const newLink = newCol.links[linkIndex];
+                if (!oldLink || !newLink) return l;
+                return { ...l, label: l.label === oldLink.label ? newLink.label : l.label };
+              }),
+            };
+          }),
+        };
+      } else if (target.type === 'card') {
+        const oldCard = oldPrimary as Extract<CanvasBlock, { type: 'card' }>;
+        const newCard = newPrimary as Extract<CanvasBlock, { type: 'card' }>;
+        next = {
+          ...target,
+          title: target.title === oldCard.title ? newCard.title : target.title,
+          body: target.body === oldCard.body ? newCard.body : target.body,
+          ctaLabel: target.ctaLabel === oldCard.ctaLabel ? newCard.ctaLabel : target.ctaLabel,
+        };
+      }
+    }
+
+    if (next.type === 'stack' || next.type === 'grid') {
+      const oldChildren =
+        oldPrimary && (oldPrimary.type === 'stack' || oldPrimary.type === 'grid') ? oldPrimary.children : [];
+      const newChildren =
+        newPrimary && (newPrimary.type === 'stack' || newPrimary.type === 'grid') ? newPrimary.children : [];
+      return {
+        ...next,
+        children: next.children.map((child) =>
+          syncBlockContentWithPrimary(
+            child,
+            oldChildren.find((x) => x.id === child.id),
+            newChildren.find((x) => x.id === child.id),
+          ),
+        ),
+      };
+    }
+    return next;
+  };
+
+  const syncLocaleWithPrimaryFallback = (
+    targetCanvas: CanvasPage,
+    oldPrimaryCanvas: CanvasPage,
+    newPrimaryCanvas: CanvasPage,
+  ): CanvasPage => {
+    const oldSections = new Map(oldPrimaryCanvas.sections.map((s) => [s.id, s]));
+    const newSections = new Map(newPrimaryCanvas.sections.map((s) => [s.id, s]));
+    return {
+      ...targetCanvas,
+      siteName:
+        targetCanvas.siteName === oldPrimaryCanvas.siteName
+          ? newPrimaryCanvas.siteName
+          : targetCanvas.siteName,
+      sections: targetCanvas.sections.map((section) => {
+        const oldSection = oldSections.get(section.id);
+        const newSection = newSections.get(section.id);
+        return {
+          ...section,
+          name:
+            oldSection && newSection && section.name === oldSection.name ? newSection.name : section.name,
+          children: section.children.map((child) =>
+            syncBlockContentWithPrimary(
+              child,
+              oldSection?.children.find((x) => x.id === child.id),
+              newSection?.children.find((x) => x.id === child.id),
+            ),
+          ),
+        };
+      }),
+    };
+  };
+
   return {
     ...prev,
     pages: prev.pages.map((p) =>
       p.id === pageId
-        ? {
-            ...p,
-            canvasLocales: { ...p.canvasLocales, [locale]: canvas },
-            updatedAt: new Date().toISOString(),
-          }
+        ? (() => {
+            const primary = p.locales[0]?.code ?? 'en';
+            const oldPrimaryCanvas =
+              p.canvasLocales[primary] ?? p.canvasLocales[locale] ?? mergeCanvasPage({});
+            const nextCanvasLocales = { ...p.canvasLocales, [locale]: canvas };
+            if (locale === primary) {
+              for (const loc of p.locales) {
+                if (loc.code === primary) continue;
+                const currentLocaleCanvas = nextCanvasLocales[loc.code];
+                if (!currentLocaleCanvas) continue;
+                nextCanvasLocales[loc.code] = syncLocaleWithPrimaryFallback(
+                  currentLocaleCanvas,
+                  oldPrimaryCanvas,
+                  canvas,
+                );
+              }
+            }
+            return {
+              ...p,
+              canvasLocales: nextCanvasLocales,
+              updatedAt: new Date().toISOString(),
+            };
+          })()
         : p,
     ),
   };
@@ -83,6 +264,25 @@ type InnerProps = Props & {
   flushCanvasToProject: (pageId: string, locale: LandingLocale, canvas: CanvasPage) => void;
 };
 
+const LANGUAGE_PRESETS: LandingLocaleConfig[] = [
+  { code: 'en', label: 'English', dir: 'ltr', flag: '🇺🇸' },
+  { code: 'ar', label: 'Arabic', dir: 'rtl', flag: '🇸🇦' },
+  { code: 'fr', label: 'French', dir: 'ltr', flag: '🇫🇷' },
+  { code: 'es', label: 'Spanish', dir: 'ltr', flag: '🇪🇸' },
+  { code: 'de', label: 'German', dir: 'ltr', flag: '🇩🇪' },
+  { code: 'it', label: 'Italian', dir: 'ltr', flag: '🇮🇹' },
+  { code: 'pt', label: 'Portuguese', dir: 'ltr', flag: '🇵🇹' },
+  { code: 'tr', label: 'Turkish', dir: 'ltr', flag: '🇹🇷' },
+  { code: 'ru', label: 'Russian', dir: 'ltr', flag: '🇷🇺' },
+  { code: 'ur', label: 'Urdu', dir: 'rtl', flag: '🇵🇰' },
+  { code: 'fa', label: 'Persian', dir: 'rtl', flag: '🇮🇷' },
+  { code: 'he', label: 'Hebrew', dir: 'rtl', flag: '🇮🇱' },
+];
+
+function localeFlag(loc: LandingLocaleConfig): string {
+  return loc.flag ?? LANGUAGE_PRESETS.find((x) => x.code === loc.code)?.flag ?? '🏳️';
+}
+
 function LandingEditorWorkspaceInner({
   page,
   setProject,
@@ -100,36 +300,110 @@ function LandingEditorWorkspaceInner({
   setPageTitle,
   commitTitle,
   flushCanvasToProject,
+  onExit,
 }: InnerProps) {
   const { canvas, setCanvas, hydrate, undo, redo, canUndo, canRedo } = useLandingEditorCanvas();
 
+  const pageLocales = page.locales.length
+    ? page.locales
+    : ([{ code: 'en', label: 'English', dir: 'ltr' }] as LandingLocaleConfig[]);
+  const addableLocales = LANGUAGE_PRESETS.filter((preset) => !pageLocales.some((l) => l.code === preset.code));
+  const [selectedPresetCode, setSelectedPresetCode] = useState<string>(addableLocales[0]?.code ?? 'ar');
+
+  useEffect(() => {
+    if (!addableLocales.some((x) => x.code === selectedPresetCode)) {
+      setSelectedPresetCode(addableLocales[0]?.code ?? '');
+    }
+  }, [addableLocales, selectedPresetCode]);
+
+  const addLocale = () => {
+    const picked = LANGUAGE_PRESETS.find((x) => x.code === selectedPresetCode);
+    if (!picked) {
+      toast.error('Choose a language');
+      return;
+    }
+    if (pageLocales.some((l) => l.code === picked.code)) {
+      toast.error('Language already exists');
+      return;
+    }
+    setProject((prev) => ({
+      ...prev,
+      pages: prev.pages.map((p) => {
+        if (p.id !== page.id) return p;
+        const source = p.canvasLocales[editingLocale] ?? p.canvasLocales[p.locales[0]?.code ?? 'en'];
+        return {
+          ...p,
+          locales: [...p.locales, picked],
+          canvasLocales: {
+            ...p.canvasLocales,
+            [picked.code]: mergeCanvasPage(source),
+          },
+          updatedAt: new Date().toISOString(),
+        };
+      }),
+    }));
+    setEditingLocale(picked.code);
+    toast.success(`${localeFlag(picked)} ${picked.label} added`);
+  };
+
+  const removeLocale = (code: string) => {
+    if (pageLocales.length <= 1) {
+      toast.error('Keep at least one locale');
+      return;
+    }
+    setProject((prev) => ({
+      ...prev,
+      pages: prev.pages.map((p) => {
+        if (p.id !== page.id) return p;
+        const nextLocales = p.locales.filter((l) => l.code !== code);
+        const nextCanvasLocales = { ...p.canvasLocales };
+        delete nextCanvasLocales[code];
+        return {
+          ...p,
+          locales: nextLocales,
+          canvasLocales: nextCanvasLocales,
+          updatedAt: new Date().toISOString(),
+        };
+      }),
+    }));
+    if (editingLocale === code) setEditingLocale(pageLocales.find((l) => l.code !== code)?.code ?? 'en');
+    const removed = pageLocales.find((l) => l.code === code);
+    toast.success(`${removed ? `${localeFlag(removed)} ${removed.label}` : code.toUpperCase()} removed`);
+  };
+
   const mirrorSectionStructure = useCallback(
     (mutator: (c: CanvasPage) => CanvasPage) => {
-      let nextActive: CanvasPage | null = null;
+      // Apply immediately to the active editor canvas to avoid one-click lag.
+      const nextLocal = mergeCanvasPage(mutator(canvas));
+      hydrate(nextLocal);
+
       setProject((prev) => {
         const p = prev.pages.find((x) => x.id === page.id);
         if (!p) return prev;
-        const nextEn = mergeCanvasPage(mutator(mergeCanvasPage(p.canvasLocales.en)));
-        const nextAr = mergeCanvasPage(mutator(mergeCanvasPage(p.canvasLocales.ar)));
-        nextActive = editingLocale === 'en' ? nextEn : nextAr;
+        const nextCanvasLocales = p.locales.reduce<Record<string, CanvasPage>>((acc, loc, i) => {
+          const primary = p.locales[0]?.code ?? 'en';
+          const source = p.canvasLocales[loc.code] ?? p.canvasLocales[primary];
+          acc[loc.code] = mergeCanvasPage(mutator(mergeCanvasPage(source)));
+          if (i === 0 && !acc[primary]) {
+            acc[primary] = acc[loc.code];
+          }
+          return acc;
+        }, {});
         return {
           ...prev,
           pages: prev.pages.map((x) =>
             x.id === page.id
               ? {
                   ...x,
-                  canvasLocales: { en: nextEn, ar: nextAr },
+                  canvasLocales: nextCanvasLocales,
                   updatedAt: new Date().toISOString(),
                 }
               : x,
           ),
         };
       });
-      if (nextActive) {
-        hydrate(mergeCanvasPage(nextActive));
-      }
     },
-    [page.id, editingLocale, setProject, hydrate],
+    [canvas, page.id, setProject, hydrate],
   );
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -191,7 +465,18 @@ function LandingEditorWorkspaceInner({
 
   const applyStarter = () => {
     mirrorSectionStructure(() => starterCanvasPage());
-    toast.success('Starter layout loaded for English and Arabic');
+    toast.success('Starter layout loaded for all locales');
+  };
+
+  const applyLeadTemplate = () => {
+    mirrorSectionStructure((current) => {
+      const next = starterCanvasPage();
+      const formSection = defaultSection('Lead capture');
+      formSection.contentAlign = 'center';
+      formSection.children = [defaultFormBlock()];
+      return { ...next, siteName: current.siteName || 'Landing', sections: [...next.sections, formSection] };
+    });
+    toast.success('Lead generation template loaded');
   };
 
   const copyJson = async () => {
@@ -208,15 +493,17 @@ function LandingEditorWorkspaceInner({
     try {
       const JSZip = (await import('jszip')).default;
       const zip = new JSZip();
-      const other: LandingLocale = editingLocale === 'en' ? 'ar' : 'en';
-      const enCanvas = editingLocale === 'en' ? canvas : page.canvasLocales.en;
-      const arCanvas = editingLocale === 'ar' ? canvas : page.canvasLocales.ar;
-      zip.file('canvas-en.json', JSON.stringify(mergeCanvasPage(enCanvas), null, 2));
-      zip.file('canvas-ar.json', JSON.stringify(mergeCanvasPage(arCanvas), null, 2));
+      for (const loc of pageLocales) {
+        const localeCanvas =
+          loc.code === editingLocale
+            ? canvas
+            : (page.canvasLocales[loc.code] ?? page.canvasLocales[pageLocales[0].code]);
+        zip.file(`canvas-${loc.code}.json`, JSON.stringify(mergeCanvasPage(localeCanvas), null, 2));
+      }
       zip.file('seo.json', JSON.stringify(mergeLandingPageSeo(page.seo, seoDraft), null, 2));
       zip.file(
         'README.md',
-        `# Landing export\n\n- canvas-en.json / canvas-ar.json — bilingual builder canvases.\n- seo.json — meta / Open Graph / hreflang fields.\n- Schema: src/types/landing-canvas.ts, landing-seo.ts\n\nNote: Unsaved edits in the other locale (${other}) use the last saved file from the editor.\n`,
+        `# Landing export\n\n- canvas-<locale>.json — one file per configured language.\n- seo.json — meta / Open Graph / hreflang fields.\n- Schema: src/types/landing-canvas.ts, landing-seo.ts\n`,
       );
       const blob = await zip.generateAsync({ type: 'blob' });
       const url = URL.createObjectURL(blob);
@@ -242,6 +529,10 @@ function LandingEditorWorkspaceInner({
 
   const backToList = () => {
     flushCanvasToProject(page.id, editingLocale, canvas);
+    if (onExit) {
+      onExit();
+      return;
+    }
     setProject((prev) => ({ ...prev, activePageId: null }));
   };
 
@@ -270,23 +561,56 @@ function LandingEditorWorkspaceInner({
 
         <div className="flex flex-1 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
           <div
-            className="flex items-center rounded-xl border border-zinc-200 p-0.5 dark:border-zinc-700"
+            className="flex items-center rounded-xl border border-zinc-200 bg-white p-1 dark:border-zinc-700 dark:bg-zinc-900"
             title="Edit canvas for each language"
           >
-            {(['en', 'ar'] as const).map((loc) => (
+            {pageLocales.map((loc) => (
               <button
-                key={loc}
+                key={loc.code}
                 type="button"
-                onClick={() => setEditingLocale(loc)}
+                onClick={() => setEditingLocale(loc.code)}
                 className={cn(
-                  'rounded-lg px-2 py-1 text-[11px] font-bold tracking-wide text-zinc-500 transition dark:text-zinc-400',
-                  editingLocale === loc &&
+                  'rounded-lg px-2 py-1 text-xs font-semibold text-zinc-600 transition dark:text-zinc-300',
+                  editingLocale === loc.code &&
                     'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/50 dark:text-indigo-200',
                 )}
+                title={loc.label}
               >
-                {loc.toUpperCase()}
+                <span className="mr-1">{localeFlag(loc)}</span>
+                {loc.label}
               </button>
             ))}
+          </div>
+          <div className="flex items-center gap-1 rounded-xl border border-zinc-200 bg-white p-1 dark:border-zinc-700 dark:bg-zinc-900">
+            <select
+              value={selectedPresetCode}
+              onChange={(e) => setSelectedPresetCode(e.target.value)}
+              className="rounded-lg border border-zinc-200 px-2 py-1 text-xs dark:border-zinc-700 dark:bg-zinc-900"
+              disabled={addableLocales.length === 0}
+            >
+              {addableLocales.map((lang) => (
+                <option key={lang.code} value={lang.code}>
+                  {`${localeFlag(lang)} ${lang.label}`}
+                </option>
+              ))}
+              {addableLocales.length === 0 ? <option value="">All preset languages added</option> : null}
+            </select>
+            <button
+              type="button"
+              onClick={addLocale}
+              className="rounded-lg bg-indigo-600 px-2 py-1 text-xs font-semibold text-white disabled:opacity-50"
+              disabled={addableLocales.length === 0}
+            >
+              + Language
+            </button>
+            <button
+              type="button"
+              onClick={() => removeLocale(editingLocale)}
+              className="rounded-lg border border-zinc-200 px-2 py-1 text-xs dark:border-zinc-700"
+              title="Remove current language"
+            >
+              - Current
+            </button>
           </div>
 
           <button
@@ -297,6 +621,15 @@ function LandingEditorWorkspaceInner({
           >
             <Sparkles className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Starter</span>
+          </button>
+          <button
+            type="button"
+            onClick={applyLeadTemplate}
+            className="inline-flex items-center gap-1 rounded-xl border border-zinc-200 px-2 py-1.5 text-xs font-medium text-zinc-800 dark:border-zinc-700 dark:text-zinc-200 sm:px-3 sm:text-sm"
+            title="Load starter plus lead form section"
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Lead form</span>
           </button>
 
           <div className="hidden items-center rounded-xl border border-zinc-200 p-0.5 dark:border-zinc-700 sm:flex">
@@ -552,7 +885,7 @@ function LandingEditorWorkspaceInner({
             >
               <div className="flex flex-wrap items-center justify-center gap-2 border-b border-zinc-100 bg-zinc-50/80 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-900/50">
                 <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                  {`Preview (${editingLocale.toUpperCase()}${editingLocale === 'ar' ? ', RTL' : ''})`}{' '}
+                  {`Preview (${editingLocale.toUpperCase()}${pageLocales.find((x) => x.code === editingLocale)?.dir === 'rtl' ? ', RTL' : ''})`}{' '}
                   — click outside frame or Esc to clear selection
                 </span>
                 <span className="rounded-md bg-zinc-200/80 px-2 py-0.5 text-[10px] font-semibold text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
@@ -568,7 +901,10 @@ function LandingEditorWorkspaceInner({
                 <CanvasPagePreview
                   canvas={canvas}
                   previewDark={previewDark}
-                  previewDir={editingLocale === 'ar' ? 'rtl' : 'ltr'}
+                  previewDir={pageLocales.find((x) => x.code === editingLocale)?.dir === 'rtl' ? 'rtl' : 'ltr'}
+                  availableLocales={pageLocales}
+                  currentLocale={editingLocale}
+                  onLocaleChange={setEditingLocale}
                   selectedId={selectedId}
                   onSelect={setSelectedId}
                   editable
@@ -604,8 +940,10 @@ function LandingEditorWorkspaceInner({
   );
 }
 
-export function LandingEditorWorkspace({ page, setProject }: Props) {
-  const [editingLocale, setEditingLocale] = useState<LandingLocale>('en');
+export function LandingEditorWorkspace({ page, setProject, onExit }: Props) {
+  const [editingLocale, setEditingLocale] = useState<LandingLocale>(
+    page.locales[0]?.code ?? 'en',
+  );
   const [seoDraft, setSeoDraft] = useState<LandingPageSeo>(() => mergeLandingPageSeo(undefined, page.seo));
   const [openPanel, setOpenPanel] = useState<'layers' | 'props' | 'json' | 'seo' | null>(null);
   const [previewDark, setPreviewDark] = useState(false);
@@ -613,6 +951,11 @@ export function LandingEditorWorkspace({ page, setProject }: Props) {
     'desktop',
   );
   const [pageTitle, setPageTitle] = useState(page.name);
+
+  useEffect(() => {
+    const currentExists = page.locales.some((l) => l.code === editingLocale);
+    if (!currentExists) setEditingLocale(page.locales[0]?.code ?? 'en');
+  }, [editingLocale, page.locales]);
 
   useEffect(() => {
     setPageTitle(page.name);
@@ -670,13 +1013,16 @@ export function LandingEditorWorkspace({ page, setProject }: Props) {
       key={`${page.id}-${editingLocale}`}
       pageId={page.id}
       locale={editingLocale}
-      seed={mergeCanvasPage(page.canvasLocales[editingLocale])}
+      seed={mergeCanvasPage(
+        page.canvasLocales[editingLocale] ?? page.canvasLocales[page.locales[0]?.code ?? 'en'],
+      )}
       onUnmountPersist={flushCanvasToProject}
       onDebouncedPersist={flushCanvasToProject}
     >
       <LandingEditorWorkspaceInner
         page={page}
         setProject={setProject}
+        onExit={onExit}
         editingLocale={editingLocale}
         setEditingLocale={setEditingLocale}
         seoDraft={seoDraft}

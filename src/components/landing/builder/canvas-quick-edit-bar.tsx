@@ -9,17 +9,13 @@ import {
   updateSectionById,
 } from '@/lib/landing-builder/canvas-mutators';
 import {
-  defaultButtonBlock,
   DEFAULT_CARD_IMAGE_FRAME,
-  defaultCardBlock,
-  defaultCopyBlock,
-  defaultFooterBlock,
-  defaultGridBlock,
-  defaultImageBlock,
-  defaultNavbarBlock,
-  defaultStackBlock,
-  defaultTextBlock,
 } from '@/lib/landing-builder/canvas-defaults';
+import {
+  createColumnBlock,
+  createRowWithColumns,
+  SECTION_BLOCK_PRESETS,
+} from '@/lib/landing-builder/block-presets';
 import cn from '@/utils/class-names';
 
 type Props = {
@@ -196,24 +192,12 @@ export function CanvasQuickEditBar({ canvas, selectedId, onChange, onSelect }: P
             Add to this section
           </p>
           <div className="flex flex-wrap gap-1">
-            {(
-              [
-                { label: 'Copy', factory: () => defaultCopyBlock() },
-                { label: 'Text', factory: () => defaultTextBlock() },
-                { label: 'Image', factory: () => defaultImageBlock() },
-                { label: 'Button', factory: () => defaultButtonBlock() },
-                { label: 'Row', factory: () => defaultStackBlock() },
-                { label: 'Grid', factory: () => defaultGridBlock(3) },
-                { label: 'Card', factory: () => defaultCardBlock() },
-                { label: 'Navbar', factory: () => defaultNavbarBlock() },
-                { label: 'Footer', factory: () => defaultFooterBlock() },
-              ] as const
-            ).map(({ label, factory }) => (
+            {SECTION_BLOCK_PRESETS.map(({ key, label, create }) => (
               <button
-                key={label}
+                key={key}
                 type="button"
                 className={btn}
-                onClick={() => appendToSection(canvas, sec.id, factory(), onChange, onSelect)}
+                onClick={() => appendToSection(canvas, sec.id, create(), onChange, onSelect)}
               >
                 + {label}
               </button>
@@ -476,10 +460,93 @@ export function CanvasQuickEditBar({ canvas, selectedId, onChange, onSelect }: P
     );
   }
 
+  if (b.type === 'form') {
+    return (
+      <Shell title="Form - quick edit">
+        <input
+          className={inp}
+          value={b.title}
+          onChange={(e) =>
+            onChange(
+              updateBlockById(canvas, b.id, (x) =>
+                x.type === 'form' ? { ...x, title: e.target.value } : x,
+              ),
+            )
+          }
+          placeholder="Form title"
+        />
+        <textarea
+          className={`${inpSm} min-h-[64px] resize-y`}
+          value={b.description}
+          onChange={(e) =>
+            onChange(
+              updateBlockById(canvas, b.id, (x) =>
+                x.type === 'form' ? { ...x, description: e.target.value } : x,
+              ),
+            )
+          }
+          placeholder="Description"
+        />
+        <div className="grid grid-cols-2 gap-2">
+          <input
+            className={inpSm}
+            value={b.submitLabel}
+            onChange={(e) =>
+              onChange(
+                updateBlockById(canvas, b.id, (x) =>
+                  x.type === 'form' ? { ...x, submitLabel: e.target.value } : x,
+                ),
+              )
+            }
+            placeholder="Submit label"
+          />
+          <input
+            className={inpSm}
+            value={b.actionValue}
+            onChange={(e) =>
+              onChange(
+                updateBlockById(canvas, b.id, (x) =>
+                  x.type === 'form' ? { ...x, actionValue: e.target.value } : x,
+                ),
+              )
+            }
+            placeholder="Action value"
+          />
+        </div>
+      </Shell>
+    );
+  }
+
   if (b.type === 'stack') {
     return (
       <Shell title="Row — quick edit">
         <div className="flex flex-wrap gap-1">
+          <button
+            type="button"
+            className={btn}
+            onClick={() =>
+              onChange(
+                updateBlockById(canvas, b.id, (x) =>
+                  x.type === 'stack' ? { ...x, children: [...x.children, createColumnBlock()] } : x,
+                ),
+              )
+            }
+          >
+            + Column
+          </button>
+          <button
+            type="button"
+            className={btn}
+            onClick={() =>
+              onChange(
+                updateBlockById(canvas, b.id, (x) =>
+                  x.type === 'stack' ? { ...x, children: [createRowWithColumns(2)] } : x,
+                ),
+              )
+            }
+          >
+            Reset to 2 columns
+          </button>
           <button
             type="button"
             className={btn}

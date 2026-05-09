@@ -378,12 +378,12 @@ export const menuItemsHaydrogen = [
     icon: <PiBrowserDuotone />,
     permissions: 'landing_pages',
   },
-  // {
-  //   name: 'Landing Page Generator',
-  //   href: routes.landingBuilder.index,
-  //   icon: <PiMagicWandDuotone />,
-  //   permissions: 'settings',
-  // },
+  {
+    name: 'Landing Page Generator',
+    href: routes.landingBuilder.index,
+    icon: <PiMagicWandDuotone />,
+    permissions: 'settings',
+  },
   {
     name: 'Looker Studio Report',
     href: '/looker-studio-report',

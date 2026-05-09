@@ -1,4 +1,4 @@
-import { LandingBuilderApp } from '@/components/landing/builder/landing-builder-app';
+import { LandingBuilderListApp } from '@/components/landing/builder/landing-builder-list-app';
 
 export const metadata = {
   title: 'Landing Page Builder',
@@ -7,5 +7,5 @@ export const metadata = {
 };
 
 export default function LandingBuilderPage() {
-  return <LandingBuilderApp />;
+  return <LandingBuilderListApp />;
 }

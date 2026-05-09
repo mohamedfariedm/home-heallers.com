@@ -4,6 +4,8 @@ import type {
   CanvasCardBlock,
   CanvasCardImageFrame,
   CanvasCopyBlock,
+  CanvasFormBlock,
+  CanvasFormField,
   CanvasFooterBlock,
   CanvasFooterColumn,
   CanvasFooterLink,
@@ -136,6 +138,16 @@ export function defaultNavbarBlock(): CanvasNavbarBlock {
     maxWidth: '1200px',
     minHeight: '52px',
     linkGap: '20px',
+    languageSwitcherBg: '#ffffff',
+    languageSwitcherTextColor: '#334155',
+    languageSwitcherBorderColor: 'rgba(15,23,42,0.15)',
+    languageSwitcherBorderRadius: '10px',
+    languageSwitcherPaddingY: '8px',
+    languageSwitcherPaddingX: '10px',
+    languageSwitcherFontSize: '12px',
+    languageSwitcherMinWidth: '92px',
+    showLanguageSwitcher: true,
+    languageSwitcherPosition: 'beside-cta',
   };
 }
 
@@ -199,6 +211,58 @@ export function defaultButtonBlock(): CanvasButtonBlock {
     width: 'auto',
     minHeight: '44px',
     alignSelf: 'auto',
+  };
+}
+
+export function defaultFormField(partial?: Partial<CanvasFormField>): CanvasFormField {
+  return {
+    id: newCanvasId('fld'),
+    name: 'field',
+    label: 'Field',
+    placeholder: '',
+    type: 'text',
+    required: false,
+    options: ['Option 1', 'Option 2'],
+    ...partial,
+  };
+}
+
+export function defaultFormBlock(): CanvasFormBlock {
+  return {
+    type: 'form',
+    id: newCanvasId('form'),
+    title: 'Contact us',
+    description: 'Fill out the form and we will get back to you shortly.',
+    actionType: 'email',
+    actionValue: 'hello@example.com',
+    submitLabel: 'Submit',
+    successMessage: 'Thanks! We received your message.',
+    method: 'POST',
+    width: '100%',
+    maxWidth: '560px',
+    padding: '24px',
+    gap: '12px',
+    background: '#ffffff',
+    borderRadius: '16px',
+    borderWidth: '1px',
+    borderColor: 'rgba(15,23,42,0.12)',
+    fields: [
+      defaultFormField({ name: 'name', label: 'Full name', placeholder: 'Jane Doe', required: true }),
+      defaultFormField({
+        name: 'email',
+        label: 'Email',
+        placeholder: 'jane@company.com',
+        type: 'email',
+        required: true,
+      }),
+      defaultFormField({
+        name: 'message',
+        label: 'Message',
+        placeholder: 'Tell us what you need...',
+        type: 'textarea',
+        required: true,
+      }),
+    ],
   };
 }
 
@@ -346,6 +410,11 @@ export function starterCanvasPage(): CanvasPage {
     },
   ];
 
+  const lead = defaultSection('Lead form');
+  lead.background = 'transparent';
+  lead.contentAlign = 'center';
+  lead.children = [defaultFormBlock()];
+
   const footSec = defaultSection('Footer area');
   footSec.background = 'transparent';
   footSec.paddingY = '0';
@@ -357,7 +426,7 @@ export function starterCanvasPage(): CanvasPage {
   return {
     ...EMPTY_CANVAS_PAGE,
     siteName: 'Starter',
-    sections: [header, hero, footSec],
+    sections: [header, hero, lead, footSec],
   };
 }
 
@@ -394,6 +463,13 @@ function mergeBlock(partial: Partial<CanvasBlock> & { type: string }): CanvasBlo
     case 'button': {
       const d = defaultButtonBlock();
       return { ...d, ...partial, type: 'button' } as CanvasButtonBlock;
+    }
+    case 'form': {
+      const d = defaultFormBlock();
+      const fields = Array.isArray((partial as Partial<CanvasFormBlock>).fields)
+        ? ((partial as Partial<CanvasFormBlock>).fields ?? []).map((f) => defaultFormField(f))
+        : d.fields;
+      return { ...d, ...partial, type: 'form', fields } as CanvasFormBlock;
     }
     case 'stack': {
       const d = defaultStackBlock();

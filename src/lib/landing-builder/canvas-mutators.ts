@@ -1,12 +1,12 @@
 import { arrayMove } from '@dnd-kit/sortable';
-import type {
-  CanvasBlock,
-  CanvasFloatingDock,
-  CanvasPage,
-  CanvasSection,
+import {
+  hasNestedBlockChildren,
+  type CanvasBlock,
+  type CanvasFloatingDock,
+  type CanvasPage,
+  type CanvasSection,
 } from '@/types/landing-canvas';
 import { mergeFloatingDockPartial } from '@/lib/landing-builder/canvas-defaults';
-import { hasNestedBlockChildren } from '@/types/landing-canvas';
 
 function mapBlocks(blocks: CanvasBlock[], mapper: (b: CanvasBlock) => CanvasBlock): CanvasBlock[] {
   return blocks.map((b) => {
@@ -113,7 +113,7 @@ function setContainerChildren(
   };
 }
 
-export function parseContainerKey(key: string): ContainerRef | null {
+function parseContainerKey(key: string): ContainerRef | null {
   if (key.startsWith('section:')) {
     return { kind: 'section', sectionId: key.slice('section:'.length) };
   }
@@ -165,20 +165,6 @@ export function appendBlockToContainer(
   const list = getContainerChildren(canvas, ref);
   if (!list) return canvas;
   return setContainerChildren(canvas, ref, [...list, block]);
-}
-
-export function insertBlockAtIndex(
-  canvas: CanvasPage,
-  containerKey: string,
-  index: number,
-  block: CanvasBlock,
-): CanvasPage {
-  const ref = parseContainerKey(containerKey);
-  if (!ref) return canvas;
-  const list = getContainerChildren(canvas, ref);
-  if (!list) return canvas;
-  const next = [...list.slice(0, index), block, ...list.slice(index)];
-  return setContainerChildren(canvas, ref, next);
 }
 
 export function reorderSections(

@@ -2,17 +2,26 @@ import type { CanvasPage } from '@/types/landing-canvas';
 import type { LandingPageConfig } from '@/types/landing-builder';
 import type { LandingPageSeo } from '@/types/landing-seo';
 
-export type LandingLocale = 'en' | 'ar';
+export type LandingLocale = string;
+
+export type LandingLocaleConfig = {
+  code: string;
+  label: string;
+  dir: 'ltr' | 'rtl';
+  flag?: string;
+};
 
 export type LandingPageDocument = {
   id: string;
   name: string;
+  slug: string;
+  locales: LandingLocaleConfig[];
   createdAt: string;
   updatedAt: string;
-  /** English and Arabic canvas copies — edit each locale from the builder toolbar. */
+  /** Canvas copy for each configured locale. */
   canvasLocales: Record<LandingLocale, CanvasPage>;
   seo: LandingPageSeo;
-  /** @deprecated Loaded into canvasLocales.en then stripped in normalize */
+  /** @deprecated Loaded into the first locale canvas then stripped in normalize */
   canvas?: CanvasPage;
   /** Legacy field — removed after load migration */
   config?: LandingPageConfig;
