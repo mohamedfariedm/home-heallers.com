@@ -15,8 +15,15 @@ import {
   sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { ChevronDown, ChevronRight, GripVertical, Plus, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import Image from 'next/image';
+import {
+  ChevronDown,
+  ChevronRight,
+  GripVertical,
+  Plus,
+  Trash2,
+} from 'lucide-react';
+import { useState, useRef } from 'react';
 import {
   hasNestedBlockChildren,
   type CanvasBlock,
@@ -34,9 +41,12 @@ import {
   reorderInContainer,
   reorderSections,
 } from '@/lib/landing-builder/canvas-mutators';
+import { defaultSection } from '@/lib/landing-builder/canvas-defaults';
 import {
-  defaultSection,
-} from '@/lib/landing-builder/canvas-defaults';
+  getLandingCanvasSectionTemplate,
+  LANDING_CANVAS_SECTION_TEMPLATE_IDS,
+  LANDING_CANVAS_SECTION_TEMPLATE_META,
+} from '@/lib/landing-builder/canvas-templates';
 import { SECTION_BLOCK_PRESETS } from '@/lib/landing-builder/block-presets';
 import cn from '@/utils/class-names';
 
@@ -83,12 +93,12 @@ function SortableLayerRow({
         selected
           ? 'border-indigo-400 bg-indigo-50/80 dark:border-indigo-500 dark:bg-indigo-950/40'
           : 'border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900/80',
-        isDragging && 'z-10 shadow-lg ring-2 ring-indigo-500/30',
+        isDragging && 'z-10 shadow-lg ring-2 ring-indigo-500/30'
       )}
     >
       <button
         type="button"
-        className="touch-none shrink-0 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
+        className="shrink-0 touch-none text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
         aria-label="Drag to reorder"
         {...attributes}
         {...listeners}
@@ -121,7 +131,8 @@ function SortableLayerRow({
 
 function labelForBlock(b: CanvasBlock): string {
   if (b.type === 'text') return `Text — ${b.content.slice(0, 28) || '(empty)'}`;
-  if (b.type === 'copy') return `Copy — ${b.headline.slice(0, 24) || '(empty)'}`;
+  if (b.type === 'copy')
+    return `Copy — ${b.headline.slice(0, 24) || '(empty)'}`;
   if (b.type === 'navbar') return `Navbar — ${b.logoText}`;
   if (b.type === 'footer') return 'Footer';
   if (b.type === 'image') return 'Image';
@@ -203,7 +214,7 @@ function BlockRows({
               onDelete={() => onDeleteBlock(b.id)}
               depth={depth}
             />
-          ),
+          )
         )}
       </div>
     </SortableContext>
@@ -242,7 +253,11 @@ function SectionCard({
           className="mt-0.5 shrink-0 text-zinc-500"
           aria-expanded={open}
         >
-          {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          {open ? (
+            <ChevronDown className="h-4 w-4" />
+          ) : (
+            <ChevronRight className="h-4 w-4" />
+          )}
         </button>
         <button
           type="button"
@@ -254,13 +269,14 @@ function SectionCard({
               'truncate text-sm font-semibold',
               selectedId === section.id
                 ? 'text-indigo-700 dark:text-indigo-300'
-                : 'text-zinc-900 dark:text-white',
+                : 'text-zinc-900 dark:text-white'
             )}
           >
             {section.name}
           </p>
           <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-            {section.children.length} block{section.children.length === 1 ? '' : 's'}
+            {section.children.length} block
+            {section.children.length === 1 ? '' : 's'}
           </p>
         </button>
         <button
@@ -378,9 +394,10 @@ export function CanvasLayersPanel({
   selectedId,
   onSelect,
 }: Props) {
+  const sectionTemplatesDetailsRef = useRef<HTMLDetailsElement>(null);
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
   const onDragEnd = (e: DragEndEvent) => {
@@ -400,11 +417,12 @@ export function CanvasLayersPanel({
       return;
     }
 
-    const activeKey = (active.data.current as { containerKey?: string } | undefined)
-      ?.containerKey;
+    const activeKey = (
+      active.data.current as { containerKey?: string } | undefined
+    )?.containerKey;
     const overKey =
-      (over.data.current as { containerKey?: string } | undefined)?.containerKey ??
-      activeKey;
+      (over.data.current as { containerKey?: string } | undefined)
+        ?.containerKey ?? activeKey;
     if (activeKey && overKey && activeKey === overKey) {
       onChange(reorderInContainer(canvas, activeKey, activeId, overId));
     }
@@ -415,32 +433,93 @@ export function CanvasLayersPanel({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-2">
-        <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">Layers</p>
-        <button
-          type="button"
-          onClick={() => {
-            const sec = defaultSection(`Section ${canvas.sections.length + 1}`);
-            if (onMirrorSectionStructure) {
-              onMirrorSectionStructure((c) => addSection(c, sec));
-            } else {
-              onChange(addSection(canvas, sec));
-            }
-            onSelect(sec.id);
-          }}
-          className="inline-flex items-center gap-1 rounded-xl border border-zinc-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-zinc-800 shadow-sm transition hover:border-indigo-300 hover:bg-indigo-50 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:border-indigo-500 dark:hover:bg-indigo-950/40"
-        >
-          <Plus className="h-3.5 w-3.5" />
-          Section
-        </button>
+        <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">
+          Layers
+        </p>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <details
+            ref={sectionTemplatesDetailsRef}
+            className="group relative"
+          >
+            <summary className="flex cursor-pointer list-none items-center gap-1 rounded-xl border border-zinc-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-zinc-800 shadow-sm marker:hidden transition hover:border-indigo-300 hover:bg-indigo-50 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:border-indigo-500 dark:hover:bg-indigo-950/40 [&::-webkit-details-marker]:hidden">
+              <ChevronDown className="h-3.5 w-3.5 shrink-0 transition group-open:rotate-180" />
+              Templates
+            </summary>
+            <div
+              className="absolute right-0 top-[calc(100%+6px)] z-[100] max-h-[min(70vh,440px)] w-[min(92vw,300px)] overflow-y-auto rounded-xl border border-zinc-200 bg-white p-2 shadow-xl dark:border-zinc-600 dark:bg-zinc-900"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <p className="px-1 pb-2 text-[10px] font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                Section layouts
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                {LANDING_CANVAS_SECTION_TEMPLATE_IDS.map((tid) => {
+                  const meta = LANDING_CANVAS_SECTION_TEMPLATE_META[tid];
+                  return (
+                    <button
+                      key={tid}
+                      type="button"
+                      onClick={() => {
+                        const sec = getLandingCanvasSectionTemplate(tid);
+                        if (onMirrorSectionStructure) {
+                          onMirrorSectionStructure((c) => addSection(c, sec));
+                        } else {
+                          onChange(addSection(canvas, sec));
+                        }
+                        onSelect(sec.id);
+                        if (sectionTemplatesDetailsRef.current) {
+                          sectionTemplatesDetailsRef.current.open = false;
+                        }
+                      }}
+                      className="flex flex-col overflow-hidden rounded-lg border border-zinc-200 bg-zinc-50 text-left transition hover:border-indigo-400 hover:shadow-md dark:border-zinc-700 dark:bg-zinc-800/80 dark:hover:border-indigo-500"
+                    >
+                      <div className="relative aspect-[5/3] w-full bg-zinc-200 dark:bg-zinc-700">
+                        <Image
+                          src={meta.previewImageUrl}
+                          alt={`${meta.label} preview`}
+                          fill
+                          className="object-cover"
+                          sizes="150px"
+                        />
+                      </div>
+                      <span className="line-clamp-2 px-1.5 py-1.5 text-[10px] font-medium leading-tight text-zinc-800 dark:text-zinc-100">
+                        {meta.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </details>
+          <button
+            type="button"
+            onClick={() => {
+              const sec = defaultSection(`Section ${canvas.sections.length + 1}`);
+              if (onMirrorSectionStructure) {
+                onMirrorSectionStructure((c) => addSection(c, sec));
+              } else {
+                onChange(addSection(canvas, sec));
+              }
+              onSelect(sec.id);
+            }}
+            className="inline-flex items-center gap-1 rounded-xl border border-zinc-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-zinc-800 shadow-sm transition hover:border-indigo-300 hover:bg-indigo-50 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:border-indigo-500 dark:hover:bg-indigo-950/40"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Empty
+          </button>
+        </div>
       </div>
 
       {canvas.sections.length === 0 ? (
         <p className="rounded-xl border border-dashed border-zinc-300 px-3 py-6 text-center text-sm text-zinc-500 dark:border-zinc-600">
-          No sections yet. Add a section, then add text, images, or buttons.
+          No sections yet. Open “Templates” to add a pictured layout, or “Empty” for a blank section.
         </p>
       ) : (
         <DndContext sensors={sensors} onDragEnd={onDragEnd}>
-          <SortableContext items={sectionIds} strategy={verticalListSortingStrategy}>
+          <SortableContext
+            items={sectionIds}
+            strategy={verticalListSortingStrategy}
+          >
             <div className="flex flex-col gap-4">
               {canvas.sections.map((sec) => (
                 <SortableSectionShell

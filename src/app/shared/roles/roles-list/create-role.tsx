@@ -15,6 +15,12 @@ import Select from 'react-select';
 import { createRoleSchema, CreateRoleInput } from '@/utils/validators/create-role.schema';
 import { Checkbox } from 'rizzui';
 
+/** Width for create/update role modals (header button + row edit). */
+export const ROLE_MODAL_CUSTOM_SIZE = 'min(92vw, 820px)';
+
+/** Max height (px) for the permissions field (chips + input); extra selections scroll inside the control. */
+const PERMISSIONS_SELECT_INPUT_MAX_HEIGHT_PX = 140;
+
 export default function CreateRole({ initValues }: { initValues?: any }) {
   const { closeModal } = useModal();
   const [lang, setLang] = useState<"en" | "ar">("en");
@@ -98,7 +104,23 @@ export default function CreateRole({ initValues }: { initValues?: any }) {
               key={"permissionsSelect"}
                 isMulti
                 menuPortalTarget={document.body}
-                styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
+                styles={{
+                  menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                  control: (base) => ({
+                    ...base,
+                    alignItems: 'flex-start',
+                  }),
+                  valueContainer: (base) => ({
+                    ...base,
+                    maxHeight: PERMISSIONS_SELECT_INPUT_MAX_HEIGHT_PX,
+                    overflowY: 'auto',
+                  }),
+                  indicatorsContainer: (base) => ({
+                    ...base,
+                    height: 'auto',
+                    alignSelf: 'center',
+                  }),
+                }}
                 options={permissions?.data?.map((permission: any) => ({
                   value: permission.id,
                   label: permission.name || permission.name || "Unnamed",

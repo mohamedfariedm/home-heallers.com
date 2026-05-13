@@ -1,6 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 import {
   Moon,
   Sun,
@@ -34,7 +40,10 @@ import {
   mergeCanvasPage,
   starterCanvasPage,
 } from '@/lib/landing-builder/canvas-defaults';
-import { addSection, insertSectionAfter } from '@/lib/landing-builder/canvas-mutators';
+import {
+  addSection,
+  insertSectionAfter,
+} from '@/lib/landing-builder/canvas-mutators';
 import { CanvasPagePreview } from '@/components/landing/canvas/canvas-page-preview';
 import { CanvasQuickEditBar } from './canvas-quick-edit-bar';
 import { CanvasLayersPanel } from './canvas-layers-panel';
@@ -57,34 +66,55 @@ function flushCanvasLocales(
   prev: LandingProjectState,
   pageId: string,
   locale: LandingLocale,
-  canvas: CanvasPage,
+  canvas: CanvasPage
 ): LandingProjectState {
   const syncBlockContentWithPrimary = (
     target: CanvasBlock,
     oldPrimary: CanvasBlock | undefined,
-    newPrimary: CanvasBlock | undefined,
+    newPrimary: CanvasBlock | undefined
   ): CanvasBlock => {
     let next = target;
-    if (oldPrimary && newPrimary && oldPrimary.type === target.type && newPrimary.type === target.type) {
+    if (
+      oldPrimary &&
+      newPrimary &&
+      oldPrimary.type === target.type &&
+      newPrimary.type === target.type
+    ) {
       if (target.type === 'text') {
         const oldText = oldPrimary as Extract<CanvasBlock, { type: 'text' }>;
         const newText = newPrimary as Extract<CanvasBlock, { type: 'text' }>;
-        if (target.content === oldText.content) next = { ...target, content: newText.content };
+        if (target.content === oldText.content)
+          next = { ...target, content: newText.content };
       } else if (target.type === 'copy') {
         const oldCopy = oldPrimary as Extract<CanvasBlock, { type: 'copy' }>;
         const newCopy = newPrimary as Extract<CanvasBlock, { type: 'copy' }>;
         next = {
           ...target,
-          eyebrow: target.eyebrow === oldCopy.eyebrow ? newCopy.eyebrow : target.eyebrow,
-          headline: target.headline === oldCopy.headline ? newCopy.headline : target.headline,
+          eyebrow:
+            target.eyebrow === oldCopy.eyebrow
+              ? newCopy.eyebrow
+              : target.eyebrow,
+          headline:
+            target.headline === oldCopy.headline
+              ? newCopy.headline
+              : target.headline,
           subheadline:
-            target.subheadline === oldCopy.subheadline ? newCopy.subheadline : target.subheadline,
+            target.subheadline === oldCopy.subheadline
+              ? newCopy.subheadline
+              : target.subheadline,
           body: target.body === oldCopy.body ? newCopy.body : target.body,
         };
       } else if (target.type === 'button') {
-        const oldButton = oldPrimary as Extract<CanvasBlock, { type: 'button' }>;
-        const newButton = newPrimary as Extract<CanvasBlock, { type: 'button' }>;
-        if (target.label === oldButton.label) next = { ...target, label: newButton.label };
+        const oldButton = oldPrimary as Extract<
+          CanvasBlock,
+          { type: 'button' }
+        >;
+        const newButton = newPrimary as Extract<
+          CanvasBlock,
+          { type: 'button' }
+        >;
+        if (target.label === oldButton.label)
+          next = { ...target, label: newButton.label };
       } else if (target.type === 'form') {
         const oldForm = oldPrimary as Extract<CanvasBlock, { type: 'form' }>;
         const newForm = newPrimary as Extract<CanvasBlock, { type: 'form' }>;
@@ -92,9 +122,13 @@ function flushCanvasLocales(
           ...target,
           title: target.title === oldForm.title ? newForm.title : target.title,
           description:
-            target.description === oldForm.description ? newForm.description : target.description,
+            target.description === oldForm.description
+              ? newForm.description
+              : target.description,
           submitLabel:
-            target.submitLabel === oldForm.submitLabel ? newForm.submitLabel : target.submitLabel,
+            target.submitLabel === oldForm.submitLabel
+              ? newForm.submitLabel
+              : target.submitLabel,
           successMessage:
             target.successMessage === oldForm.successMessage
               ? newForm.successMessage
@@ -105,19 +139,34 @@ function flushCanvasLocales(
             if (!oldField || !newField) return field;
             return {
               ...field,
-              label: field.label === oldField.label ? newField.label : field.label,
+              label:
+                field.label === oldField.label ? newField.label : field.label,
               placeholder:
-                field.placeholder === oldField.placeholder ? newField.placeholder : field.placeholder,
+                field.placeholder === oldField.placeholder
+                  ? newField.placeholder
+                  : field.placeholder,
             };
           }),
         };
       } else if (target.type === 'navbar') {
-        const oldNavbar = oldPrimary as Extract<CanvasBlock, { type: 'navbar' }>;
-        const newNavbar = newPrimary as Extract<CanvasBlock, { type: 'navbar' }>;
+        const oldNavbar = oldPrimary as Extract<
+          CanvasBlock,
+          { type: 'navbar' }
+        >;
+        const newNavbar = newPrimary as Extract<
+          CanvasBlock,
+          { type: 'navbar' }
+        >;
         next = {
           ...target,
-          logoText: target.logoText === oldNavbar.logoText ? newNavbar.logoText : target.logoText,
-          ctaLabel: target.ctaLabel === oldNavbar.ctaLabel ? newNavbar.ctaLabel : target.ctaLabel,
+          logoText:
+            target.logoText === oldNavbar.logoText
+              ? newNavbar.logoText
+              : target.logoText,
+          ctaLabel:
+            target.ctaLabel === oldNavbar.ctaLabel
+              ? newNavbar.ctaLabel
+              : target.ctaLabel,
           links: target.links.map((link, i) => {
             const oldLink = oldNavbar.links[i];
             const newLink = newNavbar.links[i];
@@ -129,13 +178,24 @@ function flushCanvasLocales(
           }),
         };
       } else if (target.type === 'footer') {
-        const oldFooter = oldPrimary as Extract<CanvasBlock, { type: 'footer' }>;
-        const newFooter = newPrimary as Extract<CanvasBlock, { type: 'footer' }>;
+        const oldFooter = oldPrimary as Extract<
+          CanvasBlock,
+          { type: 'footer' }
+        >;
+        const newFooter = newPrimary as Extract<
+          CanvasBlock,
+          { type: 'footer' }
+        >;
         next = {
           ...target,
           copyright:
-            target.copyright === oldFooter.copyright ? newFooter.copyright : target.copyright,
-          tagline: target.tagline === oldFooter.tagline ? newFooter.tagline : target.tagline,
+            target.copyright === oldFooter.copyright
+              ? newFooter.copyright
+              : target.copyright,
+          tagline:
+            target.tagline === oldFooter.tagline
+              ? newFooter.tagline
+              : target.tagline,
           columns: target.columns.map((col, i) => {
             const oldCol = oldFooter.columns[i];
             const newCol = newFooter.columns[i];
@@ -147,7 +207,10 @@ function flushCanvasLocales(
                 const oldLink = oldCol.links[linkIndex];
                 const newLink = newCol.links[linkIndex];
                 if (!oldLink || !newLink) return l;
-                return { ...l, label: l.label === oldLink.label ? newLink.label : l.label };
+                return {
+                  ...l,
+                  label: l.label === oldLink.label ? newLink.label : l.label,
+                };
               }),
             };
           }),
@@ -159,24 +222,33 @@ function flushCanvasLocales(
           ...target,
           title: target.title === oldCard.title ? newCard.title : target.title,
           body: target.body === oldCard.body ? newCard.body : target.body,
-          ctaLabel: target.ctaLabel === oldCard.ctaLabel ? newCard.ctaLabel : target.ctaLabel,
+          ctaLabel:
+            target.ctaLabel === oldCard.ctaLabel
+              ? newCard.ctaLabel
+              : target.ctaLabel,
         };
       }
     }
 
     if (next.type === 'stack' || next.type === 'grid') {
       const oldChildren =
-        oldPrimary && (oldPrimary.type === 'stack' || oldPrimary.type === 'grid') ? oldPrimary.children : [];
+        oldPrimary &&
+        (oldPrimary.type === 'stack' || oldPrimary.type === 'grid')
+          ? oldPrimary.children
+          : [];
       const newChildren =
-        newPrimary && (newPrimary.type === 'stack' || newPrimary.type === 'grid') ? newPrimary.children : [];
+        newPrimary &&
+        (newPrimary.type === 'stack' || newPrimary.type === 'grid')
+          ? newPrimary.children
+          : [];
       return {
         ...next,
         children: next.children.map((child) =>
           syncBlockContentWithPrimary(
             child,
             oldChildren.find((x) => x.id === child.id),
-            newChildren.find((x) => x.id === child.id),
-          ),
+            newChildren.find((x) => x.id === child.id)
+          )
         ),
       };
     }
@@ -186,10 +258,14 @@ function flushCanvasLocales(
   const syncLocaleWithPrimaryFallback = (
     targetCanvas: CanvasPage,
     oldPrimaryCanvas: CanvasPage,
-    newPrimaryCanvas: CanvasPage,
+    newPrimaryCanvas: CanvasPage
   ): CanvasPage => {
-    const oldSections = new Map(oldPrimaryCanvas.sections.map((s) => [s.id, s]));
-    const newSections = new Map(newPrimaryCanvas.sections.map((s) => [s.id, s]));
+    const oldSections = new Map(
+      oldPrimaryCanvas.sections.map((s) => [s.id, s])
+    );
+    const newSections = new Map(
+      newPrimaryCanvas.sections.map((s) => [s.id, s])
+    );
     return {
       ...targetCanvas,
       siteName:
@@ -202,13 +278,15 @@ function flushCanvasLocales(
         return {
           ...section,
           name:
-            oldSection && newSection && section.name === oldSection.name ? newSection.name : section.name,
+            oldSection && newSection && section.name === oldSection.name
+              ? newSection.name
+              : section.name,
           children: section.children.map((child) =>
             syncBlockContentWithPrimary(
               child,
               oldSection?.children.find((x) => x.id === child.id),
-              newSection?.children.find((x) => x.id === child.id),
-            ),
+              newSection?.children.find((x) => x.id === child.id)
+            )
           ),
         };
       }),
@@ -222,7 +300,9 @@ function flushCanvasLocales(
         ? (() => {
             const primary = p.locales[0]?.code ?? 'en';
             const oldPrimaryCanvas =
-              p.canvasLocales[primary] ?? p.canvasLocales[locale] ?? mergeCanvasPage({});
+              p.canvasLocales[primary] ??
+              p.canvasLocales[locale] ??
+              mergeCanvasPage({});
             const nextCanvasLocales = { ...p.canvasLocales, [locale]: canvas };
             if (locale === primary) {
               for (const loc of p.locales) {
@@ -232,7 +312,7 @@ function flushCanvasLocales(
                 nextCanvasLocales[loc.code] = syncLocaleWithPrimaryFallback(
                   currentLocaleCanvas,
                   oldPrimaryCanvas,
-                  canvas,
+                  canvas
                 );
               }
             }
@@ -242,7 +322,7 @@ function flushCanvasLocales(
               updatedAt: new Date().toISOString(),
             };
           })()
-        : p,
+        : p
     ),
   };
 }
@@ -253,15 +333,23 @@ type InnerProps = Props & {
   seoDraft: LandingPageSeo;
   setSeoDraft: React.Dispatch<React.SetStateAction<LandingPageSeo>>;
   openPanel: 'layers' | 'props' | 'json' | 'seo' | null;
-  setOpenPanel: React.Dispatch<React.SetStateAction<'layers' | 'props' | 'json' | 'seo' | null>>;
+  setOpenPanel: React.Dispatch<
+    React.SetStateAction<'layers' | 'props' | 'json' | 'seo' | null>
+  >;
   previewDark: boolean;
   setPreviewDark: React.Dispatch<React.SetStateAction<boolean>>;
   previewViewport: 'desktop' | 'tablet' | 'mobile';
-  setPreviewViewport: React.Dispatch<React.SetStateAction<'desktop' | 'tablet' | 'mobile'>>;
+  setPreviewViewport: React.Dispatch<
+    React.SetStateAction<'desktop' | 'tablet' | 'mobile'>
+  >;
   pageTitle: string;
   setPageTitle: React.Dispatch<React.SetStateAction<string>>;
   commitTitle: () => void;
-  flushCanvasToProject: (pageId: string, locale: LandingLocale, canvas: CanvasPage) => void;
+  flushCanvasToProject: (
+    pageId: string,
+    locale: LandingLocale,
+    canvas: CanvasPage
+  ) => void;
 };
 
 const LANGUAGE_PRESETS: LandingLocaleConfig[] = [
@@ -280,7 +368,9 @@ const LANGUAGE_PRESETS: LandingLocaleConfig[] = [
 ];
 
 function localeFlag(loc: LandingLocaleConfig): string {
-  return loc.flag ?? LANGUAGE_PRESETS.find((x) => x.code === loc.code)?.flag ?? '🏳️';
+  return (
+    loc.flag ?? LANGUAGE_PRESETS.find((x) => x.code === loc.code)?.flag ?? '🏳️'
+  );
 }
 
 function LandingEditorWorkspaceInner({
@@ -302,13 +392,18 @@ function LandingEditorWorkspaceInner({
   flushCanvasToProject,
   onExit,
 }: InnerProps) {
-  const { canvas, setCanvas, hydrate, undo, redo, canUndo, canRedo } = useLandingEditorCanvas();
+  const { canvas, setCanvas, hydrate, undo, redo, canUndo, canRedo } =
+    useLandingEditorCanvas();
 
   const pageLocales = page.locales.length
     ? page.locales
     : ([{ code: 'en', label: 'English', dir: 'ltr' }] as LandingLocaleConfig[]);
-  const addableLocales = LANGUAGE_PRESETS.filter((preset) => !pageLocales.some((l) => l.code === preset.code));
-  const [selectedPresetCode, setSelectedPresetCode] = useState<string>(addableLocales[0]?.code ?? 'ar');
+  const addableLocales = LANGUAGE_PRESETS.filter(
+    (preset) => !pageLocales.some((l) => l.code === preset.code)
+  );
+  const [selectedPresetCode, setSelectedPresetCode] = useState<string>(
+    addableLocales[0]?.code ?? 'ar'
+  );
 
   useEffect(() => {
     if (!addableLocales.some((x) => x.code === selectedPresetCode)) {
@@ -330,7 +425,9 @@ function LandingEditorWorkspaceInner({
       ...prev,
       pages: prev.pages.map((p) => {
         if (p.id !== page.id) return p;
-        const source = p.canvasLocales[editingLocale] ?? p.canvasLocales[p.locales[0]?.code ?? 'en'];
+        const source =
+          p.canvasLocales[editingLocale] ??
+          p.canvasLocales[p.locales[0]?.code ?? 'en'];
         return {
           ...p,
           locales: [...p.locales, picked],
@@ -366,9 +463,14 @@ function LandingEditorWorkspaceInner({
         };
       }),
     }));
-    if (editingLocale === code) setEditingLocale(pageLocales.find((l) => l.code !== code)?.code ?? 'en');
+    if (editingLocale === code)
+      setEditingLocale(pageLocales.find((l) => l.code !== code)?.code ?? 'en');
     const removed = pageLocales.find((l) => l.code === code);
-    toast.success(`${removed ? `${localeFlag(removed)} ${removed.label}` : code.toUpperCase()} removed`);
+    toast.success(
+      `${
+        removed ? `${localeFlag(removed)} ${removed.label}` : code.toUpperCase()
+      } removed`
+    );
   };
 
   const mirrorSectionStructure = useCallback(
@@ -380,15 +482,19 @@ function LandingEditorWorkspaceInner({
       setProject((prev) => {
         const p = prev.pages.find((x) => x.id === page.id);
         if (!p) return prev;
-        const nextCanvasLocales = p.locales.reduce<Record<string, CanvasPage>>((acc, loc, i) => {
-          const primary = p.locales[0]?.code ?? 'en';
-          const source = p.canvasLocales[loc.code] ?? p.canvasLocales[primary];
-          acc[loc.code] = mergeCanvasPage(mutator(mergeCanvasPage(source)));
-          if (i === 0 && !acc[primary]) {
-            acc[primary] = acc[loc.code];
-          }
-          return acc;
-        }, {});
+        const nextCanvasLocales = p.locales.reduce<Record<string, CanvasPage>>(
+          (acc, loc, i) => {
+            const primary = p.locales[0]?.code ?? 'en';
+            const source =
+              p.canvasLocales[loc.code] ?? p.canvasLocales[primary];
+            acc[loc.code] = mergeCanvasPage(mutator(mergeCanvasPage(source)));
+            if (i === 0 && !acc[primary]) {
+              acc[primary] = acc[loc.code];
+            }
+            return acc;
+          },
+          {}
+        );
         return {
           ...prev,
           pages: prev.pages.map((x) =>
@@ -398,12 +504,12 @@ function LandingEditorWorkspaceInner({
                   canvasLocales: nextCanvasLocales,
                   updatedAt: new Date().toISOString(),
                 }
-              : x,
+              : x
           ),
         };
       });
     },
-    [canvas, page.id, setProject, hydrate],
+    [canvas, page.id, setProject, hydrate]
   );
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -424,7 +530,8 @@ function LandingEditorWorkspaceInner({
       setSelectedId(null);
     };
     document.addEventListener('pointerdown', onPointerDown, true);
-    return () => document.removeEventListener('pointerdown', onPointerDown, true);
+    return () =>
+      document.removeEventListener('pointerdown', onPointerDown, true);
   }, [selectedId]);
 
   useEffect(() => {
@@ -436,7 +543,8 @@ function LandingEditorWorkspaceInner({
         return;
       }
       const t = e.target as HTMLElement | null;
-      if (t?.closest('input, textarea, select, [contenteditable="true"]')) return;
+      if (t?.closest('input, textarea, select, [contenteditable="true"]'))
+        return;
       setSelectedId(null);
     };
     window.addEventListener('keydown', onKeyDown);
@@ -445,7 +553,8 @@ function LandingEditorWorkspaceInner({
 
   useEffect(() => {
     if (!selectedId) return;
-    if (findSection(canvas, selectedId) || findBlock(canvas, selectedId)) return;
+    if (findSection(canvas, selectedId) || findBlock(canvas, selectedId))
+      return;
     setSelectedId(null);
   }, [canvas, selectedId]);
 
@@ -474,7 +583,11 @@ function LandingEditorWorkspaceInner({
       const formSection = defaultSection('Lead capture');
       formSection.contentAlign = 'center';
       formSection.children = [defaultFormBlock()];
-      return { ...next, siteName: current.siteName || 'Landing', sections: [...next.sections, formSection] };
+      return {
+        ...next,
+        siteName: current.siteName || 'Landing',
+        sections: [...next.sections, formSection],
+      };
     });
     toast.success('Lead generation template loaded');
   };
@@ -497,13 +610,20 @@ function LandingEditorWorkspaceInner({
         const localeCanvas =
           loc.code === editingLocale
             ? canvas
-            : (page.canvasLocales[loc.code] ?? page.canvasLocales[pageLocales[0].code]);
-        zip.file(`canvas-${loc.code}.json`, JSON.stringify(mergeCanvasPage(localeCanvas), null, 2));
+            : page.canvasLocales[loc.code] ??
+              page.canvasLocales[pageLocales[0].code];
+        zip.file(
+          `canvas-${loc.code}.json`,
+          JSON.stringify(mergeCanvasPage(localeCanvas), null, 2)
+        );
       }
-      zip.file('seo.json', JSON.stringify(mergeLandingPageSeo(page.seo, seoDraft), null, 2));
+      zip.file(
+        'seo.json',
+        JSON.stringify(mergeLandingPageSeo(page.seo, seoDraft), null, 2)
+      );
       zip.file(
         'README.md',
-        `# Landing export\n\n- canvas-<locale>.json — one file per configured language.\n- seo.json — meta / Open Graph / hreflang fields.\n- Schema: src/types/landing-canvas.ts, landing-seo.ts\n`,
+        `# Landing export\n\n- canvas-<locale>.json — one file per configured language.\n- seo.json — meta / Open Graph / hreflang fields.\n- Schema: src/types/landing-canvas.ts, landing-seo.ts\n`
       );
       const blob = await zip.generateAsync({ type: 'blob' });
       const url = URL.createObjectURL(blob);
@@ -554,7 +674,9 @@ function LandingEditorWorkspaceInner({
             value={pageTitle}
             onChange={(e) => setPageTitle(e.target.value)}
             onBlur={commitTitle}
-            onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
+            onKeyDown={(e) =>
+              e.key === 'Enter' && (e.target as HTMLInputElement).blur()
+            }
             title="Page name"
           />
         </div>
@@ -572,7 +694,7 @@ function LandingEditorWorkspaceInner({
                 className={cn(
                   'rounded-lg px-2 py-1 text-xs font-semibold text-zinc-600 transition dark:text-zinc-300',
                   editingLocale === loc.code &&
-                    'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/50 dark:text-indigo-200',
+                    'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/50 dark:text-indigo-200'
                 )}
                 title={loc.label}
               >
@@ -593,7 +715,9 @@ function LandingEditorWorkspaceInner({
                   {`${localeFlag(lang)} ${lang.label}`}
                 </option>
               ))}
-              {addableLocales.length === 0 ? <option value="">All preset languages added</option> : null}
+              {addableLocales.length === 0 ? (
+                <option value="">All preset languages added</option>
+              ) : null}
             </select>
             <button
               type="button"
@@ -648,7 +772,7 @@ function LandingEditorWorkspaceInner({
                 className={cn(
                   'rounded-lg p-1.5 text-zinc-500 transition dark:text-zinc-400',
                   previewViewport === key &&
-                    'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-200',
+                    'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-200'
                 )}
               >
                 <Icon className="h-4 w-4" />
@@ -667,7 +791,9 @@ function LandingEditorWorkspaceInner({
             ) : (
               <Moon className="h-3.5 w-3.5" />
             )}
-            <span className="hidden sm:inline">{previewDark ? 'Light' : 'Dark'}</span>
+            <span className="hidden sm:inline">
+              {previewDark ? 'Light' : 'Dark'}
+            </span>
           </button>
 
           <button
@@ -723,7 +849,7 @@ function LandingEditorWorkspaceInner({
               'flex h-11 w-11 items-center justify-center rounded-xl text-zinc-500 transition dark:text-zinc-400',
               openPanel === 'layers'
                 ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-200'
-                : 'hover:bg-zinc-100 dark:hover:bg-zinc-800',
+                : 'hover:bg-zinc-100 dark:hover:bg-zinc-800'
             )}
           >
             <Layers className="h-5 w-5" strokeWidth={1.75} />
@@ -738,7 +864,7 @@ function LandingEditorWorkspaceInner({
               'flex h-11 w-11 items-center justify-center rounded-xl text-zinc-500 transition dark:text-zinc-400',
               openPanel === 'props'
                 ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-200'
-                : 'hover:bg-zinc-100 dark:hover:bg-zinc-800',
+                : 'hover:bg-zinc-100 dark:hover:bg-zinc-800'
             )}
           >
             <SlidersHorizontal className="h-5 w-5" strokeWidth={1.75} />
@@ -753,7 +879,7 @@ function LandingEditorWorkspaceInner({
               'flex h-11 w-11 items-center justify-center rounded-xl text-zinc-500 transition dark:text-zinc-400',
               openPanel === 'json'
                 ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-200'
-                : 'hover:bg-zinc-100 dark:hover:bg-zinc-800',
+                : 'hover:bg-zinc-100 dark:hover:bg-zinc-800'
             )}
           >
             <Code2 className="h-5 w-5" strokeWidth={1.75} />
@@ -768,7 +894,7 @@ function LandingEditorWorkspaceInner({
               'flex h-11 w-11 items-center justify-center rounded-xl text-zinc-500 transition dark:text-zinc-400',
               openPanel === 'seo'
                 ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-200'
-                : 'hover:bg-zinc-100 dark:hover:bg-zinc-800',
+                : 'hover:bg-zinc-100 dark:hover:bg-zinc-800'
             )}
           >
             <Search className="h-5 w-5" strokeWidth={1.75} />
@@ -793,17 +919,18 @@ function LandingEditorWorkspaceInner({
               openPanel === 'layers'
                 ? 'Layers'
                 : openPanel === 'props'
-                  ? 'Properties'
-                  : openPanel === 'json'
-                    ? 'JSON'
-                    : 'SEO'
+                ? 'Properties'
+                : openPanel === 'json'
+                ? 'JSON'
+                : 'SEO'
             }
           >
             <div className="flex shrink-0 items-center justify-between gap-2 border-b border-zinc-200 px-3 py-2 dark:border-zinc-800">
               <span className="text-sm font-semibold text-zinc-900 dark:text-white">
                 {openPanel === 'layers' && 'Layers'}
                 {openPanel === 'props' && 'Properties'}
-                {openPanel === 'json' && `JSON (${editingLocale.toUpperCase()} canvas)`}
+                {openPanel === 'json' &&
+                  `JSON (${editingLocale.toUpperCase()} canvas)`}
                 {openPanel === 'seo' && 'SEO'}
               </span>
               <button
@@ -849,7 +976,9 @@ function LandingEditorWorkspaceInner({
                       try {
                         const parsed = JSON.parse(jsonText) as unknown;
                         setCanvas(mergeCanvasPage(parsed as typeof canvas));
-                        toast.success(`Canvas applied (${editingLocale.toUpperCase()})`);
+                        toast.success(
+                          `Canvas applied (${editingLocale.toUpperCase()})`
+                        );
                       } catch {
                         toast.error('Invalid JSON');
                       }
@@ -872,7 +1001,7 @@ function LandingEditorWorkspaceInner({
               'mx-auto w-full transition-[max-width] duration-300 ease-out',
               previewViewport === 'mobile' && 'max-w-[400px]',
               previewViewport === 'tablet' && 'max-w-[848px]',
-              previewViewport === 'desktop' && 'max-w-6xl',
+              previewViewport === 'desktop' && 'max-w-6xl'
             )}
           >
             <div
@@ -880,12 +1009,17 @@ function LandingEditorWorkspaceInner({
               className={cn(
                 'overflow-hidden rounded-2xl border border-zinc-200/80 bg-white shadow-xl ring-1 ring-black/5 dark:border-zinc-800 dark:bg-zinc-950 dark:ring-white/10',
                 previewViewport !== 'desktop' &&
-                  'shadow-2xl ring-4 ring-zinc-300/90 dark:ring-zinc-700',
+                  'shadow-2xl ring-4 ring-zinc-300/90 dark:ring-zinc-700'
               )}
             >
               <div className="flex flex-wrap items-center justify-center gap-2 border-b border-zinc-100 bg-zinc-50/80 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-900/50">
                 <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                  {`Preview (${editingLocale.toUpperCase()}${pageLocales.find((x) => x.code === editingLocale)?.dir === 'rtl' ? ', RTL' : ''})`}{' '}
+                  {`Preview (${editingLocale.toUpperCase()}${
+                    pageLocales.find((x) => x.code === editingLocale)?.dir ===
+                    'rtl'
+                      ? ', RTL'
+                      : ''
+                  })`}{' '}
                   — click outside frame or Esc to clear selection
                 </span>
                 <span className="rounded-md bg-zinc-200/80 px-2 py-0.5 text-[10px] font-semibold text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
@@ -901,7 +1035,12 @@ function LandingEditorWorkspaceInner({
                 <CanvasPagePreview
                   canvas={canvas}
                   previewDark={previewDark}
-                  previewDir={pageLocales.find((x) => x.code === editingLocale)?.dir === 'rtl' ? 'rtl' : 'ltr'}
+                  previewDir={
+                    pageLocales.find((x) => x.code === editingLocale)?.dir ===
+                    'rtl'
+                      ? 'rtl'
+                      : 'ltr'
+                  }
                   availableLocales={pageLocales}
                   currentLocale={editingLocale}
                   onLocaleChange={setEditingLocale}
@@ -910,7 +1049,7 @@ function LandingEditorWorkspaceInner({
                   editable
                   onAppendSection={() => {
                     const section = defaultSection(
-                      `Section ${canvas.sections.length + 1}`,
+                      `Section ${canvas.sections.length + 1}`
                     );
                     mirrorSectionStructure((c) => addSection(c, section));
                     setSelectedId(section.id);
@@ -918,9 +1057,11 @@ function LandingEditorWorkspaceInner({
                   }}
                   onInsertSectionAfter={(sectionId) => {
                     const section = defaultSection(
-                      `Section ${canvas.sections.length + 1}`,
+                      `Section ${canvas.sections.length + 1}`
                     );
-                    mirrorSectionStructure((c) => insertSectionAfter(c, sectionId, section));
+                    mirrorSectionStructure((c) =>
+                      insertSectionAfter(c, sectionId, section)
+                    );
                     setSelectedId(section.id);
                     pendingScrollToId.current = section.id;
                   }}
@@ -942,14 +1083,18 @@ function LandingEditorWorkspaceInner({
 
 export function LandingEditorWorkspace({ page, setProject, onExit }: Props) {
   const [editingLocale, setEditingLocale] = useState<LandingLocale>(
-    page.locales[0]?.code ?? 'en',
+    page.locales[0]?.code ?? 'en'
   );
-  const [seoDraft, setSeoDraft] = useState<LandingPageSeo>(() => mergeLandingPageSeo(undefined, page.seo));
-  const [openPanel, setOpenPanel] = useState<'layers' | 'props' | 'json' | 'seo' | null>(null);
+  const [seoDraft, setSeoDraft] = useState<LandingPageSeo>(() =>
+    mergeLandingPageSeo(undefined, page.seo)
+  );
+  const [openPanel, setOpenPanel] = useState<
+    'layers' | 'props' | 'json' | 'seo' | null
+  >(null);
   const [previewDark, setPreviewDark] = useState(false);
-  const [previewViewport, setPreviewViewport] = useState<'desktop' | 'tablet' | 'mobile'>(
-    'desktop',
-  );
+  const [previewViewport, setPreviewViewport] = useState<
+    'desktop' | 'tablet' | 'mobile'
+  >('desktop');
   const [pageTitle, setPageTitle] = useState(page.name);
 
   useEffect(() => {
@@ -976,11 +1121,15 @@ export function LandingEditorWorkspace({ page, setProject, onExit }: Props) {
   };
 
   const flushCanvasToProject = useCallback(
-    (pageId: string, locale: LandingLocale, c: Parameters<typeof mergeCanvasPage>[0]) => {
+    (
+      pageId: string,
+      locale: LandingLocale,
+      c: Parameters<typeof mergeCanvasPage>[0]
+    ) => {
       const merged = mergeCanvasPage(c);
       setProject((prev) => flushCanvasLocales(prev, pageId, locale, merged));
     },
-    [setProject],
+    [setProject]
   );
 
   const persistSeo = useCallback(
@@ -994,11 +1143,11 @@ export function LandingEditorWorkspace({ page, setProject, onExit }: Props) {
                 seo: mergeLandingPageSeo(p.seo, seo),
                 updatedAt: new Date().toISOString(),
               }
-            : p,
+            : p
         ),
       }));
     },
-    [page.id, setProject],
+    [page.id, setProject]
   );
 
   useEffect(() => {
@@ -1014,7 +1163,8 @@ export function LandingEditorWorkspace({ page, setProject, onExit }: Props) {
       pageId={page.id}
       locale={editingLocale}
       seed={mergeCanvasPage(
-        page.canvasLocales[editingLocale] ?? page.canvasLocales[page.locales[0]?.code ?? 'en'],
+        page.canvasLocales[editingLocale] ??
+          page.canvasLocales[page.locales[0]?.code ?? 'en']
       )}
       onUnmountPersist={flushCanvasToProject}
       onDebouncedPersist={flushCanvasToProject}

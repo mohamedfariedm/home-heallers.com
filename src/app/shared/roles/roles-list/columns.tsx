@@ -16,7 +16,7 @@ import AvatarCard from '@/components/ui/avatar-card';
 import DateCell from '@/components/ui/date-cell';
 import DeletePopover from '@/app/shared/delete-popover';
 import CreateButton from '../../create-button';
-import CreateRole from './create-role';
+import CreateRole, { ROLE_MODAL_CUSTOM_SIZE } from './create-role';
 import { IPermission } from '@/types';
 import TrashIcon from '@/components/icons/trash';
 
@@ -122,9 +122,10 @@ export const getColumns = ({
                   <PencilIcon className="h-4 w-4" />
                 </ActionIcon>
               }
-              view={<CreateRole initValues={row}/>}
-              label=''
-              className='p-0 m-0 bg-transparent text-gray-700'
+              view={<CreateRole initValues={row} />}
+              customSize={ROLE_MODAL_CUSTOM_SIZE}
+              label=""
+              className="m-0 bg-transparent p-0 text-gray-700"
             />
           </Tooltip>
           <DeletePopover

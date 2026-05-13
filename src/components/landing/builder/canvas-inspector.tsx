@@ -1,6 +1,10 @@
 'use client';
 
-import type { CanvasBlock, CanvasPage, CanvasSection } from '@/types/landing-canvas';
+import type {
+  CanvasBlock,
+  CanvasPage,
+  CanvasSection,
+} from '@/types/landing-canvas';
 import { findBlock, findSection } from '@/lib/landing-builder/canvas-query';
 import {
   appendBlockToContainer,
@@ -33,7 +37,10 @@ import {
   createRowWithColumns,
 } from '@/lib/landing-builder/block-presets';
 import { ImageDropField } from './image-drop-field';
-import { CardBlockInspector, GridBlockInspector } from './canvas-inspector-card-grid';
+import {
+  CardBlockInspector,
+  GridBlockInspector,
+} from './canvas-inspector-card-grid';
 
 type Props = {
   canvas: CanvasPage;
@@ -52,7 +59,9 @@ function Field({
 }) {
   return (
     <label className="block space-y-1.5">
-      <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">{label}</span>
+      <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+        {label}
+      </span>
       {children}
     </label>
   );
@@ -88,7 +97,9 @@ export function CanvasInspector({
   if (!selectedId) {
     return (
       <div className="space-y-4">
-        <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">Page</p>
+        <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">
+          Page
+        </p>
         <Field label="Site name">
           <input
             className={inputClass}
@@ -106,14 +117,18 @@ export function CanvasInspector({
                 className={colorSwatchClass}
                 value={toPickerColor(canvas.primaryColor)}
                 onChange={(e) =>
-                  onChange(updatePageMeta(canvas, { primaryColor: e.target.value }))
+                  onChange(
+                    updatePageMeta(canvas, { primaryColor: e.target.value })
+                  )
                 }
               />
               <input
                 className={inputClass}
                 value={canvas.primaryColor}
                 onChange={(e) =>
-                  onChange(updatePageMeta(canvas, { primaryColor: e.target.value }))
+                  onChange(
+                    updatePageMeta(canvas, { primaryColor: e.target.value })
+                  )
                 }
               />
             </div>
@@ -125,14 +140,18 @@ export function CanvasInspector({
                 className={colorSwatchClass}
                 value={toPickerColor(canvas.secondaryColor)}
                 onChange={(e) =>
-                  onChange(updatePageMeta(canvas, { secondaryColor: e.target.value }))
+                  onChange(
+                    updatePageMeta(canvas, { secondaryColor: e.target.value })
+                  )
                 }
               />
               <input
                 className={inputClass}
                 value={canvas.secondaryColor}
                 onChange={(e) =>
-                  onChange(updatePageMeta(canvas, { secondaryColor: e.target.value }))
+                  onChange(
+                    updatePageMeta(canvas, { secondaryColor: e.target.value })
+                  )
                 }
               />
             </div>
@@ -145,14 +164,18 @@ export function CanvasInspector({
               className={colorSwatchClass}
               value={toPickerColor(canvas.pageBackground)}
               onChange={(e) =>
-                onChange(updatePageMeta(canvas, { pageBackground: e.target.value }))
+                onChange(
+                  updatePageMeta(canvas, { pageBackground: e.target.value })
+                )
               }
             />
             <input
               className={inputClass}
               value={canvas.pageBackground}
               onChange={(e) =>
-                onChange(updatePageMeta(canvas, { pageBackground: e.target.value }))
+                onChange(
+                  updatePageMeta(canvas, { pageBackground: e.target.value })
+                )
               }
               placeholder="#ffffff or linear-gradient(...)"
             />
@@ -162,13 +185,14 @@ export function CanvasInspector({
           Floating contact and social
         </p>
         <p className="text-xs text-zinc-500 dark:text-zinc-400">
-          Fixed buttons for phone, WhatsApp, and optional social links. They appear inside the live
-          preview when enabled, and use the full browser window when you publish this page for
-          real.
+          Fixed buttons for phone, WhatsApp, and optional social links. They
+          appear inside the live preview when enabled, and use the full browser
+          window when you publish this page for real.
         </p>
         <p className="text-xs font-medium text-amber-800 dark:text-amber-200/90">
-          You are only seeing this Page section when nothing is selected. Click outside the
-          preview or press Esc to deselect a block, then open Properties again.
+          You are only seeing this Page section when nothing is selected. Click
+          outside the preview or press Esc to deselect a block, then open
+          Properties again.
         </p>
         <label className="flex cursor-pointer items-center gap-2 text-sm text-zinc-800 dark:text-zinc-100">
           <input
@@ -177,15 +201,18 @@ export function CanvasInspector({
             checked={canvas.floatingDock.enabled}
             onChange={(e) =>
               onChange(
-                updatePageMeta(canvas, { floatingDock: { enabled: e.target.checked } }),
+                updatePageMeta(canvas, {
+                  floatingDock: { enabled: e.target.checked },
+                })
               )
             }
           />
           Enable floating strip
         </label>
         <p className="text-xs text-zinc-500 dark:text-zinc-400">
-          After enabling, enter at least one phone (with Show call), WhatsApp digits (with Show
-          WhatsApp), or a social URL — otherwise nothing is shown.
+          After enabling, enter at least one phone (with Show call), WhatsApp
+          digits (with Show WhatsApp), or a social URL — otherwise nothing is
+          shown.
         </p>
         <Field label="Position">
           <select
@@ -195,9 +222,10 @@ export function CanvasInspector({
               onChange(
                 updatePageMeta(canvas, {
                   floatingDock: {
-                    position: e.target.value as typeof canvas.floatingDock.position,
+                    position: e.target
+                      .value as typeof canvas.floatingDock.position,
                   },
-                }),
+                })
               )
             }
           >
@@ -211,7 +239,11 @@ export function CanvasInspector({
               className={inputClass}
               value={canvas.floatingDock.phone}
               onChange={(e) =>
-                onChange(updatePageMeta(canvas, { floatingDock: { phone: e.target.value } }))
+                onChange(
+                  updatePageMeta(canvas, {
+                    floatingDock: { phone: e.target.value },
+                  })
+                )
               }
               placeholder="+1 555 0100"
             />
@@ -221,7 +253,11 @@ export function CanvasInspector({
               className={inputClass}
               value={canvas.floatingDock.whatsapp}
               onChange={(e) =>
-                onChange(updatePageMeta(canvas, { floatingDock: { whatsapp: e.target.value } }))
+                onChange(
+                  updatePageMeta(canvas, {
+                    floatingDock: { whatsapp: e.target.value },
+                  })
+                )
               }
               placeholder="15550101000"
             />
@@ -234,7 +270,9 @@ export function CanvasInspector({
               checked={canvas.floatingDock.showCall}
               onChange={(e) =>
                 onChange(
-                  updatePageMeta(canvas, { floatingDock: { showCall: e.target.checked } }),
+                  updatePageMeta(canvas, {
+                    floatingDock: { showCall: e.target.checked },
+                  })
                 )
               }
             />
@@ -246,7 +284,9 @@ export function CanvasInspector({
               checked={canvas.floatingDock.showWhatsapp}
               onChange={(e) =>
                 onChange(
-                  updatePageMeta(canvas, { floatingDock: { showWhatsapp: e.target.checked } }),
+                  updatePageMeta(canvas, {
+                    floatingDock: { showWhatsapp: e.target.checked },
+                  })
                 )
               }
             />
@@ -258,7 +298,11 @@ export function CanvasInspector({
             className={inputClass}
             value={canvas.floatingDock.facebookUrl}
             onChange={(e) =>
-              onChange(updatePageMeta(canvas, { floatingDock: { facebookUrl: e.target.value } }))
+              onChange(
+                updatePageMeta(canvas, {
+                  floatingDock: { facebookUrl: e.target.value },
+                })
+              )
             }
             placeholder="https://facebook.com/…"
           />
@@ -268,7 +312,11 @@ export function CanvasInspector({
             className={inputClass}
             value={canvas.floatingDock.instagramUrl}
             onChange={(e) =>
-              onChange(updatePageMeta(canvas, { floatingDock: { instagramUrl: e.target.value } }))
+              onChange(
+                updatePageMeta(canvas, {
+                  floatingDock: { instagramUrl: e.target.value },
+                })
+              )
             }
           />
         </Field>
@@ -277,7 +325,11 @@ export function CanvasInspector({
             className={inputClass}
             value={canvas.floatingDock.xUrl}
             onChange={(e) =>
-              onChange(updatePageMeta(canvas, { floatingDock: { xUrl: e.target.value } }))
+              onChange(
+                updatePageMeta(canvas, {
+                  floatingDock: { xUrl: e.target.value },
+                })
+              )
             }
           />
         </Field>
@@ -288,7 +340,9 @@ export function CanvasInspector({
               value={canvas.floatingDock.linkedinUrl}
               onChange={(e) =>
                 onChange(
-                  updatePageMeta(canvas, { floatingDock: { linkedinUrl: e.target.value } }),
+                  updatePageMeta(canvas, {
+                    floatingDock: { linkedinUrl: e.target.value },
+                  })
                 )
               }
             />
@@ -299,7 +353,9 @@ export function CanvasInspector({
               value={canvas.floatingDock.youtubeUrl}
               onChange={(e) =>
                 onChange(
-                  updatePageMeta(canvas, { floatingDock: { youtubeUrl: e.target.value } }),
+                  updatePageMeta(canvas, {
+                    floatingDock: { youtubeUrl: e.target.value },
+                  })
                 )
               }
             />
@@ -317,14 +373,18 @@ export function CanvasInspector({
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between gap-2">
-          <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">Section</p>
+          <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">
+            Section
+          </p>
         </div>
         <Field label="Label (editor only)">
           <input
             className={inputClass}
             value={section.name}
             onChange={(e) =>
-              onChange(updateSectionById(canvas, section.id, { name: e.target.value }))
+              onChange(
+                updateSectionById(canvas, section.id, { name: e.target.value })
+              )
             }
           />
         </Field>
@@ -334,7 +394,11 @@ export function CanvasInspector({
             value={section.anchorId ?? ''}
             placeholder={sectionAnchorId(section.name)}
             onChange={(e) =>
-              onChange(updateSectionById(canvas, section.id, { anchorId: e.target.value }))
+              onChange(
+                updateSectionById(canvas, section.id, {
+                  anchorId: e.target.value,
+                })
+              )
             }
           />
         </Field>
@@ -346,7 +410,9 @@ export function CanvasInspector({
               value={toPickerColor(section.background)}
               onChange={(e) =>
                 onChange(
-                  updateSectionById(canvas, section.id, { background: e.target.value }),
+                  updateSectionById(canvas, section.id, {
+                    background: e.target.value,
+                  })
                 )
               }
             />
@@ -355,7 +421,9 @@ export function CanvasInspector({
               value={section.background}
               onChange={(e) =>
                 onChange(
-                  updateSectionById(canvas, section.id, { background: e.target.value }),
+                  updateSectionById(canvas, section.id, {
+                    background: e.target.value,
+                  })
                 )
               }
               placeholder="transparent, #fff, or CSS gradient"
@@ -368,7 +436,11 @@ export function CanvasInspector({
               className={inputClass}
               value={section.paddingY}
               onChange={(e) =>
-                onChange(updateSectionById(canvas, section.id, { paddingY: e.target.value }))
+                onChange(
+                  updateSectionById(canvas, section.id, {
+                    paddingY: e.target.value,
+                  })
+                )
               }
             />
           </Field>
@@ -377,7 +449,11 @@ export function CanvasInspector({
               className={inputClass}
               value={section.paddingX}
               onChange={(e) =>
-                onChange(updateSectionById(canvas, section.id, { paddingX: e.target.value }))
+                onChange(
+                  updateSectionById(canvas, section.id, {
+                    paddingX: e.target.value,
+                  })
+                )
               }
             />
           </Field>
@@ -387,7 +463,11 @@ export function CanvasInspector({
             className={inputClass}
             value={section.maxWidth}
             onChange={(e) =>
-              onChange(updateSectionById(canvas, section.id, { maxWidth: e.target.value }))
+              onChange(
+                updateSectionById(canvas, section.id, {
+                  maxWidth: e.target.value,
+                })
+              )
             }
           />
         </Field>
@@ -399,7 +479,7 @@ export function CanvasInspector({
               onChange(
                 updateSectionById(canvas, section.id, {
                   contentAlign: e.target.value as CanvasSection['contentAlign'],
-                }),
+                })
               )
             }
           >
@@ -428,14 +508,18 @@ export function CanvasInspector({
   const block = findBlock(canvas, selectedId);
   if (!block) {
     return (
-      <p className="text-sm text-zinc-500 dark:text-zinc-400">Selection not found.</p>
+      <p className="text-sm text-zinc-500 dark:text-zinc-400">
+        Selection not found.
+      </p>
     );
   }
 
   if (block.type === 'text') {
     return (
       <div className="space-y-4">
-        <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">Text</p>
+        <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">
+          Text
+        </p>
         <Field label="Content">
           <textarea
             className={cnTextarea()}
@@ -444,8 +528,8 @@ export function CanvasInspector({
             onChange={(e) =>
               onChange(
                 updateBlockById(canvas, block.id, (b) =>
-                  b.type === 'text' ? { ...b, content: e.target.value } : b,
-                ),
+                  b.type === 'text' ? { ...b, content: e.target.value } : b
+                )
               )
             }
           />
@@ -459,8 +543,8 @@ export function CanvasInspector({
                 updateBlockById(canvas, block.id, (b) =>
                   b.type === 'text'
                     ? { ...b, variant: e.target.value as typeof block.variant }
-                    : b,
-                ),
+                    : b
+                )
               )
             }
           >
@@ -483,8 +567,8 @@ export function CanvasInspector({
                 updateBlockById(canvas, block.id, (b) =>
                   b.type === 'text'
                     ? { ...b, align: e.target.value as typeof block.align }
-                    : b,
-                ),
+                    : b
+                )
               )
             }
           >
@@ -501,8 +585,8 @@ export function CanvasInspector({
               onChange={(e) =>
                 onChange(
                   updateBlockById(canvas, block.id, (b) =>
-                    b.type === 'text' ? { ...b, width: e.target.value } : b,
-                  ),
+                    b.type === 'text' ? { ...b, width: e.target.value } : b
+                  )
                 )
               }
             />
@@ -514,8 +598,8 @@ export function CanvasInspector({
               onChange={(e) =>
                 onChange(
                   updateBlockById(canvas, block.id, (b) =>
-                    b.type === 'text' ? { ...b, maxWidth: e.target.value } : b,
-                  ),
+                    b.type === 'text' ? { ...b, maxWidth: e.target.value } : b
+                  )
                 )
               }
             />
@@ -530,8 +614,10 @@ export function CanvasInspector({
               onChange={(e) =>
                 onChange(
                   updateBlockById(canvas, block.id, (b) =>
-                    b.type === 'text' ? { ...b, color: e.target.value || undefined } : b,
-                  ),
+                    b.type === 'text'
+                      ? { ...b, color: e.target.value || undefined }
+                      : b
+                  )
                 )
               }
             />
@@ -543,8 +629,8 @@ export function CanvasInspector({
                   updateBlockById(canvas, block.id, (b) =>
                     b.type === 'text'
                       ? { ...b, color: e.target.value || undefined }
-                      : b,
-                  ),
+                      : b
+                  )
                 )
               }
               placeholder="#0f172a"
@@ -560,8 +646,8 @@ export function CanvasInspector({
                 updateBlockById(canvas, block.id, (b) =>
                   b.type === 'text'
                     ? { ...b, fontSize: e.target.value || undefined }
-                    : b,
-                ),
+                    : b
+                )
               )
             }
             placeholder="e.g. 1.125rem"
@@ -581,7 +667,9 @@ export function CanvasInspector({
   if (block.type === 'copy') {
     return (
       <div className="space-y-4">
-        <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">Copy block</p>
+        <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">
+          Copy block
+        </p>
         <p className="text-xs text-zinc-500 dark:text-zinc-400">
           Eyebrow, headline, subheadline, and multi-line body in one block.
         </p>
@@ -592,8 +680,10 @@ export function CanvasInspector({
             onChange={(e) =>
               onChange(
                 updateBlockById(canvas, block.id, (b) =>
-                  b.type === 'copy' ? { ...b, showEyebrow: e.target.checked } : b,
-                ),
+                  b.type === 'copy'
+                    ? { ...b, showEyebrow: e.target.checked }
+                    : b
+                )
               )
             }
           />
@@ -607,8 +697,8 @@ export function CanvasInspector({
               onChange={(e) =>
                 onChange(
                   updateBlockById(canvas, block.id, (b) =>
-                    b.type === 'copy' ? { ...b, eyebrow: e.target.value } : b,
-                  ),
+                    b.type === 'copy' ? { ...b, eyebrow: e.target.value } : b
+                  )
                 )
               }
             />
@@ -621,8 +711,8 @@ export function CanvasInspector({
             onChange={(e) =>
               onChange(
                 updateBlockById(canvas, block.id, (b) =>
-                  b.type === 'copy' ? { ...b, headline: e.target.value } : b,
-                ),
+                  b.type === 'copy' ? { ...b, headline: e.target.value } : b
+                )
               )
             }
           />
@@ -635,9 +725,12 @@ export function CanvasInspector({
               onChange(
                 updateBlockById(canvas, block.id, (b) =>
                   b.type === 'copy'
-                    ? { ...b, headlineTag: e.target.value as typeof block.headlineTag }
-                    : b,
-                ),
+                    ? {
+                        ...b,
+                        headlineTag: e.target.value as typeof block.headlineTag,
+                      }
+                    : b
+                )
               )
             }
           >
@@ -653,8 +746,10 @@ export function CanvasInspector({
             onChange={(e) =>
               onChange(
                 updateBlockById(canvas, block.id, (b) =>
-                  b.type === 'copy' ? { ...b, showSubheadline: e.target.checked } : b,
-                ),
+                  b.type === 'copy'
+                    ? { ...b, showSubheadline: e.target.checked }
+                    : b
+                )
               )
             }
           />
@@ -668,8 +763,10 @@ export function CanvasInspector({
               onChange={(e) =>
                 onChange(
                   updateBlockById(canvas, block.id, (b) =>
-                    b.type === 'copy' ? { ...b, subheadline: e.target.value } : b,
-                  ),
+                    b.type === 'copy'
+                      ? { ...b, subheadline: e.target.value }
+                      : b
+                  )
                 )
               }
             />
@@ -683,8 +780,8 @@ export function CanvasInspector({
             onChange={(e) =>
               onChange(
                 updateBlockById(canvas, block.id, (b) =>
-                  b.type === 'copy' ? { ...b, body: e.target.value } : b,
-                ),
+                  b.type === 'copy' ? { ...b, body: e.target.value } : b
+                )
               )
             }
           />
@@ -698,8 +795,8 @@ export function CanvasInspector({
                 updateBlockById(canvas, block.id, (b) =>
                   b.type === 'copy'
                     ? { ...b, align: e.target.value as typeof block.align }
-                    : b,
-                ),
+                    : b
+                )
               )
             }
           >
@@ -716,8 +813,8 @@ export function CanvasInspector({
               onChange={(e) =>
                 onChange(
                   updateBlockById(canvas, block.id, (b) =>
-                    b.type === 'copy' ? { ...b, gap: e.target.value } : b,
-                  ),
+                    b.type === 'copy' ? { ...b, gap: e.target.value } : b
+                  )
                 )
               }
             />
@@ -729,8 +826,8 @@ export function CanvasInspector({
               onChange={(e) =>
                 onChange(
                   updateBlockById(canvas, block.id, (b) =>
-                    b.type === 'copy' ? { ...b, maxWidth: e.target.value } : b,
-                  ),
+                    b.type === 'copy' ? { ...b, maxWidth: e.target.value } : b
+                  )
                 )
               }
             />
@@ -743,13 +840,15 @@ export function CanvasInspector({
             onChange={(e) =>
               onChange(
                 updateBlockById(canvas, block.id, (b) =>
-                  b.type === 'copy' ? { ...b, width: e.target.value } : b,
-                ),
+                  b.type === 'copy' ? { ...b, width: e.target.value } : b
+                )
               )
             }
           />
         </Field>
-        <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Optional sizes</p>
+        <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+          Optional sizes
+        </p>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Eyebrow size">
             <input
@@ -760,8 +859,8 @@ export function CanvasInspector({
                   updateBlockById(canvas, block.id, (b) =>
                     b.type === 'copy'
                       ? { ...b, eyebrowSize: e.target.value || undefined }
-                      : b,
-                  ),
+                      : b
+                  )
                 )
               }
               placeholder="0.7rem"
@@ -776,8 +875,8 @@ export function CanvasInspector({
                   updateBlockById(canvas, block.id, (b) =>
                     b.type === 'copy'
                       ? { ...b, headlineSize: e.target.value || undefined }
-                      : b,
-                  ),
+                      : b
+                  )
                 )
               }
             />
@@ -791,8 +890,8 @@ export function CanvasInspector({
                   updateBlockById(canvas, block.id, (b) =>
                     b.type === 'copy'
                       ? { ...b, subheadlineSize: e.target.value || undefined }
-                      : b,
-                  ),
+                      : b
+                  )
                 )
               }
             />
@@ -806,8 +905,8 @@ export function CanvasInspector({
                   updateBlockById(canvas, block.id, (b) =>
                     b.type === 'copy'
                       ? { ...b, bodySize: e.target.value || undefined }
-                      : b,
-                  ),
+                      : b
+                  )
                 )
               }
             />
@@ -827,7 +926,9 @@ export function CanvasInspector({
   if (block.type === 'navbar') {
     return (
       <div className="space-y-4">
-        <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">Navbar</p>
+        <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">
+          Navbar
+        </p>
         <Field label="Logo text (if no image)">
           <input
             className={inputClass}
@@ -835,8 +936,8 @@ export function CanvasInspector({
             onChange={(e) =>
               onChange(
                 updateBlockById(canvas, block.id, (b) =>
-                  b.type === 'navbar' ? { ...b, logoText: e.target.value } : b,
-                ),
+                  b.type === 'navbar' ? { ...b, logoText: e.target.value } : b
+                )
               )
             }
           />
@@ -848,8 +949,8 @@ export function CanvasInspector({
           onChange={(url) =>
             onChange(
               updateBlockById(canvas, block.id, (b) =>
-                b.type === 'navbar' ? { ...b, logoUrl: url } : b,
-              ),
+                b.type === 'navbar' ? { ...b, logoUrl: url } : b
+              )
             )
           }
         />
@@ -860,16 +961,21 @@ export function CanvasInspector({
             onChange={(e) =>
               onChange(
                 updateBlockById(canvas, block.id, (b) =>
-                  b.type === 'navbar' ? { ...b, logoHeight: e.target.value } : b,
-                ),
+                  b.type === 'navbar' ? { ...b, logoHeight: e.target.value } : b
+                )
               )
             }
           />
         </Field>
         <div className="space-y-2 rounded-xl border border-zinc-200 p-3 dark:border-zinc-700">
-          <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Links</p>
+          <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+            Links
+          </p>
           {block.links.map((l, i) => (
-            <div key={l.id} className="flex flex-col gap-2 sm:flex-row sm:items-end">
+            <div
+              key={l.id}
+              className="flex flex-col gap-2 sm:flex-row sm:items-end"
+            >
               <Field label="Label">
                 <input
                   className={inputClass}
@@ -881,7 +987,7 @@ export function CanvasInspector({
                         const links = [...b.links];
                         links[i] = { ...links[i], label: e.target.value };
                         return { ...b, links };
-                      }),
+                      })
                     )
                   }
                 />
@@ -897,7 +1003,7 @@ export function CanvasInspector({
                         const links = [...b.links];
                         links[i] = { ...links[i], href: e.target.value };
                         return { ...b, links };
-                      }),
+                      })
                     )
                   }
                 />
@@ -911,9 +1017,10 @@ export function CanvasInspector({
                       updateBlockById(canvas, block.id, (b) => {
                         if (b.type !== 'navbar') return b;
                         const links = [...b.links];
-                        if (e.target.value) links[i] = { ...links[i], href: e.target.value };
+                        if (e.target.value)
+                          links[i] = { ...links[i], href: e.target.value };
                         return { ...b, links };
-                      }),
+                      })
                     )
                   }
                 >
@@ -936,7 +1043,7 @@ export function CanvasInspector({
                     updateBlockById(canvas, block.id, (b) => {
                       if (b.type !== 'navbar') return b;
                       return { ...b, links: b.links.filter((_, j) => j !== i) };
-                    }),
+                    })
                   )
                 }
               >
@@ -952,7 +1059,7 @@ export function CanvasInspector({
                 updateBlockById(canvas, block.id, (b) => {
                   if (b.type !== 'navbar') return b;
                   return { ...b, links: [...b.links, defaultNavLink()] };
-                }),
+                })
               )
             }
           >
@@ -966,8 +1073,8 @@ export function CanvasInspector({
             onChange={(e) =>
               onChange(
                 updateBlockById(canvas, block.id, (b) =>
-                  b.type === 'navbar' ? { ...b, showCta: e.target.checked } : b,
-                ),
+                  b.type === 'navbar' ? { ...b, showCta: e.target.checked } : b
+                )
               )
             }
           />
@@ -981,8 +1088,10 @@ export function CanvasInspector({
               onChange={(e) =>
                 onChange(
                   updateBlockById(canvas, block.id, (b) =>
-                    b.type === 'navbar' ? { ...b, showLanguageSwitcher: e.target.checked } : b,
-                  ),
+                    b.type === 'navbar'
+                      ? { ...b, showLanguageSwitcher: e.target.checked }
+                      : b
+                  )
                 )
               }
             />
@@ -998,10 +1107,11 @@ export function CanvasInspector({
                     b.type === 'navbar'
                       ? {
                           ...b,
-                          languageSwitcherPosition: e.target.value as typeof block.languageSwitcherPosition,
+                          languageSwitcherPosition: e.target
+                            .value as typeof block.languageSwitcherPosition,
                         }
-                      : b,
-                  ),
+                      : b
+                  )
                 )
               }
             >
@@ -1020,8 +1130,10 @@ export function CanvasInspector({
                 onChange={(e) =>
                   onChange(
                     updateBlockById(canvas, block.id, (b) =>
-                      b.type === 'navbar' ? { ...b, ctaLabel: e.target.value } : b,
-                    ),
+                      b.type === 'navbar'
+                        ? { ...b, ctaLabel: e.target.value }
+                        : b
+                    )
                   )
                 }
               />
@@ -1033,8 +1145,10 @@ export function CanvasInspector({
                 onChange={(e) =>
                   onChange(
                     updateBlockById(canvas, block.id, (b) =>
-                      b.type === 'navbar' ? { ...b, ctaHref: e.target.value } : b,
-                    ),
+                      b.type === 'navbar'
+                        ? { ...b, ctaHref: e.target.value }
+                        : b
+                    )
                   )
                 }
               />
@@ -1050,8 +1164,10 @@ export function CanvasInspector({
               onChange={(e) =>
                 onChange(
                   updateBlockById(canvas, block.id, (b) =>
-                    b.type === 'navbar' ? { ...b, background: e.target.value } : b,
-                  ),
+                    b.type === 'navbar'
+                      ? { ...b, background: e.target.value }
+                      : b
+                  )
                 )
               }
             />
@@ -1061,8 +1177,10 @@ export function CanvasInspector({
               onChange={(e) =>
                 onChange(
                   updateBlockById(canvas, block.id, (b) =>
-                    b.type === 'navbar' ? { ...b, background: e.target.value } : b,
-                  ),
+                    b.type === 'navbar'
+                      ? { ...b, background: e.target.value }
+                      : b
+                  )
                 )
               }
             />
@@ -1076,8 +1194,10 @@ export function CanvasInspector({
               onChange={(e) =>
                 onChange(
                   updateBlockById(canvas, block.id, (b) =>
-                    b.type === 'navbar' ? { ...b, borderBottom: e.target.checked } : b,
-                  ),
+                    b.type === 'navbar'
+                      ? { ...b, borderBottom: e.target.checked }
+                      : b
+                  )
                 )
               }
             />
@@ -1090,8 +1210,8 @@ export function CanvasInspector({
               onChange={(e) =>
                 onChange(
                   updateBlockById(canvas, block.id, (b) =>
-                    b.type === 'navbar' ? { ...b, sticky: e.target.checked } : b,
-                  ),
+                    b.type === 'navbar' ? { ...b, sticky: e.target.checked } : b
+                  )
                 )
               }
             />
@@ -1106,8 +1226,8 @@ export function CanvasInspector({
               onChange={(e) =>
                 onChange(
                   updateBlockById(canvas, block.id, (b) =>
-                    b.type === 'navbar' ? { ...b, paddingY: e.target.value } : b,
-                  ),
+                    b.type === 'navbar' ? { ...b, paddingY: e.target.value } : b
+                  )
                 )
               }
             />
@@ -1119,8 +1239,8 @@ export function CanvasInspector({
               onChange={(e) =>
                 onChange(
                   updateBlockById(canvas, block.id, (b) =>
-                    b.type === 'navbar' ? { ...b, paddingX: e.target.value } : b,
-                  ),
+                    b.type === 'navbar' ? { ...b, paddingX: e.target.value } : b
+                  )
                 )
               }
             />
@@ -1134,8 +1254,8 @@ export function CanvasInspector({
               onChange={(e) =>
                 onChange(
                   updateBlockById(canvas, block.id, (b) =>
-                    b.type === 'navbar' ? { ...b, linkGap: e.target.value } : b,
-                  ),
+                    b.type === 'navbar' ? { ...b, linkGap: e.target.value } : b
+                  )
                 )
               }
             />
@@ -1147,8 +1267,8 @@ export function CanvasInspector({
               onChange={(e) =>
                 onChange(
                   updateBlockById(canvas, block.id, (b) =>
-                    b.type === 'navbar' ? { ...b, maxWidth: e.target.value } : b,
-                  ),
+                    b.type === 'navbar' ? { ...b, maxWidth: e.target.value } : b
+                  )
                 )
               }
             />
@@ -1161,8 +1281,10 @@ export function CanvasInspector({
                 onChange={(e) =>
                   onChange(
                     updateBlockById(canvas, block.id, (b) =>
-                      b.type === 'navbar' ? { ...b, minHeight: e.target.value } : b,
-                    ),
+                      b.type === 'navbar'
+                        ? { ...b, minHeight: e.target.value }
+                        : b
+                    )
                   )
                 }
               />
@@ -1170,7 +1292,9 @@ export function CanvasInspector({
           </div>
         </div>
         <div className="space-y-3 rounded-xl border border-zinc-200 p-3 dark:border-zinc-700">
-          <p className="text-xs font-medium text-zinc-600 dark:text-zinc-300">Language switcher (dropdown)</p>
+          <p className="text-xs font-medium text-zinc-600 dark:text-zinc-300">
+            Language switcher (dropdown)
+          </p>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Background">
               <div className="flex items-center gap-2">
@@ -1181,8 +1305,10 @@ export function CanvasInspector({
                   onChange={(e) =>
                     onChange(
                       updateBlockById(canvas, block.id, (b) =>
-                        b.type === 'navbar' ? { ...b, languageSwitcherBg: e.target.value } : b,
-                      ),
+                        b.type === 'navbar'
+                          ? { ...b, languageSwitcherBg: e.target.value }
+                          : b
+                      )
                     )
                   }
                 />
@@ -1192,8 +1318,10 @@ export function CanvasInspector({
                   onChange={(e) =>
                     onChange(
                       updateBlockById(canvas, block.id, (b) =>
-                        b.type === 'navbar' ? { ...b, languageSwitcherBg: e.target.value } : b,
-                      ),
+                        b.type === 'navbar'
+                          ? { ...b, languageSwitcherBg: e.target.value }
+                          : b
+                      )
                     )
                   }
                 />
@@ -1208,8 +1336,10 @@ export function CanvasInspector({
                   onChange={(e) =>
                     onChange(
                       updateBlockById(canvas, block.id, (b) =>
-                        b.type === 'navbar' ? { ...b, languageSwitcherTextColor: e.target.value } : b,
-                      ),
+                        b.type === 'navbar'
+                          ? { ...b, languageSwitcherTextColor: e.target.value }
+                          : b
+                      )
                     )
                   }
                 />
@@ -1219,8 +1349,10 @@ export function CanvasInspector({
                   onChange={(e) =>
                     onChange(
                       updateBlockById(canvas, block.id, (b) =>
-                        b.type === 'navbar' ? { ...b, languageSwitcherTextColor: e.target.value } : b,
-                      ),
+                        b.type === 'navbar'
+                          ? { ...b, languageSwitcherTextColor: e.target.value }
+                          : b
+                      )
                     )
                   }
                 />
@@ -1235,8 +1367,13 @@ export function CanvasInspector({
                   onChange={(e) =>
                     onChange(
                       updateBlockById(canvas, block.id, (b) =>
-                        b.type === 'navbar' ? { ...b, languageSwitcherBorderColor: e.target.value } : b,
-                      ),
+                        b.type === 'navbar'
+                          ? {
+                              ...b,
+                              languageSwitcherBorderColor: e.target.value,
+                            }
+                          : b
+                      )
                     )
                   }
                 />
@@ -1246,8 +1383,13 @@ export function CanvasInspector({
                   onChange={(e) =>
                     onChange(
                       updateBlockById(canvas, block.id, (b) =>
-                        b.type === 'navbar' ? { ...b, languageSwitcherBorderColor: e.target.value } : b,
-                      ),
+                        b.type === 'navbar'
+                          ? {
+                              ...b,
+                              languageSwitcherBorderColor: e.target.value,
+                            }
+                          : b
+                      )
                     )
                   }
                 />
@@ -1260,8 +1402,10 @@ export function CanvasInspector({
                 onChange={(e) =>
                   onChange(
                     updateBlockById(canvas, block.id, (b) =>
-                      b.type === 'navbar' ? { ...b, languageSwitcherBorderRadius: e.target.value } : b,
-                    ),
+                      b.type === 'navbar'
+                        ? { ...b, languageSwitcherBorderRadius: e.target.value }
+                        : b
+                    )
                   )
                 }
               />
@@ -1273,8 +1417,10 @@ export function CanvasInspector({
                 onChange={(e) =>
                   onChange(
                     updateBlockById(canvas, block.id, (b) =>
-                      b.type === 'navbar' ? { ...b, languageSwitcherPaddingY: e.target.value } : b,
-                    ),
+                      b.type === 'navbar'
+                        ? { ...b, languageSwitcherPaddingY: e.target.value }
+                        : b
+                    )
                   )
                 }
               />
@@ -1286,8 +1432,10 @@ export function CanvasInspector({
                 onChange={(e) =>
                   onChange(
                     updateBlockById(canvas, block.id, (b) =>
-                      b.type === 'navbar' ? { ...b, languageSwitcherPaddingX: e.target.value } : b,
-                    ),
+                      b.type === 'navbar'
+                        ? { ...b, languageSwitcherPaddingX: e.target.value }
+                        : b
+                    )
                   )
                 }
               />
@@ -1299,8 +1447,10 @@ export function CanvasInspector({
                 onChange={(e) =>
                   onChange(
                     updateBlockById(canvas, block.id, (b) =>
-                      b.type === 'navbar' ? { ...b, languageSwitcherFontSize: e.target.value } : b,
-                    ),
+                      b.type === 'navbar'
+                        ? { ...b, languageSwitcherFontSize: e.target.value }
+                        : b
+                    )
                   )
                 }
               />
@@ -1312,8 +1462,10 @@ export function CanvasInspector({
                 onChange={(e) =>
                   onChange(
                     updateBlockById(canvas, block.id, (b) =>
-                      b.type === 'navbar' ? { ...b, languageSwitcherMinWidth: e.target.value } : b,
-                    ),
+                      b.type === 'navbar'
+                        ? { ...b, languageSwitcherMinWidth: e.target.value }
+                        : b
+                    )
                   )
                 }
               />
@@ -1334,7 +1486,9 @@ export function CanvasInspector({
   if (block.type === 'footer') {
     return (
       <div className="space-y-4">
-        <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">Footer</p>
+        <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">
+          Footer
+        </p>
         <Field label="Background">
           <div className="flex items-center gap-2">
             <input
@@ -1344,8 +1498,10 @@ export function CanvasInspector({
               onChange={(e) =>
                 onChange(
                   updateBlockById(canvas, block.id, (b) =>
-                    b.type === 'footer' ? { ...b, background: e.target.value } : b,
-                  ),
+                    b.type === 'footer'
+                      ? { ...b, background: e.target.value }
+                      : b
+                  )
                 )
               }
             />
@@ -1355,8 +1511,10 @@ export function CanvasInspector({
               onChange={(e) =>
                 onChange(
                   updateBlockById(canvas, block.id, (b) =>
-                    b.type === 'footer' ? { ...b, background: e.target.value } : b,
-                  ),
+                    b.type === 'footer'
+                      ? { ...b, background: e.target.value }
+                      : b
+                  )
                 )
               }
             />
@@ -1370,8 +1528,8 @@ export function CanvasInspector({
               onChange={(e) =>
                 onChange(
                   updateBlockById(canvas, block.id, (b) =>
-                    b.type === 'footer' ? { ...b, paddingY: e.target.value } : b,
-                  ),
+                    b.type === 'footer' ? { ...b, paddingY: e.target.value } : b
+                  )
                 )
               }
             />
@@ -1383,8 +1541,8 @@ export function CanvasInspector({
               onChange={(e) =>
                 onChange(
                   updateBlockById(canvas, block.id, (b) =>
-                    b.type === 'footer' ? { ...b, paddingX: e.target.value } : b,
-                  ),
+                    b.type === 'footer' ? { ...b, paddingX: e.target.value } : b
+                  )
                 )
               }
             />
@@ -1397,8 +1555,8 @@ export function CanvasInspector({
             onChange={(e) =>
               onChange(
                 updateBlockById(canvas, block.id, (b) =>
-                  b.type === 'footer' ? { ...b, maxWidth: e.target.value } : b,
-                ),
+                  b.type === 'footer' ? { ...b, maxWidth: e.target.value } : b
+                )
               )
             }
           />
@@ -1413,10 +1571,12 @@ export function CanvasInspector({
                   b.type === 'footer'
                     ? {
                         ...b,
-                        columnCount: Number(e.target.value) as typeof b.columnCount,
+                        columnCount: Number(
+                          e.target.value
+                        ) as typeof b.columnCount,
                       }
-                    : b,
-                ),
+                    : b
+                )
               )
             }
           >
@@ -1433,8 +1593,8 @@ export function CanvasInspector({
             onChange={(e) =>
               onChange(
                 updateBlockById(canvas, block.id, (b) =>
-                  b.type === 'footer' ? { ...b, copyright: e.target.value } : b,
-                ),
+                  b.type === 'footer' ? { ...b, copyright: e.target.value } : b
+                )
               )
             }
           />
@@ -1446,16 +1606,21 @@ export function CanvasInspector({
             onChange={(e) =>
               onChange(
                 updateBlockById(canvas, block.id, (b) =>
-                  b.type === 'footer' ? { ...b, tagline: e.target.value } : b,
-                ),
+                  b.type === 'footer' ? { ...b, tagline: e.target.value } : b
+                )
               )
             }
           />
         </Field>
         <div className="space-y-4 rounded-xl border border-zinc-200 p-3 dark:border-zinc-700">
-          <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Columns</p>
+          <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+            Columns
+          </p>
           {block.columns.map((col, ci) => (
-            <div key={col.id} className="space-y-2 border-b border-zinc-100 pb-4 last:border-0 dark:border-zinc-800">
+            <div
+              key={col.id}
+              className="space-y-2 border-b border-zinc-100 pb-4 last:border-0 dark:border-zinc-800"
+            >
               <div className="flex items-center justify-between gap-2">
                 <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-200">
                   Column {ci + 1}
@@ -1468,8 +1633,11 @@ export function CanvasInspector({
                       updateBlockById(canvas, block.id, (b) => {
                         if (b.type !== 'footer') return b;
                         if (b.columns.length <= 1) return b;
-                        return { ...b, columns: b.columns.filter((_, j) => j !== ci) };
-                      }),
+                        return {
+                          ...b,
+                          columns: b.columns.filter((_, j) => j !== ci),
+                        };
+                      })
                     )
                   }
                 >
@@ -1487,13 +1655,16 @@ export function CanvasInspector({
                         const columns = [...b.columns];
                         columns[ci] = { ...columns[ci], title: e.target.value };
                         return { ...b, columns };
-                      }),
+                      })
                     )
                   }
                 />
               </Field>
               {col.links.map((l, li) => (
-                <div key={l.id} className="ml-2 flex flex-col gap-2 border-l-2 border-indigo-200 pl-2 dark:border-indigo-800">
+                <div
+                  key={l.id}
+                  className="ml-2 flex flex-col gap-2 border-l-2 border-indigo-200 pl-2 dark:border-indigo-800"
+                >
                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                     <input
                       className={inputClass}
@@ -1508,7 +1679,7 @@ export function CanvasInspector({
                             links[li] = { ...links[li], label: e.target.value };
                             columns[ci] = { ...columns[ci], links };
                             return { ...b, columns };
-                          }),
+                          })
                         )
                       }
                     />
@@ -1525,7 +1696,7 @@ export function CanvasInspector({
                             links[li] = { ...links[li], href: e.target.value };
                             columns[ci] = { ...columns[ci], links };
                             return { ...b, columns };
-                          }),
+                          })
                         )
                       }
                     />
@@ -1538,10 +1709,12 @@ export function CanvasInspector({
                         updateBlockById(canvas, block.id, (b) => {
                           if (b.type !== 'footer') return b;
                           const columns = [...b.columns];
-                          const links = columns[ci].links.filter((_, j) => j !== li);
+                          const links = columns[ci].links.filter(
+                            (_, j) => j !== li
+                          );
                           columns[ci] = { ...columns[ci], links };
                           return { ...b, columns };
-                        }),
+                        })
                       )
                     }
                   >
@@ -1560,7 +1733,7 @@ export function CanvasInspector({
                       const links = [...columns[ci].links, defaultFooterLink()];
                       columns[ci] = { ...columns[ci], links };
                       return { ...b, columns };
-                    }),
+                    })
                   )
                 }
               >
@@ -1575,8 +1748,11 @@ export function CanvasInspector({
               onChange(
                 updateBlockById(canvas, block.id, (b) => {
                   if (b.type !== 'footer') return b;
-                  return { ...b, columns: [...b.columns, defaultFooterColumn()] };
-                }),
+                  return {
+                    ...b,
+                    columns: [...b.columns, defaultFooterColumn()],
+                  };
+                })
               )
             }
           >
@@ -1595,25 +1771,31 @@ export function CanvasInspector({
   }
 
   if (block.type === 'card') {
-    return <CardBlockInspector canvas={canvas} block={block} onChange={onChange} />;
+    return (
+      <CardBlockInspector canvas={canvas} block={block} onChange={onChange} />
+    );
   }
 
   if (block.type === 'grid') {
-    return <GridBlockInspector canvas={canvas} block={block} onChange={onChange} />;
+    return (
+      <GridBlockInspector canvas={canvas} block={block} onChange={onChange} />
+    );
   }
 
   if (block.type === 'image') {
     return (
       <div className="space-y-4">
-        <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">Image</p>
+        <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">
+          Image
+        </p>
         <ImageDropField
           label="Image URL"
           value={block.src}
           onChange={(url) =>
             onChange(
               updateBlockById(canvas, block.id, (b) =>
-                b.type === 'image' ? { ...b, src: url } : b,
-              ),
+                b.type === 'image' ? { ...b, src: url } : b
+              )
             )
           }
         />
@@ -1624,8 +1806,8 @@ export function CanvasInspector({
             onChange={(e) =>
               onChange(
                 updateBlockById(canvas, block.id, (b) =>
-                  b.type === 'image' ? { ...b, alt: e.target.value } : b,
-                ),
+                  b.type === 'image' ? { ...b, alt: e.target.value } : b
+                )
               )
             }
           />
@@ -1638,8 +1820,8 @@ export function CanvasInspector({
               onChange={(e) =>
                 onChange(
                   updateBlockById(canvas, block.id, (b) =>
-                    b.type === 'image' ? { ...b, width: e.target.value } : b,
-                  ),
+                    b.type === 'image' ? { ...b, width: e.target.value } : b
+                  )
                 )
               }
             />
@@ -1651,8 +1833,8 @@ export function CanvasInspector({
               onChange={(e) =>
                 onChange(
                   updateBlockById(canvas, block.id, (b) =>
-                    b.type === 'image' ? { ...b, height: e.target.value } : b,
-                  ),
+                    b.type === 'image' ? { ...b, height: e.target.value } : b
+                  )
                 )
               }
             />
@@ -1666,9 +1848,12 @@ export function CanvasInspector({
               onChange(
                 updateBlockById(canvas, block.id, (b) =>
                   b.type === 'image'
-                    ? { ...b, objectFit: e.target.value as typeof block.objectFit }
-                    : b,
-                ),
+                    ? {
+                        ...b,
+                        objectFit: e.target.value as typeof block.objectFit,
+                      }
+                    : b
+                )
               )
             }
           >
@@ -1684,8 +1869,10 @@ export function CanvasInspector({
             onChange={(e) =>
               onChange(
                 updateBlockById(canvas, block.id, (b) =>
-                  b.type === 'image' ? { ...b, borderRadius: e.target.value } : b,
-                ),
+                  b.type === 'image'
+                    ? { ...b, borderRadius: e.target.value }
+                    : b
+                )
               )
             }
           />
@@ -1704,7 +1891,9 @@ export function CanvasInspector({
   if (block.type === 'button') {
     return (
       <div className="space-y-4">
-        <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">Button</p>
+        <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">
+          Button
+        </p>
         <Field label="Label">
           <input
             className={inputClass}
@@ -1712,8 +1901,8 @@ export function CanvasInspector({
             onChange={(e) =>
               onChange(
                 updateBlockById(canvas, block.id, (b) =>
-                  b.type === 'button' ? { ...b, label: e.target.value } : b,
-                ),
+                  b.type === 'button' ? { ...b, label: e.target.value } : b
+                )
               )
             }
           />
@@ -1725,8 +1914,8 @@ export function CanvasInspector({
             onChange={(e) =>
               onChange(
                 updateBlockById(canvas, block.id, (b) =>
-                  b.type === 'button' ? { ...b, href: e.target.value } : b,
-                ),
+                  b.type === 'button' ? { ...b, href: e.target.value } : b
+                )
               )
             }
           />
@@ -1740,8 +1929,8 @@ export function CanvasInspector({
                 updateBlockById(canvas, block.id, (b) =>
                   b.type === 'button'
                     ? { ...b, variant: e.target.value as typeof block.variant }
-                    : b,
-                ),
+                    : b
+                )
               )
             }
           >
@@ -1757,8 +1946,10 @@ export function CanvasInspector({
             onChange={(e) =>
               onChange(
                 updateBlockById(canvas, block.id, (b) =>
-                  b.type === 'button' ? { ...b, openInNewTab: e.target.checked } : b,
-                ),
+                  b.type === 'button'
+                    ? { ...b, openInNewTab: e.target.checked }
+                    : b
+                )
               )
             }
           />
@@ -1772,8 +1963,8 @@ export function CanvasInspector({
               onChange={(e) =>
                 onChange(
                   updateBlockById(canvas, block.id, (b) =>
-                    b.type === 'button' ? { ...b, width: e.target.value } : b,
-                  ),
+                    b.type === 'button' ? { ...b, width: e.target.value } : b
+                  )
                 )
               }
             />
@@ -1785,8 +1976,10 @@ export function CanvasInspector({
               onChange={(e) =>
                 onChange(
                   updateBlockById(canvas, block.id, (b) =>
-                    b.type === 'button' ? { ...b, minHeight: e.target.value } : b,
-                  ),
+                    b.type === 'button'
+                      ? { ...b, minHeight: e.target.value }
+                      : b
+                  )
                 )
               }
             />
@@ -1800,9 +1993,12 @@ export function CanvasInspector({
               onChange(
                 updateBlockById(canvas, block.id, (b) =>
                   b.type === 'button'
-                    ? { ...b, alignSelf: e.target.value as typeof block.alignSelf }
-                    : b,
-                ),
+                    ? {
+                        ...b,
+                        alignSelf: e.target.value as typeof block.alignSelf,
+                      }
+                    : b
+                )
               )
             }
           >
@@ -1826,7 +2022,7 @@ export function CanvasInspector({
 
   if (block.type === 'stack') {
     const rowColumnCount = block.children.filter(
-      (child) => child.type === 'stack' && child.direction === 'column',
+      (child) => child.type === 'stack' && child.direction === 'column'
     ).length;
 
     const setRowColumns = (count: number) => {
@@ -1835,31 +2031,35 @@ export function CanvasInspector({
         updateBlockById(canvas, block.id, (b) => {
           if (b.type !== 'stack') return b;
           const columnChildren = b.children.filter(
-            (child) => child.type === 'stack' && child.direction === 'column',
+            (child) => child.type === 'stack' && child.direction === 'column'
           );
           const nonColumnChildren = b.children.filter(
-            (child) => !(child.type === 'stack' && child.direction === 'column'),
+            (child) => !(child.type === 'stack' && child.direction === 'column')
           );
           const nextColumns = Array.from({ length: safeCount }, (_, i) => {
             if (columnChildren[i]) {
               return {
                 ...columnChildren[i],
-                width: `calc((100% - ${(safeCount - 1) * 16}px) / ${safeCount})`,
+                width: `calc((100% - ${
+                  (safeCount - 1) * 16
+                }px) / ${safeCount})`,
               };
             }
             const column = createColumnBlock(
-              `calc((100% - ${(safeCount - 1) * 16}px) / ${safeCount})`,
+              `calc((100% - ${(safeCount - 1) * 16}px) / ${safeCount})`
             );
             return column;
           });
           return { ...b, children: [...nextColumns, ...nonColumnChildren] };
-        }),
+        })
       );
     };
 
     return (
       <div className="space-y-4">
-        <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">Row / group</p>
+        <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">
+          Row / group
+        </p>
         <Field label="Direction">
           <select
             className={inputClass}
@@ -1868,9 +2068,12 @@ export function CanvasInspector({
               onChange(
                 updateBlockById(canvas, block.id, (b) =>
                   b.type === 'stack'
-                    ? { ...b, direction: e.target.value as typeof block.direction }
-                    : b,
-                ),
+                    ? {
+                        ...b,
+                        direction: e.target.value as typeof block.direction,
+                      }
+                    : b
+                )
               )
             }
           >
@@ -1886,8 +2089,8 @@ export function CanvasInspector({
               onChange={(e) =>
                 onChange(
                   updateBlockById(canvas, block.id, (b) =>
-                    b.type === 'stack' ? { ...b, gap: e.target.value } : b,
-                  ),
+                    b.type === 'stack' ? { ...b, gap: e.target.value } : b
+                  )
                 )
               }
             />
@@ -1899,8 +2102,8 @@ export function CanvasInspector({
               onChange={(e) =>
                 onChange(
                   updateBlockById(canvas, block.id, (b) =>
-                    b.type === 'stack' ? { ...b, width: e.target.value } : b,
-                  ),
+                    b.type === 'stack' ? { ...b, width: e.target.value } : b
+                  )
                 )
               }
             />
@@ -1915,8 +2118,8 @@ export function CanvasInspector({
                 updateBlockById(canvas, block.id, (b) =>
                   b.type === 'stack'
                     ? { ...b, align: e.target.value as typeof block.align }
-                    : b,
-                ),
+                    : b
+                )
               )
             }
           >
@@ -1935,8 +2138,8 @@ export function CanvasInspector({
                 updateBlockById(canvas, block.id, (b) =>
                   b.type === 'stack'
                     ? { ...b, justify: e.target.value as typeof block.justify }
-                    : b,
-                ),
+                    : b
+                )
               )
             }
           >
@@ -1953,8 +2156,8 @@ export function CanvasInspector({
             onChange={(e) =>
               onChange(
                 updateBlockById(canvas, block.id, (b) =>
-                  b.type === 'stack' ? { ...b, wrap: e.target.checked } : b,
-                ),
+                  b.type === 'stack' ? { ...b, wrap: e.target.checked } : b
+                )
               )
             }
           />
@@ -2014,8 +2217,8 @@ export function CanvasInspector({
                     appendBlockToContainer(
                       canvas,
                       containerKeyForStack(block.id),
-                      preset.create(),
-                    ),
+                      preset.create()
+                    )
                   )
                 }
               >
@@ -2038,13 +2241,19 @@ export function CanvasInspector({
   if (block.type === 'form') {
     return (
       <div className="space-y-4">
-        <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">Form</p>
+        <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">
+          Form
+        </p>
         <Field label="Title">
           <input
             className={inputClass}
             value={block.title}
             onChange={(e) =>
-              onChange(updateBlockById(canvas, block.id, (b) => (b.type === 'form' ? { ...b, title: e.target.value } : b)))
+              onChange(
+                updateBlockById(canvas, block.id, (b) =>
+                  b.type === 'form' ? { ...b, title: e.target.value } : b
+                )
+              )
             }
           />
         </Field>
@@ -2056,8 +2265,8 @@ export function CanvasInspector({
             onChange={(e) =>
               onChange(
                 updateBlockById(canvas, block.id, (b) =>
-                  b.type === 'form' ? { ...b, description: e.target.value } : b,
-                ),
+                  b.type === 'form' ? { ...b, description: e.target.value } : b
+                )
               )
             }
           />
@@ -2070,8 +2279,13 @@ export function CanvasInspector({
               onChange={(e) =>
                 onChange(
                   updateBlockById(canvas, block.id, (b) =>
-                    b.type === 'form' ? { ...b, actionType: e.target.value as typeof block.actionType } : b,
-                  ),
+                    b.type === 'form'
+                      ? {
+                          ...b,
+                          actionType: e.target.value as typeof block.actionType,
+                        }
+                      : b
+                  )
                 )
               }
             >
@@ -2087,8 +2301,10 @@ export function CanvasInspector({
               onChange={(e) =>
                 onChange(
                   updateBlockById(canvas, block.id, (b) =>
-                    b.type === 'form' ? { ...b, actionValue: e.target.value } : b,
-                  ),
+                    b.type === 'form'
+                      ? { ...b, actionValue: e.target.value }
+                      : b
+                  )
                 )
               }
             />
@@ -2102,8 +2318,10 @@ export function CanvasInspector({
               onChange={(e) =>
                 onChange(
                   updateBlockById(canvas, block.id, (b) =>
-                    b.type === 'form' ? { ...b, submitLabel: e.target.value } : b,
-                  ),
+                    b.type === 'form'
+                      ? { ...b, submitLabel: e.target.value }
+                      : b
+                  )
                 )
               }
             />
@@ -2115,17 +2333,24 @@ export function CanvasInspector({
               onChange={(e) =>
                 onChange(
                   updateBlockById(canvas, block.id, (b) =>
-                    b.type === 'form' ? { ...b, successMessage: e.target.value } : b,
-                  ),
+                    b.type === 'form'
+                      ? { ...b, successMessage: e.target.value }
+                      : b
+                  )
                 )
               }
             />
           </Field>
         </div>
         <div className="space-y-2 rounded-xl border border-zinc-200 p-3 dark:border-zinc-700">
-          <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Fields</p>
+          <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+            Fields
+          </p>
           {block.fields.map((field, i) => (
-            <div key={field.id} className="space-y-2 rounded-lg border border-zinc-200 p-2 dark:border-zinc-700">
+            <div
+              key={field.id}
+              className="space-y-2 rounded-lg border border-zinc-200 p-2 dark:border-zinc-700"
+            >
               <div className="grid grid-cols-2 gap-2">
                 <input
                   className={inputClass}
@@ -2138,7 +2363,7 @@ export function CanvasInspector({
                         const fields = [...b.fields];
                         fields[i] = { ...fields[i], label: e.target.value };
                         return { ...b, fields };
-                      }),
+                      })
                     )
                   }
                 />
@@ -2150,9 +2375,12 @@ export function CanvasInspector({
                       updateBlockById(canvas, block.id, (b) => {
                         if (b.type !== 'form') return b;
                         const fields = [...b.fields];
-                        fields[i] = { ...fields[i], type: e.target.value as typeof field.type };
+                        fields[i] = {
+                          ...fields[i],
+                          type: e.target.value as typeof field.type,
+                        };
                         return { ...b, fields };
-                      }),
+                      })
                     )
                   }
                 >
@@ -2174,7 +2402,7 @@ export function CanvasInspector({
                         const fields = [...b.fields];
                         fields[i] = { ...fields[i], name: e.target.value };
                         return { ...b, fields };
-                      }),
+                      })
                     )
                   }
                 />
@@ -2187,9 +2415,12 @@ export function CanvasInspector({
                       updateBlockById(canvas, block.id, (b) => {
                         if (b.type !== 'form') return b;
                         const fields = [...b.fields];
-                        fields[i] = { ...fields[i], placeholder: e.target.value };
+                        fields[i] = {
+                          ...fields[i],
+                          placeholder: e.target.value,
+                        };
                         return { ...b, fields };
-                      }),
+                      })
                     )
                   }
                 />
@@ -2204,9 +2435,12 @@ export function CanvasInspector({
                         updateBlockById(canvas, block.id, (b) => {
                           if (b.type !== 'form') return b;
                           const fields = [...b.fields];
-                          fields[i] = { ...fields[i], required: e.target.checked };
+                          fields[i] = {
+                            ...fields[i],
+                            required: e.target.checked,
+                          };
                           return { ...b, fields };
-                        }),
+                        })
                       )
                     }
                   />
@@ -2218,8 +2452,13 @@ export function CanvasInspector({
                   onClick={() =>
                     onChange(
                       updateBlockById(canvas, block.id, (b) =>
-                        b.type === 'form' ? { ...b, fields: b.fields.filter((_, idx) => idx !== i) } : b,
-                      ),
+                        b.type === 'form'
+                          ? {
+                              ...b,
+                              fields: b.fields.filter((_, idx) => idx !== i),
+                            }
+                          : b
+                      )
                     )
                   }
                 >
@@ -2234,8 +2473,10 @@ export function CanvasInspector({
             onClick={() =>
               onChange(
                 updateBlockById(canvas, block.id, (b) =>
-                  b.type === 'form' ? { ...b, fields: [...b.fields, defaultFormField()] } : b,
-                ),
+                  b.type === 'form'
+                    ? { ...b, fields: [...b.fields, defaultFormField()] }
+                    : b
+                )
               )
             }
           >

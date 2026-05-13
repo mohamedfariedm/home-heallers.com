@@ -73,19 +73,19 @@ function buttonClass(variant: 'primary' | 'secondary' | 'outline'): string {
     return cn(
       btnBase,
       'text-white shadow-md',
-      'bg-[color:var(--lp-primary)] hover:opacity-95',
+      'bg-[color:var(--lp-primary)] hover:opacity-95'
     );
   }
   if (variant === 'secondary') {
     return cn(
       btnBase,
       'text-white shadow-md',
-      'bg-[color:var(--lp-secondary)] hover:opacity-95',
+      'bg-[color:var(--lp-secondary)] hover:opacity-95'
     );
   }
   return cn(
     btnBase,
-    'border-2 border-[color:var(--lp-primary)] text-[color:var(--lp-primary)] bg-transparent hover:bg-[color:var(--lp-primary)]/10',
+    'border-2 border-[color:var(--lp-primary)] text-[color:var(--lp-primary)] bg-transparent hover:bg-[color:var(--lp-primary)]/10'
   );
 }
 
@@ -155,8 +155,8 @@ function CopyBlockView({
     block.headlineTag === 'h1'
       ? 'text-[length:clamp(1.75rem,4vw,2.75rem)] font-bold leading-tight'
       : block.headlineTag === 'h2'
-        ? 'text-[length:clamp(1.45rem,3vw,2rem)] font-bold leading-snug'
-        : 'text-[length:1.35rem] font-bold leading-snug';
+      ? 'text-[length:clamp(1.45rem,3vw,2rem)] font-bold leading-snug'
+      : 'text-[length:1.35rem] font-bold leading-snug';
 
   return (
     <div
@@ -184,7 +184,7 @@ function CopyBlockView({
         'flex w-full flex-col',
         align,
         editable && 'cursor-pointer rounded-xl',
-        editable && selectedId === block.id && ring,
+        editable && selectedId === block.id && ring
       )}
       style={{ gap, width: block.width, maxWidth: block.maxWidth }}
     >
@@ -196,7 +196,10 @@ function CopyBlockView({
           {block.eyebrow}
         </p>
       ) : null}
-      <HeadTag className={cn('text-zinc-900 dark:text-white', headlineFont)} style={headlineStyle}>
+      <HeadTag
+        className={cn('text-zinc-900 dark:text-white', headlineFont)}
+        style={headlineStyle}
+      >
         {block.headline}
       </HeadTag>
       {block.showSubheadline && block.subheadline.trim() ? (
@@ -248,8 +251,11 @@ function NavbarBlockView({
     if (!id) return;
     const target = document.getElementById(id);
     if (!target) return;
-    const stickyOffset = block.sticky ? (headerRef.current?.getBoundingClientRect().height ?? 0) : 0;
-    const top = target.getBoundingClientRect().top + window.scrollY - stickyOffset - 8;
+    const stickyOffset = block.sticky
+      ? headerRef.current?.getBoundingClientRect().height ?? 0
+      : 0;
+    const top =
+      target.getBoundingClientRect().top + window.scrollY - stickyOffset - 8;
     window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
     if (closeMobile) setMobileOpen(false);
   };
@@ -257,7 +263,9 @@ function NavbarBlockView({
   const linkClass =
     'block rounded-lg px-2 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 hover:text-[color:var(--lp-primary)] dark:text-zinc-200 dark:hover:bg-zinc-800 @lg:inline @lg:px-0 @lg:py-0 @lg:hover:bg-transparent';
   const localeOptions = opts.locales?.length ? opts.locales : null;
-  const showLocaleSwitcher = Boolean(localeOptions && block.showLanguageSwitcher);
+  const showLocaleSwitcher = Boolean(
+    localeOptions && block.showLanguageSwitcher
+  );
   const localeSelect = showLocaleSwitcher ? (
     <select
       value={opts.currentLocale}
@@ -290,7 +298,10 @@ function NavbarBlockView({
 
   const renderCta = (compact: boolean) =>
     block.showCta ? (
-      <div className={cn(compact ? 'pt-1' : '', 'shrink-0')} onClick={(e) => e.stopPropagation()}>
+      <div
+        className={cn(compact ? 'pt-1' : '', 'shrink-0')}
+        onClick={(e) => e.stopPropagation()}
+      >
         {editable ? (
           <button
             type="button"
@@ -300,7 +311,9 @@ function NavbarBlockView({
             }}
             className={cn(
               buttonClass('primary'),
-              compact ? 'w-full justify-center px-4 py-2.5 text-sm' : 'px-4 py-2 text-sm',
+              compact
+                ? 'w-full justify-center px-4 py-2.5 text-sm'
+                : 'px-4 py-2 text-sm'
             )}
           >
             {block.ctaLabel}
@@ -311,7 +324,9 @@ function NavbarBlockView({
             onClick={(e) => navigateToHref(e, block.ctaHref)}
             className={cn(
               buttonClass('primary'),
-              compact ? 'flex w-full justify-center px-4 py-2.5 text-sm' : 'px-4 py-2 text-sm',
+              compact
+                ? 'flex w-full justify-center px-4 py-2.5 text-sm'
+                : 'px-4 py-2 text-sm'
             )}
           >
             {block.ctaLabel}
@@ -327,11 +342,13 @@ function NavbarBlockView({
         'w-full',
         block.sticky && 'sticky top-0 z-10 backdrop-blur-md',
         editable && selectedId === block.id && ring,
-        editable && 'cursor-pointer rounded-xl',
+        editable && 'cursor-pointer rounded-xl'
       )}
       style={{
         background: block.background,
-        borderBottom: block.borderBottom ? '1px solid rgba(15,23,42,0.08)' : undefined,
+        borderBottom: block.borderBottom
+          ? '1px solid rgba(15,23,42,0.08)'
+          : undefined,
         paddingTop: block.paddingY,
         paddingBottom: block.paddingY,
       }}
@@ -361,8 +378,14 @@ function NavbarBlockView({
             </span>
           )}
         </div>
-        <div className="hidden shrink-0 items-center gap-3 @lg:flex" onClick={(e) => e.stopPropagation()}>
-          {showLocaleSwitcher && block.languageSwitcherPosition === 'before-links' ? localeSelect : null}
+        <div
+          className="hidden shrink-0 items-center gap-3 @lg:flex"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {showLocaleSwitcher &&
+          block.languageSwitcherPosition === 'before-links'
+            ? localeSelect
+            : null}
         </div>
         <nav
           className="mx-2 hidden min-w-0 flex-1 flex-wrap items-center justify-center gap-y-1 @lg:flex"
@@ -383,14 +406,22 @@ function NavbarBlockView({
             </a>
           ))}
         </nav>
-        <div className="hidden shrink-0 items-center gap-3 @lg:flex" onClick={(e) => e.stopPropagation()}>
-          {showLocaleSwitcher && block.languageSwitcherPosition === 'after-links' ? localeSelect : null}
-          {showLocaleSwitcher && block.languageSwitcherPosition === 'beside-cta' ? localeSelect : null}
+        <div
+          className="hidden shrink-0 items-center gap-3 @lg:flex"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {showLocaleSwitcher &&
+          block.languageSwitcherPosition === 'after-links'
+            ? localeSelect
+            : null}
+          {showLocaleSwitcher && block.languageSwitcherPosition === 'beside-cta'
+            ? localeSelect
+            : null}
           {block.showCta ? renderCta(false) : null}
         </div>
         <button
           type="button"
-          className="inline-flex shrink-0 rounded-lg border border-zinc-200 p-2 text-zinc-700 hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800 @lg:hidden"
+          className="inline-flex shrink-0 rounded-lg border border-zinc-200 p-2 text-zinc-700 hover:bg-zinc-100 @lg:hidden dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
           aria-expanded={mobileOpen}
           aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
           onClick={(e) => {
@@ -398,7 +429,11 @@ function NavbarBlockView({
             setMobileOpen((o) => !o);
           }}
         >
-          {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          {mobileOpen ? (
+            <X className="h-5 w-5" />
+          ) : (
+            <Menu className="h-5 w-5" />
+          )}
         </button>
       </div>
       {mobileOpen ? (
@@ -448,7 +483,9 @@ function NavbarBlockView({
               >
                 {localeOptions.map((loc) => (
                   <option key={loc.code} value={loc.code}>
-                    {`${loc.flag ?? '🏳️'} ${loc.label || loc.code.toUpperCase()}`}
+                    {`${loc.flag ?? '🏳️'} ${
+                      loc.label || loc.code.toUpperCase()
+                    }`}
                   </option>
                 ))}
               </select>
@@ -498,7 +535,7 @@ function FooterBlockView({
       className={cn(
         'w-full text-zinc-300',
         editable && 'cursor-pointer rounded-xl',
-        editable && selectedId === block.id && ring,
+        editable && selectedId === block.id && ring
       )}
       style={{
         background: block.background,
@@ -508,11 +545,14 @@ function FooterBlockView({
         paddingRight: block.paddingX,
       }}
     >
-      <div className="mx-auto w-full space-y-10" style={{ maxWidth: block.maxWidth }}>
+      <div
+        className="mx-auto w-full space-y-10"
+        style={{ maxWidth: block.maxWidth }}
+      >
         <div
           className={cn(
             'grid gap-8 max-sm:justify-items-center max-sm:text-center sm:justify-items-stretch sm:text-left',
-            cols,
+            cols
           )}
         >
           {block.columns.map((col) => (
@@ -551,18 +591,18 @@ function textTag(block: CanvasTextBlock) {
     (block.variant === 'h1'
       ? 'clamp(1.75rem, 4vw, 2.75rem)'
       : block.variant === 'h2'
-        ? 'clamp(1.5rem, 3vw, 2rem)'
-        : block.variant === 'h3'
-          ? '1.35rem'
-          : block.variant === 'caption'
-            ? '0.8rem'
-            : block.variant === 'lead'
-              ? 'clamp(1.05rem, 2vw, 1.25rem)'
-              : block.variant === 'subtitle'
-                ? '1.0625rem'
-                : block.variant === 'overline'
-                  ? '0.7rem'
-                  : '1rem');
+      ? 'clamp(1.5rem, 3vw, 2rem)'
+      : block.variant === 'h3'
+      ? '1.35rem'
+      : block.variant === 'caption'
+      ? '0.8rem'
+      : block.variant === 'lead'
+      ? 'clamp(1.05rem, 2vw, 1.25rem)'
+      : block.variant === 'subtitle'
+      ? '1.0625rem'
+      : block.variant === 'overline'
+      ? '0.7rem'
+      : '1rem');
   const weight =
     block.variant === 'body' ||
     block.variant === 'caption' ||
@@ -570,17 +610,18 @@ function textTag(block: CanvasTextBlock) {
     block.variant === 'subtitle'
       ? 'font-normal'
       : block.variant === 'overline'
-        ? 'font-semibold'
-        : 'font-bold';
-  const tracking = block.variant === 'overline' ? 'uppercase tracking-[0.2em]' : '';
+      ? 'font-semibold'
+      : 'font-bold';
+  const tracking =
+    block.variant === 'overline' ? 'uppercase tracking-[0.2em]' : '';
   const Tag =
     block.variant === 'h1'
       ? 'h1'
       : block.variant === 'h2'
-        ? 'h2'
-        : block.variant === 'h3'
-          ? 'h3'
-          : 'p';
+      ? 'h2'
+      : block.variant === 'h3'
+      ? 'h3'
+      : 'p';
   return { Tag, size, weight, tracking };
 }
 
@@ -593,7 +634,7 @@ function renderBlock(
     locales?: LandingLocaleConfig[];
     currentLocale?: string;
     onLocaleChange?: (locale: string) => void;
-  },
+  }
 ): ReactElement {
   const { selectedId, onSelect, editable } = opts;
   const ring =
@@ -607,8 +648,8 @@ function renderBlock(
       block.variant === 'subtitle'
         ? 'text-zinc-600 dark:text-zinc-400'
         : block.variant === 'overline'
-          ? 'text-[color:var(--lp-primary)]'
-          : '';
+        ? 'text-[color:var(--lp-primary)]'
+        : '';
     const style: CSSProperties = {
       fontSize: size,
       color: block.color || undefined,
@@ -646,34 +687,44 @@ function renderBlock(
               tracking,
               muted,
               ring,
-              editable && 'cursor-pointer rounded-lg',
+              editable && 'cursor-pointer rounded-lg'
             ),
             style,
           },
-          block.content,
+          block.content
         )}
       </div>
     );
   }
 
   if (block.type === 'copy') {
-    return <CopyBlockView key={block.id} block={block} opts={opts} ring={ring} />;
+    return (
+      <CopyBlockView key={block.id} block={block} opts={opts} ring={ring} />
+    );
   }
 
   if (block.type === 'navbar') {
-    return <NavbarBlockView key={block.id} block={block} opts={opts} ring={ring} />;
+    return (
+      <NavbarBlockView key={block.id} block={block} opts={opts} ring={ring} />
+    );
   }
 
   if (block.type === 'footer') {
-    return <FooterBlockView key={block.id} block={block} opts={opts} ring={ring} />;
+    return (
+      <FooterBlockView key={block.id} block={block} opts={opts} ring={ring} />
+    );
   }
 
   if (block.type === 'card') {
-    return <CardBlockView key={block.id} block={block} opts={opts} ring={ring} />;
+    return (
+      <CardBlockView key={block.id} block={block} opts={opts} ring={ring} />
+    );
   }
 
   if (block.type === 'grid') {
-    return <GridBlockView key={block.id} block={block} opts={opts} ring={ring} />;
+    return (
+      <GridBlockView key={block.id} block={block} opts={opts} ring={ring} />
+    );
   }
 
   if (block.type === 'image') {
@@ -684,7 +735,7 @@ function renderBlock(
         className={cn(
           'max-w-full border-0 bg-transparent p-0 text-left',
           ring,
-          editable && 'cursor-pointer',
+          editable && 'cursor-pointer'
         )}
         onClick={(e) => {
           e.stopPropagation();
@@ -712,14 +763,22 @@ function renderBlock(
       block.alignSelf === 'auto'
         ? ''
         : block.alignSelf === 'start'
-          ? 'self-start'
-          : block.alignSelf === 'center'
-            ? 'self-center'
-            : block.alignSelf === 'end'
-              ? 'self-end'
-              : 'self-stretch';
-    const cls = cn(buttonClass(block.variant), self, ring, editable && 'cursor-pointer');
-    const style = { width: block.width, minHeight: block.minHeight } as CSSProperties;
+        ? 'self-start'
+        : block.alignSelf === 'center'
+        ? 'self-center'
+        : block.alignSelf === 'end'
+        ? 'self-end'
+        : 'self-stretch';
+    const cls = cn(
+      buttonClass(block.variant),
+      self,
+      ring,
+      editable && 'cursor-pointer'
+    );
+    const style = {
+      width: block.width,
+      minHeight: block.minHeight,
+    } as CSSProperties;
     if (editable) {
       return (
         <button
@@ -751,13 +810,13 @@ function renderBlock(
   }
 
   if (block.type === 'form') {
-    return <FormBlockView key={block.id} block={block} opts={opts} ring={ring} />;
+    return (
+      <FormBlockView key={block.id} block={block} opts={opts} ring={ring} />
+    );
   }
 
   const dirClass =
-    block.direction === 'row'
-      ? 'flex-col min-[480px]:flex-row'
-      : 'flex-col';
+    block.direction === 'row' ? 'flex-col min-[480px]:flex-row' : 'flex-col';
   return (
     <div
       key={block.id}
@@ -788,7 +847,7 @@ function renderBlock(
         flexAlign[block.align],
         block.wrap && 'flex-wrap',
         editable && 'cursor-pointer rounded-xl',
-        ring,
+        ring
       )}
       style={{ gap: block.gap, width: block.width }}
     >
@@ -853,7 +912,11 @@ function FormBlockView({
             }
           : undefined
       }
-      className={cn('w-full', editable && 'cursor-pointer rounded-xl', editable && selectedId === block.id && ring)}
+      className={cn(
+        'w-full',
+        editable && 'cursor-pointer rounded-xl',
+        editable && selectedId === block.id && ring
+      )}
       style={{
         width: block.width,
         maxWidth: block.maxWidth,
@@ -866,9 +929,15 @@ function FormBlockView({
       }}
     >
       <div className="flex flex-col" style={{ gap: block.gap }}>
-        {block.title.trim() ? <h3 className="text-xl font-semibold text-zinc-900 dark:text-white">{block.title}</h3> : null}
+        {block.title.trim() ? (
+          <h3 className="text-xl font-semibold text-zinc-900 dark:text-white">
+            {block.title}
+          </h3>
+        ) : null}
         {block.description.trim() ? (
-          <p className="text-sm text-zinc-600 dark:text-zinc-300">{block.description}</p>
+          <p className="text-sm text-zinc-600 dark:text-zinc-300">
+            {block.description}
+          </p>
         ) : null}
         {block.fields.map((field) => (
           <label key={field.id} className="space-y-1">
@@ -941,7 +1010,7 @@ const cardImageJustifySelf: Record<CanvasCardBlock['imageJustify'], string> = {
 
 function cardFlexDirectionClasses(
   layout: CanvasCardBlock['layout'],
-  stackNarrow: boolean,
+  stackNarrow: boolean
 ): string {
   if (!stackNarrow) {
     return cn('flex', cardLayoutFlex[layout]);
@@ -990,7 +1059,7 @@ function CardBlockView({
           className={cn(
             'relative z-[2] shrink-0',
             imgWrapResponsive &&
-              'mx-auto w-full max-w-full @md:mx-0 @md:w-auto @md:max-w-none',
+              'mx-auto w-full max-w-full @md:mx-0 @md:w-auto @md:max-w-none'
           )}
           style={{
             minWidth: block.imageMinWidth,
@@ -1018,7 +1087,7 @@ function CardBlockView({
         className={cn(
           'relative z-[2] min-w-0 space-y-2',
           block.showImage ? 'flex-1' : 'w-full',
-          textAlignClass[block.textAlign],
+          textAlignClass[block.textAlign]
         )}
       >
         {createElement(
@@ -1030,7 +1099,7 @@ function CardBlockView({
               color: block.titleColor,
             },
           },
-          block.title,
+          block.title
         )}
         <p
           className="whitespace-pre-wrap text-zinc-600 dark:text-zinc-300"
@@ -1050,7 +1119,10 @@ function CardBlockView({
                   e.stopPropagation();
                   onSelect(block.id);
                 }}
-                className={cn(buttonClass(block.ctaVariant), 'relative z-[3] px-4 py-2 text-sm')}
+                className={cn(
+                  buttonClass(block.ctaVariant),
+                  'relative z-[3] px-4 py-2 text-sm'
+                )}
               >
                 {block.ctaLabel}
               </button>
@@ -1059,9 +1131,11 @@ function CardBlockView({
                 href={block.ctaHref || '#'}
                 className={cn(
                   buttonClass(block.ctaVariant),
-                  'relative z-[3] inline-flex px-4 py-2 text-sm',
+                  'relative z-[3] inline-flex px-4 py-2 text-sm'
                 )}
-                {...(block.ctaOpenInNewTab ? { target: '_blank', rel: 'noreferrer' } : {})}
+                {...(block.ctaOpenInNewTab
+                  ? { target: '_blank', rel: 'noreferrer' }
+                  : {})}
                 onClick={(e) => e.stopPropagation()}
               >
                 {block.ctaLabel}
@@ -1100,7 +1174,7 @@ function CardBlockView({
         cardFlexDirectionClasses(block.layout, block.stackOnNarrowScreens),
         editable && 'cursor-pointer',
         editable && selectedId === block.id && ring,
-        cardLinkActive && 'transition hover:opacity-[0.98]',
+        cardLinkActive && 'transition hover:opacity-[0.98]'
       )}
       style={{
         gap: block.showImage ? block.gap : 0,
@@ -1119,7 +1193,9 @@ function CardBlockView({
           className="absolute inset-0 z-[1]"
           style={{ borderRadius: block.borderRadius }}
           aria-label={block.title || 'Open link'}
-          {...(block.cardOpenInNewTab ? { target: '_blank', rel: 'noreferrer' } : {})}
+          {...(block.cardOpenInNewTab
+            ? { target: '_blank', rel: 'noreferrer' }
+            : {})}
         />
       ) : null}
       {body}
@@ -1179,7 +1255,7 @@ function GridBlockView({
         gridColsSmall[block.columnsSmall ?? 1],
         gridColsLarge[block.columns],
         editable && 'cursor-pointer rounded-xl',
-        editable && selectedId === block.id && ring,
+        editable && selectedId === block.id && ring
       )}
       style={{
         columnGap: block.gap,
@@ -1204,7 +1280,7 @@ function renderSection(
     locales?: LandingLocaleConfig[];
     currentLocale?: string;
     onLocaleChange?: (locale: string) => void;
-  },
+  }
 ) {
   const { selectedId, onSelect, editable } = opts;
   const secSelected = editable && selectedId === section.id;
@@ -1215,7 +1291,7 @@ function renderSection(
       id={sectionAnchorId(section.name, section.anchorId)}
       className={cn(
         'w-full',
-        secSelected && 'ring-2 ring-indigo-500 ring-inset',
+        secSelected && 'ring-2 ring-inset ring-indigo-500'
       )}
       style={{
         background: section.background,
@@ -1236,7 +1312,7 @@ function renderSection(
       <div
         className={cn(
           'mx-auto flex w-full flex-col gap-4',
-          alignMap[section.contentAlign],
+          alignMap[section.contentAlign]
         )}
         style={{ maxWidth: section.maxWidth }}
       >
@@ -1299,8 +1375,8 @@ export function CanvasPagePreview({
             Empty page
           </p>
           <p className="max-w-sm text-sm">
-            Add your first section here (it stays selected so you can style it and add
-            blocks from the bar below), or use the Layers panel.
+            Add your first section here (it stays selected so you can style it
+            and add blocks from the bar below), or use the Layers panel.
           </p>
           {editable && onAppendSection ? (
             <button
@@ -1332,7 +1408,10 @@ export function CanvasPagePreview({
           ))}
         </>
       )}
-      <CanvasFloatingDockView dock={canvas.floatingDock} pinInsidePreview={editable} />
+      <CanvasFloatingDockView
+        dock={canvas.floatingDock}
+        pinInsidePreview={editable}
+      />
     </CanvasThemeRoot>
   );
 }

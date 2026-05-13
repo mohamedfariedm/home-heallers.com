@@ -1,7 +1,9 @@
 'use client'
 import RolesTable from '@/app/shared/roles/roles-list/table';
 import TableLayout from '@/app/[locale]/(hydrogen)/tables/table-layout';
-import CreateRole from '@/app/shared/roles/roles-list/create-role';
+import CreateRole, {
+  ROLE_MODAL_CUSTOM_SIZE,
+} from '@/app/shared/roles/roles-list/create-role';
 // import { usePermissions } from '@/framework/roles';
 import { useRoles } from '@/framework/roles';
 import Spinner from '@/components/ui/spinner';
@@ -43,7 +45,8 @@ export default function RolesTablePage() {
       header="Role,Created At"
       createName='Create Role'
       // isLoading={isPermissionsLoading}
-      createElementButton={<CreateRole  />}
+      customSize={ROLE_MODAL_CUSTOM_SIZE}
+      createElementButton={<CreateRole />}
     >
       {isLoading ? (
         <div className="m-auto">
