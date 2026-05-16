@@ -301,6 +301,7 @@ export const routes = {
   },
   doctors: {
     index: '/doctors',
+    detail: (id: string | number) => `/doctors/${id}`,
   },
   groups: {
     index: '/groups',

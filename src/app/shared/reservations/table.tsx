@@ -46,6 +46,7 @@ export default function ReservationsTable({
   getSelectedColumns, 
   getSelectedRowKeys, 
   totalItems,
+  canView = true,
   canEdit = false,
   canDelete = false,
   canInviteDoctors = false,
@@ -55,6 +56,7 @@ export default function ReservationsTable({
   getSelectedColumns: React.Dispatch<React.SetStateAction<any[]>>, 
   getSelectedRowKeys: React.Dispatch<React.SetStateAction<any[]>>, 
   totalItems: number,
+  canView?: boolean,
   canEdit?: boolean,
   canDelete?: boolean,
   canInviteDoctors?: boolean,
@@ -170,12 +172,13 @@ export default function ReservationsTable({
         onChecked: handleRowSelect,
         handleSelectAll,
         onFilterChange: handleFilterChange,
+        canView,
         canEdit,
         canDelete,
         canInviteDoctors,
         canSendPaymentWhatsapp,
       }),
-    [selectedRowKeys, onHeaderCellClick, sortConfig.key, sortConfig.direction, onDeleteItem, handleRowSelect, handleSelectAll, canEdit, canDelete, canInviteDoctors, canSendPaymentWhatsapp]
+    [selectedRowKeys, onHeaderCellClick, sortConfig.key, sortConfig.direction, onDeleteItem, handleRowSelect, handleSelectAll, canView, canEdit, canDelete, canInviteDoctors, canSendPaymentWhatsapp]
   );
 
   const { visibleColumns, checkedColumns, setCheckedColumns } = useColumn(columns);

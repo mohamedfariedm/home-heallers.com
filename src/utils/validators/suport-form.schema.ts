@@ -52,6 +52,16 @@ export const leadFormSchema = z.object({
   created_by: z.string().optional(),
   event_agent_name: z.string().optional(),
   communication_channel: z.string().min(1, 'Communication Channel is required'),
+  cc: z
+    .string()
+    .optional()
+    .refine(
+      (val) =>
+        !val ||
+        val === 'Rework - Whatsapp' ||
+        val === 'Rework - Call',
+      { message: 'Please select a valid CC option' },
+    ),
 
   created_at: z.string().optional(),
   updated_at: z.string().optional(),

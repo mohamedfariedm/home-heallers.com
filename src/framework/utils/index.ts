@@ -127,6 +127,10 @@ class Client {
     }
     doctors = {
         all: (param: string) => HttpClient.get(`${routes.doctors.index}?${param}`),
+        findOne: (
+            id: number,
+            params?: { history_date_from?: string; history_date_to?: string }
+        ) => HttpClient.get(`${routes.doctors.index}/${id}`, params),
         create: (input: any) => HttpClient.post(`${routes.doctors.index}`, input),
         update: (input: any) => HttpClient.patch(`${routes.doctors.index}/${input.doctor_id}`, input),
         delete: (input: { doctor_id: number[] }) => HttpClient.delete(`${routes.doctors.index}/${input.doctor_id}`)

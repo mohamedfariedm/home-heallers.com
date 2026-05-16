@@ -90,6 +90,7 @@ export default function ReservationsTablePage() {
               getSelectedColumns={setSelectedColumns}
               getSelectedRowKeys={setSelectedRowKeys}
               totalItems={data?.meta?.total}
+              canView={reservationPermissions.view}
               canEdit={reservationPermissions.edit}
               canDelete={reservationPermissions.delete}
               canInviteDoctors={reservationPermissions.inviteDoctors}

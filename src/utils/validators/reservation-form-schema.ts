@@ -39,6 +39,16 @@ export const reservationFormSchema = z
     pain_location: z.string().min(1, "Pain location is required"),
     notes: z.string().optional(),
     customer_tier: z.string().optional(),
+    cc: z
+      .string()
+      .optional()
+      .refine(
+        (val) =>
+          !val ||
+          val === "Rework - Whatsapp" ||
+          val === "Rework - Call",
+        { message: "Please select a valid CC option" }
+      ),
 
     // Address fields
     address_city: z.string().min(1, "Address city is required"),

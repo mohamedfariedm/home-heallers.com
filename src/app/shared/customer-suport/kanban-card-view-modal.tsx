@@ -139,6 +139,13 @@ export default function KanbanCardViewModal({ item }: KanbanCardViewModalProps) 
         </div>
 
         <div>
+          <Title as="h6" className="mt-6 font-inter text-sm font-semibold">CC</Title>
+          <Text as="p" className="pb-2 leading-relaxed">
+            {item?.cc || '-'}
+          </Text>
+        </div>
+
+        <div>
           <Title as="h6" className="mt-6 font-inter text-sm font-semibold">Activity Code</Title>
           <Text as="p" className="pb-2 leading-relaxed">
             {item?.activity_code || '-'}

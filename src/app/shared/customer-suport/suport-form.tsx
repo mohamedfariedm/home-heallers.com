@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Title } from '@/components/ui/text';
 import { useModal } from '@/app/shared/modal-views/use-modal';
 import { LeadFormInput, leadFormSchema } from '@/utils/validators/suport-form.schema';
+import { CC_OPTIONS } from '@/app/shared/cc-options';
 import { Textarea } from 'rizzui';
 import { useCreateCustomerSupport, useUpdateCustomerSupport } from '@/framework/customer-suport';
 import { useSearchParams } from 'next/navigation';
@@ -127,6 +128,7 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
         created_by: data.created_by || '',
         event_agent_name: data.event_agent_name || '',
         communication_channel: data.communication_channel || '',
+        ...(data.cc ? { cc: data.cc } : {}),
       };
 
       if (initValues?.id) {
@@ -210,6 +212,7 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
           created_by: createdByName,
           event_agent_name: initValues?.event_agent_name || '',
           communication_channel: initValues?.communication_channel || '',
+          cc: initValues?.cc || '',
         },
       }}
       className="flex flex-grow flex-col gap-6 p-6"
@@ -332,6 +335,24 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
               <option value="Lead Form">Lead Form</option>
             </select>
             {errors.communication_channel && <p className="text-sm text-red-500 mt-1">{errors.communication_channel.message}</p>}
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-900">CC</label>
+            <select
+              {...register('cc')}
+              className="h-10 w-full rounded-md border border-gray-300 bg-white p-2 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Select CC</option>
+              {CC_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            {errors.cc && (
+              <p className="mt-1 text-sm text-red-500">{errors.cc.message}</p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">

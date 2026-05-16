@@ -293,17 +293,18 @@ export const menuItemsHaydrogen = [
     permissions: 'patients',
   },
   {
+    name: 'Doctors Groups',
+    href: routes.groups.index,
+    icon: <PiStackDuotone />,
+    permissions: 'doctors-groups',
+  },
+  {
     name: 'Doctors',
     href: routes.doctors.index,
     icon: <PiUserCircle />,
     permissions: 'doctors',
   },
-  {
-    name: 'Groups',
-    href: routes.groups.index,
-    icon: <PiStackDuotone />,
-    permissions: 'groups',
-  },
+
   {
     name: 'categories',
     href: routes.mainCategories.index,

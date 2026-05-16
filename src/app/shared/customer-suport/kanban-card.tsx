@@ -92,7 +92,7 @@ export default function KanbanCard({
     e.stopPropagation();
     e.preventDefault();
     openModal({
-      view: <KanbanCardModal item={item} />,
+      view: <KanbanCardModal item={item} canEdit={canEdit} />,
       customSize: '90vw',
     });
   };
@@ -139,7 +139,7 @@ export default function KanbanCard({
         e.stopPropagation();
         if (canEdit) {
           openModal({
-            view: <KanbanCardModal item={item} />,
+            view: <KanbanCardModal item={item} canEdit={canEdit} />,
             customSize: '90vw',
           });
         } else if (canViewDetails) {
@@ -158,7 +158,11 @@ export default function KanbanCard({
     if (!isSortableDragging) {
       if (!canEdit && !canViewDetails) return;
       openModal({
-        view: canEdit ? <KanbanCardModal item={item} /> : <KanbanCardViewModal item={item} />,
+        view: canEdit ? (
+          <KanbanCardModal item={item} canEdit={canEdit} />
+        ) : (
+          <KanbanCardViewModal item={item} />
+        ),
         customSize: canEdit ? '90vw' : '1000px',
       });
     }

@@ -8,6 +8,22 @@ export function useDoctors(param: string) {
   return useQuery<any, Error>({ queryKey: [routes.doctors.index, param], queryFn: () => client.doctors.all(param) });
 };
 
+export type DoctorHistoryFilters = {
+  history_date_from?: string;
+  history_date_to?: string;
+};
+
+export function useDoctor(
+  id: string | number,
+  historyFilters?: DoctorHistoryFilters
+) {
+  return useQuery<any, Error>({
+    queryKey: [routes.doctors.index, id, historyFilters],
+    queryFn: () => client.doctors.findOne(Number(id), historyFilters),
+    enabled: !!id,
+  });
+}
+
 export const useCreateDoctors = () => {
   const queryClient = useQueryClient();
   const { closeModal } = useModal();

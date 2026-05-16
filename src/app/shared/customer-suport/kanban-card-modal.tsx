@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Tabs, TabList, Tab, TabPanels, TabPanel } from '@/components/ui/tabs';
-import { PiXBold, PiUser, PiCalendarCheck } from 'react-icons/pi';
+import { PiXBold, PiUser, PiCalendarCheck, PiEye } from 'react-icons/pi';
 import { useModal } from '@/app/shared/modal-views/use-modal';
 import CreateOrUpdateCustomerSupport from './suport-form';
 import CreateOrUpdateReservation from '@/app/shared/reservations/reservations-form';
@@ -13,17 +13,24 @@ import { ActionIcon } from '@/components/ui/action-icon';
 import { Tooltip } from '@/components/ui/tooltip';
 import ChatSolidIcon from '@/components/icons/chat-solid';
 import InviteDoctorsButton from '@/app/shared/reservations/invite-doctors-button';
+import { canEditReservationWithPermission } from '@/app/shared/reservations/reservation-source';
+import { ReservationViewContent } from '@/app/shared/reservations/reservation-view-modal';
 import toast from 'react-hot-toast';
 
 interface KanbanCardModalProps {
   item: any;
+  canEdit?: boolean;
 }
 
-export default function KanbanCardModal({ item }: KanbanCardModalProps) {
+export default function KanbanCardModal({
+  item,
+  canEdit = false,
+}: KanbanCardModalProps) {
   const { closeModal } = useModal();
   const [activeTab, setActiveTab] = useState(0);
   const [reservations, setReservations] = useState<any[]>([]);
   const [selectedReservation, setSelectedReservation] = useState<any | null>(null);
+  const [viewingReservation, setViewingReservation] = useState<any | null>(null);
   const [isLoadingReservation, setIsLoadingReservation] = useState(false);
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   
@@ -101,14 +108,25 @@ export default function KanbanCardModal({ item }: KanbanCardModalProps) {
 
   // Refetch reservations when switching to reservations tab (force refresh)
   useEffect(() => {
-    if (activeTab === 1 && !selectedReservation && !isCreatingNew) {
+    if (activeTab === 1 && !selectedReservation && !viewingReservation && !isCreatingNew) {
       fetchReservations(true); // Force refresh when switching to tab
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
+  const handleViewReservation = (reservation: any) => {
+    setViewingReservation(reservation);
+    setSelectedReservation(null);
+    setIsCreatingNew(false);
+  };
+
   const handleSelectReservation = (reservation: any) => {
-    setSelectedReservation(reservation);
+    if (canEditReservationWithPermission(canEdit, reservation)) {
+      setSelectedReservation(reservation);
+      setViewingReservation(null);
+    } else {
+      handleViewReservation(reservation);
+    }
     setIsCreatingNew(false);
   };
 
@@ -119,6 +137,7 @@ export default function KanbanCardModal({ item }: KanbanCardModalProps) {
 
   const handleBackToList = () => {
     setSelectedReservation(null);
+    setViewingReservation(null);
     setIsCreatingNew(false);
   };
 
@@ -214,7 +233,23 @@ export default function KanbanCardModal({ item }: KanbanCardModalProps) {
                 <div className="flex h-64 items-center justify-center rounded-lg border border-gray-200 bg-gray-50/50 dark:border-gray-700 dark:bg-gray-100/50">
                   <Spinner size="lg" />
                 </div>
-              ) : selectedReservation || isCreatingNew ? (
+              ) : viewingReservation ? (
+                <div className="space-y-4">
+                  <button
+                    type="button"
+                    onClick={handleBackToList}
+                    className="flex items-center gap-2 text-blue-600 transition-colors hover:text-blue-800"
+                  >
+                    <PiXBold className="h-4 w-4 rotate-45" />
+                    <span>Back to Reservations List</span>
+                  </button>
+                  <div className="overflow-hidden rounded-xl border border-gray-200 bg-gray-50/50 p-2 dark:border-gray-700 dark:bg-gray-100/50">
+                    <ReservationViewContent reservation={viewingReservation} />
+                  </div>
+                </div>
+              ) : (selectedReservation &&
+                  canEditReservationWithPermission(canEdit, selectedReservation)) ||
+                isCreatingNew ? (
                 <div className="space-y-4">
                   <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                     <button
@@ -268,32 +303,44 @@ export default function KanbanCardModal({ item }: KanbanCardModalProps) {
                     <h3 className="text-lg font-semibold text-gray-900">
                       Reservations ({reservations.length})
                     </h3>
-                    <button
-                      onClick={handleCreateNew}
-                      className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                      <PiCalendarCheck className="h-4 w-4" />
-                      <span>Create New Reservation</span>
-                    </button>
+                    {canEdit && (
+                      <button
+                        onClick={handleCreateNew}
+                        className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        <PiCalendarCheck className="h-4 w-4" />
+                        <span>Create New Reservation</span>
+                      </button>
+                    )}
                   </div>
 
                   {reservations.length === 0 ? (
                     <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
                       <PiCalendarCheck className="w-12 h-12 mx-auto mb-4 text-gray-400" />
                       <p className="text-gray-600 mb-4">No reservations found for this lead</p>
-                      <button
-                        onClick={handleCreateNew}
-                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                      >
-                        Create First Reservation
-                      </button>
+                      {canEdit && (
+                        <button
+                          onClick={handleCreateNew}
+                          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                          Create First Reservation
+                        </button>
+                      )}
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      {reservations.map((reservation) => (
+                      {reservations.map((reservation) => {
+                        const showEditReservation = canEditReservationWithPermission(
+                          canEdit,
+                          reservation
+                        );
+                        return (
                         <div
                           key={reservation.id}
-                          className="rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-blue-500 hover:shadow-md"
+                          className={cn(
+                            'rounded-lg border border-gray-200 bg-white p-4 transition-all',
+                            'hover:border-blue-500 hover:shadow-md'
+                          )}
                         >
                           <div className="flex items-start justify-between gap-3">
                             <button
@@ -365,6 +412,21 @@ export default function KanbanCardModal({ item }: KanbanCardModalProps) {
                             >
                               <Tooltip
                                 size="sm"
+                                content={() => 'View'}
+                                placement="top"
+                                color="invert"
+                              >
+                                <ActionIcon
+                                  size="sm"
+                                  variant="outline"
+                                  className="cursor-pointer hover:text-gray-700"
+                                  onClick={() => handleViewReservation(reservation)}
+                                >
+                                  <PiEye className="h-4 w-4" />
+                                </ActionIcon>
+                              </Tooltip>
+                              <Tooltip
+                                size="sm"
                                 content={() => 'Send Payment WhatsApp'}
                                 placement="top"
                                 color="invert"
@@ -386,7 +448,8 @@ export default function KanbanCardModal({ item }: KanbanCardModalProps) {
                             </div>
                           </div>
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>

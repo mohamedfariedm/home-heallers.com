@@ -5,15 +5,18 @@ import { ActionIcon } from '@/components/ui/action-icon';
 import { Tooltip } from '@/components/ui/tooltip';
 import TrashIcon from '@/components/icons/trash';
 import PencilIcon from '@/components/icons/pencil';
+import EyeIcon from '@/components/icons/eye';
 import ChatSolidIcon from '@/components/icons/chat-solid';
 import CreateButton from '../create-button';
 import DeletePopover from '@/app/shared/delete-popover';
 import { Badge } from '@/components/ui/badge';
 import CreateOrUpdateReservation from './reservations-form';
+import ReservationViewModal from './reservation-view-modal';
 import ColumnFilterPopover from '@/app/shared/customer-suport/column-filter-popover';
 import client from '@/framework/utils';
 import toast from 'react-hot-toast';
 import InviteDoctorsButton from './invite-doctors-button';
+import { canEditReservationWithPermission } from './reservation-source';
 
 const truncateText = (value: string, max = 80) => {
   if (value.length <= max) return value;
@@ -58,6 +61,7 @@ interface Columns {
   onHeaderCellClick: (value: string) => void;
   onChecked?: (id: string) => void;
   onFilterChange?: (key: string, value: any) => void;
+  canView?: boolean;
   canEdit?: boolean;
   canDelete?: boolean;
   canInviteDoctors?: boolean;
@@ -73,6 +77,7 @@ export const getColumns = ({
   handleSelectAll,
   onChecked,
   onFilterChange,
+  canView = true,
   canEdit = false,
   canDelete = false,
   canInviteDoctors = false,
@@ -100,13 +105,15 @@ export const getColumns = ({
       />
     ),
   },
-  ...(canEdit || canDelete || canInviteDoctors || canSendPaymentWhatsapp
+  ...(canView || canEdit || canDelete || canInviteDoctors || canSendPaymentWhatsapp
     ? [{
     title: <></>,
     dataIndex: 'actions',
     key: 'actions',
     width: 20,
     render: (_: any, row: any) => {
+      const showEdit = canEditReservationWithPermission(canEdit, row);
+
       const handleWhatsAppPayment = async () => {
         try {
           await client.reservations.createPaymentWhatsapp({
@@ -123,7 +130,7 @@ export const getColumns = ({
 
       return (
         <div className="flex items-center gap-3">
-          {canEdit && (
+          {showEdit && (
             <Tooltip
               size="sm"
               content={() => 'Edit'}
@@ -142,6 +149,24 @@ export const getColumns = ({
               />
             </Tooltip>
           )}
+          <Tooltip
+            size="sm"
+            content={() => 'View'}
+            placement="top"
+            color="invert"
+          >
+            <CreateButton
+              customSize="960px"
+              icon={
+                <ActionIcon tag="span" size="sm" variant="outline">
+                  <EyeIcon className="h-4 w-4" />
+                </ActionIcon>
+              }
+              view={<ReservationViewModal reservation={row} />}
+              label=""
+              className="m-0 bg-transparent p-0 text-gray-700"
+            />
+          </Tooltip>
           {canSendPaymentWhatsapp && (
             <Tooltip
               size="sm"

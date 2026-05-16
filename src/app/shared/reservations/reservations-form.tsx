@@ -32,6 +32,7 @@ import { useCountries } from '@/framework/countrues';
 import { useCities } from '@/framework/cities';
 import { useStates } from '@/framework/states';
 import { Badge } from '@/components/ui/badge';
+import { CC_OPTIONS } from '@/app/shared/cc-options';
 
 const timePeriods = [
   { id: 'morning', name: 'Morning' },
@@ -218,6 +219,7 @@ export default function CreateOrUpdateReservation({
       status: initValues?.status?.toString() || '2',
       pain_location: initValues?.pain_location || '',
       notes: initValues?.notes || leadData?.notes || '',
+      cc: initValues?.cc || '',
       address_city:
         initValues?.address?.city?.en ||
         initValues?.address?.city?.ar ||
@@ -515,6 +517,7 @@ export default function CreateOrUpdateReservation({
       status: data.status ? Number(data.status) : undefined,
       pain_location: data.pain_location,
       notes: data.notes,
+      ...(data.cc ? { cc: data.cc } : {}),
       address_city: data.address_city,
       address_state: data.address_state,
       address_link: data.address_link,
@@ -1071,6 +1074,25 @@ export default function CreateOrUpdateReservation({
           <div className="mt-2">
             <CustomerTierBadge value={(watchCustomerTier as any) ?? (initValues?.customer_tier || 'عادي')} />
           </div>
+        </div>
+
+        <div>
+          <label className="mb-1 block text-sm font-medium text-gray-700">CC</label>
+          <select
+            {...inputProps}
+            {...register('cc')}
+            className="w-full rounded-lg border border-gray-300 p-2"
+          >
+            <option value="">Select CC</option>
+            {CC_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          {errors.cc && (
+            <p className="mt-1 text-sm text-red-500">{errors.cc.message}</p>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-4">

@@ -5,15 +5,34 @@ import { Button } from '@/components/ui/button';
 import { Title, Text } from '@/components/ui/text';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import toast from 'react-hot-toast';
 import client from '@/framework/utils';
 import Spinner from '@/components/ui/spinner';
 import { PiMagnifyingGlassBold } from 'react-icons/pi';
+import { useGroups } from '@/framework/groups';
+
+interface DoctorGroup {
+  id: number;
+  name: string;
+}
 
 interface Doctor {
   id: number;
   name: string | { ar: string; en: string };
   email?: string;
+  groups?: DoctorGroup[];
+}
+
+function doctorBelongsToGroup(doctor: Doctor, groupId: string): boolean {
+  if (!groupId) return true;
+  const groups = doctor.groups ?? [];
+  return groups.some((g) => String(g.id) === groupId);
+}
+
+function getDoctorGroupNames(doctor: Doctor): string[] {
+  const groups = doctor.groups ?? [];
+  return groups.map((g) => g.name).filter(Boolean);
 }
 
 interface InviteDoctorsModalProps {
@@ -32,12 +51,27 @@ export default function InviteDoctorsModal({
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedGroupId, setSelectedGroupId] = useState('');
+
+  const { data: groupsData, isLoading: isLoadingGroups } = useGroups(
+    'page=1&limit=500'
+  );
+
+  const groupOptions = useMemo(() => {
+    const raw = groupsData?.data;
+    const list = Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : [];
+    return list.map((g: { id: number; name: string }) => ({
+      id: g.id,
+      name: g.name,
+    }));
+  }, [groupsData?.data]);
 
   useEffect(() => {
     if (isOpen) {
       fetchDoctors();
-      setSelectedDoctorIds([]); // Reset selection when modal opens
-      setSearchTerm(''); // Reset search when modal opens
+      setSelectedDoctorIds([]);
+      setSearchTerm('');
+      setSelectedGroupId('');
     }
   }, [isOpen]);
 
@@ -89,23 +123,35 @@ export default function InviteDoctorsModal({
     }
   };
 
-  // Filter doctors based on search term
   const filteredDoctors = useMemo(() => {
-    if (!searchTerm.trim()) {
-      return doctors;
-    }
-    const searchLower = searchTerm.toLowerCase();
+    const searchLower = searchTerm.trim().toLowerCase();
+
     return doctors.filter((doctor) => {
-      // Get doctor name
+      if (!doctorBelongsToGroup(doctor, selectedGroupId)) {
+        return false;
+      }
+
+      if (!searchLower) {
+        return true;
+      }
+
       const doctorName =
         typeof doctor.name === 'string'
           ? doctor.name
           : doctor.name?.en || doctor.name?.ar || 'Unknown';
       const name = doctorName.toLowerCase();
       const email = (doctor.email || '').toLowerCase();
-      return name.includes(searchLower) || email.includes(searchLower);
+      const groupNames = getDoctorGroupNames(doctor)
+        .join(' ')
+        .toLowerCase();
+
+      return (
+        name.includes(searchLower) ||
+        email.includes(searchLower) ||
+        groupNames.includes(searchLower)
+      );
     });
-  }, [doctors, searchTerm]);
+  }, [doctors, searchTerm, selectedGroupId]);
 
   const getDoctorName = (doctor: Doctor): string => {
     if (typeof doctor.name === 'string') {
@@ -167,12 +213,29 @@ export default function InviteDoctorsModal({
               </Text>
             ) : (
               <>
-                {/* Search Input */}
-                <div className="mb-4">
+                <div className="mb-4 space-y-3">
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-gray-700">
+                      Filter by group
+                    </label>
+                    <select
+                      value={selectedGroupId}
+                      onChange={(e) => setSelectedGroupId(e.target.value)}
+                      disabled={isLoadingGroups}
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
+                    >
+                      <option value="">All groups</option>
+                      {groupOptions.map((group) => (
+                        <option key={group.id} value={String(group.id)}>
+                          {group.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                   <Input
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Search doctors by name or email..."
+                    placeholder="Search by name, email, or group..."
                     className="w-full"
                     prefix={
                       <PiMagnifyingGlassBold className="h-4 w-4 text-gray-500" />
@@ -184,7 +247,7 @@ export default function InviteDoctorsModal({
 
                 <div className="mb-3 flex items-center justify-between border-b pb-2">
                   <Text className="font-medium">
-                    {searchTerm
+                    {searchTerm || selectedGroupId
                       ? `Select Doctors (${filteredDoctors.length} found)`
                       : 'Select Doctors'}
                   </Text>
@@ -202,7 +265,11 @@ export default function InviteDoctorsModal({
                 <div className="max-h-80 space-y-2 overflow-y-auto">
                   {filteredDoctors.length === 0 ? (
                     <Text className="py-8 text-center text-gray-500">
-                      No doctors found matching &quot;{searchTerm}&quot;
+                      No doctors found
+                      {searchTerm ? ` matching "${searchTerm}"` : ''}
+                      {selectedGroupId
+                        ? ` in group "${groupOptions.find((g) => String(g.id) === selectedGroupId)?.name ?? ''}"`
+                        : ''}
                     </Text>
                   ) : (
                     filteredDoctors.map((doctor) => (
@@ -224,6 +291,19 @@ export default function InviteDoctorsModal({
                               {doctor.email}
                             </Text>
                           )}
+                          {getDoctorGroupNames(doctor).length > 0 && (
+                            <div className="mt-1 flex flex-wrap gap-1">
+                              {getDoctorGroupNames(doctor).map((groupName) => (
+                                <Badge
+                                  key={`${doctor.id}-${groupName}`}
+                                  variant="outline"
+                                  className="text-[10px]"
+                                >
+                                  {groupName}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))
@@ -232,7 +312,8 @@ export default function InviteDoctorsModal({
 
                 <div className="mt-4 text-sm text-gray-600">
                   Selected: {selectedDoctorIds.length} / {doctors.length}
-                  {searchTerm && filteredDoctors.length !== doctors.length && (
+                  {(searchTerm || selectedGroupId) &&
+                    filteredDoctors.length !== doctors.length && (
                     <span className="ml-2 text-gray-400">
                       (Showing {filteredDoctors.length} filtered)
                     </span>
