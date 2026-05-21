@@ -25,10 +25,13 @@ const pageHeader = {
 
 export default function PatientsTablePage() {
   const searchParams = useSearchParams();
-  const params = new URLSearchParams(searchParams);
-  if (!params.get('page')) params.set('page', '1');
-  if (!params.get('limit')) params.set('limit', '10');
-  const { data, isLoading } = usePatients(params.toString());
+  const queryParams = new URLSearchParams();
+  searchParams.forEach((value, key) => {
+    queryParams.set(key, value);
+  });
+  if (!queryParams.get('page')) queryParams.set('page', '1');
+  if (!queryParams.get('limit')) queryParams.set('limit', '10');
+  const { data, isLoading } = usePatients(queryParams.toString());
   const [selectedColumns, setSelectedColumns] = useState<any[]>([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState<any[]>([]);
   return (

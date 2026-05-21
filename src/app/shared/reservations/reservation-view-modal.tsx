@@ -15,23 +15,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import cn from '@/utils/class-names';
 
-function getName(nameField: unknown): string {
-  if (!nameField) return '—';
-  if (typeof nameField === 'string') return nameField;
-  const field = nameField as Record<string, unknown>;
-  if (field.en) {
-    if (typeof field.en === 'string') return field.en;
-    const en = field.en as Record<string, string>;
-    if (typeof en.en === 'string') return en.en;
-    if (typeof en.ar === 'string') return en.ar;
-  }
-  if (field.ar) {
-    if (typeof field.ar === 'string') return field.ar;
-    const ar = field.ar as Record<string, string>;
-    if (typeof ar.ar === 'string') return ar.ar;
-  }
-  return '—';
-}
+import {
+  getReservationPatientName,
+  resolveLocalizedNameOrFallback,
+} from '@/utils/resolve-localized-name';
 
 function formatSessionLabel(session: {
   start_time?: string;
@@ -180,38 +167,24 @@ function DetailItem({
 }
 
 function useReservationDetails(reservation: any) {
-  const patientName =
-    typeof reservation?.patient?.name === 'string'
-      ? reservation.patient.name
-      : reservation?.patient?.name?.en ??
-        reservation?.patient?.name?.ar ??
-        (typeof reservation?.guest_info?.name === 'string'
-          ? reservation.guest_info.name
-          : reservation?.guest_info?.name?.en ??
-            reservation?.guest_info?.name?.ar) ??
-        '—';
+  const patientName = getReservationPatientName(reservation);
 
-  const serviceName =
-    typeof reservation?.service?.name === 'string'
-      ? reservation.service.name
-      : getName(reservation?.service?.name);
-
-  const doctorName =
-    typeof reservation?.doctor?.name === 'string'
-      ? reservation.doctor.name
-      : getName(reservation?.doctor?.name);
+  const serviceName = resolveLocalizedNameOrFallback(reservation?.service?.name);
+  const doctorName = resolveLocalizedNameOrFallback(reservation?.doctor?.name);
 
   const cityName =
-    reservation?.address?.city != null
-      ? getName(reservation.address.city)
-      : getName(reservation?.patient?.city?.name);
+    resolveLocalizedNameOrFallback(reservation?.address?.city) !== '—'
+      ? resolveLocalizedNameOrFallback(reservation?.address?.city)
+      : resolveLocalizedNameOrFallback(reservation?.patient?.city?.name);
 
   const stateName =
-    reservation?.address?.state != null
-      ? getName(reservation.address.state)
-      : getName(reservation?.patient?.state);
+    resolveLocalizedNameOrFallback(reservation?.address?.state) !== '—'
+      ? resolveLocalizedNameOrFallback(reservation?.address?.state)
+      : resolveLocalizedNameOrFallback(
+          reservation?.patient?.state?.name ?? reservation?.patient?.state
+        );
 
-  const countryName = getName(
+  const countryName = resolveLocalizedNameOrFallback(
     reservation?.address?.country ?? reservation?.patient?.country?.name
   );
 
@@ -401,10 +374,12 @@ export function ReservationViewContent({ reservation }: { reservation: any }) {
                 reservation?.sub_total ? `${reservation.sub_total} SAR` : undefined
               }
             />
-            <DetailItem
-              label="Fees"
-              value={reservation?.fees ? `${reservation.fees} SAR` : undefined}
-            />
+            {Number(reservation?.fees) > 0 && (
+              <DetailItem
+                label="Fees (VAT)"
+                value={`${reservation.fees} SAR`}
+              />
+            )}
             <DetailItem
               label="Total Amount"
               value={

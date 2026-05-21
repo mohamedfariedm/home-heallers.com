@@ -16,6 +16,10 @@ export const isReservationEditable = (reservation: {
   );
 };
 
+export const isReservationLockedSource = (reservation: {
+  reservation_source?: ReservationSource;
+}) => !isReservationEditable(reservation);
+
 export const canEditReservationWithPermission = (
   canEdit: boolean,
   reservation: { reservation_source?: ReservationSource }

@@ -54,6 +54,9 @@ export function getKanbanColumnSelectPlaceholder(columnKey: string): string {
   if (columnKey === 'lead_source') return 'Select lead source';
   if (columnKey === 'source_campaign') return 'Select source';
   if (columnKey === 'communication_channel') return 'Select channel';
+  if (columnKey === 'nationality_name') return 'Select nationality';
+  if (columnKey === 'country_name') return 'Select country';
+  if (columnKey === 'city_name') return 'Select city';
   if (specialtyKeys.has(columnKey)) return 'Select specialty';
   return 'Select';
 }

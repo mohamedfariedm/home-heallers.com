@@ -12,8 +12,10 @@ import CreateButton from '../create-button';
 import DeletePopover from '@/app/shared/delete-popover';
 import CreateOrUpdateDoctors from './doctors-form';
 import { Badge } from '@/components/ui/badge';
+import ColumnFilterPopover from '@/app/shared/customer-suport/column-filter-popover';
+import LookupColumnFilterPopover from '@/app/shared/lookup-column-filter-popover';
+import { resolveLocalizedNameOrFallback } from '@/utils/resolve-localized-name';
 
-// Type definitions
 interface Columns {
   data: any[];
   sortConfig?: any;
@@ -22,6 +24,7 @@ interface Columns {
   onDeleteItem: (id: string[]) => void;
   onHeaderCellClick: (value: string) => void;
   onChecked?: (id: string) => void;
+  onFilterChange?: (key: string, value: any) => void;
 }
 
 export const getColumns = ({
@@ -32,6 +35,7 @@ export const getColumns = ({
   onHeaderCellClick,
   handleSelectAll,
   onChecked,
+  onFilterChange,
 }: Columns) => [
   {
     title: (
@@ -98,7 +102,30 @@ export const getColumns = ({
     ),
   },
   {
-    title: <HeaderCell title="Name" />,
+    title: (
+      <div className="flex items-center gap-1">
+        <HeaderCell title="ID" />
+        {onFilterChange && (
+          <ColumnFilterPopover columnKey="id" onFilterChange={onFilterChange} />
+        )}
+      </div>
+    ),
+    dataIndex: 'id',
+    key: 'id',
+    width: 70,
+    render: (id: number) => (
+      <span className="font-semibold text-gray-800">#{id}</span>
+    ),
+  },
+  {
+    title: (
+      <div className="flex items-center gap-1">
+        <HeaderCell title="Name" />
+        {onFilterChange && (
+          <ColumnFilterPopover columnKey="name" onFilterChange={onFilterChange} />
+        )}
+      </div>
+    ),
     dataIndex: 'name',
     key: 'name',
     render: (_: any, row: any) => (
@@ -109,13 +136,27 @@ export const getColumns = ({
     ),
   },
   {
-    title: <HeaderCell title="Email" />,
+    title: (
+      <div className="flex items-center gap-1">
+        <HeaderCell title="Email" />
+        {onFilterChange && (
+          <ColumnFilterPopover columnKey="email" onFilterChange={onFilterChange} />
+        )}
+      </div>
+    ),
     dataIndex: 'email',
     key: 'email',
     render: (email: string) => email ?? '—',
   },
   {
-    title: <HeaderCell title="Doctor Role" />,
+    title: (
+      <div className="flex items-center gap-1">
+        <HeaderCell title="Doctor Role" />
+        {onFilterChange && (
+          <ColumnFilterPopover columnKey="doctor_role" onFilterChange={onFilterChange} />
+        )}
+      </div>
+    ),
     dataIndex: 'doctor_role',
     key: 'doctor_role',
     render: (doctor_role: string) => (
@@ -125,16 +166,64 @@ export const getColumns = ({
     ),
   },
   {
-    title: <HeaderCell title="Department" />,
+    title: (
+      <div className="flex items-center gap-1">
+        <HeaderCell title="Department" />
+        {onFilterChange && (
+          <ColumnFilterPopover columnKey="department" onFilterChange={onFilterChange} />
+        )}
+      </div>
+    ),
     dataIndex: 'department',
     key: 'department',
     render: (department: string) => department ?? '—',
   },
   {
-    title: <HeaderCell title="Specialization" />,
+    title: (
+      <div className="flex items-center gap-1">
+        <HeaderCell title="Specialization" />
+        {onFilterChange && (
+          <ColumnFilterPopover columnKey="specialized_in" onFilterChange={onFilterChange} />
+        )}
+      </div>
+    ),
     dataIndex: 'specialized_in',
     key: 'specialized_in',
     render: (specialized_in: string) => specialized_in ?? '—',
+  },
+  {
+    title: (
+      <div className="flex items-center gap-1">
+        <HeaderCell title="City" />
+        {onFilterChange && (
+          <LookupColumnFilterPopover
+            columnKey="city_name"
+            onFilterChange={onFilterChange}
+          />
+        )}
+      </div>
+    ),
+    dataIndex: 'city',
+    key: 'city',
+    render: (_: any, row: any) =>
+      row?.city ? resolveLocalizedNameOrFallback(row.city.name) : '—',
+  },
+  {
+    title: (
+      <div className="flex items-center gap-1">
+        <HeaderCell title="Nationality" />
+        {onFilterChange && (
+          <LookupColumnFilterPopover
+            columnKey="nationality_name"
+            onFilterChange={onFilterChange}
+          />
+        )}
+      </div>
+    ),
+    dataIndex: 'nationality',
+    key: 'nationality',
+    render: (_: any, row: any) =>
+      row?.nationality ? resolveLocalizedNameOrFallback(row.nationality.name) : '—',
   },
   {
     title: <HeaderCell title="Experience" />,
@@ -143,20 +232,41 @@ export const getColumns = ({
     render: (experience: number) => `${experience} years` ?? '—',
   },
   {
-    title: <HeaderCell title="Mobile" />,
+    title: (
+      <div className="flex items-center gap-1">
+        <HeaderCell title="Mobile" />
+        {onFilterChange && (
+          <ColumnFilterPopover columnKey="mobile" onFilterChange={onFilterChange} />
+        )}
+      </div>
+    ),
     dataIndex: 'mobile_number',
     key: 'mobile_number',
     render: (mobile_number: string, row: any) => 
       `${row.country_code || ''} ${mobile_number}`.trim() || '—',
   },
   {
-    title: <HeaderCell title="National ID" />,
+    title: (
+      <div className="flex items-center gap-1">
+        <HeaderCell title="National ID" />
+        {onFilterChange && (
+          <ColumnFilterPopover columnKey="national_id" onFilterChange={onFilterChange} />
+        )}
+      </div>
+    ),
     dataIndex: 'national_id',
     key: 'national_id',
     render: (national_id: string) => national_id ?? '—',
   },
   {
-    title: <HeaderCell title="Gender" />,
+    title: (
+      <div className="flex items-center gap-1">
+        <HeaderCell title="Gender" />
+        {onFilterChange && (
+          <ColumnFilterPopover columnKey="gender" onFilterChange={onFilterChange} />
+        )}
+      </div>
+    ),
     dataIndex: 'gender',
     key: 'gender',
     render: (gender: string) => (
@@ -216,7 +326,14 @@ export const getColumns = ({
       medical_license_expiry ? new Date(medical_license_expiry).toLocaleDateString() : '—',
   },
   {
-    title: <HeaderCell title="Status" />,
+    title: (
+      <div className="flex items-center gap-1">
+        <HeaderCell title="Status" />
+        {onFilterChange && (
+          <ColumnFilterPopover columnKey="status" onFilterChange={onFilterChange} />
+        )}
+      </div>
+    ),
     dataIndex: 'status',
     key: 'status',
     render: (status: boolean) => (
@@ -226,19 +343,20 @@ export const getColumns = ({
     ),
   },
   {
-    title: <HeaderCell title="Nationality" />,
-    dataIndex: 'nationality',
-    key: 'nationality',
-    render: (_: any, row: any) => row?.nationality?.name?.en ?? '—',
-  },
-  {
     title: <HeaderCell title="Languages" />,
     dataIndex: 'languages_spoken',
     key: 'languages_spoken',
     render: (languages_spoken: string) => languages_spoken ?? '—',
   },
   {
-    title: <HeaderCell title="Created At" />,
+    title: (
+      <div className="flex items-center gap-1">
+        <HeaderCell title="Created At" />
+        {onFilterChange && (
+          <ColumnFilterPopover columnKey="created_at" onFilterChange={onFilterChange} />
+        )}
+      </div>
+    ),
     dataIndex: 'created_at',
     key: 'created_at',
     render: (created_at: string) => new Date(created_at).toLocaleString(),

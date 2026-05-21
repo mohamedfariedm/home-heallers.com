@@ -25,7 +25,9 @@ import {
   PiStethoscopeBold,
   PiBriefcaseBold,
   PiStarBold,
+  PiMapPinBold,
 } from 'react-icons/pi';
+import { resolveLocalizedNameOrFallback } from '@/utils/resolve-localized-name';
 
 type DoctorAttachment = {
   id?: string;
@@ -199,6 +201,15 @@ export default function DoctorProfileView({
                 <PiEnvelopeBold className="h-4 w-4" />
                 <span>{doctor?.email ?? '—'}</span>
               </div>
+              {doctor?.city ? (
+                <>
+                  <span className="opacity-60">•</span>
+                  <div className="inline-flex items-center gap-1.5">
+                    <PiMapPinBold className="h-4 w-4" />
+                    <span>{resolveLocalizedNameOrFallback(doctor.city.name)}</span>
+                  </div>
+                </>
+              ) : null}
               {doctor?.rate != null ? (
                 <>
                   <span className="opacity-60">•</span>

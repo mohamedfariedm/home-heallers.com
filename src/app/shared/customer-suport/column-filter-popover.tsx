@@ -38,7 +38,7 @@ function FilterValueControl({
   const placeholder = getKanbanColumnSelectPlaceholder(columnKey);
   const staticOptions = getKanbanStaticSelectOptions(columnKey);
 
-  if (columnKey === 'offer') {
+  if (offerOptions !== undefined) {
     return (
       <select
         className={selectClassName}

@@ -16,7 +16,12 @@ import ColumnFilterPopover from '@/app/shared/customer-suport/column-filter-popo
 import client from '@/framework/utils';
 import toast from 'react-hot-toast';
 import InviteDoctorsButton from './invite-doctors-button';
-import { canEditReservationWithPermission } from './reservation-source';
+import { PiDeviceMobile, PiGlobe } from 'react-icons/pi';
+import {
+  getReservationPatientName,
+  resolveLocalizedName,
+  resolveLocalizedNameOrFallback,
+} from '@/utils/resolve-localized-name';
 
 const truncateText = (value: string, max = 80) => {
   if (value.length <= max) return value;
@@ -110,9 +115,9 @@ export const getColumns = ({
     title: <></>,
     dataIndex: 'actions',
     key: 'actions',
-    width: 20,
+    width: 160,
     render: (_: any, row: any) => {
-      const showEdit = canEditReservationWithPermission(canEdit, row);
+      const source = row?.reservation_source;
 
       const handleWhatsAppPayment = async () => {
         try {
@@ -130,25 +135,6 @@ export const getColumns = ({
 
       return (
         <div className="flex items-center gap-3">
-          {showEdit && (
-            <Tooltip
-              size="sm"
-              content={() => 'Edit'}
-              placement="top"
-              color="invert"
-            >
-              <CreateButton
-                icon={
-                  <ActionIcon tag="span" size="sm" variant="outline">
-                    <PencilIcon className="h-4 w-4" />
-                  </ActionIcon>
-                }
-                view={<CreateOrUpdateReservation initValues={row} />}
-                label=""
-                className="m-0 bg-transparent p-0 text-gray-700"
-              />
-            </Tooltip>
-          )}
           <Tooltip
             size="sm"
             content={() => 'View'}
@@ -167,6 +153,22 @@ export const getColumns = ({
               className="m-0 bg-transparent p-0 text-gray-700"
             />
           </Tooltip>
+
+          {canEdit && (
+            <Tooltip size="sm" content={() => 'Edit'} placement="top" color="invert">
+              <CreateButton
+                icon={
+                  <ActionIcon tag="span" size="sm" variant="outline">
+                    <PencilIcon className="h-4 w-4" />
+                  </ActionIcon>
+                }
+                view={<CreateOrUpdateReservation initValues={row} />}
+                label=""
+                className="m-0 bg-transparent p-0 text-gray-700"
+              />
+            </Tooltip>
+          )}
+
           {canSendPaymentWhatsapp && (
             <Tooltip
               size="sm"
@@ -184,21 +186,44 @@ export const getColumns = ({
               </ActionIcon>
             </Tooltip>
           )}
+
           {canInviteDoctors && <InviteDoctorsButton reservationId={row.id} />}
+
           {canDelete && (
             <DeletePopover
               title={`Delete Reservation`}
               description={`Are you sure you want to delete reservation #${row.id}?`}
               onDelete={() => onDeleteItem([row.id])}
             >
-              <ActionIcon
-                size="sm"
-                variant="outline"
-                className="hover:text-gray-700"
-              >
+              <ActionIcon size="sm" variant="outline" className="hover:text-gray-700">
                 <TrashIcon className="h-4 w-4" />
               </ActionIcon>
             </DeletePopover>
+          )}
+
+          {source === 'Application' && (
+            <Tooltip size="sm" content={() => 'Application'} placement="top" color="invert">
+              <ActionIcon
+                tag="span"
+                size="sm"
+                variant="outline"
+                className="cursor-default text-indigo-600"
+              >
+                <PiDeviceMobile className="h-4 w-4" />
+              </ActionIcon>
+            </Tooltip>
+          )}
+          {source === 'Website' && (
+            <Tooltip size="sm" content={() => 'Website'} placement="top" color="invert">
+              <ActionIcon
+                tag="span"
+                size="sm"
+                variant="outline"
+                className="cursor-default text-sky-600"
+              >
+                <PiGlobe className="h-4 w-4" />
+              </ActionIcon>
+            </Tooltip>
           )}
         </div>
       );
@@ -239,20 +264,7 @@ export const getColumns = ({
     dataIndex: 'patient',
     key: 'patient',
     render: (_: any, row: any) => {
-      // Handle patient name - can be object with ar/en or just ar, or string
-      let patientName = '—';
-      if (row?.patient?.name) {
-        if (typeof row.patient.name === 'string') {
-          patientName = row.patient.name;
-        } else {
-          patientName = row.patient.name?.en ?? row.patient.name?.ar ?? '—';
-        }
-      } else if (row?.guest_info?.name) {
-        patientName =
-          typeof row.guest_info.name === 'string'
-            ? row.guest_info.name
-            : row.guest_info.name?.en ?? row.guest_info.name?.ar ?? '—';
-      }
+      const patientName = getReservationPatientName(row);
 
       // Handle patient email
       const patientEmail = row?.patient?.email ?? row?.guest_info?.email ?? '';
@@ -285,10 +297,7 @@ export const getColumns = ({
     key: 'doctor',
     render: (_: any, row: any) => {
       if (!row?.doctor) return '—';
-      // Doctor name can be a string directly
-      return typeof row.doctor.name === 'string'
-        ? row.doctor.name
-        : row.doctor.name?.en ?? row.doctor.name?.ar ?? '—';
+      return resolveLocalizedNameOrFallback(row.doctor.name);
     },
   },
 
@@ -309,11 +318,7 @@ export const getColumns = ({
     key: 'service',
     render: (_: any, row: any) => {
       if (!row?.service) return '—';
-      // Service name can be a string directly or an object with ar/en
-      if (typeof row.service.name === 'string') {
-        return row.service.name;
-      }
-      return row.service.name?.en ?? row.service.name?.ar ?? '—';
+      return resolveLocalizedNameOrFallback(row.service.name);
     },
   },
 
@@ -333,31 +338,9 @@ export const getColumns = ({
     dataIndex: 'city',
     key: 'city',
     render: (_: any, row: any) => {
-      // Try to get city from address first, then from patient
-      let cityName = '—';
-      
-      // Check address.city
-      if (row?.address?.city) {
-        if (typeof row.address.city === 'string') {
-          cityName = row.address.city;
-        } else {
-          cityName = row.address.city?.en ?? row.address.city?.ar ?? '—';
-        }
-      }
-      
-      // If no city from address, check patient.city
-      if (cityName === '—' && row?.patient?.city?.name) {
-        if (typeof row.patient.city.name === 'string') {
-          cityName = row.patient.city.name;
-        } else {
-          cityName = row.patient.city.name?.en?.en ?? 
-                     row.patient.city.name?.en ?? 
-                     row.patient.city.name?.ar?.en ?? 
-                     row.patient.city.name?.ar ?? '—';
-        }
-      }
-      
-      return cityName;
+      const fromAddress = resolveLocalizedName(row?.address?.city);
+      const fromPatient = resolveLocalizedName(row?.patient?.city?.name);
+      return fromAddress || fromPatient || '—';
     },
   },
 
@@ -377,28 +360,9 @@ export const getColumns = ({
     dataIndex: 'state',
     key: 'state',
     render: (_: any, row: any) => {
-      // Try to get state from address first, then from patient
-      let stateName = '—';
-      
-      // Check address.state
-      if (row?.address?.state) {
-        if (typeof row.address.state === 'string') {
-          stateName = row.address.state;
-        } else {
-          stateName = row.address.state?.en ?? row.address.state?.ar ?? '—';
-        }
-      }
-      
-      // If no state from address, check patient.state
-      if (stateName === '—' && row?.patient?.state) {
-        if (typeof row.patient.state === 'string') {
-          stateName = row.patient.state;
-        } else {
-          stateName = row.patient.state?.en ?? row.patient.state?.ar ?? '—';
-        }
-      }
-      
-      return stateName;
+      const fromAddress = resolveLocalizedName(row?.address?.state);
+      const fromPatient = resolveLocalizedName(row?.patient?.state?.name ?? row?.patient?.state);
+      return fromAddress || fromPatient || '—';
     },
   },
 

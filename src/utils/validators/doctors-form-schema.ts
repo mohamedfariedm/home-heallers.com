@@ -9,6 +9,7 @@ export const doctorFormSchema = z.object({
   }),
   email: z.string().email('Invalid email address'),
   nationality_id: z.string().min(1, 'Nationality is required'),
+  city_id: z.string().optional(),
 
   // ⬇️ change from single to array
   category_ids: z.array(z.string()).min(1, 'At least one category is required'),

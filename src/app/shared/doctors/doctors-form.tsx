@@ -10,6 +10,7 @@ import { useModal } from '../modal-views/use-modal';
 import { useCreateDoctors, useUpdateDoctors } from '@/framework/doctors';
 import { DoctorFormInput, doctorFormSchema } from '@/utils/validators/doctors-form-schema';
 import { useNationality } from '@/framework/nationality';
+import { useCities } from '@/framework/cities';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import toast from 'react-hot-toast';
@@ -55,6 +56,7 @@ export default function CreateOrUpdateDoctors({ initValues }: { initValues?: any
   const [lang, setLang] = useState<"en" | "ar">("en");
 
   const { data: nationalities, isLoading } = useNationality("");
+  const { data: cities, isLoading: isLoadingCities } = useCities('');
   const { data: categories, isLoading: isLoadingCategories } = useCategories("");
   const { data: groupsData, isLoading: isLoadingGroups } = useGroups('');
 
@@ -110,6 +112,7 @@ export default function CreateOrUpdateDoctors({ initValues }: { initValues?: any
       name: data.name,
       email: data.email,
       nationality_id: Number(data.nationality_id) || undefined,
+      city_id: data.city_id ? Number(data.city_id) : null,
 
       // map string ids -> numbers
       category_ids: (data.category_ids || []).map((id) => Number(id)),
@@ -205,6 +208,7 @@ export default function CreateOrUpdateDoctors({ initValues }: { initValues?: any
               : [],
 
           nationality_id: initValues?.nationality?.id?.toString() || '',
+          city_id: initValues?.city_id?.toString() || initValues?.city?.id?.toString() || '',
           national_id: initValues?.national_id || '',
           country_code: initValues?.country_code || '',
           mobile_number: initValues?.mobile_number || '',
@@ -375,6 +379,24 @@ export default function CreateOrUpdateDoctors({ initValues }: { initValues?: any
                 ))}
               </select>
               {errors.nationality_id && <p className="text-sm text-red-500">{errors.nationality_id.message}</p>}
+            </div>
+
+            <div>
+              <label className="text-sm text-gray-700">City (Optional)</label>
+              <select
+                {...register('city_id')}
+                className="w-full border border-gray-300 rounded-lg p-2"
+                disabled={isLoadingCities}
+              >
+                <option value="">
+                  {isLoadingCities ? 'Loading cities...' : 'Select City'}
+                </option>
+                {cities?.data?.map((city: any) => (
+                  <option key={city.id} value={city.id}>
+                    {city.name?.en ?? city.name?.ar ?? `City ${city.id}`}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
