@@ -207,6 +207,7 @@ export const routes = {
   },
   invoices: {
     index: '/invoices',
+    detail: (id: string | number) => `/invoices/${id}`,
   },
   pos: {
     index: '/point-of-sale',

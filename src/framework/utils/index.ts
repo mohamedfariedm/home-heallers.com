@@ -1,4 +1,5 @@
 import { HttpClient } from './request';
+import request from './request';
 import { CreateRuleInput, UserInput, Region, City, Retailer, Store, LoginInput, AuthResponse, Category, Journey, Products, stock, Target, Inquerie, notifications } from '@/types'
 import { routes } from '@/config/routes';
 import { CreateBrandInput } from '@/utils/validators/create-brand.schema ';
@@ -114,6 +115,36 @@ class Client {
         create: (input: any) => HttpClient.post(`${`/invoices`}`, input),
         update: (input: any) => HttpClient.patch(`${`/invoices`}/${input.id}`, input),
         delete: (input: { region_id: number[] }) => HttpClient.delete(`${`/invoices`}/${input.region_id}`)
+    }
+    zatca = {
+        list: (param: string) => HttpClient.get(`/zatca/invoices?${param}`),
+        get: (id: number | string) => HttpClient.get(`/zatca/invoices/${id}`),
+        submissions: (id: number | string, param = '') =>
+            HttpClient.get(`/zatca/invoices/${id}/submissions${param ? `?${param}` : ''}`),
+        xml: (id: number | string, kind: string, download?: boolean) =>
+            HttpClient.get(
+                `/zatca/invoices/${id}/xml/${kind}${download ? '?download=1' : ''}`
+            ),
+        qr: (id: number | string) => HttpClient.get(`/zatca/invoices/${id}/qr`),
+        export: (param: string) => HttpClient.get(`/zatca/invoices/export?${param}`),
+        submit: (id: number | string, data: unknown) =>
+            HttpClient.post(`/zatca/invoices/${id}/submit`, data),
+        retry: (id: number | string, data: unknown) =>
+            HttpClient.post(`/zatca/invoices/${id}/retry`, data),
+        revalidate: (id: number | string) => HttpClient.post(`/zatca/invoices/${id}/revalidate`),
+        issue: (id: number | string, data: unknown) =>
+            HttpClient.post(`/invoices/${id}/issue`, data),
+        cancel: (id: number | string) => HttpClient.post(`/invoices/${id}/cancel`),
+        creditNote: (id: number | string, data: unknown) =>
+            HttpClient.post(`/invoices/${id}/credit-note`, data),
+        debitNote: (id: number | string, data: unknown) =>
+            HttpClient.post(`/invoices/${id}/debit-note`, data),
+        pdfBlob: async (id: number | string) => {
+            const res = await request.get(`/zatca/invoices/${id}/pdf`, {
+                responseType: 'blob',
+            });
+            return res.data as Blob;
+        },
     }
     invoiceDetails = {
         delete: (id: string | number) => HttpClient.delete(`/invoice-details/${id}`),
