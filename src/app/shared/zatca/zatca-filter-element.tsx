@@ -59,22 +59,52 @@ export default function ZatcaFilterElement({
         <StatusField
           options={documentTypeOptions}
           value={filters.document_type as string}
-          onChange={(v: string) => updateFilter('document_type', v)}
-          getOptionValue={(o) => o.value}
+          onChange={(v) =>
+            updateFilter(
+              'document_type',
+              typeof v === 'object' && v != null && 'value' in v
+                ? String((v as { value: string }).value)
+                : String(v ?? '')
+            )
+          }
+          getOptionValue={(option) => option.value}
+          displayValue={(selected: string) =>
+            documentTypeOptions.find((o) => o.value === selected)?.label ?? selected
+          }
           placeholder="Document type"
         />
         <StatusField
           options={zatcaStatusOptions}
           value={filters.zatca_status as string}
-          onChange={(v: string) => updateFilter('zatca_status', v)}
-          getOptionValue={(o) => o.value}
+          onChange={(v) =>
+            updateFilter(
+              'zatca_status',
+              typeof v === 'object' && v != null && 'value' in v
+                ? String((v as { value: string }).value)
+                : String(v ?? '')
+            )
+          }
+          getOptionValue={(option) => option.value}
+          displayValue={(selected: string) =>
+            zatcaStatusOptions.find((o) => o.value === selected)?.label ?? selected
+          }
           placeholder="ZATCA status"
         />
         <StatusField
           options={businessStatusOptions}
           value={filters.business_status as string}
-          onChange={(v: string) => updateFilter('business_status', v)}
-          getOptionValue={(o) => o.value}
+          onChange={(v) =>
+            updateFilter(
+              'business_status',
+              typeof v === 'object' && v != null && 'value' in v
+                ? String((v as { value: string }).value)
+                : String(v ?? '')
+            )
+          }
+          getOptionValue={(option) => option.value}
+          displayValue={(selected: string) =>
+            businessStatusOptions.find((o) => o.value === selected)?.label ?? selected
+          }
           placeholder="Business status"
         />
         <DateFiled

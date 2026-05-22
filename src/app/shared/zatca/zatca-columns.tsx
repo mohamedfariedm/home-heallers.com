@@ -10,10 +10,7 @@ import DateCell from '@/components/ui/date-cell';
 import StatusBadge from '@/app/shared/zatca/status-badge';
 import type { ZatcaPermissions } from '@/app/shared/zatca/permissions';
 import type { ZatcaInvoice } from '@/types/zatca';
-import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
-
-dayjs.extend(relativeTime);
+import { formatDate } from '@/utils/format-date';
 
 type Columns = {
   data: ZatcaInvoice[];
@@ -64,7 +61,7 @@ export function getZatcaColumns({
       width: 50,
       render: (_: unknown, row: ZatcaInvoice) =>
         permissions.view ? (
-          <Tooltip content="View" placement="top">
+          <Tooltip content={() => 'View'} placement="top" color="invert">
             <Link href={`/invoices/${row.id}`}>
               <ActionIcon size="sm" variant="outline" tag="span">
                 <EyeIcon className="h-4 w-4" />
@@ -163,7 +160,7 @@ export function getZatcaColumns({
       render: (v: string | undefined) =>
         v ? (
           <span className="text-xs text-gray-600" title={v}>
-            {dayjs(v).fromNow()}
+            {formatDate(new Date(v), 'DD MMM, YYYY HH:mm')}
           </span>
         ) : (
           '—'

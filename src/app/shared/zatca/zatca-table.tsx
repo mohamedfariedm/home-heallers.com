@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useTable } from '@/hooks/use-table';
 import { useColumn } from '@/hooks/use-column';
@@ -16,7 +16,7 @@ const FilterElement = dynamic(
 );
 
 export default function ZatcaInvoicesTable({
-  data = [],
+  data: rawData = [],
   totalItems,
   permissions,
   getSelectedColumns,
@@ -28,6 +28,7 @@ export default function ZatcaInvoicesTable({
   getSelectedColumns: React.Dispatch<React.SetStateAction<unknown[]>>;
   getSelectedRowKeys: React.Dispatch<React.SetStateAction<unknown[]>>;
 }) {
+  const data = Array.isArray(rawData) ? rawData : [];
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
