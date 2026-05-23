@@ -128,13 +128,12 @@ export default function CreateOrUpdateReservation({
   useEffect(() => {
     if (!citiesData?.data || selectedCityId) return;
     const cityName =
-      initValues?.address?.city?.en ||
-      initValues?.address?.city?.ar ||
-      initValues?.patient?.city?.name?.en ||
+      resolveLocalizedName(initValues?.address?.city) ||
+      resolveLocalizedName(initValues?.patient?.city?.name) ||
       '';
     if (!cityName) return;
     const match = activeCities.find(
-      (c: any) => c.name?.en === cityName || c.name?.ar === cityName
+      (c: any) => getName(c.name) === cityName
     );
     if (match) setSelectedCityId(match.id);
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -214,17 +213,15 @@ export default function CreateOrUpdateReservation({
       notes: initValues?.notes || leadData?.notes || '',
       cc: initValues?.cc || '',
       address_city:
-        initValues?.address?.city?.en ||
-        initValues?.address?.city?.ar ||
-        initValues?.patient?.city?.name?.en?.en ||
+        resolveLocalizedName(initValues?.address?.city) ||
+        resolveLocalizedName(initValues?.patient?.city?.name) ||
         initValues?.guest_info?.city ||
         initValues?.address_city ||
         leadData?.address_1 ||
         '',
       address_state:
-        initValues?.address?.state?.en ||
-        initValues?.address?.state?.ar ||
-        initValues?.patient?.state?.name?.en?.en ||
+        resolveLocalizedName(initValues?.address?.state) ||
+        resolveLocalizedName(initValues?.patient?.state?.name) ||
         initValues?.guest_info?.state ||
         initValues?.address_state ||
         '',
@@ -235,13 +232,8 @@ export default function CreateOrUpdateReservation({
       name: initValues?.name || (shouldUseLeadData ? leadData?.name : undefined),
 
       patient_name:
-        guest?.name ||
-        (typeof initValues?.patient?.name?.en === 'string'
-          ? initValues?.patient?.name?.en
-          : initValues?.patient?.name?.en?.en) ||
-        (typeof initValues?.patient?.name?.ar === 'string'
-          ? initValues?.patient?.name?.ar
-          : initValues?.patient?.name?.ar?.ar) ||
+        resolveLocalizedName(guest?.name) ||
+        resolveLocalizedName(initValues?.patient?.name) ||
         (shouldUseLeadData ? leadData?.name : ''),
       patient_email: guest?.email || initValues?.patient?.email || '',
       patient_national_id:
@@ -250,17 +242,12 @@ export default function CreateOrUpdateReservation({
       patient_country:
         guest?.country ||
         guest?.nationality ||
-        // country.name.en can be a nested object { ar:..., en:... } or a plain string
-        (typeof initValues?.patient?.country?.name?.en === 'string'
-          ? initValues?.patient?.country?.name?.en
-          : initValues?.patient?.country?.name?.en?.en) ||
+        resolveLocalizedName(initValues?.patient?.country?.name) ||
         '',
       patient_mobile: guest?.mobile || initValues?.patient?.mobile || (shouldUseLeadData ? leadData?.mobile_phone || leadData?.booking_phone_number : ''),
       patient_city:
         guest?.city ||
-        (typeof initValues?.patient?.city?.name?.en === 'string'
-          ? initValues?.patient?.city?.name?.en
-          : initValues?.patient?.city?.name?.en?.en) ||
+        resolveLocalizedName(initValues?.patient?.city?.name) ||
         '',
       patient_state: guest?.state || initValues?.patient?.state?.en || '',
       patient_date_of_birth:
@@ -805,7 +792,7 @@ export default function CreateOrUpdateReservation({
             </option>
             {patients?.data?.map((patient: any) => (
               <option key={patient.id} value={String(patient.id)}>
-                {patient.name?.en || patient.name?.ar}
+                {getName(patient.name) || `Patient #${patient.id}`}
               </option>
             ))}
           </select>
