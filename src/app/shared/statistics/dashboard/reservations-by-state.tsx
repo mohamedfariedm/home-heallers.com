@@ -26,8 +26,11 @@ interface ReservationsByStateProps {
   className?: string;
 }
 
+const INITIAL_STATES_SHOWN = 5;
+
 export default function ReservationsByState({ data, className }: ReservationsByStateProps) {
   const [isTopTenOpen, setIsTopTenOpen] = useState(false);
+  const [showAllStates, setShowAllStates] = useState(false);
   
   if (!data || !data.by_state || data.by_state.length === 0) {
     return null;
@@ -44,6 +47,11 @@ export default function ReservationsByState({ data, className }: ReservationsByS
   
   // Prepare Top 10 data
   const sortedStates = [...data.by_state].sort((a, b) => b.reservations_count - a.reservations_count);
+  const displayedStates = showAllStates
+    ? sortedStates
+    : sortedStates.slice(0, INITIAL_STATES_SHOWN);
+  const hiddenStatesCount = Math.max(0, sortedStates.length - INITIAL_STATES_SHOWN);
+
   const topTenItems = sortedStates.slice(0, 10).map((state) => ({
     name: state.state_name || 'Unknown',
     value: state.reservations_count,
@@ -123,7 +131,7 @@ export default function ReservationsByState({ data, className }: ReservationsByS
             </h4>
           </div>
           <div className="space-y-3">
-            {sortedStates.slice(0, 5).map((state, index) => {
+            {displayedStates.map((state, index) => {
               const reservationPercentage = data.total_reservations > 0 
                 ? (state.reservations_count / data.total_reservations) * 100 
                 : 0;
@@ -191,10 +199,19 @@ export default function ReservationsByState({ data, className }: ReservationsByS
                 </div>
               );
             })}
-            {data.by_state.length > 5 && (
-              <p className="text-xs text-gray-500 mt-2 text-center">
-                +{data.by_state.length - 5} more states
-              </p>
+            {hiddenStatesCount > 0 && (
+              <div className="mt-2 flex justify-center">
+                <Button
+                  size="sm"
+                  variant="text"
+                  onClick={() => setShowAllStates((prev) => !prev)}
+                  className="text-xs text-gray-600 dark:text-gray-400"
+                >
+                  {showAllStates
+                    ? 'Show less'
+                    : `+${hiddenStatesCount} more states`}
+                </Button>
+              </div>
             )}
           </div>
         </div>
