@@ -7,6 +7,7 @@ import StatusBreakdown from './status-breakdown';
 import SupportTypeBreakdown from './support-type-breakdown';
 import InvoiceBreakdown from './invoice-breakdown';
 import CostRatioChart from './cost-ratio-chart';
+import ConversionRateChart from './conversion-rate-chart';
 import ReservationCampaignsChart from './reservation-campaigns';
 import SupportCampaignsChart from './support-campaigns';
 import ReservationsByCity from './reservations-by-city';
@@ -78,6 +79,22 @@ interface AggregateData {
     confirmed_reservations_count: number;
     cost_ratio: number | null;
   }>;
+  reservation_rate?: {
+    successful_count: number;
+    total_count: number;
+    rate: number;
+  };
+  package_conversion_rate?: {
+    repeat_clients: number;
+    clients_with_reservation: number;
+    rate: number;
+  };
+  conversion_rate?: Array<{
+    source_campaign: string;
+    customer_support_count: number;
+    reservations_count: number;
+    conversion_rate: number;
+  }>;
   reservations_by_city?: {
     by_city: Array<{
       city_id: string | null;
@@ -145,7 +162,8 @@ export default function StatisticsDashboard() {
     hasPermission('dashboard.top_states_performance');
   const showFinancialSection =
     hasPermission('dashboard.invoice_status') ||
-    hasPermission('dashboard.campaign_statistics');
+    hasPermission('dashboard.campaign_statistics') ||
+    hasPermission('dashboard.conversion_rate');
   const showCampaignSection =
     hasPermission('dashboard.reservations_by_campaign') ||
     hasPermission('dashboard.support_tickets_by_campaign');
@@ -365,6 +383,11 @@ export default function StatisticsDashboard() {
                 <div className="lg:col-span-6">
                   {hasPermission('dashboard.campaign_statistics') && aggregateData?.cost_ratio && aggregateData.cost_ratio.length > 0 && (
                     <CostRatioChart data={aggregateData.cost_ratio} className="h-full" />
+                  )}
+                </div>
+                <div className="lg:col-span-12">
+                  {hasPermission('dashboard.conversion_rate') && aggregateData?.conversion_rate && aggregateData.conversion_rate.length > 0 && (
+                    <ConversionRateChart data={aggregateData.conversion_rate} className="h-full" />
                   )}
                 </div>
               </div>

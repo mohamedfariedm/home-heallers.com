@@ -47,6 +47,23 @@ const customerSupportTypeOptions = [
   { value: 'emergency', label: 'Emergency' },
 ];
 
+function toSelectValue(value: unknown): string {
+  if (value == null || value === '') return '';
+  if (typeof value === 'object' && value !== null && 'value' in value) {
+    return String((value as { value: string | number }).value);
+  }
+  return String(value);
+}
+
+function getSelectDisplayName(
+  selected: unknown,
+  options: Array<{ value: string | number; name: string }>
+): string {
+  const selectedValue = toSelectValue(selected);
+  if (!selectedValue) return '';
+  return options.find((option) => String(option.value) === selectedValue)?.name ?? selectedValue;
+}
+
 export default function StatisticsFiltersComponent({
   onFilter,
   className,
@@ -137,14 +154,41 @@ export default function StatisticsFiltersComponent({
       : { ar: '', en: center.name || '' }
   }));
 
+  const doctorOptions = [
+    { value: '', name: loadingDoctors ? 'Loading...' : 'Select Doctor' },
+    ...doctors.map((doctor) => ({
+      value: String(doctor.id),
+      name: doctor.name?.ar || doctor.name?.en || `Doctor ${doctor.id}`,
+    })),
+  ];
+
+  const clientOptions = [
+    { value: '', name: loadingClients ? 'Loading...' : 'Select Client' },
+    ...clients.map((client) => ({
+      value: String(client.id),
+      name: client.name?.ar || client.name?.en || `Client ${client.id}`,
+    })),
+  ];
+
+  const centerOptions = [
+    { value: '', name: loadingCenters ? 'Loading...' : 'Select Center' },
+    ...normalizedCenters.map((center) => ({
+      value: String(center.id),
+      name: center.name?.ar || center.name?.en || `Center ${center.id}`,
+    })),
+  ];
+
   const handleApplyFilters = () => {
     const filters: StatisticsFilters = {};
+    const normalizedDoctorId = toSelectValue(doctorId);
+    const normalizedClientId = toSelectValue(clientId);
+    const normalizedCenterId = toSelectValue(centerId);
     
     if (dateFrom) filters.date_from = dateFrom;
     if (dateTo) filters.date_to = dateTo;
-    if (doctorId) filters.doctor_id = doctorId;
-    if (clientId) filters.client_id = clientId;
-    if (centerId) filters.center_id = centerId;
+    if (normalizedDoctorId) filters.doctor_id = normalizedDoctorId;
+    if (normalizedClientId) filters.client_id = normalizedClientId;
+    if (normalizedCenterId) filters.center_id = normalizedCenterId;
     if (sourceCampaign) filters.source_campaign = sourceCampaign;
     if (selectedStatuses.length > 0) {
       filters.reservation_statuses = selectedStatuses.map(s => parseInt(s));
@@ -243,14 +287,10 @@ export default function StatisticsFiltersComponent({
           </label>
           <SelectBox
             value={doctorId}
-            onChange={setDoctorId}
-            options={[
-              { value: '', name: loadingDoctors ? 'Loading...' : 'Select Doctor' },
-              ...doctors.map(doctor => ({
-                value: String(doctor.id),
-                name: doctor.name?.ar || doctor.name?.en || `Doctor ${doctor.id}`
-              }))
-            ]}
+            onChange={(value) => setDoctorId(toSelectValue(value))}
+            getOptionValue={(option) => option.value}
+            displayValue={(selected) => getSelectDisplayName(selected, doctorOptions)}
+            options={doctorOptions}
             placeholder="Select Doctor"
             className="w-full"
             selectClassName="border-gray-200 dark:border-gray-700 focus:ring-blue-500 rounded-lg h-[38px]"
@@ -264,14 +304,10 @@ export default function StatisticsFiltersComponent({
           </label>
           <SelectBox
             value={clientId}
-            onChange={setClientId}
-            options={[
-              { value: '', name: loadingClients ? 'Loading...' : 'Select Client' },
-              ...clients.map(client => ({
-                value: String(client.id),
-                name: client.name?.ar || client.name?.en || `Client ${client.id}`
-              }))
-            ]}
+            onChange={(value) => setClientId(toSelectValue(value))}
+            getOptionValue={(option) => option.value}
+            displayValue={(selected) => getSelectDisplayName(selected, clientOptions)}
+            options={clientOptions}
             placeholder="Select Client"
             className="w-full"
             selectClassName="border-gray-200 dark:border-gray-700 focus:ring-blue-500 rounded-lg h-[38px]"
@@ -285,14 +321,10 @@ export default function StatisticsFiltersComponent({
           </label>
           <SelectBox
             value={centerId}
-            onChange={setCenterId}
-            options={[
-              { value: '', name: loadingCenters ? 'Loading...' : 'Select Center' },
-              ...normalizedCenters.map((center: { id: number; name: { en: string; ar: string } }) => ({
-                value: String(center.id),
-                name: center.name?.ar || center.name?.en || `Center ${center.id}`
-              }))
-            ]}
+            onChange={(value) => setCenterId(toSelectValue(value))}
+            getOptionValue={(option) => option.value}
+            displayValue={(selected) => getSelectDisplayName(selected, centerOptions)}
+            options={centerOptions}
             placeholder="Select Center"
             className="w-full"
             selectClassName="border-gray-200 dark:border-gray-700 focus:ring-blue-500 rounded-lg h-[38px]"

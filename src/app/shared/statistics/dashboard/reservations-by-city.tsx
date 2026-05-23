@@ -26,8 +26,11 @@ interface ReservationsByCityProps {
   className?: string;
 }
 
+const INITIAL_CITIES_SHOWN = 5;
+
 export default function ReservationsByCity({ data, className }: ReservationsByCityProps) {
   const [isTopTenOpen, setIsTopTenOpen] = useState(false);
+  const [showAllCities, setShowAllCities] = useState(false);
   
   if (!data || !data.by_city || data.by_city.length === 0) {
     return null;
@@ -44,6 +47,11 @@ export default function ReservationsByCity({ data, className }: ReservationsByCi
   
   // Prepare Top 10 data
   const sortedCities = [...data.by_city].sort((a, b) => b.reservations_count - a.reservations_count);
+  const displayedCities = showAllCities
+    ? sortedCities
+    : sortedCities.slice(0, INITIAL_CITIES_SHOWN);
+  const hiddenCitiesCount = Math.max(0, sortedCities.length - INITIAL_CITIES_SHOWN);
+
   const topTenItems = sortedCities.slice(0, 10).map((city) => ({
     name: city.city_name || 'Unknown',
     value: city.reservations_count,
@@ -123,7 +131,7 @@ export default function ReservationsByCity({ data, className }: ReservationsByCi
             </h4>
           </div>
           <div className="space-y-3">
-            {sortedCities.slice(0, 5).map((city, index) => {
+            {displayedCities.map((city, index) => {
               const reservationPercentage = data.total_reservations > 0 
                 ? (city.reservations_count / data.total_reservations) * 100 
                 : 0;
@@ -191,10 +199,19 @@ export default function ReservationsByCity({ data, className }: ReservationsByCi
                 </div>
               );
             })}
-            {data.by_city.length > 5 && (
-              <p className="text-xs text-gray-500 mt-2 text-center">
-                +{data.by_city.length - 5} more cities
-              </p>
+            {hiddenCitiesCount > 0 && (
+              <div className="mt-2 flex justify-center">
+                <Button
+                  size="sm"
+                  variant="text"
+                  onClick={() => setShowAllCities((prev) => !prev)}
+                  className="text-xs text-gray-600 dark:text-gray-400"
+                >
+                  {showAllCities
+                    ? 'Show less'
+                    : `+${hiddenCitiesCount} more cities`}
+                </Button>
+              </div>
             )}
           </div>
         </div>

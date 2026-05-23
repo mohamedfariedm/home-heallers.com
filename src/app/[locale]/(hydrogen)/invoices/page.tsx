@@ -108,7 +108,7 @@ export default function InvoicesTablePage() {
         </Text>
       ) : (
         <>
-          {showZatcaTab && (
+          {/* {showZatcaTab && (
             <div className="mb-6 flex flex-wrap gap-2 border-b border-gray-200 pb-4">
               <Button
                 variant={activeView === 'management' ? 'solid' : 'outline'}
@@ -131,7 +131,7 @@ export default function InvoicesTablePage() {
                 ZATCA compliance
               </Button>
             </div>
-          )}
+          )} */}
 
           {isLoading ? (
             <div className="m-auto py-16">
