@@ -27,6 +27,7 @@ export default function InvoiceDetailPage() {
         breadcrumb={[
           { href: '/', name: 'Home' },
           { href: '/invoices', name: 'Invoices' },
+          { href: '/invoices?tab=zatca', name: 'ZATCA' },
           { name: id },
         ]}
       />

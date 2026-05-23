@@ -12,6 +12,7 @@ import { useSearchParams } from 'next/navigation';
 import { ActionIcon } from 'rizzui';
 import { PiCaretDownBold, PiCaretUpBold } from 'react-icons/pi';
 import { useDeleteInvoices } from '@/framework/invoices';
+import type { ZatcaPermissions } from '@/app/shared/zatca/permissions';
 
 const FilterElement = dynamic(
   () => import('@/app/shared/invoices/filter-element'),
@@ -46,11 +47,13 @@ export default function InvoicesTable({
   getSelectedColumns,
   getSelectedRowKeys,
   totalItems,
+  zatcaPermissions,
 }: {
   data: any[];
   getSelectedColumns: React.Dispatch<React.SetStateAction<any[]>>;
   getSelectedRowKeys: React.Dispatch<React.SetStateAction<any[]>>;
   totalItems: number;
+  zatcaPermissions?: ZatcaPermissions;
 }) {
   const { mutate: deleteInvoice } = useDeleteInvoices();
   const searchParams = useSearchParams();
@@ -123,6 +126,7 @@ export default function InvoicesTable({
         onDeleteItem,
         onChecked: handleRowSelect,
         handleSelectAll,
+        zatcaPermissions,
       }),
     [
       selectedRowKeys,
@@ -132,6 +136,7 @@ export default function InvoicesTable({
       onDeleteItem,
       handleRowSelect,
       handleSelectAll,
+      zatcaPermissions,
     ]
   );
 

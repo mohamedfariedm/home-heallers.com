@@ -1,11 +1,11 @@
 'use client';
 
+import Link from 'next/link';
 import { Tooltip } from '@/components/ui/tooltip';
 import { HeaderCell } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ActionIcon } from '@/components/ui/action-icon';
 import PencilIcon from '@/components/icons/pencil';
-import AvatarCard from '@/components/ui/avatar-card';
 import DateCell from '@/components/ui/date-cell';
 import DeletePopover from '@/app/shared/delete-popover';
 import TrashIcon from '@/components/icons/trash';
@@ -13,6 +13,9 @@ import CreateButton from '../create-button';
 import InvoiceForm from './invoices-form';
 import InvoiceView from '@/components/ui/invoiceView';
 import EyeIcon from '@/components/icons/eye';
+import StatusBadge from '@/app/shared/zatca/status-badge';
+import type { ZatcaPermissions } from '@/app/shared/zatca/permissions';
+import { PiShieldCheck } from 'react-icons/pi';
 
 type Columns = {
   data: any[];
@@ -22,6 +25,7 @@ type Columns = {
   onDeleteItem: (id: string[]) => void;
   onHeaderCellClick: (value: string) => void;
   onChecked?: (id: string) => void;
+  zatcaPermissions?: ZatcaPermissions;
 };
 
 export const getColumns = ({
@@ -32,6 +36,7 @@ export const getColumns = ({
   onHeaderCellClick,
   handleSelectAll,
   onChecked,
+  zatcaPermissions,
 }: Columns) => [
   {
     title: (
@@ -62,70 +67,98 @@ export const getColumns = ({
     dataIndex: 'action',
     key: 'action',
     width: 20,
-    render: (_: string, row: any) => (
-      <div className="flex items-center gap-3">
-        <Tooltip
-          size="sm"
-          content={() => 'Edit Invoice'}
-          placement="top"
-          color="invert"
-        >
-          <CreateButton
-            icon={
-              <ActionIcon
-                tag="span"
-                size="sm"
-                variant="outline"
-                className="hover:!border-gray-900 hover:text-gray-700"
-              >
-                <PencilIcon className="h-4 w-4" />
-              </ActionIcon>
-            }
-            view={<InvoiceForm initValues={row} />}
-            label=""
-            customSize='750px'
-            className="m-0 bg-transparent p-0 text-gray-700"
-          />
-        </Tooltip>
-        <Tooltip
-          size="sm"
-          content={() => 'Show Invoice'}
-          placement="top"
-          color="invert"
-        >
-          <CreateButton
-            icon={
-              <ActionIcon
-                tag="span"
-                size="sm"
-                variant="outline"
-                className="hover:!border-gray-900 hover:text-gray-700"
-              >
-                <EyeIcon className="h-4 w-4" />
-              </ActionIcon>
-            }
-            view={<InvoiceView invoiceData={row} />}
-            customSize='750px'
-            label=''
-            className="m-0 bg-transparent p-0 text-gray-700"
-          />
-        </Tooltip>
-        <DeletePopover
-          title={`Delete Invoice`}
-          description={`Are you sure you want to delete invoice #${row.invoice_number}?`}
-          onDelete={() => onDeleteItem([row.id])}
-        >
-          <ActionIcon
+    render: (_: string, row: any) => {
+      const locked = Boolean(row.is_locked);
+      const showZatcaLink = zatcaPermissions?.view;
+
+      return (
+        <div className="flex items-center gap-3">
+          {!locked && (
+            <Tooltip
+              size="sm"
+              content={() => 'Edit Invoice'}
+              placement="top"
+              color="invert"
+            >
+              <CreateButton
+                icon={
+                  <ActionIcon
+                    tag="span"
+                    size="sm"
+                    variant="outline"
+                    className="hover:!border-gray-900 hover:text-gray-700"
+                  >
+                    <PencilIcon className="h-4 w-4" />
+                  </ActionIcon>
+                }
+                view={<InvoiceForm initValues={row} />}
+                label=""
+                customSize="750px"
+                className="m-0 bg-transparent p-0 text-gray-700"
+              />
+            </Tooltip>
+          )}
+          <Tooltip
             size="sm"
-            variant="outline"
-            aria-label={'Delete Invoice'}
-            className="cursor-pointer hover:!border-gray-900 hover:text-gray-700"
+            content={() => 'Show Invoice'}
+            placement="top"
+            color="invert"
           >
-            <TrashIcon className="h-4 w-4" />
-          </ActionIcon>
-        </DeletePopover>
-      </div>
-    ),
+            <CreateButton
+              icon={
+                <ActionIcon
+                  tag="span"
+                  size="sm"
+                  variant="outline"
+                  className="hover:!border-gray-900 hover:text-gray-700"
+                >
+                  <EyeIcon className="h-4 w-4" />
+                </ActionIcon>
+              }
+              view={<InvoiceView invoiceData={row} />}
+              customSize="750px"
+              label=""
+              className="m-0 bg-transparent p-0 text-gray-700"
+            />
+          </Tooltip>
+          {showZatcaLink && (
+            <Tooltip
+              size="sm"
+              content={() => 'ZATCA detail'}
+              placement="top"
+              color="invert"
+            >
+              <Link href={`/invoices/${row.id}`}>
+                <ActionIcon
+                  tag="span"
+                  size="sm"
+                  variant="outline"
+                  className="hover:!border-gray-900 hover:text-gray-700"
+                >
+                  <PiShieldCheck className="h-4 w-4" />
+                </ActionIcon>
+              </Link>
+            </Tooltip>
+          )}
+          {!locked && (
+            <DeletePopover
+              title={`Delete Invoice`}
+              description={`Are you sure you want to delete invoice #${row.invoice_number}?`}
+              onDelete={() => onDeleteItem([row.id])}
+            >
+              <ActionIcon
+                size="sm"
+                variant="outline"
+                aria-label={'Delete Invoice'}
+                className="cursor-pointer hover:!border-gray-900 hover:text-gray-700"
+              >
+                <TrashIcon className="h-4 w-4" />
+              </ActionIcon>
+            </DeletePopover>
+          )}
+        </div>
+      );
+    },
   },
   {
     title: <HeaderCell align="center" title="Invoice Number" />,
@@ -240,6 +273,38 @@ export const getColumns = ({
       <div className="w-full text-center">{row.status}</div>
     ),
   },
+  ...(zatcaPermissions?.view
+    ? [
+        {
+          title: <HeaderCell align="center" title="Business" />,
+          dataIndex: 'business_status',
+          key: 'business_status',
+          width: 100,
+          render: (_: string, row: any) =>
+            row.business_status ? (
+              <div className="flex justify-center">
+                <StatusBadge kind="business" value={row.business_status} />
+              </div>
+            ) : (
+              <span className="text-gray-400">—</span>
+            ),
+        },
+        {
+          title: <HeaderCell align="center" title="ZATCA" />,
+          dataIndex: 'zatca_status',
+          key: 'zatca_status',
+          width: 120,
+          render: (_: string, row: any) =>
+            row.zatca_status != null && row.zatca_status !== '' ? (
+              <div className="flex justify-center">
+                <StatusBadge kind="zatca" value={row.zatca_status} />
+              </div>
+            ) : (
+              <span className="text-gray-400">—</span>
+            ),
+        },
+      ]
+    : []),
   {
     title: <HeaderCell align="center" title="Paid" />,
     dataIndex: 'is_paid',

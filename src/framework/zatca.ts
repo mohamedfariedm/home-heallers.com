@@ -19,10 +19,11 @@ export const zatcaKeys = {
   qr: (id: number | string) => ['zatca-qr', id] as const,
 };
 
-export function useZatcaInvoices(param: string) {
+export function useZatcaInvoices(param: string, enabled = true) {
   return useQuery<ZatcaPaginatedResponse<ZatcaInvoice>, Error>({
     queryKey: zatcaKeys.list(param),
     queryFn: () => client.zatca.list(param) as Promise<ZatcaPaginatedResponse<ZatcaInvoice>>,
+    enabled,
   });
 }
 
