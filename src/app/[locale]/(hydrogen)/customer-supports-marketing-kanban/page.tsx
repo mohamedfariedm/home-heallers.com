@@ -33,6 +33,8 @@ const pageHeader = {
   ],
 };
 
+const KANBAN_TYPE = 'marketing' as const;
+
 const STATUS_COLUMNS = [
   { id: 'new', label: 'New', status: 'new' },
   { id: 'negotiation', label: 'Negotiation', status: 'negotiation' },
@@ -140,7 +142,7 @@ export default function CustomerSupportsMarketingKanbanPage() {
     // Override/ensure required params
     params.set('page', String(page));
     params.set('limit', '25'); // Get more items to distribute across columns
-    params.set('type', 'marketing');
+    params.set('type', KANBAN_TYPE);
 
     return params.toString();
   };
@@ -286,7 +288,7 @@ export default function CustomerSupportsMarketingKanbanPage() {
 
     // Clear old filter params
     Object.keys(filters).forEach((key) => {
-      Array.from(params.entries()).forEach(([paramKey]) => {
+      Array.from(params.keys()).forEach((paramKey) => {
         if (paramKey.startsWith(`${key}_`)) params.delete(paramKey);
       });
     });
@@ -313,6 +315,7 @@ export default function CustomerSupportsMarketingKanbanPage() {
         params.set(`${key}_${c2.op}_${logic === 'or' ? 'or' : 'and'}`, c2.value);
     });
 
+    params.set('type', KANBAN_TYPE);
     router.push(`?${params.toString()}`, { scroll: false });
   };
 
@@ -321,10 +324,10 @@ export default function CustomerSupportsMarketingKanbanPage() {
     setFilters({});
     setPage(1);
 
-    // Create a completely new URLSearchParams with ONLY page=1
-    // This ensures all filter params are removed
+    // Reset filter params but keep kanban type
     const params = new URLSearchParams();
     params.set('page', '1');
+    params.set('type', KANBAN_TYPE);
     
     // Use replace to avoid adding to history and force a clean URL
     router.replace(`?${params.toString()}`);
@@ -385,7 +388,7 @@ export default function CustomerSupportsMarketingKanbanPage() {
       ) : (
         <div className="flex w-full flex-col gap-4">
           {/* Statistics Cards */}
-          <KanbanStatisticsCards statistics={allData.data?.statistics} />
+          <KanbanStatisticsCards statistics={allData.data?.statistics} supportType={KANBAN_TYPE} />
           
           <div className="flex w-full gap-4 overflow-x-auto pb-4">
             <CustomerSupportKanban

@@ -243,7 +243,9 @@ export default function KanbanFilters({ onFilterChange, onClearFilters, currentF
                 const columnLabel = columnKey
                   .replace(/_/g, ' ')
                   .replace(/\b\w/g, (l) => l.toUpperCase());
-                const hasFilter = filters[columnKey]?.c1?.value || filters[columnKey]?.c2?.value;
+                const hasFilter =
+                  mergedFilters[columnKey]?.c1?.value ||
+                  mergedFilters[columnKey]?.c2?.value;
 
                 return (
                   <div
@@ -271,8 +273,8 @@ export default function KanbanFilters({ onFilterChange, onClearFilters, currentF
                         columnKey={columnKey}
                         onFilterChange={handleFilterChange}
                         initialValue={resetKey > 0 ? undefined : (filters[columnKey] || currentFilters[columnKey] || undefined)}
-                        offerOptions={offerOptions}
-                        offerOptionsLoading={offerOptionsLoading}
+                        offerOptions={columnKey === 'offer' ? offerOptions : undefined}
+                        offerOptionsLoading={columnKey === 'offer' ? offerOptionsLoading : undefined}
                       />
                     </div>
                   </div>

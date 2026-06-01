@@ -45,6 +45,8 @@ interface KanbanStatistics {
 interface KanbanStatisticsCardsProps {
   statistics: KanbanStatistics | null | undefined;
   className?: string;
+  /** Ensures filter links stay scoped to inbound (operation) or outbound (marketing). */
+  supportType?: 'marketing' | 'operation';
 }
 
 // Color schemes for different statuses
@@ -200,7 +202,8 @@ const StatCard = ({
   compact = false,
   showCheckbox = false,
   checked = false,
-  onCheckboxChange
+  onCheckboxChange,
+  supportType,
 }: {
   title: string;
   value: number | string;
@@ -217,6 +220,7 @@ const StatCard = ({
   showCheckbox?: boolean;
   checked?: boolean;
   onCheckboxChange?: (checked: boolean) => void;
+  supportType?: 'marketing' | 'operation';
 }) => {
   const router = useRouter();
   const pathname = usePathname();
@@ -233,7 +237,12 @@ const StatCard = ({
     }
     if (link) {
       const queryParams = convertApiLinkToQueryParams(link);
-      const url = queryParams ? `${pathname}?${queryParams}` : pathname;
+      const frontendParams = new URLSearchParams(queryParams);
+      if (supportType) {
+        frontendParams.set('type', supportType);
+      }
+      frontendParams.set('page', '1');
+      const url = `${pathname}?${frontendParams.toString()}`;
       router.push(url);
     }
   };
@@ -328,7 +337,8 @@ const StatCard = ({
 
 export default function KanbanStatisticsCards({ 
   statistics, 
-  className 
+  className,
+  supportType,
 }: KanbanStatisticsCardsProps) {
   const [sourceCampaignExpanded, setSourceCampaignExpanded] = useState(false);
   const [communicationChannelExpanded, setCommunicationChannelExpanded] = useState(false);
@@ -587,12 +597,13 @@ export default function KanbanStatisticsCards({
             </div>
             <div className="flex flex-wrap w-full gap-3">
               {row.title === 'Source Campaigns' && (
-                <StatCard key="total-source-campaigns" {...totalSourceCampaignCard} />
+                <StatCard key="total-source-campaigns" {...totalSourceCampaignCard} supportType={supportType} />
               )}
               {row.cards.map((card: any, cardIndex: number) => (
                 <StatCard 
                   key={cardIndex} 
                   {...card}
+                  supportType={supportType}
                   onCheckboxChange={card.campaignKey ? (checked: boolean) => handleSourceCampaignCheckboxChange(card.campaignKey, checked) : undefined}
                 />
               ))}
