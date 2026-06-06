@@ -121,7 +121,7 @@ export const getColumns = ({
               className="m-0 bg-transparent p-0 text-gray-700"
             />
           </Tooltip>
-          {/* {showZatcaLink && (
+          {showZatcaLink && (
             <Tooltip
               size="sm"
               content={() => 'ZATCA detail'}
@@ -139,7 +139,7 @@ export const getColumns = ({
                 </ActionIcon>
               </Link>
             </Tooltip>
-          )} */}
+          )}
           {!locked && (
             <DeletePopover
               title={`Delete Invoice`}

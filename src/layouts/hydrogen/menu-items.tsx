@@ -221,6 +221,18 @@ export const menuItemsHaydrogen = [
     icon: <FaUserShield />,
     permissions: 'users',
   },
+  {
+    name: 'Activity Logs',
+    href: routes.activityLogs.index,
+    icon: <PiHourglassSimpleDuotone />,
+    permissions: 'activity-logs',
+  },
+  {
+    name: 'KPIs',
+    href: routes.kpis.index,
+    icon: <PiChartLineUpDuotone />,
+    permissions: 'user_reports,doctor_reports',
+  },
 
   { name: 'Contact Center' },
   {
@@ -234,6 +246,12 @@ export const menuItemsHaydrogen = [
     href: '/customer-supports-operation-kanban',
     icon: <PiHeadsetDuotone />,
     permissions: 'customer_supports_inbound',
+  },
+  {
+    name: 'WhatsApp Inbox',
+    href: routes.whatsappInbox.index,
+    icon: <PiChatCenteredDotsDuotone />,
+    permissions: 'whatsapp.manage',
   },
 
   { name: 'master Mangement ' },

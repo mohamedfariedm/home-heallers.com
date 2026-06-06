@@ -5,6 +5,14 @@ import { routes } from '@/config/routes';
 import { CreateBrandInput } from '@/utils/validators/create-brand.schema ';
 import { CreateToDoInput } from '@/utils/validators/create-todo.schema';
 import { BrandFormInput } from '@/utils/validators/Brand-form.schema copy';
+import type {
+    LaravelPaginator,
+    SendWhatsAppMessageResult,
+    WhatsAppChat,
+    WhatsAppChatMessage,
+    WhatsAppQrResponse,
+    WhatsAppSessionStatus,
+} from '@/types/whatsapp';
 
 
 
@@ -353,6 +361,27 @@ class Client {
         all: (params: string) => HttpClient.get(`${routes.logRequest.index}/index?${params}`),
         findOne: (id: number) => HttpClient.get(`/log_requests/view?log_id=${id}`)
     }
+    activityLogs = {
+        all: (params: string) => HttpClient.get(`${routes.activityLogs.index}?${params}`),
+        findOne: (id: number) => HttpClient.get(`${routes.activityLogs.index}/${id}`),
+        filterOptions: () => HttpClient.get(`${routes.activityLogs.index}/filter-options`),
+    }
+    userActivityReports = {
+        all: (params: string) => HttpClient.get(`${routes.userActivityReports.index}?${params}`),
+        findOne: (userId: number, params: string) =>
+            HttpClient.get(`${routes.userActivityReports.detail(userId)}?${params}`),
+        filterOptions: () => HttpClient.get(`${routes.userActivityReports.index}/filter-options`),
+        export: (params: string) =>
+            HttpClient.get(`${routes.userActivityReports.index}?export=true&${params}`),
+    }
+    doctorActivityReports = {
+        all: (params: string) => HttpClient.get(`${routes.doctorActivityReports.index}?${params}`),
+        findOne: (doctorId: number, params: string) =>
+            HttpClient.get(`${routes.doctorActivityReports.detail(doctorId)}?${params}`),
+        filterOptions: () => HttpClient.get(`${routes.doctorActivityReports.index}/filter-options`),
+        export: (params: string) =>
+            HttpClient.get(`${routes.doctorActivityReports.index}?export=true&${params}`),
+    }
     sampling = {
         all: (params: string) => HttpClient.get(`/Sampling_report?${params}`),
         findOne: (id: number) => HttpClient.get(`/specific_Sampling_report?id=${id}`)
@@ -501,6 +530,57 @@ class Client {
             HttpClient.post(`/landing-pages/${input.pageId}/sections`, input.data),
         deleteSection: (input: { pageId: number; sectionId: number }) =>
             HttpClient.delete(`/landing-pages/${input.pageId}/sections/${input.sectionId}`),
+    };
+
+    whatsapp = {
+        sessionStatus: () =>
+            HttpClient.get<WhatsAppSessionStatus>('/whatsapp/session/status'),
+        sessionQr: () =>
+            HttpClient.get<WhatsAppQrResponse>('/whatsapp/session/qr'),
+        sessionReconnect: () =>
+            request
+                .post<WhatsAppSessionStatus>('/whatsapp/session/reconnect')
+                .then((r) => r.data),
+        sessionLogout: () =>
+            request
+                .post<{ success?: boolean; session?: string }>(
+                    '/whatsapp/session/logout'
+                )
+                .then((r) => r.data),
+        chats: (params?: {
+            search?: string;
+            page?: number;
+            per_page?: number;
+        }) =>
+            HttpClient.get<LaravelPaginator<WhatsAppChat>>(
+                '/whatsapp/chats',
+                params
+            ),
+        messages: (
+            chatId: number,
+            params?: {
+                per_page?: number;
+                before?: string;
+                include_system?: boolean | number;
+            }
+        ) =>
+            HttpClient.get<LaravelPaginator<WhatsAppChatMessage>>(
+                `/whatsapp/chats/${chatId}/messages`,
+                params
+            ),
+        sendMessage: (chatId: number, message: string) =>
+            request
+                .post<Omit<SendWhatsAppMessageResult, 'httpStatus'>>(
+                    `/whatsapp/chats/${chatId}/messages`,
+                    { message }
+                )
+                .then(
+                    (r) =>
+                        ({
+                            httpStatus: r.status,
+                            ...r.data,
+                        }) as SendWhatsAppMessageResult
+                ),
     };
 }
 

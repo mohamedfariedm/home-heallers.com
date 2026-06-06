@@ -27,6 +27,9 @@ export function filterMenuItemsByPermissions(
     }
 
     // Include items where the user has the required permission
+    if (item.permissions.includes(',')) {
+      return item.permissions.split(',').some((p) => userPermissions.includes(p.trim()));
+    }
     return userPermissions.includes(item.permissions);
   });
 }

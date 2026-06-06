@@ -1,6 +1,11 @@
 import { useMutation } from '@tanstack/react-query';
 import client from '@/framework/utils';
 import { setAuthCredentials } from '@/utils/auth-utils';
+import {
+  extractRolesFromLoginPayload,
+  setStoredRoles,
+  clearStoredRoles,
+} from '@/utils/kpi-export';
 import toast from 'react-hot-toast';
 import Cookies from 'js-cookie';
 import { usePermissions } from '@/context/PermissionsContext';
@@ -16,12 +21,15 @@ export function useLogin() {
       const token = data?.data?.token;
       const userId = data?.data?.user?.id;
       const permissions = data?.data?.permissions?.map((perm: any) => perm.name) || [];
+      const roles = extractRolesFromLoginPayload(data);
       console.log('useLogin - Permissions:', permissions);
+      console.log('useLogin - Roles:', roles);
 
       if (token) {
         setAuthCredentials(token);
         setPermissions(permissions);
         localStorage.setItem('permissions', JSON.stringify(permissions));
+        setStoredRoles(roles);
 
         // Pass user data directly to next-auth session
         const signInResponse = await signIn('credentials', {
@@ -33,6 +41,7 @@ export function useLogin() {
             name: data?.data?.user?.name?.en,
             token,
             permissions,
+            roles,
           }),
         });
 
@@ -62,6 +71,7 @@ export function useLogin() {
       setAuthCredentials('');
       setPermissions([]);
       localStorage.removeItem('permissions');
+      clearStoredRoles();
     },
   });
 }
@@ -76,6 +86,7 @@ export function useLogout() {
       setAuthCredentials('');
       setPermissions([]);
       localStorage.removeItem('permissions');
+      clearStoredRoles();
       Cookies.remove('userId');
       signOut({ callbackUrl: '/en/auth/login' });
     },

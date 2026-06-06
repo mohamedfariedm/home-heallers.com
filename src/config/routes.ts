@@ -119,6 +119,22 @@ export const routes = {
   logRequest: {
     index: '/log_requests'
   },
+  activityLogs: {
+    index: '/activity-logs',
+  },
+  kpis: {
+    index: '/kpis',
+    users: (userId: number | string) => `/kpis/users/${userId}`,
+    doctors: (doctorId: number | string) => `/kpis/doctors/${doctorId}`,
+  },
+  userActivityReports: {
+    index: '/reports/user-activity',
+    detail: (userId: number | string) => `/reports/user-activity/${userId}`,
+  },
+  doctorActivityReports: {
+    index: '/reports/doctor-activity',
+    detail: (doctorId: number | string) => `/reports/doctor-activity/${doctorId}`,
+  },
   notifications: {
     index: '/notifications'
   },
@@ -198,6 +214,9 @@ export const routes = {
   },
   customerSupport: {
     index: '/customer-supports'
+  },
+  whatsappInbox: {
+    index: '/whatsapp-inbox',
   },
   addresses: {
     index: '/addresses',

@@ -2,6 +2,10 @@
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import client from '@/framework/utils';
+import {
+  extractRolesFromLoginPayload,
+  setStoredRoles,
+} from '@/utils/kpi-export';
 
 export const authOptions = {
   providers: [
@@ -31,6 +35,7 @@ export const authOptions = {
 
           if (data?.data?.token) {
             const permissions = data.data.permissions?.map((perm: any) => perm.name) || [];
+            const roles = extractRolesFromLoginPayload(data);
             console.log('Authorize - Permissions:', permissions);
             return {
               id: data.data.user.id.toString(),
@@ -38,6 +43,7 @@ export const authOptions = {
               name: data.data.user.name.en,
               token: data.data.token,
               permissions,
+              roles,
             };
           }
           console.log('Authorize - No token found in response');
@@ -57,6 +63,7 @@ export const authOptions = {
         token.name = user.name;
         token.token = user.token;
         token.permissions = user.permissions;
+        token.roles = user.roles;
         console.log('JWT callback - Token:', token);
       }
       return token;
@@ -67,6 +74,7 @@ export const authOptions = {
       session.user.name = token.name;
       session.user.token = token.token;
       session.user.permissions = token.permissions;
+      session.user.roles = token.roles;
       console.log('Session callback - Session:', session);
       return session;
     },

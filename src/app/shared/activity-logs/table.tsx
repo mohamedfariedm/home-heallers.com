@@ -1,0 +1,220 @@
+'use client';
+
+import React, { useEffect, useMemo, useState } from 'react';
+import dynamic from 'next/dynamic';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useTable } from '@/hooks/use-table';
+import { useColumn } from '@/hooks/use-column';
+import ControlledTable from '@/components/controlled-table';
+import { getColumns } from '@/app/shared/activity-logs/columns';
+import type { ActivityLog } from '@/types/activity-log';
+
+const FilterElement = dynamic(
+  () => import('@/app/shared/activity-logs/filter-element'),
+  { ssr: false }
+);
+
+const SORTABLE_COLUMNS = new Set(['created_at', 'event', 'log_name', 'id']);
+
+export default function ActivityLogsTable({
+  data = [],
+  totalItems,
+  getSelectedColumns,
+  getSelectedRowKeys,
+}: {
+  data: ActivityLog[];
+  totalItems: number;
+  getSelectedColumns: React.Dispatch<React.SetStateAction<unknown[]>>;
+  getSelectedRowKeys: React.Dispatch<React.SetStateAction<unknown[]>>;
+}) {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const [pageSize, setPageSize] = useState(
+    Number(searchParams.get('per_page') || searchParams.get('limit')) || 10
+  );
+  const [searchInput, setSearchInput] = useState(
+    searchParams.get('search') ?? ''
+  );
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const currentSearch = searchParams.get('search') ?? '';
+      if (searchInput.trim() === currentSearch.trim()) return;
+
+      const params = new URLSearchParams(searchParams.toString());
+      const trimmed = searchInput.trim();
+      if (trimmed) params.set('search', trimmed);
+      else params.delete('search');
+      params.set('page', '1');
+      params.set('per_page', String(pageSize));
+      params.delete('limit');
+      router.push(`${pathname}?${params.toString()}`);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchInput, pageSize, pathname, router, searchParams]);
+
+  const pushParams = (next: Record<string, string>) => {
+    const params = new URLSearchParams(searchParams.toString());
+    Object.entries(next).forEach(([key, value]) => {
+      if (value) params.set(key, value);
+      else params.delete(key);
+    });
+    params.set('page', '1');
+    params.set('per_page', String(pageSize));
+    params.delete('limit');
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  const filterState = {
+    search: searchParams.get('search') || '',
+    event: searchParams.get('event') || '',
+    log_name: searchParams.get('log_name') || '',
+    subject_type: searchParams.get('subject_type') || '',
+    subject_id: searchParams.get('subject_id') || '',
+    causer_type: searchParams.get('causer_type') || '',
+    actor_name: searchParams.get('actor_name') || '',
+    actor_email: searchParams.get('actor_email') || '',
+    created_from: searchParams.get('created_from') || '',
+    created_to: searchParams.get('created_to') || '',
+    today: searchParams.get('today') || '',
+    yesterday: searchParams.get('yesterday') || '',
+    this_week: searchParams.get('this_week') || '',
+    this_month: searchParams.get('this_month') || '',
+    last_month: searchParams.get('last_month') || '',
+  };
+
+  const sortConfig = useMemo(
+    () => ({
+      key: searchParams.get('sort_by'),
+      direction: searchParams.get('sort_direction'),
+    }),
+    [searchParams]
+  );
+
+  const onHeaderCellClick = (value: string) => ({
+    onClick: () => {
+      if (!SORTABLE_COLUMNS.has(value)) return;
+
+      const currentSortBy = searchParams.get('sort_by') ?? 'created_at';
+      const currentDirection = searchParams.get('sort_direction') ?? 'desc';
+      const nextDirection =
+        currentSortBy === value && currentDirection === 'desc' ? 'asc' : 'desc';
+
+      pushParams({
+        sort_by: value,
+        sort_direction: nextDirection,
+      });
+    },
+  });
+
+  const {
+    isLoading,
+    isFiltered,
+    tableData,
+    currentPage,
+    handlePaginate,
+    filters,
+    updateFilter,
+    searchTerm,
+    handleSearch,
+    selectedRowKeys,
+    setSelectedRowKeys,
+    handleRowSelect,
+    handleSelectAll,
+    handleReset: resetTable,
+  } = useTable(data, pageSize, filterState);
+
+  const updateFilterAndUrl = (
+    columnId: string,
+    filterValue: string | unknown[]
+  ) => {
+    updateFilter(columnId, filterValue as string);
+    pushParams({
+      ...Object.fromEntries(
+        Object.entries({ ...filters, [columnId]: filterValue as string }).map(
+          ([key, value]) => [key, String(value ?? '')]
+        )
+      ),
+      [columnId]: String(filterValue ?? ''),
+    });
+  };
+
+  const handleReset = () => {
+    resetTable();
+    setSearchInput('');
+    setPageSize(10);
+    router.push(`${pathname}?page=1&per_page=10`);
+  };
+
+  const columns = React.useMemo(
+    () =>
+      getColumns({
+        data,
+        sortConfig,
+        onHeaderCellClick,
+      }),
+    [data, sortConfig, onHeaderCellClick]
+  );
+
+  const { visibleColumns, checkedColumns, setCheckedColumns } =
+    useColumn(columns);
+
+  useEffect(() => {
+    getSelectedColumns(checkedColumns);
+    getSelectedRowKeys(selectedRowKeys);
+  }, [checkedColumns, selectedRowKeys, getSelectedColumns, getSelectedRowKeys]);
+
+  return (
+    <ControlledTable
+      variant="modern"
+      data={tableData}
+      isLoading={isLoading}
+      showLoadingText
+      // @ts-ignore
+      columns={visibleColumns}
+      paginatorOptions={{
+        pageSize,
+        setPageSize: ((size: number) => {
+          setPageSize(size);
+          const params = new URLSearchParams(searchParams.toString());
+          params.set('per_page', String(size));
+          params.delete('limit');
+          router.push(`${pathname}?${params.toString()}`);
+        }) as React.Dispatch<React.SetStateAction<number>>,
+        total: totalItems,
+        current: currentPage,
+        onChange: handlePaginate,
+      }}
+      filterOptions={{
+        searchTerm: searchInput || searchTerm,
+        onSearchClear: () => {
+          setSearchInput('');
+          handleSearch('');
+          pushParams({ search: '' });
+        },
+        onSearchChange: (event) => {
+          setSearchInput(event.target.value);
+          handleSearch(event.target.value);
+        },
+        hasSearched: isFiltered || Boolean(searchInput),
+        showSearchOnTheRight: true,
+        enableDrawerFilter: true,
+        drawerTitle: 'Activity Log Filters',
+        columns,
+        checkedColumns,
+        setCheckedColumns,
+        filters,
+      }}
+      filterElement={
+        <FilterElement
+          filters={filters}
+          updateFilter={updateFilterAndUrl}
+          handleReset={handleReset}
+        />
+      }
+      className="overflow-hidden rounded-md border border-gray-200 text-sm shadow-sm [&_.rc-table-placeholder_.rc-table-expanded-row-fixed>div]:h-60 [&_.rc-table-row:last-child_td.rc-table-cell]:border-b-0 [&_thead.rc-table-thead]:sticky [&_thead.rc-table-thead]:top-0 [&_thead.rc-table-thead]:z-10 [&_thead.rc-table-thead]:bg-white"
+    />
+  );
+}
