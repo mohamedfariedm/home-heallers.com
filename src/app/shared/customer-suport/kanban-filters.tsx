@@ -10,39 +10,15 @@ import ColumnFilterPopover from './column-filter-popover';
 import cn from '@/utils/class-names';
 import dynamic from 'next/dynamic';
 import { usePackages } from '@/framework/packages';
+import {
+  KANBAN_FILTERABLE_COLUMNS,
+  getKanbanFilterColumnLabel,
+} from './kanban-filter-columns';
 
 const Drawer = dynamic(
   () => import('@/components/ui/drawer').then((module) => ({ default: module.Drawer })),
   { ssr: false }
 );
-
-const FILTERABLE_COLUMNS = [
-  'name',
-  'offer',
-  'agent_name',
-  'status',
-  'reason',
-  'age',
-  'gender',
-  'lead_source',
-  'source_campaign',
-  'mobile_phone',
-  'booking_phone_number',
-  'home_phone',
-  'address_1',
-  'description',
-  'first_call_time',
-  'last_call_result',
-  'last_call_total_duration',
-  'last_phone',
-  'notes',
-  'ads_name',
-  'communication_channel',
-  // Advanced specialties
-  'specialtie_1',
-  'specialtie_2',
-  'specialtie_3',
-];
 
 interface KanbanFiltersProps {
   onFilterChange: (filters: Record<string, any>, dates?: { date_from?: string; date_to?: string }) => void;
@@ -239,10 +215,8 @@ export default function KanbanFilters({ onFilterChange, onClearFilters, currentF
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              {FILTERABLE_COLUMNS.map((columnKey) => {
-                const columnLabel = columnKey
-                  .replace(/_/g, ' ')
-                  .replace(/\b\w/g, (l) => l.toUpperCase());
+              {KANBAN_FILTERABLE_COLUMNS.map((columnKey) => {
+                const columnLabel = getKanbanFilterColumnLabel(columnKey);
                 const hasFilter =
                   mergedFilters[columnKey]?.c1?.value ||
                   mergedFilters[columnKey]?.c2?.value;

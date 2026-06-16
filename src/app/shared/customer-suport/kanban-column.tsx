@@ -23,6 +23,8 @@ interface KanbanItem {
   gender?: string;
   lead_source?: string;
   address_1?: string;
+  city?: string;
+  state?: string;
   offer?: string;
   agent_name?: string;
   notes?: string;

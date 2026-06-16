@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { PiXBold } from 'react-icons/pi';
-import { SubmitHandler } from 'react-hook-form';
+import { Controller, SubmitHandler } from 'react-hook-form';
 import { Form } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -10,9 +10,169 @@ import { LeadFormInput, leadFormSchema } from '@/utils/validators/suport-form.sc
 import { CC_OPTIONS } from '@/app/shared/cc-options';
 import { Textarea } from 'rizzui';
 import { useCreateCustomerSupport, useUpdateCustomerSupport } from '@/framework/customer-suport';
-import { useSearchParams } from 'next/navigation';
+import { useCities } from '@/framework/cities';
+import { useStates } from '@/framework/states';
+import { resolveLocalizedName } from '@/utils/resolve-localized-name';
 import axios from 'axios';
 import Cookies from 'js-cookie';
+
+function getLocationLabel(nameField: unknown): string {
+  return resolveLocalizedName(nameField);
+}
+
+function matchesStoredLocationName(nameField: unknown, stored: string): boolean {
+  if (!stored?.trim()) return false;
+  const trimmed = stored.trim();
+  return (
+    resolveLocalizedName(nameField, 'en') === trimmed ||
+    resolveLocalizedName(nameField, 'ar') === trimmed
+  );
+}
+
+function LeadCityStateFields({
+  control,
+  setValue,
+  errors,
+  initCity,
+  initState,
+  activeCities,
+  activeStates,
+  isCitiesLoading,
+  isStatesLoading,
+  selectedCityId,
+  setSelectedCityId,
+  filteredStates,
+}: {
+  control: any;
+  setValue: (name: 'city' | 'state', value: string) => void;
+  errors: any;
+  initCity?: string;
+  initState?: string;
+  activeCities: any[];
+  activeStates: any[];
+  isCitiesLoading: boolean;
+  isStatesLoading: boolean;
+  selectedCityId: number | null;
+  setSelectedCityId: (id: number | null) => void;
+  filteredStates: any[];
+}) {
+  const syncedLeadKey = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!activeCities.length) return;
+
+    const leadKey = `${initCity ?? ''}|${initState ?? ''}`;
+    if (syncedLeadKey.current === leadKey) return;
+
+    if (!(initCity || '').trim()) {
+      syncedLeadKey.current = leadKey;
+      setSelectedCityId(null);
+      return;
+    }
+
+    const cityMatch = activeCities.find((city: any) =>
+      matchesStoredLocationName(city.name, initCity!)
+    );
+    if (!cityMatch) {
+      syncedLeadKey.current = leadKey;
+      return;
+    }
+
+    const cityLabel = getLocationLabel(cityMatch.name);
+    setSelectedCityId(cityMatch.id);
+    setValue('city', cityLabel);
+
+    const stateName = (initState || '').trim();
+    if (stateName) {
+      const stateMatch = activeStates
+        .filter((state: any) => state.city?.id === cityMatch.id)
+        .find((state: any) => matchesStoredLocationName(state.name, stateName));
+
+      if (stateMatch) {
+        setValue('state', getLocationLabel(stateMatch.name));
+      }
+    }
+
+    syncedLeadKey.current = leadKey;
+  }, [activeCities, activeStates, initCity, initState, setValue, setSelectedCityId]);
+
+  return (
+    <div className="grid grid-cols-2 gap-4">
+      <div>
+        <label className="mb-1 block text-sm font-medium text-gray-900">City</label>
+        <Controller
+          name="city"
+          control={control}
+          render={({ field: { value, onChange } }) => (
+            <select
+              value={value || ''}
+              onChange={(e) => {
+                const option = e.target.options[e.target.selectedIndex];
+                onChange(e.target.value);
+                setSelectedCityId(option.dataset.id ? Number(option.dataset.id) : null);
+                setValue('state', '');
+              }}
+              disabled={isCitiesLoading}
+              className="h-10 w-full rounded-md border border-gray-300 bg-white p-2 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">
+                {isCitiesLoading ? 'Loading cities...' : 'Select City'}
+              </option>
+              {activeCities.map((city: any) => {
+                const label = getLocationLabel(city.name);
+                return (
+                  <option key={city.id} value={label} data-id={city.id}>
+                    {label}
+                  </option>
+                );
+              })}
+            </select>
+          )}
+        />
+        {errors.city && (
+          <p className="mt-1 text-sm text-red-500">{errors.city.message}</p>
+        )}
+      </div>
+
+      <div>
+        <label className="mb-1 block text-sm font-medium text-gray-900">
+          State / Region
+        </label>
+        <Controller
+          name="state"
+          control={control}
+          render={({ field: { value, onChange } }) => (
+            <select
+              value={value || ''}
+              onChange={(e) => onChange(e.target.value)}
+              disabled={isStatesLoading || !selectedCityId}
+              className="h-10 w-full rounded-md border border-gray-300 bg-white p-2 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">
+                {isStatesLoading
+                  ? 'Loading states...'
+                  : selectedCityId
+                    ? 'Select State / Region'
+                    : 'Select a city first'}
+              </option>
+              {filteredStates.map((state: any) => {
+                const label = getLocationLabel(state.name);
+                return (
+                  <option key={state.id} value={label}>
+                    {label}
+                  </option>
+                );
+              })}
+            </select>
+          )}
+        />
+        {errors.state && (
+          <p className="mt-1 text-sm text-red-500">{errors.state.message}</p>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function CreateOrUpdateLead({ initValues,type }: { initValues?: any,type: string }) {
 
@@ -25,6 +185,34 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
   const [packages, setPackages] = useState<any[]>([]);
   const [packagesLoading, setPackagesLoading] = useState<boolean>(false);
   const [selectedOffer, setSelectedOffer] = useState<string>('');
+  const [selectedCityId, setSelectedCityId] = useState<number | null>(null);
+
+  const { data: citiesData, isLoading: isCitiesLoading } = useCities('limit=1000');
+  const { data: statesData, isLoading: isStatesLoading } = useStates('limit=1000');
+
+  const activeCities = useMemo(
+    () =>
+      (citiesData?.data ?? []).filter(
+        (city: any) => city.status === '1' || city.status === 'Published'
+      ),
+    [citiesData]
+  );
+
+  const activeStates = useMemo(
+    () =>
+      (statesData?.data ?? []).filter(
+        (state: any) => state.status === '1' || state.status === 'Published'
+      ),
+    [statesData]
+  );
+
+  const filteredStates = useMemo(
+    () =>
+      selectedCityId
+        ? activeStates.filter((state: any) => state.city?.id === selectedCityId)
+        : [],
+    [activeStates, selectedCityId]
+  );
 
   useEffect(() => {
     if (initValues) {
@@ -96,6 +284,8 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
         booking_phone_number: data.booking_phone_number || '',
         home_phone: data.home_phone || '',
         address_1: data.address_1 || '',
+        city: data.city || '',
+        state: data.state || '',
         source_campaign: data.source_campaign || '',
         activity_code: data.activity_code || '',
         call_sub_result: data.call_sub_result || '',
@@ -180,6 +370,8 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
           booking_phone_number: initValues?.booking_phone_number || '',
           home_phone: initValues?.home_phone || '',
           address_1: initValues?.address_1 || '',
+          city: initValues?.city || '',
+          state: initValues?.state || '',
           source_campaign: initValues?.source_campaign || '',
           activity_code: initValues?.activity_code || '',
           call_sub_result: initValues?.call_sub_result || '',
@@ -217,7 +409,7 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
       }}
       className="flex flex-grow flex-col gap-6 p-6"
     >
-      {({ register, formState: { errors } }) => {
+      {({ register, control, setValue, formState: { errors } }) => {
         return (
           <>
           <div className="flex items-center justify-between">
@@ -257,6 +449,21 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
           </div>
 
           <Input label="Address" {...register('address_1')} error={errors.address_1?.message} />
+
+          <LeadCityStateFields
+            control={control}
+            setValue={setValue}
+            errors={errors}
+            initCity={initValues?.city}
+            initState={initValues?.state}
+            activeCities={activeCities}
+            activeStates={activeStates}
+            isCitiesLoading={isCitiesLoading}
+            isStatesLoading={isStatesLoading}
+            selectedCityId={selectedCityId}
+            setSelectedCityId={setSelectedCityId}
+            filteredStates={filteredStates}
+          />
 
           <div className="grid grid-cols-2 gap-4">
             <div>

@@ -16,6 +16,7 @@ const FilterElement = dynamic(
 
 const SORTABLE_COLUMNS = new Set([
   'total_actions',
+  'reservations_count',
   'last_activity_at',
   'first_activity_at',
   'name',
@@ -87,7 +88,6 @@ export default function DoctorActivityReportsTable({
     event: searchParams.get('event') || '',
     log_name: searchParams.get('log_name') || '',
     subject_type: searchParams.get('subject_type') || '',
-    with_reservation: searchParams.get('with_reservation') || '',
   };
 
   const sortConfig = useMemo(

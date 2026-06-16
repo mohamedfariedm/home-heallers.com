@@ -8,19 +8,21 @@ import {
   PiListChecksBold,
   PiMegaphoneBold,
 } from 'react-icons/pi';
+import { useSearchParams } from 'next/navigation';
 import Cookies from 'js-cookie';
 import WidgetCard from '@/components/cards/widget-card';
 import { Badge } from '@/components/ui/badge';
-import { Text } from '@/components/ui/text';
 import DateCell from '@/components/ui/date-cell';
 import AvatarCard from '@/components/ui/avatar-card';
 import KpiStatCard, { type KpiStatCardColor } from '@/app/shared/kpis/kpi-stat-card';
 import KpiBreakdownWidget from '@/app/shared/kpis/kpi-breakdown-widget';
+import UserActivityDrillDownLink from '@/app/shared/user-activity-reports/drill-down-link';
 import {
-  buildCustomerSupportListPath,
+  buildUserActivityLeadFilterPathFromLink,
   formatLeadStatusLabel,
   formatSourceCampaignLabel,
   formatUserActivityLogName,
+  isLeadFilterLinkActive,
 } from '@/utils/user-activity-query';
 import type {
   LeadStatusBucket,
@@ -46,6 +48,7 @@ function LeadStatCardsSection<T extends { count: number; link: string }>({
   description,
   items,
   icon,
+  userId,
   getLabel,
   getKey,
 }: {
@@ -53,22 +56,21 @@ function LeadStatCardsSection<T extends { count: number; link: string }>({
   description: string;
   items: T[];
   icon: typeof PiMegaphoneBold;
+  userId: number;
   getLabel: (item: T) => string;
   getKey: (item: T, index: number) => string;
 }) {
-  if (!items.length) return null;
-
+  const searchParams = useSearchParams();
+  const current = new URLSearchParams(searchParams.toString());
   const locale = Cookies.get('NEXT_LOCALE') || 'en';
+
+  if (!items.length) return null;
 
   return (
     <div className="space-y-3">
       <div>
-        <Text className="text-base font-semibold text-gray-900 dark:text-white">
-          {title}
-        </Text>
-        <Text className="text-sm text-gray-500 dark:text-gray-400">
-          {description}
-        </Text>
+        <p className="text-base font-semibold text-gray-900 dark:text-white">{title}</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">{description}</p>
       </div>
       <div className="flex w-full flex-wrap gap-5">
         {items.map((item, index) => (
@@ -78,8 +80,18 @@ function LeadStatCardsSection<T extends { count: number; link: string }>({
             value={item.count}
             icon={icon}
             color={LEAD_STAT_COLORS[index % LEAD_STAT_COLORS.length]}
-            subtitle="Distinct leads"
-            href={buildCustomerSupportListPath(locale, item.link)}
+            subtitle={
+              isLeadFilterLinkActive(current, item.link)
+                ? 'Records filter active'
+                : 'Distinct leads'
+            }
+            href={buildUserActivityLeadFilterPathFromLink(
+              locale,
+              userId,
+              current,
+              item.link
+            )}
+            selected={isLeadFilterLinkActive(current, item.link)}
           />
         ))}
       </div>
@@ -201,6 +213,11 @@ export default function UserActivitySummaryPanel({
                     ? 'Uncategorized'
                     : String(item.event),
                 count: item.count,
+                countNode: item.link ? (
+                  <UserActivityDrillDownLink link={item.link} userId={user.id}>
+                    {item.count}
+                  </UserActivityDrillDownLink>
+                ) : undefined,
               }))}
             />
           </div>
@@ -209,10 +226,15 @@ export default function UserActivitySummaryPanel({
           <div className="lg:col-span-4">
             <KpiBreakdownWidget
               title="By Log Name"
-              items={summary.by_log_name.slice(0, 6).map((item, index) => ({
+              items={summary.by_log_name.slice(0, 8).map((item, index) => ({
                 key: `${String(item.log_name)}-${index}`,
                 label: formatUserActivityLogName(String(item.log_name)),
                 count: item.count,
+                countNode: item.link ? (
+                  <UserActivityDrillDownLink link={item.link} userId={user.id}>
+                    {item.count}
+                  </UserActivityDrillDownLink>
+                ) : undefined,
               }))}
             />
           </div>
@@ -235,9 +257,10 @@ export default function UserActivitySummaryPanel({
         <div className="space-y-6">
           <LeadStatCardsSection<SourceCampaignBucket>
             title="Leads by Source Campaign"
-            description="Distinct CustomerSupport leads acted on"
+            description="Filters activity records below; summary stays unchanged"
             items={campaigns}
             icon={PiMegaphoneBold}
+            userId={user.id}
             getLabel={(item) => formatSourceCampaignLabel(item.source_campaign)}
             getKey={(item, index) =>
               `campaign-${String(item.source_campaign)}-${index}`
@@ -245,9 +268,10 @@ export default function UserActivitySummaryPanel({
           />
           <LeadStatCardsSection<LeadStatusBucket>
             title="Leads by Status"
-            description="Distinct CustomerSupport leads acted on"
+            description="Filters activity records below; summary stays unchanged"
             items={statuses}
             icon={PiFlagBold}
+            userId={user.id}
             getLabel={(item) => formatLeadStatusLabel(item.status)}
             getKey={(item, index) => `status-${String(item.status)}-${index}`}
           />

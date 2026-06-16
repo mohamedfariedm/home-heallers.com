@@ -5,6 +5,10 @@ import {
   getKanbanColumnSelectPlaceholder,
   getKanbanStaticSelectOptions,
 } from './kanban-column-select-options';
+import {
+  getKanbanFilterColumnLabel,
+  isLeadsQualificationFilterKey,
+} from './kanban-filter-columns';
 
 const operators = [
   { label: 'Equals', value: 'equal' },
@@ -17,6 +21,11 @@ const operators = [
   { label: 'Does not begin with', value: 'not_begin_with' },
   { label: 'Ends with', value: 'end_with' },
   { label: 'Does not end with', value: 'not_end_with' },
+];
+
+const qualificationOperators = [
+  { label: 'Equals', value: 'equal' },
+  { label: 'Does not equal', value: 'not_equal' },
 ];
 
 const selectClassName =
@@ -92,14 +101,18 @@ export default function ColumnFilterPopover({
   offerOptions?: { label: string; value: string }[];
   offerOptionsLoading?: boolean;
 }) {
+  const isQualificationField = isLeadsQualificationFilterKey(columnKey);
+  const availableOperators = isQualificationField
+    ? qualificationOperators
+    : operators;
   const [open, setOpen] = useState(false);
-  const [cond1, setCond1] = useState({ 
-    op: initialValue?.c1?.op || 'equal', 
-    value: initialValue?.c1?.value || '' 
+  const [cond1, setCond1] = useState({
+    op: initialValue?.c1?.op || 'equal',
+    value: initialValue?.c1?.value || '',
   });
-  const [cond2, setCond2] = useState({ 
-    op: initialValue?.c2?.op || 'equal', 
-    value: initialValue?.c2?.value || '' 
+  const [cond2, setCond2] = useState({
+    op: initialValue?.c2?.op || 'equal',
+    value: initialValue?.c2?.value || '',
   });
   const [logic, setLogic] = useState<'and' | 'or'>(initialValue?.logic || 'and');
   const modalRef = useRef<HTMLDivElement | null>(null);
@@ -108,27 +121,25 @@ export default function ColumnFilterPopover({
   const prevValues = useRef<{ cond1: { op: string; value: string }; cond2: { op: string; value: string }; logic: 'and' | 'or' } | null>(null);
   const hasMounted = useRef(false);
   const onFilterChangeRef = useRef(onFilterChange);
-  
-  // Keep ref updated without causing re-renders
+
   useEffect(() => {
     onFilterChangeRef.current = onFilterChange;
   }, [onFilterChange]);
 
-  // Initialize on mount
   useEffect(() => {
     if (!hasMounted.current) {
       hasMounted.current = true;
       if (initialValue) {
-        const newCond1 = { 
-          op: initialValue.c1?.op || 'equal', 
-          value: initialValue.c1?.value || '' 
+        const newCond1 = {
+          op: initialValue.c1?.op || 'equal',
+          value: initialValue.c1?.value || '',
         };
-        const newCond2 = { 
-          op: initialValue.c2?.op || 'equal', 
-          value: initialValue.c2?.value || '' 
+        const newCond2 = {
+          op: initialValue.c2?.op || 'equal',
+          value: initialValue.c2?.value || '',
         };
         const newLogic = initialValue.logic || 'and';
-        
+
         setCond1(newCond1);
         setCond2(newCond2);
         setLogic(newLogic);
@@ -141,47 +152,44 @@ export default function ColumnFilterPopover({
     }
   }, []);
 
-  // Update state when initialValue changes (only if it's different and after mount)
   useEffect(() => {
     if (!hasMounted.current) return;
-    
+
     const currentInitial = JSON.stringify(initialValue || null);
-    
+
     if (currentInitial !== lastInitialValue.current) {
       lastInitialValue.current = currentInitial;
       isInitializing.current = true;
-      
+
       if (initialValue && (initialValue.c1?.value || initialValue.c2?.value)) {
-        const newCond1 = { 
-          op: initialValue.c1?.op || 'equal', 
-          value: initialValue.c1?.value || '' 
+        const newCond1 = {
+          op: initialValue.c1?.op || 'equal',
+          value: initialValue.c1?.value || '',
         };
-        const newCond2 = { 
-          op: initialValue.c2?.op || 'equal', 
-          value: initialValue.c2?.value || '' 
+        const newCond2 = {
+          op: initialValue.c2?.op || 'equal',
+          value: initialValue.c2?.value || '',
         };
         const newLogic = initialValue.logic || 'and';
-        
+
         setCond1(newCond1);
         setCond2(newCond2);
         setLogic(newLogic);
         prevValues.current = { cond1: newCond1, cond2: newCond2, logic: newLogic };
       } else {
-        // Clear all values
         const emptyCond = { op: 'equal', value: '' };
         setCond1(emptyCond);
         setCond2(emptyCond);
         setLogic('and');
         prevValues.current = { cond1: emptyCond, cond2: emptyCond, logic: 'and' };
       }
-      
+
       setTimeout(() => {
         isInitializing.current = false;
       }, 100);
     }
   }, [initialValue]);
 
-  // close modal when clicking outside or pressing Esc
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (modalRef.current && !modalRef.current.contains(e.target as Node)) setOpen(false);
@@ -197,7 +205,6 @@ export default function ColumnFilterPopover({
     };
   }, [open]);
 
-  // Handle save button click
   const handleSave = () => {
     onFilterChangeRef.current(columnKey, { c1: cond1, c2: cond2, logic });
     setOpen(false);
@@ -230,17 +237,16 @@ export default function ColumnFilterPopover({
               ✕
             </button>
             <h3 className="text-lg font-semibold text-gray-800 mb-4">
-              Filter – {columnKey.replace(/_/g, ' ')}
+              Filter – {getKanbanFilterColumnLabel(columnKey)}
             </h3>
 
-            {/* Condition 1 */}
             <div className="flex items-center gap-2 mb-4">
               <select
                 className="border border-gray-300 rounded-lg px-2 py-2 text-sm w-1/2 focus:ring-2 focus:ring-blue-500"
                 value={cond1.op}
                 onChange={(e) => setCond1((s) => ({ ...s, op: e.target.value }))}
               >
-                {operators.map((op) => (
+                {availableOperators.map((op) => (
                   <option key={op.value} value={op.value}>
                     {op.label}
                   </option>
@@ -255,7 +261,6 @@ export default function ColumnFilterPopover({
               />
             </div>
 
-            {/* Logic */}
             <div className="flex justify-center gap-6 mb-4">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
@@ -281,14 +286,13 @@ export default function ColumnFilterPopover({
               </label>
             </div>
 
-            {/* Condition 2 */}
             <div className="flex items-center gap-2 mb-4">
               <select
                 className="border border-gray-300 rounded-lg px-2 py-2 text-sm w-1/2 focus:ring-2 focus:ring-blue-500"
                 value={cond2.op}
                 onChange={(e) => setCond2((s) => ({ ...s, op: e.target.value }))}
               >
-                {operators.map((op) => (
+                {availableOperators.map((op) => (
                   <option key={op.value} value={op.value}>
                     {op.label}
                   </option>
@@ -303,7 +307,6 @@ export default function ColumnFilterPopover({
               />
             </div>
 
-            {/* Save Button */}
             <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-gray-200">
               <button
                 onClick={() => setOpen(false)}

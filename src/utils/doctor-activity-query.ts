@@ -1,5 +1,13 @@
+type DoctorActivityQueryOptions = {
+  /** Detail endpoint — do not apply list-only sort defaults. */
+  forDetail?: boolean;
+};
+
 /** Map doctor-activity report page URL params to API query string */
-export function toDoctorActivityQuery(searchParams: URLSearchParams): string {
+export function toDoctorActivityQuery(
+  searchParams: URLSearchParams,
+  options?: DoctorActivityQueryOptions
+): string {
   const p = new URLSearchParams();
 
   searchParams.forEach((value, key) => {
@@ -13,8 +21,13 @@ export function toDoctorActivityQuery(searchParams: URLSearchParams): string {
 
   if (!p.get('page')) p.set('page', '1');
   if (!p.get('per_page')) p.set('per_page', '25');
-  if (!p.get('sort_by')) p.set('sort_by', 'total_actions');
-  if (!p.get('sort_direction')) p.set('sort_direction', 'desc');
+
+  if (!options?.forDetail) {
+    if (!p.get('sort_by')) p.set('sort_by', 'total_actions');
+    if (!p.get('sort_direction')) p.set('sort_direction', 'desc');
+  } else if (!p.get('sort_direction')) {
+    p.set('sort_direction', 'desc');
+  }
 
   return p.toString();
 }
@@ -29,6 +42,7 @@ export function hasActiveDoctorActivityFilters(
     'sort_by',
     'sort_direction',
     'tab',
+    'with_reservation',
   ]);
   return Array.from(searchParams.keys()).some((key) => !ignored.has(key));
 }
@@ -65,4 +79,19 @@ export function buildDoctorActivityDetailPath(
 ): string {
   const qs = params?.toString();
   return `/${locale}/kpis/doctors/${doctorId}${qs ? `?${qs}` : ''}`;
+}
+
+export function formatReservationStatusLabel(
+  status: number | string | null
+): string {
+  if (status == null || status === '') return '—';
+  const labels: Record<string, string> = {
+    '1': 'Reviewing',
+    '2': 'Awaiting Confirmation',
+    '3': 'Confirmed',
+    '4': 'Canceled',
+    '5': 'Completed',
+    '6': 'Failed',
+  };
+  return labels[String(status)] ?? String(status);
 }

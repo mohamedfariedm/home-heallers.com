@@ -1,6 +1,9 @@
 /** Options aligned with `suport-form.tsx` selects — used for kanban column filters. */
 
+import { isLeadsQualificationFilterKey } from './kanban-filter-columns';
+
 export const kanbanStatusOptions = [
+
   { label: 'New', value: 'new' },
   { label: 'Negotiation', value: 'negotiation' },
   { label: 'Success', value: 'success' },
@@ -42,6 +45,11 @@ export const kanbanSpecialtyOptions = [
   { label: 'Extendcare', value: 'Extendcare' },
 ];
 
+export const kanbanYesNoOptions = [
+  { label: 'Yes', value: 'yes' },
+  { label: 'No', value: 'no' },
+];
+
 /** No separate list in the lead form; same channel set as Source for consistent filtering. */
 export const kanbanLeadSourceOptions = kanbanSourceCampaignOptions;
 
@@ -58,6 +66,7 @@ export function getKanbanColumnSelectPlaceholder(columnKey: string): string {
   if (columnKey === 'country_name') return 'Select country';
   if (columnKey === 'city_name') return 'Select city';
   if (specialtyKeys.has(columnKey)) return 'Select specialty';
+  if (isLeadsQualificationFilterKey(columnKey)) return 'Select answer';
   return 'Select';
 }
 
@@ -80,6 +89,9 @@ export function getKanbanStaticSelectOptions(
     case 'specialtie_3':
       return kanbanSpecialtyOptions;
     default:
+      if (isLeadsQualificationFilterKey(columnKey)) {
+        return kanbanYesNoOptions;
+      }
       return null;
   }
 }

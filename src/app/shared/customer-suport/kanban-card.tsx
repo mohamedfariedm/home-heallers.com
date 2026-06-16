@@ -30,6 +30,8 @@ interface KanbanItem {
   gender?: string;
   lead_source?: string;
   address_1?: string;
+  city?: string;
+  state?: string;
   offer?: string;
   agent_name?: string;
   notes?: string;
@@ -338,11 +340,11 @@ export default function KanbanCard({
           </div>
         )}
 
-        {item.address_1 && (
+        {(item.address_1 || item.city || item.state) && (
           <div className="flex items-start gap-2">
             <PiMapPin className="mt-0.5 h-4 w-4 flex-shrink-0 text-gray-400" />
             <span className="text-gray-600 dark:text-gray-300">
-              {item.address_1}
+              {[item.address_1, item.city, item.state].filter(Boolean).join(', ')}
             </span>
           </div>
         )}

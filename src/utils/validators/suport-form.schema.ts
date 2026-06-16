@@ -17,6 +17,8 @@ export const leadFormSchema = z.object({
   booking_phone_number: z.string().optional(),
   home_phone: z.string().optional(),
   address_1: z.string().optional(),
+  city: z.string().max(255, 'City must not exceed 255 characters').optional(),
+  state: z.string().max(255, 'State must not exceed 255 characters').optional(),
   source_campaign: z.string().min(1, 'Source is required'),
 
   activity_code: z.string().optional(),

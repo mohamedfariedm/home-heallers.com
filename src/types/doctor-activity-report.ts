@@ -15,6 +15,11 @@ export interface EventBucket {
   link: string;
 }
 
+export interface RecordEventBucket {
+  event: string | null;
+  count: number;
+}
+
 export interface LogNameBucket {
   log_name: string;
   count: number;
@@ -24,6 +29,14 @@ export interface LogNameBucket {
 export interface ModelBucket {
   type: string;
   count: number;
+}
+
+export interface DoctorReservationRef {
+  id: number;
+  status: number | string | null;
+  client_name: string | null;
+  service_name: string | null;
+  created_at: string;
 }
 
 export interface DoctorActivityRow {
@@ -78,7 +91,16 @@ export interface DoctorActivityListResponse {
   message: string;
 }
 
-export type TimelineItem = ActivityLog;
+export type DoctorActivityLogItem = ActivityLog;
+
+export interface DoctorReservationActivityRow {
+  reservation: DoctorReservationRef;
+  total_actions: number;
+  by_event: RecordEventBucket[];
+  first_activity_at: string | null;
+  last_activity_at: string | null;
+  activities: DoctorActivityLogItem[];
+}
 
 export interface DoctorActivitySummary {
   total_actions: number;
@@ -98,7 +120,7 @@ export interface DoctorActivityDetailResponse {
   data: {
     doctor: DoctorRef;
     summary: DoctorActivitySummary;
-    timeline: TimelineItem[];
+    reservations: DoctorReservationActivityRow[];
   };
   links: PaginationLinks;
   meta: { current_page: number; per_page: number; total: number };

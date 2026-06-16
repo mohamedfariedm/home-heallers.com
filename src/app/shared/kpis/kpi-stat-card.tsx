@@ -107,6 +107,7 @@ interface KpiStatCardProps {
   color?: KpiStatCardColor;
   subtitle?: React.ReactNode;
   href?: string;
+  selected?: boolean;
   className?: string;
 }
 
@@ -117,6 +118,7 @@ export default function KpiStatCard({
   color = 'blue',
   subtitle,
   href,
+  selected,
   className,
 }: KpiStatCardProps) {
   const colors = colorStyles[color];
@@ -126,6 +128,7 @@ export default function KpiStatCard({
       className={cn(
         'relative min-w-[180px] flex-1 basis-[calc(20%-16px)] overflow-hidden rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-shadow dark:border-gray-700 dark:bg-gray-800',
         href && 'hover:shadow-md',
+        selected && 'border-blue-500 ring-2 ring-blue-500/20',
         className
       )}
     >

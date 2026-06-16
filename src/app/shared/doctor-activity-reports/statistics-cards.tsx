@@ -1,8 +1,5 @@
 'use client';
 
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import Cookies from 'js-cookie';
 import {
   PiCalendarCheckBold,
   PiChartBarBold,
@@ -13,11 +10,7 @@ import {
 import cn from '@/utils/class-names';
 import KpiStatCard from '@/app/shared/kpis/kpi-stat-card';
 import KpiBreakdownWidget from '@/app/shared/kpis/kpi-breakdown-widget';
-import {
-  buildDoctorActivityDetailPath,
-  buildDoctorActivityListPath,
-  parseDoctorApiLinkToSearchParams,
-} from '@/utils/doctor-activity-query';
+import DoctorActivityDrillDownLink from '@/app/shared/doctor-activity-reports/drill-down-link';
 import type { DoctorActivityStatistics } from '@/types/doctor-activity-report';
 
 interface DoctorActivityStatisticsCardsProps {
@@ -33,47 +26,6 @@ const cards = [
   { key: 'this_month', title: 'This Month', icon: PiChartBarBold, color: 'indigo' as const },
 ] as const;
 
-function DrillDownLink({
-  link,
-  children,
-  className,
-}: {
-  link: string;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const locale = Cookies.get('NEXT_LOCALE') || 'en';
-
-  const handleClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    const params = parseDoctorApiLinkToSearchParams(link);
-    params.set('tab', 'doctors');
-
-    const doctorMatch = link.match(/\/doctor-activity\/(\d+)/);
-    if (doctorMatch) {
-      router.push(buildDoctorActivityDetailPath(locale, Number(doctorMatch[1]), params));
-      return;
-    }
-
-    router.push(buildDoctorActivityListPath(locale, params));
-  };
-
-  return (
-    <Link
-      href={pathname}
-      onClick={handleClick}
-      className={cn(
-        'font-semibold text-blue-600 hover:underline dark:text-blue-400',
-        className
-      )}
-    >
-      {children}
-    </Link>
-  );
-}
-
 export default function DoctorActivityStatisticsCards({
   statistics,
   className,
@@ -82,6 +34,7 @@ export default function DoctorActivityStatisticsCards({
 
   const hasBreakdowns =
     statistics.by_event?.length > 0 ||
+    statistics.by_log_name?.length > 0 ||
     statistics.top_doctors?.length > 0 ||
     statistics.most_modified_models?.length > 0;
 
@@ -102,7 +55,7 @@ export default function DoctorActivityStatisticsCards({
       {hasBreakdowns && (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
           {statistics.by_event?.length > 0 && (
-            <div className="lg:col-span-4">
+            <div className="lg:col-span-3">
               <KpiBreakdownWidget
                 title="By Event"
                 items={statistics.by_event.slice(0, 5).map((bucket) => ({
@@ -110,9 +63,27 @@ export default function DoctorActivityStatisticsCards({
                   label: bucket.event ?? 'Uncategorized',
                   count: bucket.count,
                   countNode: (
-                    <DrillDownLink link={bucket.link}>
+                    <DoctorActivityDrillDownLink link={bucket.link}>
                       {bucket.count}
-                    </DrillDownLink>
+                    </DoctorActivityDrillDownLink>
+                  ),
+                }))}
+              />
+            </div>
+          )}
+
+          {statistics.by_log_name?.length > 0 && (
+            <div className="lg:col-span-3">
+              <KpiBreakdownWidget
+                title="By Log Name"
+                items={statistics.by_log_name.slice(0, 5).map((bucket) => ({
+                  key: bucket.log_name,
+                  label: bucket.log_name,
+                  count: bucket.count,
+                  countNode: (
+                    <DoctorActivityDrillDownLink link={bucket.link}>
+                      {bucket.count}
+                    </DoctorActivityDrillDownLink>
                   ),
                 }))}
               />
@@ -120,7 +91,7 @@ export default function DoctorActivityStatisticsCards({
           )}
 
           {statistics.top_doctors?.length > 0 && (
-            <div className="lg:col-span-4">
+            <div className="lg:col-span-3">
               <KpiBreakdownWidget
                 title="Top Doctors"
                 items={statistics.top_doctors.slice(0, 5).map((doctor) => ({
@@ -128,7 +99,9 @@ export default function DoctorActivityStatisticsCards({
                   label: doctor.name,
                   count: doctor.count,
                   countNode: (
-                    <DrillDownLink link={doctor.link}>{doctor.count}</DrillDownLink>
+                    <DoctorActivityDrillDownLink link={doctor.link}>
+                      {doctor.count}
+                    </DoctorActivityDrillDownLink>
                   ),
                 }))}
               />
@@ -136,7 +109,7 @@ export default function DoctorActivityStatisticsCards({
           )}
 
           {statistics.most_modified_models?.length > 0 && (
-            <div className="lg:col-span-4">
+            <div className="lg:col-span-3">
               <KpiBreakdownWidget
                 title="Most Modified Models"
                 items={statistics.most_modified_models.slice(0, 5).map((model) => ({

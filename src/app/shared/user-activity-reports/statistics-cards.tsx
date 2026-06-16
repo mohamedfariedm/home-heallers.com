@@ -13,11 +13,9 @@ import {
 import cn from '@/utils/class-names';
 import KpiStatCard from '@/app/shared/kpis/kpi-stat-card';
 import KpiBreakdownWidget from '@/app/shared/kpis/kpi-breakdown-widget';
+import UserActivityDrillDownLink from '@/app/shared/user-activity-reports/drill-down-link';
 import {
-  buildUserActivityDetailPath,
-  buildUserActivityListPath,
   formatUserActivityLogName,
-  parseUserApiLinkToSearchParams,
 } from '@/utils/user-activity-query';
 import type { UserActivityStatistics } from '@/types/user-activity-report';
 
@@ -33,47 +31,6 @@ const cards = [
   { key: 'this_week', title: 'This Week', icon: PiCalendarCheckBold, color: 'amber' as const },
   { key: 'this_month', title: 'This Month', icon: PiChartBarBold, color: 'indigo' as const },
 ] as const;
-
-function DrillDownLink({
-  link,
-  children,
-  className,
-}: {
-  link: string;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const locale = Cookies.get('NEXT_LOCALE') || 'en';
-
-  const handleClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    const params = parseUserApiLinkToSearchParams(link);
-    params.set('tab', 'users');
-
-    const userMatch = link.match(/\/user-activity\/(\d+)/);
-    if (userMatch) {
-      router.push(buildUserActivityDetailPath(locale, Number(userMatch[1]), params));
-      return;
-    }
-
-    router.push(buildUserActivityListPath(locale, params));
-  };
-
-  return (
-    <Link
-      href={pathname}
-      onClick={handleClick}
-      className={cn(
-        'font-semibold text-blue-600 hover:underline dark:text-blue-400',
-        className
-      )}
-    >
-      {children}
-    </Link>
-  );
-}
 
 export default function UserActivityStatisticsCards({
   statistics,
@@ -112,7 +69,9 @@ export default function UserActivityStatisticsCards({
                   label: bucket.event ?? 'Uncategorized',
                   count: bucket.count,
                   countNode: (
-                    <DrillDownLink link={bucket.link}>{bucket.count}</DrillDownLink>
+                    <UserActivityDrillDownLink link={bucket.link}>
+                      {bucket.count}
+                    </UserActivityDrillDownLink>
                   ),
                 }))}
               />
@@ -128,7 +87,9 @@ export default function UserActivityStatisticsCards({
                   label: formatUserActivityLogName(bucket.log_name),
                   count: bucket.count,
                   countNode: (
-                    <DrillDownLink link={bucket.link}>{bucket.count}</DrillDownLink>
+                    <UserActivityDrillDownLink link={bucket.link}>
+                      {bucket.count}
+                    </UserActivityDrillDownLink>
                   ),
                 }))}
               />
@@ -144,7 +105,9 @@ export default function UserActivityStatisticsCards({
                   label: user.name,
                   count: user.count,
                   countNode: (
-                    <DrillDownLink link={user.link}>{user.count}</DrillDownLink>
+                    <UserActivityDrillDownLink link={user.link}>
+                      {user.count}
+                    </UserActivityDrillDownLink>
                   ),
                 }))}
               />

@@ -20,6 +20,7 @@ import ExportButton from '@/app/shared/export-button';
 import { usePermissions } from '@/context/PermissionsContext';
 import { resolveCustomerSupportKanbanPermissions } from '@/app/shared/customer-suport/permissions';
 import { useKanbanStatusChange } from '@/app/shared/customer-suport/use-kanban-status-change';
+import { KANBAN_FILTERABLE_COLUMNS } from '@/app/shared/customer-suport/kanban-filter-columns';
 
 const pageHeader = {
   title: 'Inbound Customer Supports',
@@ -84,15 +85,7 @@ export default function CustomerSupportsOperationKanbanPage() {
   // Initialize filters from URL params - sync whenever searchParams changes
   useEffect(() => {
     const initialFilters: Record<string, any> = {};
-    const filterableColumns = [
-      'name', 'offer', 'agent_name', 'status', 'reason', 'age', 'gender',
-      'lead_source', 'source_campaign', 'mobile_phone', 'booking_phone_number',
-      'home_phone', 'address_1', 'description', 'first_call_time',
-      'last_call_result', 'last_call_total_duration', 'last_phone', 'notes',
-      'ads_name', 'communication_channel',
-      // Advanced specialties
-      'specialtie_1', 'specialtie_2', 'specialtie_3',
-    ];
+    const filterableColumns = [...KANBAN_FILTERABLE_COLUMNS];
 
     filterableColumns.forEach((key) => {
       const params: any = {};

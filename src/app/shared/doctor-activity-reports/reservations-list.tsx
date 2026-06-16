@@ -11,71 +11,12 @@ import { Button } from '@/components/ui/button';
 import DateCell from '@/components/ui/date-cell';
 import CreateButton from '@/app/shared/create-button';
 import ActivityLogDetailsModal from '@/app/shared/activity-logs/details-modal';
-import {
-  formatSubjectLabel,
-  getSubjectHref,
-} from '@/app/shared/activity-logs/subject-link';
-import {
-  formatLeadStatusLabel,
-  formatSourceCampaignLabel,
-} from '@/utils/user-activity-query';
-import type { UserActivityLogItem, UserActivityRecord } from '@/types/user-activity-report';
-
-function RecordsFilterBanner() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const pathname = usePathname();
-
-  const sourceCampaign = searchParams.get('source_campaign');
-  const status = searchParams.get('status');
-
-  if (!sourceCampaign && !status) return null;
-
-  const clearFilter = (key: 'source_campaign' | 'status') => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete(key);
-    params.set('page', '1');
-    router.push(`${pathname}?${params.toString()}`);
-  };
-
-  return (
-    <div className="mb-4 flex flex-wrap items-center gap-2">
-      <Text className="text-xs font-medium text-gray-500 dark:text-gray-400">
-        Records filtered by:
-      </Text>
-      {sourceCampaign && (
-        <Badge variant="flat" color="primary" className="gap-2">
-          Campaign:{' '}
-          {formatSourceCampaignLabel(
-            sourceCampaign === 'null' ? null : sourceCampaign
-          )}
-          <button
-            type="button"
-            onClick={() => clearFilter('source_campaign')}
-            className="ms-1 text-xs hover:opacity-70"
-            aria-label="Clear campaign filter"
-          >
-            ×
-          </button>
-        </Badge>
-      )}
-      {status && (
-        <Badge variant="flat" color="primary" className="gap-2">
-          Status:{' '}
-          {formatLeadStatusLabel(status === 'null' ? null : status)}
-          <button
-            type="button"
-            onClick={() => clearFilter('status')}
-            className="ms-1 text-xs hover:opacity-70"
-            aria-label="Clear status filter"
-          >
-            ×
-          </button>
-        </Badge>
-      )}
-    </div>
-  );
-}
+import { getSubjectHref } from '@/app/shared/activity-logs/subject-link';
+import { formatReservationStatusLabel } from '@/utils/doctor-activity-query';
+import type {
+  DoctorActivityLogItem,
+  DoctorReservationActivityRow,
+} from '@/types/doctor-activity-report';
 
 function EventBadge({ event }: { event: string | null }) {
   if (!event) return <Badge variant="flat" color="secondary">—</Badge>;
@@ -88,7 +29,7 @@ function EventBadge({ event }: { event: string | null }) {
   );
 }
 
-function ActivityRow({ activity }: { activity: UserActivityLogItem }) {
+function ActivityRow({ activity }: { activity: DoctorActivityLogItem }) {
   return (
     <div className="flex flex-wrap items-center gap-3 border-t border-gray-100 px-4 py-3 dark:border-gray-700">
       <DateCell date={new Date(activity.created_at)} />
@@ -112,12 +53,14 @@ function ActivityRow({ activity }: { activity: UserActivityLogItem }) {
   );
 }
 
-function RecordCard({ record }: { record: UserActivityRecord }) {
+function ReservationCard({ row }: { row: DoctorReservationActivityRow }) {
   const [open, setOpen] = useState(false);
-  const subjectHref = getSubjectHref(record.model.type, record.model.id);
-  const modelLabel =
-    record.model.label ??
-    formatSubjectLabel(record.model.type, record.model.id);
+  const reservation = row.reservation;
+  const subjectHref = getSubjectHref('Reservation', reservation.id);
+  const title =
+    reservation.service_name ??
+    reservation.client_name ??
+    `Reservation #${reservation.id}`;
 
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
@@ -142,35 +85,47 @@ function RecordCard({ record }: { record: UserActivityRecord }) {
                 onClick={(e) => e.stopPropagation()}
                 className="font-semibold text-blue-600 hover:underline dark:text-blue-400"
               >
-                {modelLabel}
+                {title}
               </Link>
             ) : (
               <Text className="font-semibold text-gray-900 dark:text-gray-100">
-                {modelLabel}
+                {title}
               </Text>
             )}
             <Badge variant="flat" color="secondary">
-              {record.model.type} #{record.model.id}
+              #{reservation.id}
+            </Badge>
+            <Badge variant="outline">
+              {formatReservationStatusLabel(reservation.status)}
             </Badge>
           </div>
 
+          {reservation.client_name && reservation.service_name && (
+            <Text className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+              {reservation.client_name}
+            </Text>
+          )}
+
           <div className="mt-2 flex flex-wrap gap-4 text-xs text-gray-500 dark:text-gray-400">
-            <span>{record.total_actions} action(s)</span>
-            {record.first_activity_at && (
+            <span>
+              Booked: <DateCell date={new Date(reservation.created_at)} />
+            </span>
+            <span>{row.total_actions} action(s)</span>
+            {row.first_activity_at && (
               <span>
-                First: <DateCell date={new Date(record.first_activity_at)} />
+                First: <DateCell date={new Date(row.first_activity_at)} />
               </span>
             )}
-            {record.last_activity_at && (
+            {row.last_activity_at && (
               <span>
-                Last: <DateCell date={new Date(record.last_activity_at)} />
+                Last: <DateCell date={new Date(row.last_activity_at)} />
               </span>
             )}
           </div>
 
-          {record.by_event?.length > 0 && (
+          {row.by_event?.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-1">
-              {record.by_event.map((bucket) => (
+              {row.by_event.map((bucket) => (
                 <Badge
                   key={bucket.event ?? 'none'}
                   variant="flat"
@@ -182,12 +137,18 @@ function RecordCard({ record }: { record: UserActivityRecord }) {
               ))}
             </div>
           )}
+
+          {row.total_actions === 0 && (
+            <Text className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+              No logged actions on this reservation
+            </Text>
+          )}
         </div>
       </button>
 
-      {open && record.activities?.length > 0 && (
+      {open && row.activities?.length > 0 && (
         <div className="border-t border-gray-200 bg-gray-50/70 dark:border-gray-700 dark:bg-gray-900/30">
-          {record.activities.map((activity) => (
+          {row.activities.map((activity) => (
             <ActivityRow key={activity.id} activity={activity} />
           ))}
         </div>
@@ -196,11 +157,11 @@ function RecordCard({ record }: { record: UserActivityRecord }) {
   );
 }
 
-export default function UserActivityRecordsList({
-  records,
+export default function DoctorReservationsList({
+  reservations,
   totalItems,
 }: {
-  records: UserActivityRecord[];
+  reservations: DoctorReservationActivityRow[];
   totalItems: number;
 }) {
   const searchParams = useSearchParams();
@@ -208,7 +169,9 @@ export default function UserActivityRecordsList({
   const pathname = usePathname();
 
   const currentPage = Number(searchParams.get('page') || 1);
-  const pageSize = Number(searchParams.get('per_page') || searchParams.get('limit') || 25);
+  const pageSize = Number(
+    searchParams.get('per_page') || searchParams.get('limit') || 25
+  );
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
 
   const goToPage = (page: number) => {
@@ -219,16 +182,15 @@ export default function UserActivityRecordsList({
     router.push(`${pathname}?${params.toString()}`);
   };
 
-  if (records.length === 0) {
+  if (reservations.length === 0) {
     return (
       <WidgetCard
-        title="Activity Records"
-        description="Distinct models touched by this user"
+        title="Reservations"
+        description="Reservations assigned to this doctor in the selected date range"
       >
-        <RecordsFilterBanner />
         <div className="rounded-lg border border-dashed border-gray-200 bg-gray-50 px-4 py-10 text-center dark:border-gray-700 dark:bg-gray-800/50">
           <Text className="text-sm text-gray-600 dark:text-gray-400">
-            No records match the current filters.
+            No reservations match the current filters.
           </Text>
         </div>
       </WidgetCard>
@@ -237,15 +199,14 @@ export default function UserActivityRecordsList({
 
   return (
     <WidgetCard
-      title="Activity Records"
-      description={`${totalItems.toLocaleString()} distinct models`}
+      title="Reservations"
+      description={`${totalItems.toLocaleString()} reservations`}
     >
-      <RecordsFilterBanner />
       <div className="space-y-3">
-        {records.map((record) => (
-          <RecordCard
-            key={`${record.model.type}-${record.model.id}`}
-            record={record}
+        {reservations.map((row) => (
+          <ReservationCard
+            key={row.reservation.id}
+            row={row}
           />
         ))}
       </div>

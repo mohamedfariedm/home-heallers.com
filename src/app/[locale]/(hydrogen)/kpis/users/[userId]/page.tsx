@@ -29,7 +29,8 @@ export default function UserKpiDetailPage() {
   const kpisPermissions = resolveKpisPermissions(effectivePermissions);
 
   const queryString = toUserActivityQuery(
-    new URLSearchParams(searchParams.toString())
+    new URLSearchParams(searchParams.toString()),
+    { forDetail: true }
   );
 
   const { data, isLoading, isError, error, isFetching } =

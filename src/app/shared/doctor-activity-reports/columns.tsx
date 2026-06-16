@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import Cookies from 'js-cookie';
+import cn from '@/utils/class-names';
 import { HeaderCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip } from '@/components/ui/tooltip';
@@ -9,6 +10,7 @@ import { ActionIcon } from '@/components/ui/action-icon';
 import DateCell from '@/components/ui/date-cell';
 import AvatarCard from '@/components/ui/avatar-card';
 import EyeIcon from '@/components/icons/eye';
+import DoctorActivityDrillDownLink from '@/app/shared/doctor-activity-reports/drill-down-link';
 import {
   buildDoctorActivityDetailPath,
   parseDoctorApiLinkToSearchParams,
@@ -19,6 +21,44 @@ type ColumnsProps = {
   sortConfig?: { key: string | null; direction: string | null };
   onHeaderCellClick: (value: string) => { onClick: () => void };
 };
+
+function LogNameCounts({ row }: { row: DoctorActivityRow }) {
+  if (!row.by_log_name?.length) return <span className="text-gray-400">—</span>;
+
+  return (
+    <div className="flex flex-wrap gap-1">
+      {row.by_log_name.slice(0, 4).map((bucket) => {
+        const badge = (
+          <Badge
+            variant="flat"
+            color="secondary"
+            className={bucket.link ? 'cursor-pointer hover:opacity-80' : undefined}
+          >
+            {bucket.log_name.slice(0, 12)}
+            {bucket.log_name.length > 12 ? '…' : ''} {bucket.count}
+          </Badge>
+        );
+
+        return (
+          <Tooltip
+            key={bucket.log_name}
+            content={() => `${bucket.log_name}: ${bucket.count}`}
+            placement="top"
+            color="invert"
+          >
+            {bucket.link ? (
+              <DoctorActivityDrillDownLink link={bucket.link} doctorId={row.doctor.id}>
+                {badge}
+              </DoctorActivityDrillDownLink>
+            ) : (
+              badge
+            )}
+          </Tooltip>
+        );
+      })}
+    </div>
+  );
+}
 
 function EventCounts({ row }: { row: DoctorActivityRow }) {
   if (!row.by_event?.length) return <span className="text-gray-400">—</span>;
@@ -35,6 +75,19 @@ function EventCounts({ row }: { row: DoctorActivityRow }) {
                 ? 'danger'
                 : 'secondary';
 
+        const badge = (
+          <Badge
+            variant="flat"
+            color={color}
+            className={cn(
+              'capitalize',
+              bucket.link && 'cursor-pointer hover:opacity-80'
+            )}
+          >
+            {bucket.event?.slice(0, 1) ?? '?'} {bucket.count}
+          </Badge>
+        );
+
         return (
           <Tooltip
             key={bucket.event ?? 'none'}
@@ -42,9 +95,13 @@ function EventCounts({ row }: { row: DoctorActivityRow }) {
             placement="top"
             color="invert"
           >
-            <Badge variant="flat" color={color} className="capitalize">
-              {bucket.event?.slice(0, 1) ?? '?'} {bucket.count}
-            </Badge>
+            {bucket.link ? (
+              <DoctorActivityDrillDownLink link={bucket.link} doctorId={row.doctor.id}>
+                {badge}
+              </DoctorActivityDrillDownLink>
+            ) : (
+              badge
+            )}
           </Tooltip>
         );
       })}
@@ -79,7 +136,7 @@ export const getDoctorActivityColumns = ({
       const href = buildDoctorActivityDetailPath(locale, row.doctor.id, params);
 
       return (
-        <Tooltip size="sm" content={() => 'View timeline'} placement="top" color="invert">
+        <Tooltip size="sm" content={() => 'View reservations'} placement="top" color="invert">
           <Link href={href} aria-label="View doctor activity">
             <ActionIcon size="sm" variant="outline">
               <EyeIcon className="h-4 w-4" />
@@ -132,7 +189,17 @@ export const getDoctorActivityColumns = ({
     ),
   },
   {
-    title: <HeaderCell title="Reservations" />,
+    title: (
+      <HeaderCell
+        title="Reservations"
+        sortable
+        ascending={
+          sortConfig?.direction === 'asc' &&
+          sortConfig?.key === 'reservations_count'
+        }
+      />
+    ),
+    onHeaderCell: () => onHeaderCellClick('reservations_count'),
     dataIndex: 'reservations_count',
     key: 'reservations_count',
     width: 110,
@@ -144,6 +211,13 @@ export const getDoctorActivityColumns = ({
     key: 'by_event',
     width: 180,
     render: (_: unknown, row: DoctorActivityRow) => <EventCounts row={row} />,
+  },
+  {
+    title: <HeaderCell title="By Log Name" />,
+    dataIndex: 'by_log_name',
+    key: 'by_log_name',
+    width: 180,
+    render: (_: unknown, row: DoctorActivityRow) => <LogNameCounts row={row} />,
   },
   {
     title: <HeaderCell title="Top Models" />,

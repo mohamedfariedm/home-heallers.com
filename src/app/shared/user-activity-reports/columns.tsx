@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import Cookies from 'js-cookie';
+import cn from '@/utils/class-names';
 import { HeaderCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip } from '@/components/ui/tooltip';
@@ -14,6 +15,7 @@ import {
   formatUserActivityLogName,
   parseUserApiLinkToSearchParams,
 } from '@/utils/user-activity-query';
+import UserActivityDrillDownLink from '@/app/shared/user-activity-reports/drill-down-link';
 import type { UserActivityRow } from '@/types/user-activity-report';
 
 type ColumnsProps = {
@@ -34,6 +36,17 @@ function LogNameCounts({ row }: { row: UserActivityRow }) {
     <div className="flex flex-wrap gap-1">
       {row.by_log_name.slice(0, 4).map((bucket) => {
         const label = formatUserActivityLogName(bucket.log_name);
+        const badge = (
+          <Badge
+            variant="flat"
+            color={logNameBadgeColor(bucket.log_name)}
+            className={bucket.link ? 'cursor-pointer hover:opacity-80' : undefined}
+          >
+            {label.slice(0, 12)}
+            {label.length > 12 ? '…' : ''} {bucket.count}
+          </Badge>
+        );
+
         return (
           <Tooltip
             key={bucket.log_name}
@@ -41,10 +54,13 @@ function LogNameCounts({ row }: { row: UserActivityRow }) {
             placement="top"
             color="invert"
           >
-            <Badge variant="flat" color={logNameBadgeColor(bucket.log_name)}>
-              {label.slice(0, 12)}
-              {label.length > 12 ? '…' : ''} {bucket.count}
-            </Badge>
+            {bucket.link ? (
+              <UserActivityDrillDownLink link={bucket.link} userId={row.user.id}>
+                {badge}
+              </UserActivityDrillDownLink>
+            ) : (
+              badge
+            )}
           </Tooltip>
         );
       })}
@@ -67,6 +83,19 @@ function EventCounts({ row }: { row: UserActivityRow }) {
                 ? 'danger'
                 : 'secondary';
 
+        const badge = (
+          <Badge
+            variant="flat"
+            color={color}
+            className={cn(
+              'capitalize',
+              bucket.link && 'cursor-pointer hover:opacity-80'
+            )}
+          >
+            {bucket.event?.slice(0, 1) ?? '?'} {bucket.count}
+          </Badge>
+        );
+
         return (
           <Tooltip
             key={bucket.event ?? 'none'}
@@ -74,9 +103,13 @@ function EventCounts({ row }: { row: UserActivityRow }) {
             placement="top"
             color="invert"
           >
-            <Badge variant="flat" color={color} className="capitalize">
-              {bucket.event?.slice(0, 1) ?? '?'} {bucket.count}
-            </Badge>
+            {bucket.link ? (
+              <UserActivityDrillDownLink link={bucket.link} userId={row.user.id}>
+                {badge}
+              </UserActivityDrillDownLink>
+            ) : (
+              badge
+            )}
           </Tooltip>
         );
       })}

@@ -131,6 +131,16 @@ interface AggregateData {
     qualified_leads: number;
     lead_quality_rate: number;
   };
+  inbound_leads?: {
+    total_leads: number;
+    qualified_leads: number;
+    lead_quality_rate: number;
+  };
+  outbound_leads?: {
+    total_leads: number;
+    qualified_leads: number;
+    lead_quality_rate: number;
+  };
   filters_applied?: any[];
   [key: string]: any; // Allow any additional fields
 }

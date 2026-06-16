@@ -213,6 +213,7 @@ export default function CreateOrUpdateReservation({
         resolveLocalizedName(initValues?.patient?.city?.name) ||
         initValues?.guest_info?.city ||
         initValues?.address_city ||
+        leadData?.city ||
         leadData?.address_1 ||
         '',
       address_state:
@@ -220,6 +221,7 @@ export default function CreateOrUpdateReservation({
         resolveLocalizedName(initValues?.patient?.state?.name) ||
         initValues?.guest_info?.state ||
         initValues?.address_state ||
+        leadData?.state ||
         '',
       address_link: initValues?.address?.link || initValues?.address_link || '',
 

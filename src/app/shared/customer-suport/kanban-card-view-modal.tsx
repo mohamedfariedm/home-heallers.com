@@ -116,6 +116,20 @@ export default function KanbanCardViewModal({ item }: KanbanCardViewModalProps) 
           </Text>
         </div>
 
+        <div>
+          <Title as="h6" className="mt-6 font-inter text-sm font-semibold">City</Title>
+          <Text as="p" className="pb-2 leading-relaxed">
+            {item?.city || '-'}
+          </Text>
+        </div>
+
+        <div>
+          <Title as="h6" className="mt-6 font-inter text-sm font-semibold">State / Region</Title>
+          <Text as="p" className="pb-2 leading-relaxed">
+            {item?.state || '-'}
+          </Text>
+        </div>
+
         {/* Source Details */}
         <div>
           <Title as="h6" className="mt-6 font-inter text-sm font-semibold">Source</Title>

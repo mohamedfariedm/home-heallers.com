@@ -126,6 +126,8 @@ export const getColumns = ({
     'booking_phone_number',
     'home_phone',
     'address_1',
+    'city',
+    'state',
     'description',
     'first_call_time',
     'last_call_result',

@@ -230,12 +230,12 @@ export default function KpisPage() {
               <Text className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 {hasFilters || searchParams.get('search')
                   ? 'No doctors match your filters.'
-                  : 'No doctor activity has been recorded yet.'}
+                  : 'No doctors with reservations found.'}
               </Text>
               <Text className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                 {hasFilters || searchParams.get('search')
                   ? 'Use the Filters button to adjust or clear your filters.'
-                  : 'Doctor actions across the platform will appear here as KPI summaries.'}
+                  : 'Doctors with reservations in the selected date range will appear here with activity KPIs.'}
               </Text>
             </div>
           )}

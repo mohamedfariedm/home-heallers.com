@@ -6,7 +6,6 @@ import StatusField from '@/components/controlled-table/status-field';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Text } from '@/components/ui/text';
-import { Switch } from '@/components/ui/switch';
 import { formatDate } from '@/utils/format-date';
 import { useDoctorActivityReportFilterOptions } from '@/framework/doctor-activity-reports';
 import type { DoctorActivityFilterOptions } from '@/types/doctor-activity-report';
@@ -103,20 +102,6 @@ export default function DoctorActivityFilterElement({
         />
       </FilterField>
 
-      <FilterField label="With reservation only">
-        <div className="flex h-10 items-center gap-3">
-          <Switch
-            checked={filters.with_reservation === 'true'}
-            onChange={(checked) =>
-              updateFilter('with_reservation', checked ? 'true' : '')
-            }
-          />
-          <Text className="text-sm text-gray-600">
-            Only doctors with reservations in the date range
-          </Text>
-        </div>
-      </FilterField>
-
       <FilterField label="Event type">
         <StatusField
           className="w-full"
@@ -199,6 +184,9 @@ export default function DoctorActivityFilterElement({
           placeholderText="Select start date"
           inputProps={{ labelClassName: 'font-medium text-gray-700' }}
         />
+        <Text className="text-xs text-gray-500 dark:text-gray-400">
+          Scopes which doctors appear and their reservation counts
+        </Text>
       </FilterField>
 
       <FilterField label="Date to">

@@ -10,41 +10,17 @@ import {
   PiCaretDownBold,
   PiCaretUpBold,
   PiChartLineUpBold,
+  PiListChecksBold,
 } from 'react-icons/pi';
 import cn from '@/utils/class-names';
 import { useRouter, usePathname } from 'next/navigation';
+import type { CustomerSupportStatistics } from '@/types/customer-support-statistics';
+import { KANBAN_FILTERABLE_COLUMNS } from './kanban-filter-columns';
 
-interface KanbanStatistics {
-  total: number;
-  by_status: Array<{
-    status?: string | null;
-    count?: number;
-    link?: string;
-  }> | {
+interface KanbanStatistics extends CustomerSupportStatistics {
+  by_status: CustomerSupportStatistics['by_status'] | {
     new?: number;
     [key: string]: number | undefined;
-  };
-  clients_with_mobile_and_reservation: number;
-  clients_with_mobile_and_multiple_reservations?: number;
-  by_source_campaign?: Array<{
-    source_campaign?: string;
-    count?: number;
-    link?: string;
-  }>;
-  by_communication_channel?: Array<{
-    communication_channel?: string;
-    count?: number;
-    link?: string;
-  }>;
-  by_offer?: Array<{
-    offer?: string;
-    count?: number;
-    link?: string;
-  }>;
-  leads?: {
-    total_leads?: number;
-    qualified_leads?: number;
-    lead_quality_rate?: number;
   };
 }
 
@@ -137,32 +113,7 @@ const convertApiLinkToQueryParams = (apiLink: string | undefined): string => {
     const frontendParams = new URLSearchParams();
 
     // Keys our filters system recognizes
-    const filterableKeys = new Set([
-      'name',
-      'offer',
-      'agent_name',
-      'status',
-      'reason',
-      'age',
-      'gender',
-      'lead_source',
-      'source_campaign',
-      'mobile_phone',
-      'booking_phone_number',
-      'home_phone',
-      'address_1',
-      'description',
-      'first_call_time',
-      'last_call_result',
-      'last_call_total_duration',
-      'last_phone',
-      'notes',
-      'ads_name',
-      'communication_channel',
-      'specialtie_1',
-      'specialtie_2',
-      'specialtie_3',
-    ]);
+    const filterableKeys = new Set<string>(KANBAN_FILTERABLE_COLUMNS);
     
     params.forEach((value, key) => {
       const hasOperatorSuffix = /_(equal|not_equal|has|not_has|contain|not_contain|begin_with|not_begin_with|end_with|not_end_with)(_(and|or))?$/.test(
@@ -347,6 +298,8 @@ export default function KanbanStatisticsCards({
   supportType,
 }: KanbanStatisticsCardsProps) {
   const [sourceCampaignExpanded, setSourceCampaignExpanded] = useState(false);
+  const [leadQualityCampaignExpanded, setLeadQualityCampaignExpanded] = useState(false);
+  const [qualificationExpanded, setQualificationExpanded] = useState(false);
   const [communicationChannelExpanded, setCommunicationChannelExpanded] = useState(false);
   const [offersExpanded, setOffersExpanded] = useState(false);
   
@@ -561,7 +514,53 @@ export default function KanbanStatisticsCards({
     ? allSourceCampaignCards 
     : allSourceCampaignCards.slice(0, SOURCE_CAMPAIGNS_PER_ROW);
 
-  // Row 5: Communication Channels
+  // Row 4b: Lead quality by source campaign
+  const allLeadQualityCampaignCards = (statistics.lead_quality_by_source_campaign || [])
+    .sort((a, b) => (b.total_leads || 0) - (a.total_leads || 0))
+    .map((campaign) => ({
+      title: campaign.source_campaign || 'Unknown',
+      value: `${Number(campaign.lead_quality_rate || 0).toFixed(2)}%`,
+      subtitle: `${campaign.qualified_leads || 0} / ${campaign.total_leads || 0} qualified`,
+      icon: PiChartLineUpBold,
+      bgColor: 'bg-amber-50',
+      textColor: 'text-amber-600',
+      darkBgColor: 'dark:bg-amber-900/20',
+      darkTextColor: 'dark:text-amber-400',
+      blurColor: 'bg-amber-50/50',
+      darkBlurColor: 'dark:bg-amber-900/10',
+      link: campaign.link,
+      compact: true,
+    }));
+
+  const LEAD_QUALITY_CAMPAIGNS_PER_ROW = 6;
+  const leadQualityCampaignCards = leadQualityCampaignExpanded
+    ? allLeadQualityCampaignCards
+    : allLeadQualityCampaignCards.slice(0, LEAD_QUALITY_CAMPAIGNS_PER_ROW);
+
+  // Row 5: Leads qualification stats (yes/no per question)
+  const allQualificationCards = (statistics.by_leads_qualification || []).flatMap(
+    (question) =>
+      (question.by_answer || []).map((bucket) => ({
+        title: `${question.label} — ${bucket.answer === 'yes' ? 'Yes' : 'No'}`,
+        value: bucket.count || 0,
+        icon: PiListChecksBold,
+        bgColor: bucket.answer === 'yes' ? 'bg-green-50' : 'bg-rose-50',
+        textColor: bucket.answer === 'yes' ? 'text-green-600' : 'text-rose-600',
+        darkBgColor: bucket.answer === 'yes' ? 'dark:bg-green-900/20' : 'dark:bg-rose-900/20',
+        darkTextColor: bucket.answer === 'yes' ? 'dark:text-green-400' : 'dark:text-rose-400',
+        blurColor: bucket.answer === 'yes' ? 'bg-green-50/50' : 'bg-rose-50/50',
+        darkBlurColor: bucket.answer === 'yes' ? 'dark:bg-green-900/10' : 'dark:bg-rose-900/10',
+        link: bucket.link,
+        compact: true,
+      }))
+  );
+
+  const QUALIFICATION_CARDS_PER_ROW = 8;
+  const qualificationCards = qualificationExpanded
+    ? allQualificationCards
+    : allQualificationCards.slice(0, QUALIFICATION_CARDS_PER_ROW);
+
+  // Row 6: Communication Channels
   const allCommunicationChannelCards = (statistics.by_communication_channel || [])
     .sort((a, b) => (b.count || 0) - (a.count || 0)) // Sort by count descending
     .map((channel) => ({
@@ -612,6 +611,26 @@ export default function KanbanStatisticsCards({
       : []),
     { title: 'Clients', cards: clientCards },
     { title: 'Source Campaigns', cards: sourceCampaignCards, allCards: allSourceCampaignCards, expanded: sourceCampaignExpanded, setExpanded: setSourceCampaignExpanded, perRow: SOURCE_CAMPAIGNS_PER_ROW },
+    ...(allLeadQualityCampaignCards.length > 0
+      ? [{
+          title: 'Lead Quality by Campaign',
+          cards: leadQualityCampaignCards,
+          allCards: allLeadQualityCampaignCards,
+          expanded: leadQualityCampaignExpanded,
+          setExpanded: setLeadQualityCampaignExpanded,
+          perRow: LEAD_QUALITY_CAMPAIGNS_PER_ROW,
+        }]
+      : []),
+    ...(allQualificationCards.length > 0
+      ? [{
+          title: 'Leads Qualification',
+          cards: qualificationCards,
+          allCards: allQualificationCards,
+          expanded: qualificationExpanded,
+          setExpanded: setQualificationExpanded,
+          perRow: QUALIFICATION_CARDS_PER_ROW,
+        }]
+      : []),
     { title: 'Communication Channels', cards: communicationChannelCards, allCards: allCommunicationChannelCards, expanded: communicationChannelExpanded, setExpanded: setCommunicationChannelExpanded, perRow: COMMUNICATION_CHANNELS_PER_ROW },
     { title: 'Offers', cards: offerCards, allCards: allOfferCards, expanded: offersExpanded, setExpanded: setOffersExpanded, perRow: OFFERS_PER_ROW },
   ];

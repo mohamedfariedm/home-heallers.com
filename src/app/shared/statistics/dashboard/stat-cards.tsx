@@ -65,6 +65,16 @@ interface AggregateData {
     qualified_leads: number;
     lead_quality_rate: number;
   };
+  inbound_leads?: {
+    total_leads: number;
+    qualified_leads: number;
+    lead_quality_rate: number;
+  };
+  outbound_leads?: {
+    total_leads: number;
+    qualified_leads: number;
+    lead_quality_rate: number;
+  };
 }
 
 interface StatCardsProps {
@@ -198,6 +208,30 @@ export default function StatCards({
       rate: (data.leads?.lead_quality_rate ?? 0) / 100,
       show: Boolean(data.leads),
     },
+    {
+      permission: 'dashboard.lead_quality_rate',
+      title: 'Inbound Quality Rate',
+      value: `${Number(data.inbound_leads?.lead_quality_rate ?? 0).toFixed(2)}%`,
+      subtitle: data.inbound_leads
+        ? `${data.inbound_leads.qualified_leads.toLocaleString()} / ${data.inbound_leads.total_leads.toLocaleString()} qualified`
+        : undefined,
+      icon: PiChartLineUpBold,
+      metric: 'lead_quality',
+      rate: (data.inbound_leads?.lead_quality_rate ?? 0) / 100,
+      show: Boolean(data.inbound_leads),
+    },
+    {
+      permission: 'dashboard.lead_quality_rate',
+      title: 'Outbound Quality Rate',
+      value: `${Number(data.outbound_leads?.lead_quality_rate ?? 0).toFixed(2)}%`,
+      subtitle: data.outbound_leads
+        ? `${data.outbound_leads.qualified_leads.toLocaleString()} / ${data.outbound_leads.total_leads.toLocaleString()} qualified`
+        : undefined,
+      icon: PiChartLineUpBold,
+      metric: 'lead_quality',
+      rate: (data.outbound_leads?.lead_quality_rate ?? 0) / 100,
+      show: Boolean(data.outbound_leads),
+    },
   ];
 
   const staticCards = [
@@ -241,6 +275,32 @@ export default function StatCards({
       show: Boolean(data.leads),
     },
     {
+      permission: 'dashboard.total_leads',
+      title: 'Inbound Leads',
+      value: String(data.inbound_leads?.total_leads ?? 0),
+      icon: PiUsersBold,
+      bgColor: 'bg-blue-50',
+      textColor: 'text-blue-600',
+      darkBgColor: 'dark:bg-blue-900/20',
+      darkTextColor: 'dark:text-blue-400',
+      blurColor: 'bg-blue-50/50',
+      darkBlurColor: 'dark:bg-blue-900/10',
+      show: Boolean(data.inbound_leads),
+    },
+    {
+      permission: 'dashboard.total_leads',
+      title: 'Outbound Leads',
+      value: String(data.outbound_leads?.total_leads ?? 0),
+      icon: PiUsersBold,
+      bgColor: 'bg-violet-50',
+      textColor: 'text-violet-600',
+      darkBgColor: 'dark:bg-violet-900/20',
+      darkTextColor: 'dark:text-violet-400',
+      blurColor: 'bg-violet-50/50',
+      darkBlurColor: 'dark:bg-violet-900/10',
+      show: Boolean(data.outbound_leads),
+    },
+    {
       permission: 'dashboard.qualified_leads',
       title: 'Qualified Leads',
       value: String(data.leads?.qualified_leads ?? 0),
@@ -252,6 +312,32 @@ export default function StatCards({
       blurColor: 'bg-lime-50/50',
       darkBlurColor: 'dark:bg-lime-900/10',
       show: Boolean(data.leads),
+    },
+    {
+      permission: 'dashboard.qualified_leads',
+      title: 'Inbound Qualified',
+      value: String(data.inbound_leads?.qualified_leads ?? 0),
+      icon: PiListChecksBold,
+      bgColor: 'bg-teal-50',
+      textColor: 'text-teal-600',
+      darkBgColor: 'dark:bg-teal-900/20',
+      darkTextColor: 'dark:text-teal-400',
+      blurColor: 'bg-teal-50/50',
+      darkBlurColor: 'dark:bg-teal-900/10',
+      show: Boolean(data.inbound_leads),
+    },
+    {
+      permission: 'dashboard.qualified_leads',
+      title: 'Outbound Qualified',
+      value: String(data.outbound_leads?.qualified_leads ?? 0),
+      icon: PiListChecksBold,
+      bgColor: 'bg-fuchsia-50',
+      textColor: 'text-fuchsia-600',
+      darkBgColor: 'dark:bg-fuchsia-900/20',
+      darkTextColor: 'dark:text-fuchsia-400',
+      blurColor: 'bg-fuchsia-50/50',
+      darkBlurColor: 'dark:bg-fuchsia-900/10',
+      show: Boolean(data.outbound_leads),
     },
     {
       permission: 'dashboard.total_invoices',
