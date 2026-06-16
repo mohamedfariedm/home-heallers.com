@@ -18,6 +18,8 @@ import TimeSeriesChart from './time-series-chart';
 import SingleMetricChart from './single-metric-chart';
 import { Loader } from '@/components/ui/loader';
 import { toast } from 'react-hot-toast';
+import { useSettings, useUpdateSettings } from '@/framework/site-settings';
+import type { RateColorsByMetric } from '@/types/settings';
 
 interface AggregateData {
   customer_support?: {
@@ -124,6 +126,11 @@ interface AggregateData {
     revenue?: Array<{ date: string; amount: number }>;
     clients?: Array<{ date: string; count: number }>;
   };
+  leads?: {
+    total_leads: number;
+    qualified_leads: number;
+    lead_quality_rate: number;
+  };
   filters_applied?: any[];
   [key: string]: any; // Allow any additional fields
 }
@@ -134,6 +141,21 @@ export default function StatisticsDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [permissions, setPermissions] = useState<string[]>([]);
+  const { data: settingsResponse } = useSettings();
+  const { mutate: updateSettings, isPending: isSavingRateColors } = useUpdateSettings();
+  const fullSettings = settingsResponse?.data?.[0]?.setting;
+  const rateColors = fullSettings?.rate_colors || {};
+
+  const handleSaveRateColors = (
+    nextRateColors: RateColorsByMetric,
+    onSuccess?: () => void
+  ) => {
+    if (!fullSettings) return;
+    updateSettings(
+      { setting: { ...fullSettings, rate_colors: nextRateColors } },
+      { onSuccess }
+    );
+  };
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -262,7 +284,7 @@ export default function StatisticsDashboard() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 @xl:text-3xl dark:text-white">Statistics Dashboard</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Monitor reservations, revenue, and customer support metrics
+            Monitor reservations, revenue, customer support, and lead quality metrics
           </p>
         </div>
       </div>
@@ -277,7 +299,13 @@ export default function StatisticsDashboard() {
       ) : (
         <div className="space-y-6">
           {/* Stat Cards */}
-          <StatCards data={aggregateData} hasPermission={hasPermission} />
+          <StatCards
+            data={aggregateData}
+            hasPermission={hasPermission}
+            rateColors={rateColors}
+            onSaveRateColors={handleSaveRateColors}
+            isSavingRateColors={isSavingRateColors}
+          />
 
           {/* Overview Section: Status & Support Breakdowns */}
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
@@ -416,7 +444,8 @@ export default function StatisticsDashboard() {
           {/* Empty State */}
           {aggregateData && 
            aggregateData.reservations?.total === 0 && 
-           aggregateData.customer_support?.total === 0 && (
+           aggregateData.customer_support?.total === 0 &&
+           (aggregateData.leads?.total_leads ?? 0) === 0 && (
             <div className="mt-6 rounded-lg border border-gray-200 bg-gray-50 p-12 text-center dark:border-gray-700 dark:bg-gray-800">
               <p className="text-lg font-medium text-gray-900 dark:text-white">No data found</p>
               <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">

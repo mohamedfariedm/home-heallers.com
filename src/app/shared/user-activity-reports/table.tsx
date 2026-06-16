@@ -87,6 +87,11 @@ export default function UserActivityReportsTable({
     event: searchParams.get('event') || '',
     log_name: searchParams.get('log_name') || '',
     subject_type: searchParams.get('subject_type') || '',
+    only_created: searchParams.get('only_created') || '',
+    only_updated: searchParams.get('only_updated') || '',
+    only_deleted: searchParams.get('only_deleted') || '',
+    only_login_related: searchParams.get('only_login_related') || '',
+    only_request_related: searchParams.get('only_request_related') || '',
   };
 
   const sortConfig = useMemo(

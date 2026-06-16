@@ -67,3 +67,39 @@ export function buildUserActivityDetailPath(
   const qs = params?.toString();
   return `/${locale}/kpis/users/${userId}${qs ? `?${qs}` : ''}`;
 }
+
+/** Synthetic by_log_name entries on the list endpoint (not real Spatie channels). */
+export function formatUserActivityLogName(logName: string): string {
+  if (logName === 'inbound') return 'Inbound';
+  if (logName === 'outbound') return 'Outbound';
+  return logName;
+}
+
+export function formatSourceCampaignLabel(value: string | null): string {
+  if (value == null || value === '' || value === 'null') return 'No campaign';
+  return value;
+}
+
+export function formatLeadStatusLabel(value: string | null): string {
+  if (value == null || value === '' || value === 'null') return 'No status';
+  return value;
+}
+
+/** Map API customer-supports drill-down links to the frontend list page. */
+export function buildCustomerSupportListPath(
+  locale: string,
+  apiLink: string,
+  supportType: 'operation' | 'marketing' = 'operation'
+): string {
+  try {
+    const url = new URL(apiLink);
+    const params = new URLSearchParams(url.search);
+    const basePath =
+      supportType === 'marketing'
+        ? '/customer-supports-marketing'
+        : '/customer-supports-operation';
+    return `/${locale}${basePath}?${params.toString()}`;
+  } catch {
+    return `/${locale}/customer-supports-operation`;
+  }
+}

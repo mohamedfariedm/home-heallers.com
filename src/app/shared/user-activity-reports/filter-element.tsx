@@ -6,6 +6,7 @@ import StatusField from '@/components/controlled-table/status-field';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Text } from '@/components/ui/text';
+import { Switch } from '@/components/ui/switch';
 import { formatDate } from '@/utils/format-date';
 import { useUserActivityReportFilterOptions } from '@/framework/user-activity-reports';
 import type { UserActivityFilterOptions } from '@/types/user-activity-report';
@@ -17,6 +18,20 @@ const eventOptions = [
   { value: 'deleted', name: 'deleted', label: 'Deleted' },
 ];
 
+const customerSupportTypeOptions = [
+  { value: '', name: 'all', label: 'All lead activity' },
+  { value: 'operation', name: 'operation', label: 'Inbound (operation leads)' },
+  { value: 'marketing', name: 'marketing', label: 'Outbound (marketing leads)' },
+];
+
+const BOOLEAN_FILTERS = [
+  'only_created',
+  'only_updated',
+  'only_deleted',
+  'only_login_related',
+  'only_request_related',
+] as const;
+
 type FilterElementProps = {
   filters: Record<string, unknown>;
   updateFilter: (columnId: string, filterValue: string | unknown[]) => void;
@@ -26,6 +41,10 @@ type FilterElementProps = {
 function toSelectValue(value: unknown): string {
   if (value == null) return '';
   return String(value);
+}
+
+function isTruthy(value: unknown): boolean {
+  return value === 'true' || value === '1' || value === true;
 }
 
 function FilterField({
@@ -77,12 +96,26 @@ export default function UserActivityFilterElement({
     { value: '', name: 'all', label: 'All entity types' },
     ...(filterOptions?.subject_types ?? []).map(
       (item: { value: string; label: string }) => ({
-        value: item.value,
-        name: item.value,
+        value: item.label,
+        name: item.label,
         label: item.label,
       })
     ),
   ];
+
+  const setBooleanFilter = (key: (typeof BOOLEAN_FILTERS)[number], checked: boolean) => {
+    if (checked) {
+      BOOLEAN_FILTERS.forEach((name) => {
+        if (name !== key) updateFilter(name, '');
+      });
+      updateFilter(key, 'true');
+      if (key === 'only_created') updateFilter('event', 'created');
+      if (key === 'only_updated') updateFilter('event', 'updated');
+      if (key === 'only_deleted') updateFilter('event', 'deleted');
+      return;
+    }
+    updateFilter(key, '');
+  };
 
   return (
     <div className="flex w-full min-w-0 flex-col gap-5">
@@ -107,7 +140,10 @@ export default function UserActivityFilterElement({
           className="w-full"
           options={eventOptions}
           value={toSelectValue(filters.event)}
-          onChange={(value) => updateFilter('event', toSelectValue(value))}
+          onChange={(value) => {
+            BOOLEAN_FILTERS.slice(0, 3).forEach((name) => updateFilter(name, ''));
+            updateFilter('event', toSelectValue(value));
+          }}
           getOptionValue={(option) => option.value}
           displayValue={(selected: string) =>
             eventOptions.find((option) => option.value === selected)?.label ??
@@ -118,12 +154,56 @@ export default function UserActivityFilterElement({
         />
       </FilterField>
 
+      <FilterField label="Quick filters">
+        <div className="space-y-3 rounded-md border border-gray-200 p-3 dark:border-gray-700">
+          {(
+            [
+              ['only_created', 'Created only'],
+              ['only_updated', 'Updated only'],
+              ['only_deleted', 'Deleted only'],
+              ['only_login_related', 'Login / authentication only'],
+              ['only_request_related', 'Import / bulk operations only'],
+            ] as const
+          ).map(([key, label]) => (
+            <div key={key} className="flex items-center justify-between gap-3">
+              <Text className="text-sm text-gray-600">{label}</Text>
+              <Switch
+                checked={isTruthy(filters[key])}
+                onChange={(checked) => setBooleanFilter(key, checked)}
+              />
+            </div>
+          ))}
+        </div>
+      </FilterField>
+
+      <FilterField label="Lead activity type">
+        <StatusField
+          className="w-full"
+          options={customerSupportTypeOptions}
+          value={toSelectValue(filters.customer_support_type)}
+          onChange={(value) => {
+            updateFilter('customer_support_type', toSelectValue(value));
+            if (toSelectValue(value)) updateFilter('log_name', '');
+          }}
+          getOptionValue={(option) => option.value}
+          displayValue={(selected: string) =>
+            customerSupportTypeOptions.find((option) => option.value === selected)
+              ?.label ?? selected
+          }
+          placeholder="Select lead type"
+          selectClassName="h-10 w-full min-w-0"
+        />
+      </FilterField>
+
       <FilterField label="Log name">
         <StatusField
           className="w-full"
           options={logNameOptions}
           value={toSelectValue(filters.log_name)}
-          onChange={(value) => updateFilter('log_name', toSelectValue(value))}
+          onChange={(value) => {
+            updateFilter('log_name', toSelectValue(value));
+            if (toSelectValue(value)) updateFilter('customer_support_type', '');
+          }}
           getOptionValue={(option) => option.value}
           displayValue={(selected: string) =>
             logNameOptions.find((option) => option.value === selected)?.label ??

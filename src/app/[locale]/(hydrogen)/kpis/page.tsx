@@ -6,7 +6,7 @@ import { useSession } from 'next-auth/react';
 import TableLayout from '@/app/[locale]/(hydrogen)/tables/table-layout';
 import Spinner from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
-import { Button } from '@/components/ui/button';
+import KpiViewTabs from '@/app/shared/kpis/kpi-view-tabs';
 import UserActivityReportsTable from '@/app/shared/user-activity-reports/table';
 import UserActivityStatisticsCards from '@/app/shared/user-activity-reports/statistics-cards';
 import UserActivityExportButton from '@/app/shared/user-activity-reports/export-button';
@@ -36,7 +36,6 @@ import type {
   DoctorActivityListResponse,
   DoctorActivityRow,
 } from '@/types/doctor-activity-report';
-import cn from '@/utils/class-names';
 
 const pageHeader = {
   title: 'KPIs',
@@ -185,47 +184,34 @@ export default function KpisPage() {
       canCreate={false}
       canImport={false}
     >
-      {(showTabs ||
-        kpisPermissions.viewUsers ||
-        kpisPermissions.viewDoctors) && (
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-gray-200 pb-4 dark:border-gray-700">
-          {showTabs ? (
-            <div className="flex flex-wrap gap-2">
-              <Button
-                variant={activeView === 'users' ? 'solid' : 'outline'}
-                onClick={() => setView('users')}
-                className={cn(
-                  activeView === 'users' &&
-                    'bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900'
-                )}
-              >
-                Users
-              </Button>
-              <Button
-                variant={activeView === 'doctors' ? 'solid' : 'outline'}
-                onClick={() => setView('doctors')}
-                className={cn(
-                  activeView === 'doctors' &&
-                    'bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900'
-                )}
-              >
-                Doctors
-              </Button>
-            </div>
-          ) : (
-            <Text className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              {activeView === 'doctors' ? 'Doctor KPIs' : 'User KPIs'}
-            </Text>
-          )}
+      <div className="@container space-y-6">
+        {(showTabs ||
+          kpisPermissions.viewUsers ||
+          kpisPermissions.viewDoctors) && (
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            {showTabs ? (
+              <KpiViewTabs
+                tabs={[
+                  { id: 'users', label: 'Users' },
+                  { id: 'doctors', label: 'Doctors' },
+                ]}
+                activeTab={activeView}
+                onChange={(tabId) => setView(tabId as KpiView)}
+              />
+            ) : (
+              <Text className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                {activeView === 'doctors' ? 'Doctor KPIs' : 'User KPIs'}
+              </Text>
+            )}
 
-          {activeView === 'users' && kpisPermissions.exportUsers && (
-            <UserActivityExportButton disabled={exportDisabled} />
-          )}
-          {activeView === 'doctors' && kpisPermissions.exportDoctors && (
-            <DoctorActivityExportButton disabled={exportDisabled} />
-          )}
-        </div>
-      )}
+            {activeView === 'users' && kpisPermissions.exportUsers && (
+              <UserActivityExportButton disabled={exportDisabled} />
+            )}
+            {activeView === 'doctors' && kpisPermissions.exportDoctors && (
+              <DoctorActivityExportButton disabled={exportDisabled} />
+            )}
+          </div>
+        )}
 
       {isLoading ? (
         <div className="m-auto py-16">
@@ -240,7 +226,7 @@ export default function KpisPage() {
           <DoctorActivityStatisticsCards statistics={doctorListData?.statistics} />
 
           {totalItems === 0 && (
-            <div className="mb-4 rounded-md border border-dashed border-gray-200 bg-gray-50 px-4 py-3 text-center dark:border-gray-700 dark:bg-gray-800/50">
+            <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-6 text-center dark:border-gray-700 dark:bg-gray-800/50">
               <Text className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 {hasFilters || searchParams.get('search')
                   ? 'No doctors match your filters.'
@@ -270,7 +256,7 @@ export default function KpisPage() {
           <UserActivityStatisticsCards statistics={userListData?.statistics} />
 
           {totalItems === 0 && (
-            <div className="mb-4 rounded-md border border-dashed border-gray-200 bg-gray-50 px-4 py-3 text-center dark:border-gray-700 dark:bg-gray-800/50">
+            <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-6 text-center dark:border-gray-700 dark:bg-gray-800/50">
               <Text className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 {hasFilters || searchParams.get('search')
                   ? 'No staff users match your filters.'
@@ -296,6 +282,7 @@ export default function KpisPage() {
           )}
         </>
       )}
+      </div>
     </TableLayout>
   );
 }

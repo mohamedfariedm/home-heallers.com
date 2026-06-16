@@ -9,6 +9,7 @@ import {
   PiPhoneBold,
   PiCaretDownBold,
   PiCaretUpBold,
+  PiChartLineUpBold,
 } from 'react-icons/pi';
 import cn from '@/utils/class-names';
 import { useRouter, usePathname } from 'next/navigation';
@@ -40,6 +41,11 @@ interface KanbanStatistics {
     count?: number;
     link?: string;
   }>;
+  leads?: {
+    total_leads?: number;
+    qualified_leads?: number;
+    lead_quality_rate?: number;
+  };
 }
 
 interface KanbanStatisticsCardsProps {
@@ -411,6 +417,48 @@ export default function KanbanStatisticsCards({
     };
   });
 
+  // Row 2: Lead quality metrics
+  const leadCards = statistics.leads
+    ? [
+        {
+          title: 'Total Leads',
+          value: statistics.leads.total_leads || 0,
+          icon: PiUsersBold,
+          bgColor: 'bg-sky-50',
+          textColor: 'text-sky-600',
+          darkBgColor: 'dark:bg-sky-900/20',
+          darkTextColor: 'dark:text-sky-400',
+          blurColor: 'bg-sky-50/50',
+          darkBlurColor: 'dark:bg-sky-900/10',
+          compact: true,
+        },
+        {
+          title: 'Qualified Leads',
+          value: statistics.leads.qualified_leads || 0,
+          icon: PiCheckCircleBold,
+          bgColor: 'bg-lime-50',
+          textColor: 'text-lime-600',
+          darkBgColor: 'dark:bg-lime-900/20',
+          darkTextColor: 'dark:text-lime-400',
+          blurColor: 'bg-lime-50/50',
+          darkBlurColor: 'dark:bg-lime-900/10',
+          compact: true,
+        },
+        {
+          title: 'Lead Quality Rate',
+          value: `${Number(statistics.leads.lead_quality_rate || 0).toFixed(2)}%`,
+          icon: PiChartLineUpBold,
+          bgColor: 'bg-orange-50',
+          textColor: 'text-orange-600',
+          darkBgColor: 'dark:bg-orange-900/20',
+          darkTextColor: 'dark:text-orange-400',
+          blurColor: 'bg-orange-50/50',
+          darkBlurColor: 'dark:bg-orange-900/10',
+          compact: true,
+        },
+      ]
+    : [];
+
   // Row 3: Clients
   const clientCards = [
     {
@@ -559,6 +607,9 @@ export default function KanbanStatisticsCards({
 
   const rows = [
     { title: 'Status Statistics', cards: statusCards },
+    ...(leadCards.length > 0
+      ? [{ title: 'Lead Quality', cards: leadCards }]
+      : []),
     { title: 'Clients', cards: clientCards },
     { title: 'Source Campaigns', cards: sourceCampaignCards, allCards: allSourceCampaignCards, expanded: sourceCampaignExpanded, setExpanded: setSourceCampaignExpanded, perRow: SOURCE_CAMPAIGNS_PER_ROW },
     { title: 'Communication Channels', cards: communicationChannelCards, allCards: allCommunicationChannelCards, expanded: communicationChannelExpanded, setExpanded: setCommunicationChannelExpanded, perRow: COMMUNICATION_CHANNELS_PER_ROW },

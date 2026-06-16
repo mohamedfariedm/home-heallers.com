@@ -13,15 +13,40 @@ export interface EventBucket {
   link: string;
 }
 
+export interface RecordEventBucket {
+  event: string | null;
+  count: number;
+}
+
 export interface LogNameBucket {
   log_name: string;
   count: number;
   link: string;
 }
 
+export interface SourceCampaignBucket {
+  source_campaign: string | null;
+  count: number;
+  link: string;
+}
+
+export interface LeadStatusBucket {
+  status: string | null;
+  count: number;
+  link: string;
+}
+
+export type CustomerSupportTypeFilter = 'operation' | 'marketing';
+
 export interface ModelBucket {
   type: string;
   count: number;
+}
+
+export interface UserActivityModelRef {
+  type: string;
+  id: number;
+  label: string | null;
 }
 
 export interface UserActivityRow {
@@ -75,12 +100,23 @@ export interface UserActivityListResponse {
   message: string;
 }
 
-export type TimelineItem = ActivityLog;
+export type UserActivityLogItem = ActivityLog;
+
+export interface UserActivityRecord {
+  model: UserActivityModelRef;
+  total_actions: number;
+  by_event: RecordEventBucket[];
+  first_activity_at: string | null;
+  last_activity_at: string | null;
+  activities: UserActivityLogItem[];
+}
 
 export interface UserActivitySummary {
   total_actions: number;
   by_event: EventBucket[];
   by_log_name: LogNameBucket[];
+  by_source_campaign?: SourceCampaignBucket[];
+  by_status?: LeadStatusBucket[];
   most_modified_models: ModelBucket[];
   first_activity_at: string | null;
   last_activity_at: string | null;
@@ -94,7 +130,7 @@ export interface UserActivityDetailResponse {
   data: {
     user: UserRef;
     summary: UserActivitySummary;
-    timeline: TimelineItem[];
+    records: UserActivityRecord[];
   };
   links: PaginationLinks;
   meta: { current_page: number; per_page: number; total: number };

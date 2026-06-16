@@ -6,7 +6,7 @@ import { useTable } from '@/hooks/use-table';
 import { useColumn } from '@/hooks/use-column';
 import ControlledTable from '@/components/controlled-table';
 import { getColumns } from '@/app/shared/activity-logs/columns';
-import type { TimelineItem } from '@/types/user-activity-report';
+import type { ActivityLog } from '@/types/activity-log';
 
 const SORTABLE_COLUMNS = new Set(['created_at']);
 
@@ -14,7 +14,7 @@ export default function UserActivityTimelineTable({
   data = [],
   totalItems,
 }: {
-  data: TimelineItem[];
+  data: ActivityLog[];
   totalItems: number;
 }) {
   const searchParams = useSearchParams();

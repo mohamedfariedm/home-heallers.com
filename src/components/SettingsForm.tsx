@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import { Settings, Banner, Social, SEOData, BusinessInfo, MediaFolder } from '../types/settings';
+import { Settings, Banner, Social, SEOData, BusinessInfo, MediaFolder, RateColorsByMetric } from '../types/settings';
 import BannerSection from './BannerSection';
 import SocialSection from './SocialSection';
 import AppLinksSection from './AppLinksSection';
 import SEOSection from './SEOSection';
-import { Save, Settings as SettingsIcon, Image, Share2, Smartphone, Search, FileText, Shield, Building2, FolderOpen } from 'lucide-react';
+import { Save, Settings as SettingsIcon, Image, Share2, Smartphone, Search, FileText, Shield, Building2, FolderOpen, Palette } from 'lucide-react';
 import TermsSection from './TermsSection';
 import ConditionsSection from './ConditionsSection';
 import BusinessInfoSection from './BusinessInfoSection';
 import FolderManagementSection from './FolderManagementSection';
+import RateColorsSection from './RateColorsSection';
 
 interface SettingsFormProps {
   initialSettings: Settings;
@@ -28,6 +29,7 @@ const tabs = [
   { id: 'terms', label: 'Terms & Conditions', icon: FileText },
   { id: 'conditions', label: 'General Conditions', icon: Shield },
   { id: 'business-info', label: 'Business Information', icon: Building2 },
+  { id: 'rate-colors', label: 'Rate Colors', icon: Palette },
   // { id: 'folder-management', label: 'Folder Management', icon: FolderOpen },
 ];
 
@@ -74,6 +76,10 @@ const updateBusinessInfo = (business_info: BusinessInfo) => {
 
 const updateMediaFolders = (media_folders: MediaFolder[]) => {
   setSettings(prev => ({ ...prev, media_folders }));
+};
+
+const updateRateColors = (rate_colors: RateColorsByMetric) => {
+  setSettings(prev => ({ ...prev, rate_colors }));
 };
 
   const renderTabContent = () => {
@@ -127,6 +133,13 @@ const updateMediaFolders = (media_folders: MediaFolder[]) => {
             brand: '',
           }}
           onUpdate={updateBusinessInfo}
+        />
+      );
+    case "rate-colors":
+      return (
+        <RateColorsSection
+          rateColors={settings.rate_colors || {}}
+          onUpdate={updateRateColors}
         />
       );
     // case 'folder-management':

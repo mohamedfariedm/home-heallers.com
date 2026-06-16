@@ -1,7 +1,7 @@
 'use client';
 
 import dayjs from 'dayjs';
-import { PiArrowRight, PiXBold } from 'react-icons/pi';
+import { PiXBold } from 'react-icons/pi';
 import { ActionIcon } from '@/components/ui/action-icon';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,7 @@ import {
   formatSubjectLabel,
   getSubjectHref,
 } from '@/app/shared/activity-logs/subject-link';
+import { ActivityLogChangeDiff } from '@/app/shared/activity-logs/activity-log-diff';
 import type { ActivityLog } from '@/types/activity-log';
 
 function isDateString(value: unknown): boolean {
@@ -24,6 +25,10 @@ function isDateString(value: unknown): boolean {
   return isoDateRegex.test(value) && !Number.isNaN(Date.parse(value));
 }
 
+function formatLabel(key: string): string {
+  return key.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
+}
+
 function formatValue(value: unknown): string {
   if (value === null || value === undefined || value === '') return '';
   if (isDateString(value)) {
@@ -31,10 +36,6 @@ function formatValue(value: unknown): string {
   }
   if (typeof value === 'object') return JSON.stringify(value, null, 2);
   return String(value);
-}
-
-function formatLabel(key: string): string {
-  return key.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
 }
 
 function EventBadge({ event }: { event: ActivityLog['event'] }) {
@@ -53,55 +54,6 @@ function EventBadge({ event }: { event: ActivityLog['event'] }) {
     <Badge variant="flat" color={color} className="capitalize">
       {event}
     </Badge>
-  );
-}
-
-function ChangeDiff({
-  oldValues,
-  newValues,
-}: {
-  oldValues: Record<string, unknown>;
-  newValues: Record<string, unknown>;
-}) {
-  const keys = Array.from(
-    new Set([...Object.keys(oldValues), ...Object.keys(newValues)])
-  );
-
-  return (
-    <div className="space-y-2">
-      {keys.map((key) => {
-        const oldValue = oldValues[key];
-        const newValue = newValues[key];
-        const formattedOld = formatValue(oldValue);
-        const formattedNew = formatValue(newValue);
-
-        return (
-          <div
-            key={key}
-            className="rounded-md border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800/50"
-          >
-            <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-              {formatLabel(key)}
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="flex-1 rounded-md bg-red-50 px-2 py-1.5 text-sm dark:bg-red-900/20">
-                <div className="text-xs text-red-600 dark:text-red-400">Before</div>
-                <div className="font-medium text-red-700 dark:text-red-300">
-                  {formattedOld || <span className="italic text-gray-400">(none)</span>}
-                </div>
-              </div>
-              <PiArrowRight className="h-4 w-4 shrink-0 text-gray-400" />
-              <div className="flex-1 rounded-md bg-green-50 px-2 py-1.5 text-sm dark:bg-green-900/20">
-                <div className="text-xs text-green-600 dark:text-green-400">After</div>
-                <div className="font-medium text-green-700 dark:text-green-300">
-                  {formattedNew || <span className="italic text-gray-400">(none)</span>}
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      })}
-    </div>
   );
 }
 
@@ -221,7 +173,10 @@ function ActivityLogDetailsContent({ log }: { log: ActivityLog }) {
             {hasDiff ? 'Changed Values' : 'Properties'}
           </Title>
           {hasDiff ? (
-            <ChangeDiff oldValues={log.old_values!} newValues={log.new_values!} />
+            <ActivityLogChangeDiff
+              oldValues={log.old_values!}
+              newValues={log.new_values!}
+            />
           ) : (
             <PropertiesList properties={log.properties} />
           )}

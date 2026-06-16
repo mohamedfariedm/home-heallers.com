@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import {
   PiCalendarCheckBold,
   PiUsersBold,
@@ -9,13 +10,18 @@ import {
   PiReceiptBold,
   PiClockBold,
   PiRepeatBold,
+  PiListChecksBold,
+  PiChartLineUpBold,
 } from 'react-icons/pi';
 import cn from '@/utils/class-names';
+import type { RateColorRange, RateColorsByMetric } from '@/types/settings';
+import RateColorsModal from './rate-colors-modal';
 import {
   formatRatePercent,
   getPerformanceColors,
   getPerformanceLabel,
   getRatePerformance,
+  type RateMetricKey,
 } from './metric-thresholds';
 import type { ConversionRateItem } from './conversion-rate-chart';
 
@@ -54,12 +60,20 @@ interface AggregateData {
     rate: number;
   };
   conversion_rate?: ConversionRateItem[];
+  leads?: {
+    total_leads: number;
+    qualified_leads: number;
+    lead_quality_rate: number;
+  };
 }
 
 interface StatCardsProps {
   data: AggregateData | null;
   className?: string;
   hasPermission?: (permission: string) => boolean;
+  rateColors?: RateColorsByMetric;
+  onSaveRateColors?: (rateColors: RateColorsByMetric, onSuccess?: () => void) => void;
+  isSavingRateColors?: boolean;
 }
 
 function computeOverallConversionRate(
@@ -79,8 +93,38 @@ function computeOverallConversionRate(
   return 0;
 }
 
-export default function StatCards({ data, className, hasPermission }: StatCardsProps) {
+const DEFAULT_COLOR = '#22c55e';
+
+function isHexColor(value: string) {
+  return /^#([0-9A-Fa-f]{6})$/.test(value);
+}
+
+function withHexAlpha(hexColor: string, alphaHex: string) {
+  if (!isHexColor(hexColor)) return DEFAULT_COLOR;
+  return `${hexColor}${alphaHex}`;
+}
+
+function getMatchedRateRange(rate: number, ranges?: RateColorRange[]) {
+  if (!ranges || ranges.length === 0) return null;
+  const percent = rate * 100;
+  const sorted = [...ranges].sort((a, b) => a.from - b.from);
+  return sorted.find((range) => percent >= range.from && percent <= range.to) ?? null;
+}
+
+export default function StatCards({
+  data,
+  className,
+  hasPermission,
+  rateColors,
+  onSaveRateColors,
+  isSavingRateColors,
+}: StatCardsProps) {
+  const [editingMetric, setEditingMetric] = useState<RateMetricKey | null>(null);
+
   if (!data) return null;
+
+  const canEditRateColors =
+    Boolean(onSaveRateColors) && (hasPermission ? hasPermission('settings') : true);
 
   const overallConversionRate = computeOverallConversionRate(
     data.conversion_rate,
@@ -94,7 +138,7 @@ export default function StatCards({ data, className, hasPermission }: StatCardsP
     value: string;
     subtitle?: string;
     icon: typeof PiArrowUpRightBold;
-    metric: 'reservation_rate' | 'conversion_rate' | 'package_conversion';
+    metric: RateMetricKey;
     rate: number;
     show: boolean;
   }> = [
@@ -142,6 +186,18 @@ export default function StatCards({ data, className, hasPermission }: StatCardsP
       rate: data.package_conversion_rate?.rate ?? 0,
       show: Boolean(data.package_conversion_rate),
     },
+    {
+      permission: 'dashboard.lead_quality_rate',
+      title: 'Lead Quality Rate',
+      value: `${Number(data.leads?.lead_quality_rate ?? 0).toFixed(2)}%`,
+      subtitle: data.leads
+        ? `${data.leads.qualified_leads.toLocaleString()} / ${data.leads.total_leads.toLocaleString()} qualified`
+        : undefined,
+      icon: PiChartLineUpBold,
+      metric: 'lead_quality',
+      rate: (data.leads?.lead_quality_rate ?? 0) / 100,
+      show: Boolean(data.leads),
+    },
   ];
 
   const staticCards = [
@@ -170,6 +226,32 @@ export default function StatCards({ data, className, hasPermission }: StatCardsP
       blurColor: 'bg-indigo-50/50',
       darkBlurColor: 'dark:bg-indigo-900/10',
       show: true,
+    },
+    {
+      permission: 'dashboard.total_leads',
+      title: 'Total Leads',
+      value: String(data.leads?.total_leads ?? 0),
+      icon: PiUsersBold,
+      bgColor: 'bg-sky-50',
+      textColor: 'text-sky-600',
+      darkBgColor: 'dark:bg-sky-900/20',
+      darkTextColor: 'dark:text-sky-400',
+      blurColor: 'bg-sky-50/50',
+      darkBlurColor: 'dark:bg-sky-900/10',
+      show: Boolean(data.leads),
+    },
+    {
+      permission: 'dashboard.qualified_leads',
+      title: 'Qualified Leads',
+      value: String(data.leads?.qualified_leads ?? 0),
+      icon: PiListChecksBold,
+      bgColor: 'bg-lime-50',
+      textColor: 'text-lime-600',
+      darkBgColor: 'dark:bg-lime-900/20',
+      darkTextColor: 'dark:text-lime-400',
+      blurColor: 'bg-lime-50/50',
+      darkBlurColor: 'dark:bg-lime-900/10',
+      show: Boolean(data.leads),
     },
     {
       permission: 'dashboard.total_invoices',
@@ -251,35 +333,75 @@ export default function StatCards({ data, className, hasPermission }: StatCardsP
   );
 
   return (
+    <>
     <div className={cn('flex w-full flex-wrap gap-5 pb-4', className)}>
       {visibleRateCards.map((card) => {
         const status = getRatePerformance(card.rate, card.metric);
         const colors = getPerformanceColors(status);
+        const matchedRange = getMatchedRateRange(card.rate, rateColors?.[card.metric]);
+        const customColor = matchedRange?.color && isHexColor(matchedRange.color) ? matchedRange.color : null;
+        const customLabel = matchedRange?.label?.trim();
 
         return (
           <div
             key={card.permission}
-            className="relative min-w-[180px] flex-1 basis-[calc(20%-16px)] overflow-hidden rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
+            role={canEditRateColors ? 'button' : undefined}
+            tabIndex={canEditRateColors ? 0 : undefined}
+            onClick={
+              canEditRateColors
+                ? () => setEditingMetric(card.metric)
+                : undefined
+            }
+            onKeyDown={
+              canEditRateColors
+                ? (event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      setEditingMetric(card.metric);
+                    }
+                  }
+                : undefined
+            }
+            className={cn(
+              'relative min-w-[180px] flex-1 basis-[calc(20%-16px)] overflow-hidden rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800',
+              canEditRateColors && 'cursor-pointer'
+            )}
           >
             <div className="flex items-center justify-between">
               <div
                 className={cn(
                   'flex h-12 w-12 items-center justify-center rounded-lg',
-                  colors.bgColor,
-                  colors.textColor,
-                  colors.darkBgColor,
-                  colors.darkTextColor
+                  customColor ? '' : colors.bgColor,
+                  customColor ? '' : colors.textColor,
+                  customColor ? '' : colors.darkBgColor,
+                  customColor ? '' : colors.darkTextColor
                 )}
+                style={
+                  customColor
+                    ? {
+                        backgroundColor: withHexAlpha(customColor, '1A'),
+                        color: customColor,
+                      }
+                    : undefined
+                }
               >
                 <card.icon className="h-6 w-6" />
               </div>
               <span
                 className={cn(
                   'rounded-full px-2 py-0.5 text-xs font-medium',
-                  colors.badgeClass
+                  customColor ? '' : colors.badgeClass
                 )}
+                style={
+                  customColor
+                    ? {
+                        color: customColor,
+                        backgroundColor: withHexAlpha(customColor, '26'),
+                      }
+                    : undefined
+                }
               >
-                {getPerformanceLabel(status)}
+                {customLabel || getPerformanceLabel(status)}
               </span>
             </div>
 
@@ -290,9 +412,10 @@ export default function StatCards({ data, className, hasPermission }: StatCardsP
               <p
                 className={cn(
                   'mt-1 text-3xl font-bold',
-                  colors.textColor,
-                  colors.darkTextColor
+                  customColor ? '' : colors.textColor,
+                  customColor ? '' : colors.darkTextColor
                 )}
+                style={customColor ? { color: customColor } : undefined}
               >
                 {card.value}
               </p>
@@ -306,9 +429,16 @@ export default function StatCards({ data, className, hasPermission }: StatCardsP
             <div
               className={cn(
                 'absolute -right-4 -top-4 -z-10 h-24 w-24 rounded-full blur-2xl',
-                colors.blurColor,
-                colors.darkBlurColor
+                customColor ? '' : colors.blurColor,
+                customColor ? '' : colors.darkBlurColor
               )}
+              style={
+                customColor
+                  ? {
+                      backgroundColor: withHexAlpha(customColor, '33'),
+                    }
+                  : undefined
+              }
             />
           </div>
         );
@@ -352,5 +482,17 @@ export default function StatCards({ data, className, hasPermission }: StatCardsP
         </div>
       ))}
     </div>
+
+    <RateColorsModal
+      isOpen={Boolean(editingMetric)}
+      onClose={() => setEditingMetric(null)}
+      metric={editingMetric}
+      rateColors={rateColors || {}}
+      onSave={(nextRateColors, onSuccess) => {
+        onSaveRateColors?.(nextRateColors, onSuccess ?? (() => setEditingMetric(null)));
+      }}
+      isSaving={isSavingRateColors}
+    />
+    </>
   );
 }

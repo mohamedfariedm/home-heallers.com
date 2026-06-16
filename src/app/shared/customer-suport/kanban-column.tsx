@@ -45,6 +45,7 @@ interface KanbanColumnProps {
   canEdit?: boolean;
   canViewDetails?: boolean;
   canViewActivityLogs?: boolean;
+  canViewQualifications?: boolean;
 }
 
 const columnColors: Record<
@@ -90,6 +91,7 @@ export default function KanbanColumn({
   canEdit = true,
   canViewDetails = true,
   canViewActivityLogs = true,
+  canViewQualifications = true,
 }: KanbanColumnProps) {
   const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
   const { setNodeRef, isOver } = useDroppable({
@@ -164,6 +166,7 @@ export default function KanbanColumn({
                   canEdit={canEdit}
                   canViewDetails={canViewDetails}
                   canViewActivityLogs={canViewActivityLogs}
+                  canViewQualifications={canViewQualifications}
                 />
               ))}
             </div>

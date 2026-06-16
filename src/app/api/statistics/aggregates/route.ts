@@ -78,7 +78,12 @@ export async function GET(request: NextRequest) {
           reservations: { by_status: [], total: 0 },
           invoices: { by_status: [], total: 0 },
           doctors: { total: 0 },
-          clients: { total: 0 }
+          clients: { total: 0 },
+          leads: {
+            total_leads: 0,
+            qualified_leads: 0,
+            lead_quality_rate: 0,
+          },
         }
       },
       { status: 500 }

@@ -217,6 +217,21 @@ export interface MediaFolder {
   files: MediaFile[];
 }
 
+export type RateMetricKey =
+  | 'reservation_rate'
+  | 'conversion_rate'
+  | 'package_conversion'
+  | 'lead_quality';
+
+export interface RateColorRange {
+  from: number;
+  to: number;
+  color: string;
+  label?: string;
+}
+
+export type RateColorsByMetric = Partial<Record<RateMetricKey, RateColorRange[]>>;
+
 export interface Settings {
   banners: Banner[];
   social: Social;
@@ -228,4 +243,5 @@ export interface Settings {
   business_info?: BusinessInfo;
   landing_pages?: LandingPage[];
   media_folders?: MediaFolder[];
+  rate_colors?: RateColorsByMetric;
 }

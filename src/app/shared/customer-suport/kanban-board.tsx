@@ -53,12 +53,13 @@ interface CustomerSupportKanbanProps {
     itemId: number,
     newStatus: string,
     oldStatus: string
-  ) => void;
+  ) => boolean | void | Promise<boolean | void>;
   canMoveStatus?: boolean;
   canSendWhatsapp?: boolean;
   canEdit?: boolean;
   canViewDetails?: boolean;
   canViewActivityLogs?: boolean;
+  canViewQualifications?: boolean;
 }
 
 export default function CustomerSupportKanban({
@@ -70,6 +71,7 @@ export default function CustomerSupportKanban({
   canEdit = true,
   canViewDetails = true,
   canViewActivityLogs = true,
+  canViewQualifications = true,
 }: CustomerSupportKanbanProps) {
   const [activeId, setActiveId] = useState<number | null>(null);
   const [oldStatusMap, setOldStatusMap] = useState<Record<number, string>>({});
@@ -247,10 +249,13 @@ export default function CustomerSupportKanban({
     // Check if status actually changed
     if (oldStatus.toLowerCase() !== newStatus) {
       if (!canMoveStatus) return;
-      // Optimistically move item
-      setMovedStatusMap((prev) => ({ ...prev, [activeId]: newStatus }));
-      // Call the callback to update on server
-      onStatusChange(activeId, newStatus, oldStatus);
+
+      void (async () => {
+        const canProceed = await onStatusChange(activeId, newStatus, oldStatus);
+        if (canProceed !== false) {
+          setMovedStatusMap((prev) => ({ ...prev, [activeId]: newStatus }));
+        }
+      })();
     }
   };
 
@@ -303,6 +308,7 @@ export default function CustomerSupportKanban({
               canEdit={canEdit}
               canViewDetails={canViewDetails}
               canViewActivityLogs={canViewActivityLogs}
+              canViewQualifications={canViewQualifications}
               onStatusChange={(itemId, newStatus) =>
                 onStatusChange(itemId, newStatus, column.status)
               }

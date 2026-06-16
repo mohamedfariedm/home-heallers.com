@@ -19,6 +19,7 @@ import KanbanStatisticsCards from '@/app/shared/customer-suport/kanban-statistic
 import ExportButton from '@/app/shared/export-button';
 import { usePermissions } from '@/context/PermissionsContext';
 import { resolveCustomerSupportKanbanPermissions } from '@/app/shared/customer-suport/permissions';
+import { useKanbanStatusChange } from '@/app/shared/customer-suport/use-kanban-status-change';
 
 const pageHeader = {
   title: 'Inbound Customer Supports',
@@ -240,25 +241,13 @@ export default function CustomerSupportsOperationKanbanPage() {
   };
 
   const { mutate: updateCustomerSupport } = useUpdateCustomerSupport();
+  const allItems = allData.data?.data || [];
 
-  const handleStatusChange = (
-    itemId: number,
-    newStatus: string,
-    oldStatus: string
-  ) => {
-    if (!kanbanPermissions.moveStatus) return;
-    // Find the item in all data
-    const allItems = allData.data?.data || [];
-    const item = allItems.find((item: any) => item.id === itemId);
-
-    if (item) {
-      updateCustomerSupport({
-        lead_id: itemId,
-        ...item,
-        status: newStatus,
-      });
-    }
-  };
+  const { handleStatusChange } = useKanbanStatusChange({
+    allItems,
+    canMoveStatus: kanbanPermissions.moveStatus,
+    updateCustomerSupport,
+  });
 
   const handlePageChange = (newPage: number) => {
     const safePage = Number.isInteger(newPage) && newPage > 0 ? newPage : 1;
@@ -400,6 +389,9 @@ export default function CustomerSupportsOperationKanbanPage() {
               canEdit={kanbanPermissions.update}
               canViewDetails={kanbanPermissions.viewDetails}
               canViewActivityLogs={kanbanPermissions.viewActivityLogs}
+              canViewQualifications={
+                kanbanPermissions.update || kanbanPermissions.moveStatus
+              }
             />
           </div>
 

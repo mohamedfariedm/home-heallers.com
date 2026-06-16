@@ -215,6 +215,9 @@ export const routes = {
   customerSupport: {
     index: '/customer-supports'
   },
+  leadsQualifications: {
+    index: '/leads-qualifications',
+  },
   whatsappInbox: {
     index: '/whatsapp-inbox',
   },

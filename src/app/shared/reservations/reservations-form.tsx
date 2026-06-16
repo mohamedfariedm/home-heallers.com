@@ -30,10 +30,6 @@ import { usePermissions } from '@/context/PermissionsContext';
 import { useCenters } from '@/framework/centers';
 import { useCountries } from '@/framework/countrues';
 import { useCities } from '@/framework/cities';
-import {
-  isSaudiNationalityOrCountry,
-  isSaudiNationalityRecord,
-} from '@/utils/is-saudi-nationality';
 import { useStates } from '@/framework/states';
 import { Badge } from '@/components/ui/badge';
 import { CC_OPTIONS } from '@/app/shared/cc-options';
@@ -285,9 +281,6 @@ export default function CreateOrUpdateReservation({
   const watchSubTotal = useWatch({ control, name: 'sub_total' });
   const watchFeesType = useWatch({ control, name: 'fees_type' });
   const watchFees = useWatch({ control, name: 'fees' });
-  const watchTotalAmount = useWatch({ control, name: 'total_amount' });
-  const watchPatientId = useWatch({ control, name: 'patient_id' });
-  const watchPatientCountry = useWatch({ control, name: 'patient_country' });
   const watchReservationStatus = useWatch({ control, name: 'status' });
   const watchSourceCampaign = useWatch({ control, name: 'source_campaign' });
   const watchCustomerTier = useWatch({ control, name: 'customer_tier' as any });
@@ -427,24 +420,11 @@ export default function CreateOrUpdateReservation({
     }
   }, [watchSessionPrice, watchSessionsCount, setValue]);
 
-  const selectedPatient = patients?.data?.find(
-    (p: any) => String(p.id) === String(watchPatientId)
-  );
-  const isSaudiClient =
-    reservationType === 'existing'
-      ? isSaudiNationalityRecord(selectedPatient?.nationality)
-      : isSaudiNationalityOrCountry(watchPatientCountry);
-
   useEffect(() => {
     const sub = Number(watchSubTotal) || 0;
     let calculatedFees = 0;
 
-    if (isSaudiClient) {
-      calculatedFees = 0;
-      if (watchFeesType !== 'صفریة') {
-        setValue('fees_type', 'صفریة', { shouldValidate: false });
-      }
-    } else if (watchFeesType === 'صفریة' || watchFeesType === 'معافاة') {
+    if (watchFeesType === 'صفریة' || watchFeesType === 'معافاة') {
       calculatedFees = 0;
     } else if (watchFeesType === '15%') {
       calculatedFees = sub * 0.15;
@@ -454,7 +434,7 @@ export default function CreateOrUpdateReservation({
     setValue('total_amount', (sub + calculatedFees).toString(), {
       shouldValidate: false,
     });
-  }, [watchFeesType, watchSubTotal, isSaudiClient, setValue]);
+  }, [watchFeesType, watchSubTotal, setValue]);
 
   useEffect(() => {
     if (patients?.data?.length && initValues?.patient?.id) {
@@ -999,7 +979,7 @@ export default function CreateOrUpdateReservation({
               {...inputProps}
               {...register('fees_type')}
               className="w-full rounded-lg border border-gray-300 p-2"
-              disabled={isSaudiClient || !canEdit}
+              disabled={!canEdit}
             >
               {feesTypeOptions.map((item) => (
                 <option key={item.value} value={item.value}>
@@ -1007,11 +987,6 @@ export default function CreateOrUpdateReservation({
                 </option>
               ))}
             </select>
-            {isSaudiClient && (
-              <p className="mt-1 text-xs text-gray-500">
-                Saudi clients: VAT is 0% (fees applied by server on save).
-              </p>
-            )}
           </div>
 
           <div>

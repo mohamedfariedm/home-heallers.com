@@ -11,11 +11,13 @@ import {
   PiPencilSimpleBold,
   PiEye,
   PiClock,
+  PiListChecks,
 } from 'react-icons/pi';
 import { useModal } from '@/app/shared/modal-views/use-modal';
 import KanbanCardModal from './kanban-card-modal';
 import KanbanCardViewModal from './kanban-card-view-modal';
 import ActivityLogsModal from './activity-logs-modal';
+import LeadsQualificationModal from './leads-qualification-modal';
 import { useState, useRef } from 'react';
 
 interface KanbanItem {
@@ -53,6 +55,7 @@ interface KanbanCardProps {
   canEdit?: boolean;
   canViewDetails?: boolean;
   canViewActivityLogs?: boolean;
+  canViewQualifications?: boolean;
 }
 
 export default function KanbanCard({
@@ -61,6 +64,7 @@ export default function KanbanCard({
   canEdit = true,
   canViewDetails = true,
   canViewActivityLogs = true,
+  canViewQualifications = true,
 }: KanbanCardProps) {
   const { openModal } = useModal();
   const [hasMoved, setHasMoved] = useState(false);
@@ -117,6 +121,20 @@ export default function KanbanCard({
         />
       ),
       customSize: '900px',
+    });
+  };
+
+  const handleQualificationClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    openModal({
+      view: (
+        <LeadsQualificationModal
+          customerSupportId={item.id}
+          itemName={item.name}
+        />
+      ),
+      customSize: '760px',
     });
   };
 
@@ -245,7 +263,7 @@ export default function KanbanCard({
       )}
     >
       {/* Edit, View, and Activity Logs Buttons - positioned absolutely to not interfere with drag */}
-      {(canEdit || canViewDetails || canViewActivityLogs) && (
+      {(canEdit || canViewDetails || canViewActivityLogs || canViewQualifications) && (
         <div className="absolute right-2 top-2 z-10 flex flex-col gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
           {canEdit && (
             <button
@@ -275,6 +293,16 @@ export default function KanbanCard({
               title="Activity Logs"
             >
               <PiClock className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+            </button>
+          )}
+          {canViewQualifications && (
+            <button
+              onClick={handleQualificationClick}
+              onPointerDown={(e) => e.stopPropagation()}
+              className="rounded-full bg-gray-100 p-1.5 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
+              title="Lead Qualification"
+            >
+              <PiListChecks className="h-4 w-4 text-gray-600 dark:text-gray-300" />
             </button>
           )}
         </div>

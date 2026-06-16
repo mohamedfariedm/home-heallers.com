@@ -106,6 +106,19 @@ class Client {
         }),
         sendWhatsApp: (input: { status: string; message: string }) => HttpClient.post('/customer-supports/send-whatsapp', input),
     }
+    leadsQualifications = {
+        all: (param?: string) =>
+            HttpClient.get(`${routes.leadsQualifications.index}${param ? `?${param}` : ''}`),
+        get: (id: number) => HttpClient.get(`${routes.leadsQualifications.index}/${id}`),
+        getByCustomerSupport: (customerSupportId: number) =>
+            HttpClient.get(
+                `${routes.leadsQualifications.index}/by-customer-support/${customerSupportId}`
+            ),
+        create: (input: any) => HttpClient.post(`${routes.leadsQualifications.index}`, input),
+        update: (input: any) =>
+            HttpClient.patch(`${routes.leadsQualifications.index}/${input.id}`, input),
+        delete: (id: number) => HttpClient.delete(`${routes.leadsQualifications.index}/${id}`),
+    }
     addresses = {
         all: (param: string) => HttpClient.get(`${routes.addresses.index}?${param}`),
         create: (input: any) => HttpClient.post(`${routes.addresses.index}`, input),

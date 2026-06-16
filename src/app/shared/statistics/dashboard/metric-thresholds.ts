@@ -1,9 +1,7 @@
-export type MetricPerformance = 'excellent' | 'average' | 'danger';
+import type { RateMetricKey } from '@/types/settings';
 
-export type RateMetricKey =
-  | 'reservation_rate'
-  | 'conversion_rate'
-  | 'package_conversion';
+export type { RateMetricKey };
+export type MetricPerformance = 'excellent' | 'average' | 'danger';
 
 const THRESHOLDS: Record<
   RateMetricKey,
@@ -12,6 +10,7 @@ const THRESHOLDS: Record<
   reservation_rate: { excellentMin: 25, averageMin: 15 },
   conversion_rate: { excellentMin: 18, averageMin: 10 },
   package_conversion: { excellentMin: 35, averageMin: 20 },
+  lead_quality: { excellentMin: 30, averageMin: 15 },
 };
 
 /** Rate is a decimal (0–1); thresholds are in percent (0–100). */

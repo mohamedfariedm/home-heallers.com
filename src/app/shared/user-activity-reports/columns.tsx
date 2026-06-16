@@ -11,6 +11,7 @@ import AvatarCard from '@/components/ui/avatar-card';
 import EyeIcon from '@/components/icons/eye';
 import {
   buildUserActivityDetailPath,
+  formatUserActivityLogName,
   parseUserApiLinkToSearchParams,
 } from '@/utils/user-activity-query';
 import type { UserActivityRow } from '@/types/user-activity-report';
@@ -19,6 +20,37 @@ type ColumnsProps = {
   sortConfig?: { key: string | null; direction: string | null };
   onHeaderCellClick: (value: string) => { onClick: () => void };
 };
+
+function logNameBadgeColor(logName: string) {
+  if (logName === 'inbound') return 'success';
+  if (logName === 'outbound') return 'warning';
+  return 'secondary';
+}
+
+function LogNameCounts({ row }: { row: UserActivityRow }) {
+  if (!row.by_log_name?.length) return <span className="text-gray-400">—</span>;
+
+  return (
+    <div className="flex flex-wrap gap-1">
+      {row.by_log_name.slice(0, 4).map((bucket) => {
+        const label = formatUserActivityLogName(bucket.log_name);
+        return (
+          <Tooltip
+            key={bucket.log_name}
+            content={() => `${label}: ${bucket.count}`}
+            placement="top"
+            color="invert"
+          >
+            <Badge variant="flat" color={logNameBadgeColor(bucket.log_name)}>
+              {label.slice(0, 12)}
+              {label.length > 12 ? '…' : ''} {bucket.count}
+            </Badge>
+          </Tooltip>
+        );
+      })}
+    </div>
+  );
+}
 
 function EventCounts({ row }: { row: UserActivityRow }) {
   if (!row.by_event?.length) return <span className="text-gray-400">—</span>;
@@ -79,7 +111,7 @@ export const getUserActivityColumns = ({
       const href = buildUserActivityDetailPath(locale, row.user.id, params);
 
       return (
-        <Tooltip size="sm" content={() => 'View timeline'} placement="top" color="invert">
+        <Tooltip size="sm" content={() => 'View records'} placement="top" color="invert">
           <Link href={href} aria-label="View user activity">
             <ActionIcon size="sm" variant="outline">
               <EyeIcon className="h-4 w-4" />
@@ -139,11 +171,35 @@ export const getUserActivityColumns = ({
     render: (_: unknown, row: UserActivityRow) => <EventCounts row={row} />,
   },
   {
+    title: <HeaderCell title="By Log Name" />,
+    dataIndex: 'by_log_name',
+    key: 'by_log_name',
+    width: 180,
+    render: (_: unknown, row: UserActivityRow) => <LogNameCounts row={row} />,
+  },
+  {
     title: <HeaderCell title="Top Models" />,
     dataIndex: 'most_modified_models',
     key: 'most_modified_models',
     width: 180,
     render: (_: unknown, row: UserActivityRow) => <TopModels row={row} />,
+  },
+  {
+    title: (
+      <HeaderCell
+        title="First Activity"
+        sortable
+        ascending={
+          sortConfig?.direction === 'asc' && sortConfig?.key === 'first_activity_at'
+        }
+      />
+    ),
+    onHeaderCell: () => onHeaderCellClick('first_activity_at'),
+    dataIndex: 'first_activity_at',
+    key: 'first_activity_at',
+    width: 160,
+    render: (value: string | null) =>
+      value ? <DateCell date={new Date(value)} /> : <span className="text-gray-400">—</span>,
   },
   {
     title: (
@@ -167,6 +223,20 @@ export const getUserActivityColumns = ({
     dataIndex: 'active_days',
     key: 'active_days',
     width: 100,
+    render: (value: number) => value,
+  },
+  {
+    title: <HeaderCell title="Today" />,
+    dataIndex: 'today',
+    key: 'today',
+    width: 80,
+    render: (value: number) => value,
+  },
+  {
+    title: <HeaderCell title="This Week" />,
+    dataIndex: 'this_week',
+    key: 'this_week',
+    width: 90,
     render: (value: number) => value,
   },
   {
