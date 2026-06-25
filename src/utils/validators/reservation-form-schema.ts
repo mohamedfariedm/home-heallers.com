@@ -38,6 +38,7 @@ export const reservationFormSchema = z
       .default("2"),
     pain_location: z.string().min(1, "Pain location is required"),
     notes: z.string().optional(),
+    operation_notes: z.string().optional(),
     customer_tier: z.string().optional(),
     cc: z
       .string()

@@ -1,5 +1,3 @@
-import type { ActivityLog } from '@/types/activity-log';
-
 export interface DoctorRef {
   id: number;
   name: string;
@@ -9,26 +7,16 @@ export interface DoctorRef {
   status: boolean | null;
 }
 
-export interface EventBucket {
-  event: string | null;
+export interface StatusBucket {
+  status: string | number | null;
   count: number;
   link: string;
 }
 
-export interface RecordEventBucket {
-  event: string | null;
-  count: number;
-}
-
-export interface LogNameBucket {
-  log_name: string;
+export interface SourceCampaignBucket {
+  source_campaign: string;
   count: number;
   link: string;
-}
-
-export interface ModelBucket {
-  type: string;
-  count: number;
 }
 
 export interface DoctorReservationRef {
@@ -41,30 +29,17 @@ export interface DoctorReservationRef {
 
 export interface DoctorActivityRow {
   doctor: DoctorRef;
-  total_actions: number;
   reservations_count: number;
-  by_event: EventBucket[];
-  by_log_name: LogNameBucket[];
-  most_modified_models: ModelBucket[];
-  first_activity_at: string | null;
-  last_activity_at: string | null;
-  today: number;
-  this_week: number;
-  this_month: number;
-  active_days: number;
+  by_status: StatusBucket[];
+  by_source_campaign: SourceCampaignBucket[];
   link: string;
 }
 
 export interface DoctorActivityStatistics {
   total_doctors: number;
-  total_actions: number;
-  today: number;
-  this_week: number;
-  this_month: number;
-  by_event: EventBucket[];
-  by_log_name: LogNameBucket[];
-  most_modified_models: ModelBucket[];
-  top_doctors: Array<{ id: number; name: string; count: number; link: string }>;
+  total_reservations: number;
+  by_status: StatusBucket[];
+  by_source_campaign: SourceCampaignBucket[];
 }
 
 export interface PaginationLinks {
@@ -91,29 +66,14 @@ export interface DoctorActivityListResponse {
   message: string;
 }
 
-export type DoctorActivityLogItem = ActivityLog;
-
 export interface DoctorReservationActivityRow {
   reservation: DoctorReservationRef;
-  total_actions: number;
-  by_event: RecordEventBucket[];
-  first_activity_at: string | null;
-  last_activity_at: string | null;
-  activities: DoctorActivityLogItem[];
 }
 
 export interface DoctorActivitySummary {
-  total_actions: number;
   reservations_count: number;
-  by_event: EventBucket[];
-  by_log_name: LogNameBucket[];
-  most_modified_models: ModelBucket[];
-  first_activity_at: string | null;
-  last_activity_at: string | null;
-  today: number;
-  this_week: number;
-  this_month: number;
-  active_days: number;
+  by_status: StatusBucket[];
+  by_source_campaign: SourceCampaignBucket[];
 }
 
 export interface DoctorActivityDetailResponse {

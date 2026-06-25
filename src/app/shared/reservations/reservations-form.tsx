@@ -10,6 +10,7 @@ import {
 import { zodResolver } from '@hookform/resolvers/zod';
 import { PiXBold } from 'react-icons/pi';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { ActionIcon } from 'rizzui';
 import { useModal } from '../modal-views/use-modal';
@@ -207,6 +208,7 @@ export default function CreateOrUpdateReservation({
       status: initValues?.status?.toString() || '2',
       pain_location: initValues?.pain_location || '',
       notes: initValues?.notes || leadData?.notes || '',
+      operation_notes: initValues?.operation_notes || '',
       cc: initValues?.cc || '',
       address_city:
         resolveLocalizedName(initValues?.address?.city) ||
@@ -491,6 +493,7 @@ export default function CreateOrUpdateReservation({
       status: data.status ? Number(data.status) : undefined,
       pain_location: data.pain_location,
       notes: data.notes,
+      operation_notes: data.operation_notes,
       ...(data.cc ? { cc: data.cc } : {}),
       address_city: data.address_city,
       address_state: data.address_state,
@@ -1191,6 +1194,15 @@ export default function CreateOrUpdateReservation({
         placeholder="e.g., حجز ضيف جديد"
         {...register('notes')}
         error={errors.notes?.message}
+      />
+
+      <Textarea
+        {...inputProps}
+        label="Operation Notes"
+        placeholder="e.g., ملاحظات العملية"
+        rows={4}
+        {...register('operation_notes')}
+        error={errors.operation_notes?.message}
       />
 
       <div className="space-y-4 border-l-4 border-orange-500 pl-4">

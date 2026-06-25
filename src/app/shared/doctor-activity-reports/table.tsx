@@ -14,13 +14,7 @@ const FilterElement = dynamic(
   { ssr: false }
 );
 
-const SORTABLE_COLUMNS = new Set([
-  'total_actions',
-  'reservations_count',
-  'last_activity_at',
-  'first_activity_at',
-  'name',
-]);
+const SORTABLE_COLUMNS = new Set(['reservations_count', 'name']);
 
 export default function DoctorActivityReportsTable({
   data = [],
@@ -82,12 +76,6 @@ export default function DoctorActivityReportsTable({
     actor_email: searchParams.get('actor_email') || '',
     date_from: searchParams.get('date_from') || '',
     date_to: searchParams.get('date_to') || '',
-    time: searchParams.get('time') || '',
-    time_from: searchParams.get('time_from') || '',
-    time_to: searchParams.get('time_to') || '',
-    event: searchParams.get('event') || '',
-    log_name: searchParams.get('log_name') || '',
-    subject_type: searchParams.get('subject_type') || '',
   };
 
   const sortConfig = useMemo(
@@ -102,7 +90,7 @@ export default function DoctorActivityReportsTable({
     onClick: () => {
       if (!SORTABLE_COLUMNS.has(value)) return;
 
-      const currentSortBy = searchParams.get('sort_by') ?? 'total_actions';
+      const currentSortBy = searchParams.get('sort_by') ?? 'reservations_count';
       const currentDirection = searchParams.get('sort_direction') ?? 'desc';
       const nextDirection =
         currentSortBy === value && currentDirection === 'desc' ? 'asc' : 'desc';
@@ -204,7 +192,7 @@ export default function DoctorActivityReportsTable({
         hasSearched: isFiltered || Boolean(searchInput),
         showSearchOnTheRight: true,
         enableDrawerFilter: true,
-        drawerTitle: 'Doctor Activity Filters',
+        drawerTitle: 'Doctor KPI Filters',
         columns,
         checkedColumns,
         setCheckedColumns,

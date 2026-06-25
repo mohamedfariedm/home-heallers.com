@@ -177,7 +177,7 @@ export default function KpisPage() {
       fileName={activeView === 'doctors' ? 'doctor-activity-report' : 'user-activity-report'}
       header={
         activeView === 'doctors'
-          ? 'Doctor,Total Actions,Reservations,Last Activity'
+          ? 'Doctor,Reservations,By Status,By Source Campaign'
           : 'User,Total Actions,Last Activity,Active Days'
       }
       canExport={false}
@@ -235,7 +235,7 @@ export default function KpisPage() {
               <Text className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                 {hasFilters || searchParams.get('search')
                   ? 'Use the Filters button to adjust or clear your filters.'
-                  : 'Doctors with reservations in the selected date range will appear here with activity KPIs.'}
+                  : 'Doctors with reservations in the selected date range will appear here with reservation KPIs.'}
               </Text>
             </div>
           )}
