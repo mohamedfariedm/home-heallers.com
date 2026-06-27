@@ -6,62 +6,15 @@ import WidgetCard from '@/components/cards/widget-card';
 import { Badge } from '@/components/ui/badge';
 import { Text } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
-import DateCell from '@/components/ui/date-cell';
-import { getSubjectHref } from '@/app/shared/activity-logs/subject-link';
+import DoctorHistoryCard from '@/app/shared/doctor-activity-reports/doctor-history-card';
 import { formatReservationStatusLabel } from '@/utils/doctor-activity-query';
-import type { DoctorReservationActivityRow } from '@/types/doctor-activity-report';
-
-function ReservationRow({ row }: { row: DoctorReservationActivityRow }) {
-  const reservation = row.reservation;
-  const subjectHref = getSubjectHref('Reservation', reservation.id);
-  const title =
-    reservation.service_name ??
-    reservation.client_name ??
-    `Reservation #${reservation.id}`;
-
-  return (
-    <div className="flex flex-wrap items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-2">
-          {subjectHref ? (
-            <Link
-              href={subjectHref}
-              className="font-semibold text-blue-600 hover:underline dark:text-blue-400"
-            >
-              {title}
-            </Link>
-          ) : (
-            <Text className="font-semibold text-gray-900 dark:text-gray-100">
-              {title}
-            </Text>
-          )}
-          <Badge variant="flat" color="secondary">
-            #{reservation.id}
-          </Badge>
-          <Badge variant="outline">
-            {formatReservationStatusLabel(reservation.status)}
-          </Badge>
-        </div>
-
-        {reservation.client_name && reservation.service_name && (
-          <Text className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-            {reservation.client_name}
-          </Text>
-        )}
-
-        <Text className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          Booked: <DateCell date={new Date(reservation.created_at)} />
-        </Text>
-      </div>
-    </div>
-  );
-}
+import type { DoctorHistoryItem } from '@/types/doctor-activity-report';
 
 export default function DoctorReservationsList({
   reservations,
   totalItems,
 }: {
-  reservations: DoctorReservationActivityRow[];
+  reservations: DoctorHistoryItem[];
   totalItems: number;
 }) {
   const searchParams = useSearchParams();
@@ -156,8 +109,8 @@ export default function DoctorReservationsList({
       )}
 
       <div className="space-y-3">
-        {reservations.map((row) => (
-          <ReservationRow key={row.reservation.id} row={row} />
+        {reservations.map((item) => (
+          <DoctorHistoryCard key={item.reservation_id} item={item} />
         ))}
       </div>
 

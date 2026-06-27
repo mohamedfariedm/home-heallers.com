@@ -71,7 +71,7 @@ export default function DoctorKpiDetailPage() {
       breadcrumb={pageHeader.breadcrumb}
       data={{ columns: [], rows: [] }}
       fileName="doctor-activity-reservations"
-      header="Reservation,Status,Client,Service,Created"
+      header="Reservation ID,Status,Patient,Sessions,Total"
       canExport={false}
       canCreate={false}
       canImport={false}

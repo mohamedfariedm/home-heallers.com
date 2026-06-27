@@ -8,6 +8,7 @@ import { Title } from '@/components/ui/text';
 import { useModal } from '@/app/shared/modal-views/use-modal';
 import { LeadFormInput, leadFormSchema } from '@/utils/validators/suport-form.schema';
 import { CC_OPTIONS } from '@/app/shared/cc-options';
+import { kanbanSourceCampaignOptions } from '@/app/shared/customer-suport/kanban-column-select-options';
 import { Textarea } from 'rizzui';
 import { useCreateCustomerSupport, useUpdateCustomerSupport } from '@/framework/customer-suport';
 import { useCities } from '@/framework/cities';
@@ -513,18 +514,11 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
                 className="w-full border border-gray-300 rounded-md p-2 h-10 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
               >
                 <option value="">Select Source</option>
-                <option value="google">Google</option>
-                <option value="facebook">Facebook</option>
-                <option value="instagram">Instagram</option>
-                <option value="snapchat">Snapchat</option>
-                <option value="telegram">Telegram</option>
-                <option value="twitter">Twitter</option>
-                <option value="tiktok">TikTok</option>
-                <option value="mobile_application">Mobile Application</option>
-                <option value="youtube">YouTube</option>
-                <option value="website">Website</option>
-                <option value="referral">Referral</option>
-                <option value="other">Other</option>
+                {kanbanSourceCampaignOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
               </select>
               {errors.source_campaign && <p className="text-sm text-red-500 mt-1">{errors.source_campaign.message}</p>}
             </div>

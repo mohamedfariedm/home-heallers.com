@@ -11,6 +11,8 @@ import {
   PiCaretUpBold,
   PiChartLineUpBold,
   PiListChecksBold,
+  PiMapPinBold,
+  PiBuildingsBold,
 } from 'react-icons/pi';
 import cn from '@/utils/class-names';
 import { useRouter, usePathname } from 'next/navigation';
@@ -302,6 +304,8 @@ export default function KanbanStatisticsCards({
   const [qualificationExpanded, setQualificationExpanded] = useState(false);
   const [communicationChannelExpanded, setCommunicationChannelExpanded] = useState(false);
   const [offersExpanded, setOffersExpanded] = useState(false);
+  const [cityExpanded, setCityExpanded] = useState(false);
+  const [stateExpanded, setStateExpanded] = useState(false);
   
   // State to track checked source campaigns
   const [checkedSourceCampaigns, setCheckedSourceCampaigns] = useState<Set<string>>(new Set());
@@ -604,6 +608,50 @@ export default function KanbanStatisticsCards({
     ? allOfferCards 
     : allOfferCards.slice(0, OFFERS_PER_ROW);
 
+  // Row 7: Cities
+  const allCityCards = (statistics.by_city || [])
+    .sort((a, b) => (b.count || 0) - (a.count || 0))
+    .map((item) => ({
+      title: item.city || 'Unknown',
+      value: item.count || 0,
+      icon: PiMapPinBold,
+      bgColor: 'bg-violet-50',
+      textColor: 'text-violet-600',
+      darkBgColor: 'dark:bg-violet-900/20',
+      darkTextColor: 'dark:text-violet-400',
+      blurColor: 'bg-violet-50/50',
+      darkBlurColor: 'dark:bg-violet-900/10',
+      link: item.link,
+      compact: true,
+    }));
+
+  const CITIES_PER_ROW = 6;
+  const cityCards = cityExpanded
+    ? allCityCards
+    : allCityCards.slice(0, CITIES_PER_ROW);
+
+  // Row 8: States
+  const allStateCards = (statistics.by_state || [])
+    .sort((a, b) => (b.count || 0) - (a.count || 0))
+    .map((item) => ({
+      title: item.state || 'Unknown',
+      value: item.count || 0,
+      icon: PiBuildingsBold,
+      bgColor: 'bg-fuchsia-50',
+      textColor: 'text-fuchsia-600',
+      darkBgColor: 'dark:bg-fuchsia-900/20',
+      darkTextColor: 'dark:text-fuchsia-400',
+      blurColor: 'bg-fuchsia-50/50',
+      darkBlurColor: 'dark:bg-fuchsia-900/10',
+      link: item.link,
+      compact: true,
+    }));
+
+  const STATES_PER_ROW = 6;
+  const stateCards = stateExpanded
+    ? allStateCards
+    : allStateCards.slice(0, STATES_PER_ROW);
+
   const rows = [
     { title: 'Status Statistics', cards: statusCards },
     ...(leadCards.length > 0
@@ -633,6 +681,26 @@ export default function KanbanStatisticsCards({
       : []),
     { title: 'Communication Channels', cards: communicationChannelCards, allCards: allCommunicationChannelCards, expanded: communicationChannelExpanded, setExpanded: setCommunicationChannelExpanded, perRow: COMMUNICATION_CHANNELS_PER_ROW },
     { title: 'Offers', cards: offerCards, allCards: allOfferCards, expanded: offersExpanded, setExpanded: setOffersExpanded, perRow: OFFERS_PER_ROW },
+    ...(allCityCards.length > 0
+      ? [{
+          title: 'Cities',
+          cards: cityCards,
+          allCards: allCityCards,
+          expanded: cityExpanded,
+          setExpanded: setCityExpanded,
+          perRow: CITIES_PER_ROW,
+        }]
+      : []),
+    ...(allStateCards.length > 0
+      ? [{
+          title: 'States',
+          cards: stateCards,
+          allCards: allStateCards,
+          expanded: stateExpanded,
+          setExpanded: setStateExpanded,
+          perRow: STATES_PER_ROW,
+        }]
+      : []),
   ];
 
   return (

@@ -157,3 +157,23 @@ export function buildDoctorReservationFilterPathFromLink(
   const params = toggleReservationFilterFromLink(current, apiLink);
   return buildDoctorActivityDetailPath(locale, doctorId, params);
 }
+
+export function buildDoctorActivityPathFromApiLink(
+  locale: string,
+  link: string,
+  doctorId?: number
+): string {
+  const params = parseDoctorApiLinkToSearchParams(link);
+  params.delete('tab');
+
+  const pathDoctorMatch = link.match(/\/doctor-activity\/(\d+)/);
+  const targetDoctorId = pathDoctorMatch
+    ? Number(pathDoctorMatch[1])
+    : doctorId ?? (params.get('actor_id') ? Number(params.get('actor_id')) : null);
+
+  if (targetDoctorId) {
+    return buildDoctorActivityDetailPath(locale, targetDoctorId, params);
+  }
+
+  return buildDoctorActivityListPath(locale, params);
+}

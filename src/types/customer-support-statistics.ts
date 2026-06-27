@@ -48,5 +48,7 @@ export interface CustomerSupportStatistics {
     link: string;
   }>;
   by_offer?: Array<{ offer: string; count: number; link: string }>;
+  by_city?: Array<{ city: string; count: number; link: string }>;
+  by_state?: Array<{ state: string; count: number; link: string }>;
   leads?: LeadsSummary;
 }

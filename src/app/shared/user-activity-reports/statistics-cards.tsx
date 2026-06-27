@@ -1,7 +1,5 @@
 'use client';
 
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
 import {
   PiCalendarCheckBold,
@@ -12,9 +10,9 @@ import {
 } from 'react-icons/pi';
 import cn from '@/utils/class-names';
 import KpiStatCard from '@/app/shared/kpis/kpi-stat-card';
-import KpiBreakdownWidget from '@/app/shared/kpis/kpi-breakdown-widget';
-import UserActivityDrillDownLink from '@/app/shared/user-activity-reports/drill-down-link';
+import KpiBreakdownCardsSection from '@/app/shared/kpis/kpi-breakdown-cards-section';
 import {
+  buildUserActivityPathFromApiLink,
   formatUserActivityLogName,
 } from '@/utils/user-activity-query';
 import type { UserActivityStatistics } from '@/types/user-activity-report';
@@ -38,11 +36,7 @@ export default function UserActivityStatisticsCards({
 }: UserActivityStatisticsCardsProps) {
   if (!statistics) return null;
 
-  const hasBreakdowns =
-    statistics.by_event?.length > 0 ||
-    statistics.by_log_name?.length > 0 ||
-    statistics.top_users?.length > 0 ||
-    statistics.most_modified_models?.length > 0;
+  const locale = Cookies.get('NEXT_LOCALE') || 'en';
 
   return (
     <div className={cn('space-y-6', className)}>
@@ -58,76 +52,48 @@ export default function UserActivityStatisticsCards({
         ))}
       </div>
 
-      {hasBreakdowns && (
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-          {statistics.by_event?.length > 0 && (
-            <div className="lg:col-span-3">
-              <KpiBreakdownWidget
-                title="By Event"
-                items={statistics.by_event.slice(0, 5).map((bucket) => ({
-                  key: bucket.event ?? 'uncategorized',
-                  label: bucket.event ?? 'Uncategorized',
-                  count: bucket.count,
-                  countNode: (
-                    <UserActivityDrillDownLink link={bucket.link}>
-                      {bucket.count}
-                    </UserActivityDrillDownLink>
-                  ),
-                }))}
-              />
-            </div>
-          )}
+      <KpiBreakdownCardsSection
+        title="By Event"
+        items={(statistics.by_event ?? []).map((bucket, index) => ({
+          key: `${bucket.event ?? 'uncategorized'}-${index}`,
+          label: bucket.event ?? 'Uncategorized',
+          count: bucket.count,
+          href: buildUserActivityPathFromApiLink(locale, bucket.link),
+        }))}
+        icon={PiListChecksBold}
+      />
 
-          {statistics.by_log_name?.length > 0 && (
-            <div className="lg:col-span-3">
-              <KpiBreakdownWidget
-                title="By Log Name"
-                items={statistics.by_log_name.slice(0, 5).map((bucket) => ({
-                  key: bucket.log_name,
-                  label: formatUserActivityLogName(bucket.log_name),
-                  count: bucket.count,
-                  countNode: (
-                    <UserActivityDrillDownLink link={bucket.link}>
-                      {bucket.count}
-                    </UserActivityDrillDownLink>
-                  ),
-                }))}
-              />
-            </div>
-          )}
+      <KpiBreakdownCardsSection
+        title="By Log Name"
+        items={(statistics.by_log_name ?? []).map((bucket) => ({
+          key: bucket.log_name,
+          label: formatUserActivityLogName(bucket.log_name),
+          count: bucket.count,
+          href: buildUserActivityPathFromApiLink(locale, bucket.link),
+        }))}
+        icon={PiListChecksBold}
+      />
 
-          {statistics.top_users?.length > 0 && (
-            <div className="lg:col-span-3">
-              <KpiBreakdownWidget
-                title="Top Users"
-                items={statistics.top_users.slice(0, 5).map((user) => ({
-                  key: String(user.id),
-                  label: user.name,
-                  count: user.count,
-                  countNode: (
-                    <UserActivityDrillDownLink link={user.link}>
-                      {user.count}
-                    </UserActivityDrillDownLink>
-                  ),
-                }))}
-              />
-            </div>
-          )}
+      <KpiBreakdownCardsSection
+        title="Top Users"
+        items={(statistics.top_users ?? []).map((user) => ({
+          key: String(user.id),
+          label: user.name,
+          count: user.count,
+          href: buildUserActivityPathFromApiLink(locale, user.link),
+        }))}
+        icon={PiUsersBold}
+      />
 
-          {statistics.most_modified_models?.length > 0 && (
-            <div className="lg:col-span-3">
-              <KpiBreakdownWidget
-                title="Most Modified Models"
-                items={statistics.most_modified_models.slice(0, 5).map((model) => ({
-                  key: model.type,
-                  label: model.type,
-                  count: model.count,
-                }))}
-              />
-            </div>
-          )}
-        </div>
-      )}
+      <KpiBreakdownCardsSection
+        title="Most Modified Models"
+        items={(statistics.most_modified_models ?? []).map((model) => ({
+          key: model.type,
+          label: model.type,
+          count: model.count,
+        }))}
+        icon={PiChartBarBold}
+      />
     </div>
   );
 }
