@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import {
   PiXBold,
   PiUser,
@@ -14,11 +15,17 @@ import { useModal } from '@/app/shared/modal-views/use-modal';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import cn from '@/utils/class-names';
+import ConfirmCashPaymentModal from './confirm-cash-payment-modal';
 
 import {
   getReservationPatientName,
   resolveLocalizedNameOrFallback,
 } from '@/utils/resolve-localized-name';
+import {
+  canConfirmCashPayment,
+  getPaymentStatusLabel,
+  isCashPayment,
+} from '@/utils/reservation-payment';
 
 function formatSessionLabel(session: {
   start_time?: string;
@@ -210,7 +217,16 @@ function useReservationDetails(reservation: any) {
   };
 }
 
-export function ReservationViewContent({ reservation }: { reservation: any }) {
+export function ReservationViewContent({
+  reservation,
+  canEdit = false,
+  onReservationUpdate,
+}: {
+  reservation: any;
+  canEdit?: boolean;
+  onReservationUpdate?: (updated: any) => void;
+}) {
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const {
     patientName,
     serviceName,
@@ -221,12 +237,8 @@ export function ReservationViewContent({ reservation }: { reservation: any }) {
     addressText,
   } = useReservationDetails(reservation);
 
-  const paidLabel =
-    reservation?.paid === null || reservation?.paid === undefined
-      ? '—'
-      : reservation.paid
-        ? 'Yes'
-        : 'No';
+  const paidLabel = getPaymentStatusLabel(reservation);
+  const showConfirmCash = canEdit && canConfirmCashPayment(reservation);
 
   return (
     <div className="space-y-5">
@@ -261,6 +273,11 @@ export function ReservationViewContent({ reservation }: { reservation: any }) {
                 {reservation.reservation_source}
               </span>
             )}
+            {isCashPayment(reservation?.payment_method) && (
+              <span className="rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-800">
+                Cash
+              </span>
+            )}
             <CustomerTierBadge tier={reservation?.customer_tier} />
           </div>
         </div>
@@ -289,11 +306,17 @@ export function ReservationViewContent({ reservation }: { reservation: any }) {
             </p>
           </div>
           <div className="rounded-lg bg-white/80 px-3 py-2.5 ring-1 ring-gray-100">
-            <p className="text-xs text-gray-500">Paid</p>
+            <p className="text-xs text-gray-500">Payment</p>
             <p
               className={cn(
                 'text-base font-bold',
-                reservation?.paid ? 'text-emerald-600' : 'text-amber-600'
+                isCashPayment(reservation?.payment_method)
+                  ? reservation?.paid
+                    ? 'text-emerald-600'
+                    : 'text-orange-600'
+                  : reservation?.paid
+                    ? 'text-emerald-600'
+                    : 'text-red-600'
               )}
             >
               {paidLabel}
@@ -366,8 +389,15 @@ export function ReservationViewContent({ reservation }: { reservation: any }) {
 
         <Section title="Payment" icon={PiCurrencyDollar}>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <DetailItem label="Payment Method" value={reservation?.payment_method} />
-            <DetailItem label="Paid" value={paidLabel} />
+            <DetailItem
+              label="Payment Method"
+              value={
+                isCashPayment(reservation?.payment_method)
+                  ? 'Cash'
+                  : reservation?.payment_method
+              }
+            />
+            <DetailItem label="Payment Status" value={paidLabel} />
             <DetailItem
               label="Sub Total"
               value={
@@ -448,6 +478,23 @@ export function ReservationViewContent({ reservation }: { reservation: any }) {
         </div>
       )}
 
+      {showConfirmCash && (
+        <div className="flex justify-end">
+          <Button onClick={() => setConfirmModalOpen(true)}>
+            Confirm & mark paid
+          </Button>
+        </div>
+      )}
+
+      <ConfirmCashPaymentModal
+        isOpen={confirmModalOpen}
+        onClose={() => setConfirmModalOpen(false)}
+        reservationId={Number(reservation?.id)}
+        onSuccess={(updatedReservation) => {
+          onReservationUpdate?.(updatedReservation);
+        }}
+      />
+
       <div className="flex flex-wrap gap-4 rounded-lg border border-dashed border-gray-200 bg-gray-50/50 px-4 py-3 text-xs text-gray-500">
         <span>
           <span className="font-medium text-gray-600">Created:</span>{' '}
@@ -464,10 +511,17 @@ export function ReservationViewContent({ reservation }: { reservation: any }) {
 
 export default function ReservationViewModal({
   reservation,
+  canEdit = false,
 }: {
   reservation: any;
+  canEdit?: boolean;
 }) {
   const { closeModal } = useModal();
+  const [localReservation, setLocalReservation] = useState(reservation);
+
+  useEffect(() => {
+    setLocalReservation(reservation);
+  }, [reservation]);
 
   return (
     <div className="flex max-h-[90vh] flex-col overflow-hidden bg-gray-50/50">
@@ -477,7 +531,9 @@ export default function ReservationViewModal({
             Reservation Details
           </Title>
           <Text as="p" className="mt-0.5 text-sm text-gray-500">
-            Read-only view
+            {canEdit && canConfirmCashPayment(localReservation)
+              ? 'Review details or confirm cash collection'
+              : 'Read-only view'}
           </Text>
         </div>
         <Button onClick={closeModal} variant="outline" size="sm" className="shrink-0">
@@ -485,7 +541,11 @@ export default function ReservationViewModal({
         </Button>
       </div>
       <div className="flex-1 overflow-y-auto p-6">
-        <ReservationViewContent reservation={reservation} />
+        <ReservationViewContent
+          reservation={localReservation}
+          canEdit={canEdit}
+          onReservationUpdate={setLocalReservation}
+        />
       </div>
     </div>
   );

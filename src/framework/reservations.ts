@@ -45,6 +45,33 @@ export const useUpdateReservation = () => {
   });
 }
 
+export const useUpdateReservationStatus = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: {
+      reservation_id: number;
+      status: number;
+      paid?: boolean;
+      notes?: string;
+    }) => {
+      const response = await client.reservations.updateStatus(input);
+      return response?.data?.[0] ?? response?.data ?? response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [routes.reservations.index] });
+      toast.success('Reservation updated successfully');
+    },
+    onError: (error: any) => {
+      toast.error(
+        error?.response?.data?.message ||
+          error?.message ||
+          'Failed to update reservation status'
+      );
+    },
+  });
+};
+
 export const useDeleteReservation = () => {
   const queryClient = useQueryClient();
   

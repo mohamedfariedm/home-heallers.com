@@ -10,6 +10,7 @@ import ChatSolidIcon from '@/components/icons/chat-solid';
 import CreateButton from '../create-button';
 import DeletePopover from '@/app/shared/delete-popover';
 import { Badge } from '@/components/ui/badge';
+import cn from '@/utils/class-names';
 import CreateOrUpdateReservation from './reservations-form';
 import ReservationViewModal from './reservation-view-modal';
 import ColumnFilterPopover from '@/app/shared/customer-suport/column-filter-popover';
@@ -22,6 +23,10 @@ import {
   resolveLocalizedName,
   resolveLocalizedNameOrFallback,
 } from '@/utils/resolve-localized-name';
+import {
+  getPaymentStatusLabel,
+  isCashPayment,
+} from '@/utils/reservation-payment';
 
 const truncateText = (value: string, max = 80) => {
   if (value.length <= max) return value;
@@ -148,7 +153,7 @@ export const getColumns = ({
                   <EyeIcon className="h-4 w-4" />
                 </ActionIcon>
               }
-              view={<ReservationViewModal reservation={row} />}
+              view={<ReservationViewModal reservation={row} canEdit={canEdit} />}
               label=""
               className="m-0 bg-transparent p-0 text-gray-700"
             />
@@ -169,7 +174,7 @@ export const getColumns = ({
             </Tooltip>
           )}
 
-          {canSendPaymentWhatsapp && (
+          {canSendPaymentWhatsapp && !isCashPayment(row?.payment_method) && (
             <Tooltip
               size="sm"
               content={() => 'Send Payment WhatsApp'}
@@ -382,16 +387,26 @@ export const getColumns = ({
     dataIndex: 'status_label',
     key: 'status_label',
     align: 'center',
-    render: (status_label: string) => (
-      <Badge variant="outline">{status_label ?? '—'}</Badge>
+    render: (status_label: string, row: any) => (
+      <div className="flex flex-wrap items-center justify-center gap-1.5">
+        <Badge variant="outline">{status_label ?? '—'}</Badge>
+        {isCashPayment(row?.payment_method) && (
+          <Badge
+            variant="outline"
+            className="border-orange-200 bg-orange-50 text-orange-700"
+          >
+            Cash
+          </Badge>
+        )}
+      </div>
     ),
   },
 
-  // ✅ Paid
+  // ✅ Payment
   {
     title: (
       <div className="flex items-center gap-1">
-        <HeaderCell title="Paid" />
+        <HeaderCell title="Payment" />
         {onFilterChange && (
           <ColumnFilterPopover
             columnKey="paid"
@@ -402,9 +417,19 @@ export const getColumns = ({
     ),
     dataIndex: 'paid',
     key: 'paid',
-    render: (paid: number | null | undefined) => {
-      if (paid === null || paid === undefined) return '—';
-      return paid ? 'Yes' : 'No';
+    render: (_: any, row: any) => {
+      const label = getPaymentStatusLabel(row);
+      if (label === '—') return '—';
+
+      const colorClasses = isCashPayment(row?.payment_method)
+        ? row?.paid
+          ? 'text-emerald-700'
+          : 'text-orange-700'
+        : row?.paid
+          ? 'text-emerald-700'
+          : 'text-red-600';
+
+      return <span className={cn('text-sm font-medium', colorClasses)}>{label}</span>;
     },
   },
 
