@@ -42,7 +42,6 @@ import { useCities } from '@/framework/cities';
 import { useCountries } from '@/framework/countrues';
 import { useCategories } from '@/framework/categories';
 import { DatePicker } from '@/components/ui/datepicker';
-import SelectBox from '@/components/ui/select';
 import {
   COUPON_TYPES,
   ELIGIBLE_USER_TYPES,
@@ -75,6 +74,81 @@ const selectMenuPortal = {
     typeof document !== 'undefined' ? document.body : undefined,
   styles: { menuPortal: (base: object) => ({ ...base, zIndex: 9999 }) },
 };
+
+const nativeSelectClassName =
+  'w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900';
+
+function CouponEnumSelect<T extends string>({
+  label,
+  value,
+  onChange,
+  options,
+  error,
+}: {
+  label: string;
+  value: T;
+  onChange: (value: T) => void;
+  options: { value: T; label: string }[];
+  error?: string;
+}) {
+  return (
+    <div>
+      <label className="mb-1.5 block text-sm font-medium text-gray-900">
+        {label}
+      </label>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value as T)}
+        className={cn(nativeSelectClassName, error && 'border-red-500')}
+      >
+        {options.map((opt) => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
+      {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
+    </div>
+  );
+}
+
+function CouponPortalSelect({
+  label,
+  value,
+  onChange,
+  options,
+  error,
+  placeholder,
+  isLoading,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: { value: string; label: string }[];
+  error?: string;
+  placeholder?: string;
+  isLoading?: boolean;
+}) {
+  const selected =
+    options.find((o) => o.value === value) ?? null;
+
+  return (
+    <div>
+      <label className="mb-1.5 block text-sm font-medium text-gray-900">
+        {label}
+      </label>
+      <Select
+        options={options}
+        value={selected}
+        onChange={(opt) => onChange(opt?.value ?? '')}
+        isLoading={isLoading}
+        placeholder={placeholder}
+        {...selectMenuPortal}
+      />
+      {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
+    </div>
+  );
+}
 
 function toSelectOptions(
   items: any[] | undefined,
@@ -161,6 +235,7 @@ type FormFieldsProps = {
   isServicesLoading: boolean;
   isCitiesLoading: boolean;
   isCountriesLoading: boolean;
+  isCategoriesLoading: boolean;
   insuranceTypes: CouponInsuranceFilter[];
   setInsuranceTypes: React.Dispatch<
     React.SetStateAction<CouponInsuranceFilter[]>
@@ -234,18 +309,12 @@ function GeneralTab({
           control={control}
           name="type"
           render={({ field }) => (
-            <SelectBox
+            <CouponEnumSelect
               label="Discount type"
-              placeholder="Select type"
-              options={COUPON_TYPES.map((t) => ({
-                value: t.value,
-                name: t.label,
-                label: t.label,
-              }))}
               value={field.value}
               onChange={field.onChange}
+              options={COUPON_TYPES}
               error={errors.type?.message}
-              className="col-span-full sm:col-span-1"
             />
           )}
         />
@@ -405,6 +474,7 @@ function AudienceTab({
   watch,
   errors,
   categoryOptions,
+  isCategoriesLoading,
 }: FormFieldsProps) {
   const watchFirstBookingScope = watch('first_booking_scope');
 
@@ -417,16 +487,11 @@ function AudienceTab({
         control={control}
         name="eligible_user_type"
         render={({ field }) => (
-          <SelectBox
+          <CouponEnumSelect
             label="Eligible user type"
-            placeholder="Select user type"
-            options={ELIGIBLE_USER_TYPES.map((t) => ({
-              value: t.value,
-              name: t.label,
-              label: t.label,
-            }))}
             value={field.value}
             onChange={field.onChange}
+            options={ELIGIBLE_USER_TYPES}
             error={errors.eligible_user_type?.message}
           />
         )}
@@ -435,16 +500,11 @@ function AudienceTab({
         control={control}
         name="first_booking_scope"
         render={({ field }) => (
-          <SelectBox
+          <CouponEnumSelect
             label="First booking scope"
-            placeholder="Select scope"
-            options={FIRST_BOOKING_SCOPES.map((t) => ({
-              value: t.value,
-              name: t.label,
-              label: t.label,
-            }))}
             value={field.value}
             onChange={field.onChange}
+            options={FIRST_BOOKING_SCOPES}
             error={errors.first_booking_scope?.message}
           />
         )}
@@ -454,14 +514,17 @@ function AudienceTab({
           control={control}
           name="first_booking_category_id"
           render={({ field }) => (
-            <SelectBox
+            <CouponPortalSelect
               label="First booking category"
               placeholder="Select category"
-              options={categoryOptions}
-              value={field.value}
+              options={categoryOptions.map((c) => ({
+                value: c.value,
+                label: c.label,
+              }))}
+              value={field.value ?? ''}
               onChange={field.onChange}
               error={errors.first_booking_category_id?.message}
-              className="col-span-full"
+              isLoading={isCategoriesLoading}
             />
           )}
         />
@@ -856,6 +919,7 @@ export default function CreateOrUpdateCoupon({
           isServicesLoading,
           isCitiesLoading,
           isCountriesLoading,
+          isCategoriesLoading,
           insuranceTypes,
           setInsuranceTypes,
         };

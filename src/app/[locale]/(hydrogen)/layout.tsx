@@ -16,7 +16,7 @@ export default function DefaultLayout({
   const { layout } = useLayout();
   const isMounted = useIsMounted();
   if (!isMounted) {
-    return null;
+    return <HydrogenLayout>{children}</HydrogenLayout>;
   }
 
   if (layout === LAYOUT_OPTIONS.HELIUM) {
