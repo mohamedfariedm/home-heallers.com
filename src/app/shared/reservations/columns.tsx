@@ -24,8 +24,11 @@ import {
   resolveLocalizedNameOrFallback,
 } from '@/utils/resolve-localized-name';
 import {
+  getPaymentStatusBadgeClasses,
+  getPaymentStatusBadgeLabel,
+  getPaymentStatusColorClass,
   getPaymentStatusLabel,
-  isCashPayment,
+  shouldHidePaymentLink,
 } from '@/utils/reservation-payment';
 
 const truncateText = (value: string, max = 80) => {
@@ -174,7 +177,7 @@ export const getColumns = ({
             </Tooltip>
           )}
 
-          {canSendPaymentWhatsapp && !isCashPayment(row?.payment_method) && (
+          {canSendPaymentWhatsapp && !shouldHidePaymentLink(row) && (
             <Tooltip
               size="sm"
               content={() => 'Send Payment WhatsApp'}
@@ -387,19 +390,23 @@ export const getColumns = ({
     dataIndex: 'status_label',
     key: 'status_label',
     align: 'center',
-    render: (status_label: string, row: any) => (
-      <div className="flex flex-wrap items-center justify-center gap-1.5">
-        <Badge variant="outline">{status_label ?? '—'}</Badge>
-        {isCashPayment(row?.payment_method) && (
-          <Badge
-            variant="outline"
-            className="border-orange-200 bg-orange-50 text-orange-700"
-          >
-            Cash
-          </Badge>
-        )}
-      </div>
-    ),
+    render: (status_label: string, row: any) => {
+      const paymentStatusBadge = getPaymentStatusBadgeLabel(row?.payment_status);
+
+      return (
+        <div className="flex flex-wrap items-center justify-center gap-1.5">
+          <Badge variant="outline">{status_label ?? '—'}</Badge>
+          {paymentStatusBadge && (
+            <Badge
+              variant="outline"
+              className={getPaymentStatusBadgeClasses(row?.payment_status)}
+            >
+              {paymentStatusBadge}
+            </Badge>
+          )}
+        </div>
+      );
+    },
   },
 
   // ✅ Payment
@@ -421,15 +428,11 @@ export const getColumns = ({
       const label = getPaymentStatusLabel(row);
       if (label === '—') return '—';
 
-      const colorClasses = isCashPayment(row?.payment_method)
-        ? row?.paid
-          ? 'text-emerald-700'
-          : 'text-orange-700'
-        : row?.paid
-          ? 'text-emerald-700'
-          : 'text-red-600';
-
-      return <span className={cn('text-sm font-medium', colorClasses)}>{label}</span>;
+      return (
+        <span className={cn('text-sm font-medium', getPaymentStatusColorClass(row))}>
+          {label}
+        </span>
+      );
     },
   },
 

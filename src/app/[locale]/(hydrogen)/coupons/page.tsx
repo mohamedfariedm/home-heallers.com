@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { useCoupons } from '@/framework/coupons';
 import CreateOrUpdateCoupon from '@/app/shared/coupons/coupons-form';
 import CouponsTable from '@/app/shared/coupons/table';
+import CreateButton from '@/app/shared/create-button';
 // export const metadata = {
 //   ...metaObject('Enhanced Table'),
 // };
@@ -43,10 +44,16 @@ export default function CouponsTablePage() {
           ),
         rows: selectedRowKeys,
       }}
-      fileName="Coupons/index"
-      header="User,Created At"
-      createName="Create Coupons"
-      createElementButton={<CreateOrUpdateCoupon />}
+      fileName="coupons"
+      header="excel"
+      createName="Create Coupon"
+      createElementButton={
+        <CreateButton
+          label="Create Coupon"
+          view={<CreateOrUpdateCoupon />}
+          customSize="960px"
+        />
+      }
     >
       {isLoading ? (
         <div className="m-auto">

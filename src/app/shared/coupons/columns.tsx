@@ -9,9 +9,14 @@ import AvatarCard from '@/components/ui/avatar-card';
 import DateCell from '@/components/ui/date-cell';
 import DeletePopover from '@/app/shared/delete-popover';
 import CreateButton from '../create-button';
-import RegionForm from './coupons-form';
-import { Region } from '@/types';
+import CouponForm from './coupons-form';
 import TrashIcon from '@/components/icons/trash';
+import { Badge } from '@/components/ui/badge';
+import {
+  formatCouponType,
+  formatCouponValue,
+} from '@/utils/coupon-constants';
+import type { CouponDiscountType } from '@/types/coupon';
 
 type Columns = {
   data: any[];
@@ -25,23 +30,21 @@ type Columns = {
 
 export const getColumns = ({
   data,
-  sortConfig,
   checkedItems,
   onDeleteItem,
-  onHeaderCellClick,
   handleSelectAll,
   onChecked,
 }: Columns) => {
-  const lang = "en"; // Or use dynamic lang state as per your requirement
+  const lang = 'en';
 
   return [
     {
       title: (
         <div className="ps-2">
           <Checkbox
-            title={'Select All'}
+            title="Select All"
             onChange={handleSelectAll}
-            checked={checkedItems.length === data.length}
+            checked={checkedItems.length === data.length && data.length > 0}
             className="cursor-pointer"
           />
         </div>
@@ -66,24 +69,44 @@ export const getColumns = ({
       width: 20,
       render: (_: string, row: any) => (
         <div className="flex items-center gap-3">
-          <Tooltip size="sm" content={() => 'Edit Region'} placement="top" color="invert">
+          <Tooltip
+            size="sm"
+            content={() => 'Edit coupon'}
+            placement="top"
+            color="invert"
+          >
             <CreateButton
               icon={
-                <ActionIcon tag="span" size="sm" variant="outline" className="hover:!border-gray-900 hover:text-gray-700">
+                <ActionIcon
+                  tag="span"
+                  size="sm"
+                  variant="outline"
+                  className="hover:!border-gray-900 hover:text-gray-700"
+                >
                   <PencilIcon className="h-4 w-4" />
                 </ActionIcon>
               }
-              view={<RegionForm initValues={row} />}
+              view={<CouponForm initValues={row} />}
               label=""
-              className="p-0 m-0 bg-transparent text-gray-700"
+              customSize="960px"
+              className="m-0 bg-transparent p-0 text-gray-700"
             />
           </Tooltip>
           <DeletePopover
-            title={`Delete region`}
-            description={`Are you sure you want to delete this #${row.id} region?`}
+            title="Delete coupon"
+            description={
+              row.redemptions_count > 0
+                ? `This coupon has ${row.redemptions_count} redemption(s). Consider deactivating instead of deleting.`
+                : `Are you sure you want to delete coupon ${row.code}?`
+            }
             onDelete={() => onDeleteItem([row.id])}
           >
-            <ActionIcon size="sm" variant="outline" aria-label={'Delete Item'} className="cursor-pointer hover:!border-gray-900 hover:text-gray-700">
+            <ActionIcon
+              size="sm"
+              variant="outline"
+              aria-label="Delete coupon"
+              className="cursor-pointer hover:!border-gray-900 hover:text-gray-700"
+            >
               <TrashIcon className="h-4 w-4" />
             </ActionIcon>
           </DeletePopover>
@@ -91,25 +114,25 @@ export const getColumns = ({
       ),
     },
     {
-      title: <HeaderCell title="Coupon Name" />,
-      dataIndex: 'name',
-      key: 'name',
-      width: 250,
-      render: (_: string, row: any) => (
-        <AvatarCard
-          src={`/uploads/${row.image || 'countrydefault.png'}`} // fallback image
-          name={row?.name?.[lang] ?? row?.name?.en ?? 'Unnamed'}
-          description={`ID-${row.id}`}
-        />
+      title: <HeaderCell title="Code" />,
+      dataIndex: 'code',
+      key: 'code',
+      width: 120,
+      render: (code: string) => (
+        <span className="font-mono font-semibold uppercase">{code}</span>
       ),
     },
     {
-      title: <HeaderCell title="Discount" />,
-      dataIndex: 'discount',
-      key: 'discount',
-      width: 120,
-      render: (discount: string) => (
-        <span className="font-medium">{discount}</span>
+      title: <HeaderCell title="Name" />,
+      dataIndex: 'name',
+      key: 'name',
+      width: 220,
+      render: (_: string, row: any) => (
+        <AvatarCard
+          src="/uploads/countrydefault.png"
+          name={row?.name?.[lang] ?? row?.name?.en ?? 'Unnamed'}
+          description={row.id}
+        />
       ),
     },
     {
@@ -117,43 +140,64 @@ export const getColumns = ({
       dataIndex: 'type',
       key: 'type',
       width: 150,
-      render: (type: string) => type,
+      render: (type: CouponDiscountType) => formatCouponType(type),
     },
-    // {
-    //   title: <HeaderCell title="Doctors" />,
-    //   dataIndex: 'doctors',
-    //   key: 'doctors',
-    //   width: 200,
-    //   render: (_: any, row: any) => (
-    //     <div>
-    //       {row?.doctors ? row?.doctors.map((doctor: any) => (
-    //         <span key={doctor.id}>
-    //           {doctor?.name?.[lang] ?? doctor?.name?.en} <br />
-    //         </span>
-    //       )) : 'No doctors'}
-    //     </div>
-    //   ),
-    // },
-    // {
-    //   title: <HeaderCell title="Status" />,
-    //   dataIndex: 'status',
-    //   key: 'status',
-    //   width: 120,
-    //   render: (status: string) => <span className="capitalize font-medium">{status}</span>,
-    // },
-    // {
-    //   title: (
-    //     <HeaderCell
-    //       title="Created"
-    //       sortable
-    //       ascending={sortConfig?.direction === 'asc' && sortConfig?.key === 'created_at'}
-    //     />
-    //   ),
-    //   onHeaderCell: () => onHeaderCellClick('created_at'),
-    //   dataIndex: 'created_at',
-    //   key: 'created_at',
-    //   width: 50,
-    //   render: (value: Date) => <DateCell date={value} />,
-    // },
+    {
+      title: <HeaderCell title="Value" />,
+      dataIndex: 'value',
+      key: 'value',
+      width: 120,
+      render: (_: number, row: any) =>
+        formatCouponValue(row.type, row.value ?? 0),
+    },
+    {
+      title: <HeaderCell title="Status" />,
+      dataIndex: 'is_active',
+      key: 'is_active',
+      width: 100,
+      render: (isActive: boolean) => (
+        <Badge color={isActive ? 'success' : 'danger'}>
+          {isActive ? 'Active' : 'Inactive'}
+        </Badge>
+      ),
+    },
+    {
+      title: <HeaderCell title="Redemptions" />,
+      dataIndex: 'redemptions_count',
+      key: 'redemptions_count',
+      width: 110,
+      render: (count: number) => count ?? 0,
+    },
+    {
+      title: <HeaderCell title="Schedule" />,
+      dataIndex: 'starts_at',
+      key: 'schedule',
+      width: 200,
+      render: (_: string, row: any) => {
+        if (!row.starts_at && !row.ends_at) return '—';
+        return (
+          <div className="text-xs leading-5">
+            {row.starts_at && (
+              <div>
+                From: <DateCell date={row.starts_at} />
+              </div>
+            )}
+            {row.ends_at && (
+              <div>
+                To: <DateCell date={row.ends_at} />
+              </div>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      title: <HeaderCell title="Min subtotal" />,
+      dataIndex: 'min_order_subtotal',
+      key: 'min_order_subtotal',
+      width: 110,
+      render: (value: number | null) =>
+        value != null ? `${value} SAR` : '—',
+    },
   ];
 };

@@ -23,6 +23,9 @@ import {
 } from '@/utils/resolve-localized-name';
 import {
   canConfirmCashPayment,
+  getPaymentStatusBadgeClasses,
+  getPaymentStatusBadgeLabel,
+  getPaymentStatusColorClass,
   getPaymentStatusLabel,
   isCashPayment,
 } from '@/utils/reservation-payment';
@@ -75,6 +78,7 @@ function getStatusColor(status: string | number | undefined) {
   if (s === '4') return 'bg-red-50 text-red-800 border-red-200';
   if (s === '5') return 'bg-violet-50 text-violet-800 border-violet-200';
   if (s === '6') return 'bg-gray-50 text-gray-800 border-gray-200';
+  if (s === '8') return 'bg-rose-50 text-rose-800 border-rose-200';
   return 'bg-gray-50 text-gray-700 border-gray-200';
 }
 
@@ -238,6 +242,7 @@ export function ReservationViewContent({
   } = useReservationDetails(reservation);
 
   const paidLabel = getPaymentStatusLabel(reservation);
+  const paymentStatusBadge = getPaymentStatusBadgeLabel(reservation?.payment_status);
   const showConfirmCash = canEdit && canConfirmCashPayment(reservation);
 
   return (
@@ -271,6 +276,16 @@ export function ReservationViewContent({
                 )}
               >
                 {reservation.reservation_source}
+              </span>
+            )}
+            {paymentStatusBadge && (
+              <span
+                className={cn(
+                  'rounded-full border px-3 py-1 text-xs font-semibold',
+                  getPaymentStatusBadgeClasses(reservation?.payment_status)
+                )}
+              >
+                {paymentStatusBadge}
               </span>
             )}
             {isCashPayment(reservation?.payment_method) && (
@@ -310,13 +325,7 @@ export function ReservationViewContent({
             <p
               className={cn(
                 'text-base font-bold',
-                isCashPayment(reservation?.payment_method)
-                  ? reservation?.paid
-                    ? 'text-emerald-600'
-                    : 'text-orange-600'
-                  : reservation?.paid
-                    ? 'text-emerald-600'
-                    : 'text-red-600'
+                getPaymentStatusColorClass(reservation)
               )}
             >
               {paidLabel}
@@ -397,7 +406,24 @@ export function ReservationViewContent({
                   : reservation?.payment_method
               }
             />
-            <DetailItem label="Payment Status" value={paidLabel} />
+            <DetailItem
+              label="Payment Status"
+              value={paymentStatusBadge ?? paidLabel}
+            />
+            {reservation?.payment_discount != null &&
+              Number(reservation.payment_discount) > 0 && (
+                <DetailItem
+                  label="Payment Discount"
+                  value={`${reservation.payment_discount}%`}
+                />
+              )}
+            {reservation?.provider_fee != null &&
+              Number(reservation.provider_fee) > 0 && (
+                <DetailItem
+                  label="Provider Fee"
+                  value={`${reservation.provider_fee} SAR`}
+                />
+              )}
             <DetailItem
               label="Sub Total"
               value={

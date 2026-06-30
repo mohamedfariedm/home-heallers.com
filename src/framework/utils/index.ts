@@ -219,9 +219,16 @@ class Client {
     };
     coupons = {
         all: (param: string) => HttpClient.get(`${routes.coupons.index}?${param}`),
+        show: (couponId: string) => HttpClient.get(`${routes.coupons.index}/${couponId}`),
         create: (input: any) => HttpClient.post(`${routes.coupons.index}`, input),
-        update: (input: any) => HttpClient.patch(`${routes.coupons.index}/${input.coupon_id}`, input),
-        delete: (input: { region_id: number[] }) => HttpClient.delete(`${routes.coupons.index}/${input.region_id}`)
+        update: (input: any) => {
+            const { coupon_id, ...body } = input;
+            return HttpClient.patch(`${routes.coupons.index}/${coupon_id}`, body);
+        },
+        delete: (input: { coupon_id: string | string[] }) => {
+            const id = Array.isArray(input.coupon_id) ? input.coupon_id[0] : input.coupon_id;
+            return HttpClient.delete(`${routes.coupons.index}/${id}`);
+        },
     }
 
     cities = {

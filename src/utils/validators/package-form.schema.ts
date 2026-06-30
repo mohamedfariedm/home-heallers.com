@@ -31,6 +31,8 @@ export const packageFormSchema = z.object({
         label: z.string(),
       })
     ).optional(), // Make doctors optional
+
+  category_ids: z.array(z.string()).optional().default([]),
 });
 
 export type PackageFormInput = z.infer<typeof packageFormSchema>;

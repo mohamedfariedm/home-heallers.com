@@ -24,13 +24,13 @@ export default function ConfirmCashPaymentModal({
   reservationId,
   onSuccess,
 }: ConfirmCashPaymentModalProps) {
-  const [status, setStatus] = useState<number>(ReservationStatus.Confirmed);
+  const [status, setStatus] = useState<number>(ReservationStatus.Reviewing);
   const [notes, setNotes] = useState('');
   const { mutate: updateStatus, isPending } = useUpdateReservationStatus();
 
   const handleClose = () => {
     if (isPending) return;
-    setStatus(ReservationStatus.Confirmed);
+    setStatus(ReservationStatus.Reviewing);
     setNotes('');
     onClose();
   };
@@ -46,7 +46,7 @@ export default function ConfirmCashPaymentModal({
       {
         onSuccess: (updatedReservation) => {
           onSuccess?.(updatedReservation);
-          setStatus(ReservationStatus.Confirmed);
+          setStatus(ReservationStatus.Reviewing);
           setNotes('');
           onClose();
         },
@@ -61,7 +61,9 @@ export default function ConfirmCashPaymentModal({
           Confirm & mark paid
         </Title>
         <Text as="p" className="mt-1 text-sm text-gray-500">
-          Mark cash as collected and update reservation #{reservationId}.
+          Mark cash as collected for reservation #{reservationId}. The server
+          will set payment to paid and move the reservation to Reviewing for ops
+          follow-up.
         </Text>
 
         <div className="mt-5 space-y-4">

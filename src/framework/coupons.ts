@@ -9,6 +9,14 @@ export function useCoupons(param:string) {
   return useQuery<any, Error>({queryKey: [routes.coupons.index,param], queryFn: () => client.coupons.all(param)});
 };
 
+export function useCoupon(couponId: string, enabled = true) {
+  return useQuery<any, Error>({
+    queryKey: [routes.coupons.index, couponId],
+    queryFn: () => client.coupons.show(couponId),
+    enabled: enabled && Boolean(couponId),
+  });
+}
+
 export const useCreateCoupons = () => {
 
     const queryClient = useQueryClient();
