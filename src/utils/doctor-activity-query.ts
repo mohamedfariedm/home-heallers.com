@@ -92,6 +92,7 @@ export function formatReservationStatusLabel(
     '4': 'Canceled',
     '5': 'Completed',
     '6': 'Failed',
+    '8': 'Pending Payment',
   };
   return labels[String(status)] ?? String(status);
 }

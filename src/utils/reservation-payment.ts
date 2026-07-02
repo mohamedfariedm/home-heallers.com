@@ -15,6 +15,7 @@ export const RESERVATION_STATUS_OPTIONS = [
   { value: ReservationStatus.Canceled, label: 'Canceled' },
   { value: ReservationStatus.Completed, label: 'Completed' },
   { value: ReservationStatus.Failed, label: 'Failed' },
+  { value: ReservationStatus.PendingPayment, label: 'Pending Payment' },
 ] as const;
 
 export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'cash_pending';
