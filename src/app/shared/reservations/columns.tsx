@@ -17,7 +17,7 @@ import ColumnFilterPopover from '@/app/shared/customer-suport/column-filter-popo
 import client from '@/framework/utils';
 import toast from 'react-hot-toast';
 import InviteDoctorsButton from './invite-doctors-button';
-import { PiDeviceMobile, PiGlobe } from 'react-icons/pi';
+import { PiDeviceMobile, PiGlobe, PiReceipt } from 'react-icons/pi';
 import {
   getReservationPatientName,
   resolveLocalizedName,
@@ -28,8 +28,14 @@ import {
   getPaymentStatusBadgeLabel,
   getPaymentStatusColorClass,
   getPaymentStatusLabel,
+  getPaymentWhatsappDisabledReason,
   shouldHidePaymentLink,
 } from '@/utils/reservation-payment';
+import {
+  canSendInvoiceWhatsapp as canSendInvoiceWhatsappForRow,
+  getReservationClientMobile,
+  getSendInvoiceWhatsappDisabledReason,
+} from '@/utils/reservation-invoice-whatsapp';
 
 const truncateText = (value: string, max = 80) => {
   if (value.length <= max) return value;
@@ -79,6 +85,7 @@ interface Columns {
   canDelete?: boolean;
   canInviteDoctors?: boolean;
   canSendPaymentWhatsapp?: boolean;
+  canSendInvoiceWhatsapp?: boolean;
 }
 
 export const getColumns = ({
@@ -95,6 +102,7 @@ export const getColumns = ({
   canDelete = false,
   canInviteDoctors = false,
   canSendPaymentWhatsapp = false,
+  canSendInvoiceWhatsapp = false,
 }: Columns) => [
   {
     title: (
@@ -118,14 +126,21 @@ export const getColumns = ({
       />
     ),
   },
-  ...(canView || canEdit || canDelete || canInviteDoctors || canSendPaymentWhatsapp
+  ...(canView || canEdit || canDelete || canInviteDoctors || canSendPaymentWhatsapp || canSendInvoiceWhatsapp
     ? [{
     title: <></>,
     dataIndex: 'actions',
     key: 'actions',
-    width: 160,
+    width: 200,
     render: (_: any, row: any) => {
       const source = row?.reservation_source;
+      const clientMobile = getReservationClientMobile(row);
+      const invoiceWhatsappEnabled =
+        canSendInvoiceWhatsapp && canSendInvoiceWhatsappForRow(row);
+      const invoiceWhatsappDisabledReason = getSendInvoiceWhatsappDisabledReason(row);
+      const paymentWhatsappEnabled =
+        canSendPaymentWhatsapp && !shouldHidePaymentLink(row);
+      const paymentWhatsappDisabledReason = getPaymentWhatsappDisabledReason(row);
 
       const handleWhatsAppPayment = async () => {
         try {
@@ -137,6 +152,26 @@ export const getColumns = ({
           toast.error(
             error?.response?.data?.message ||
               'Failed to send payment WhatsApp message'
+          );
+        }
+      };
+
+      const handleSendInvoiceWhatsapp = async () => {
+        const mobile = clientMobile;
+        if (
+          mobile &&
+          !window.confirm(`Send invoice PDF to ${mobile}?`)
+        ) {
+          return;
+        }
+
+        try {
+          await client.reservations.sendInvoiceWhatsapp(row.id);
+          toast.success('Invoice is being sent to the client on WhatsApp.');
+        } catch (error: any) {
+          toast.error(
+            error?.response?.data?.message ||
+              'Failed to send invoice via WhatsApp'
           );
         }
       };
@@ -156,7 +191,14 @@ export const getColumns = ({
                   <EyeIcon className="h-4 w-4" />
                 </ActionIcon>
               }
-              view={<ReservationViewModal reservation={row} canEdit={canEdit} />}
+              view={
+                <ReservationViewModal
+                  reservation={row}
+                  canEdit={canEdit}
+                  canSendPaymentWhatsapp={canSendPaymentWhatsapp}
+                  canSendInvoiceWhatsapp={canSendInvoiceWhatsapp}
+                />
+              }
               label=""
               className="m-0 bg-transparent p-0 text-gray-700"
             />
@@ -177,20 +219,56 @@ export const getColumns = ({
             </Tooltip>
           )}
 
-          {canSendPaymentWhatsapp && !shouldHidePaymentLink(row) && (
+          {canSendPaymentWhatsapp && (
             <Tooltip
               size="sm"
-              content={() => 'Send Payment WhatsApp'}
+              content={() =>
+                paymentWhatsappEnabled
+                  ? 'Send Payment WhatsApp'
+                  : paymentWhatsappDisabledReason ?? 'Send Payment WhatsApp'
+              }
               placement="top"
               color="invert"
             >
               <ActionIcon
+                tag={paymentWhatsappEnabled ? 'button' : 'span'}
                 size="sm"
                 variant="outline"
-                className="cursor-pointer hover:text-gray-700"
-                onClick={handleWhatsAppPayment}
+                className={cn(
+                  paymentWhatsappEnabled
+                    ? 'cursor-pointer hover:text-gray-700'
+                    : 'cursor-not-allowed text-gray-300'
+                )}
+                {...(paymentWhatsappEnabled && { onClick: handleWhatsAppPayment })}
               >
                 <ChatSolidIcon className="h-4 w-4" />
+              </ActionIcon>
+            </Tooltip>
+          )}
+
+          {canSendInvoiceWhatsapp && (
+            <Tooltip
+              size="sm"
+              content={() =>
+                invoiceWhatsappEnabled
+                  ? 'Send invoice on WhatsApp'
+                  : invoiceWhatsappDisabledReason ?? 'Send invoice on WhatsApp'
+              }
+              placement="top"
+              color="invert"
+            >
+              <ActionIcon
+                tag={invoiceWhatsappEnabled ? 'button' : 'span'}
+                size="sm"
+                variant="outline"
+                className={cn(
+                  invoiceWhatsappEnabled
+                    ? 'cursor-pointer text-emerald-600 hover:text-emerald-700'
+                    : 'cursor-not-allowed text-gray-300'
+                )}
+                {...(invoiceWhatsappEnabled && { onClick: handleSendInvoiceWhatsapp })}
+              >
+                <PiReceipt className="h-4 w-4" />
               </ActionIcon>
             </Tooltip>
           )}

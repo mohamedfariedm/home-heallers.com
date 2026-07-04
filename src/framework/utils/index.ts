@@ -209,6 +209,8 @@ class Client {
             },
         }),
         createPaymentWhatsapp: (input: { reservation_id: number }) => HttpClient.post('/reservations/create-payment-whatsapp', input),
+        sendInvoiceWhatsapp: (reservationId: number) =>
+            HttpClient.post(`/reservations/${reservationId}/send-invoice-whatsapp`),
         updateStatus: (input: { reservation_id: number; status: number; paid?: boolean; notes?: string }) =>
             HttpClient.patch(`${routes.reservations.index}/${input.reservation_id}/status`, {
                 status: input.status,

@@ -95,6 +95,7 @@ export default function ReservationsTablePage() {
               canDelete={reservationPermissions.delete}
               canInviteDoctors={reservationPermissions.inviteDoctors}
               canSendPaymentWhatsapp={reservationPermissions.sendPaymentWhatsapp}
+              canSendInvoiceWhatsapp={reservationPermissions.sendInvoiceWhatsapp}
             />
           </>
         )}

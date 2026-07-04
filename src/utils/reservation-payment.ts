@@ -45,6 +45,21 @@ export function shouldHidePaymentLink(reservation: ReservationPaymentFields): bo
   return isCashPayment(reservation.payment_method);
 }
 
+export function getPaymentWhatsappDisabledReason(
+  reservation: ReservationPaymentFields
+): string | null {
+  if (reservation.payment_status === 'paid') {
+    return 'Payment already completed';
+  }
+  if (reservation.payment_status === 'cash_pending') {
+    return 'Cash payment pending — payment link not needed';
+  }
+  if (isCashPayment(reservation.payment_method)) {
+    return 'Cash payment — payment link not available';
+  }
+  return null;
+}
+
 export function getPaymentStatusBadgeLabel(
   paymentStatus: string | null | undefined
 ): string | null {
@@ -119,4 +134,20 @@ export function getPaymentStatusColorClass(
 
 export function canConfirmCashPayment(reservation: ReservationPaymentFields): boolean {
   return isCashPending(reservation);
+}
+
+export function getConfirmCashPaymentDisabledReason(
+  reservation: ReservationPaymentFields
+): string | null {
+  if (canConfirmCashPayment(reservation)) return null;
+
+  if (reservation.payment_status === 'paid' || Boolean(reservation.paid)) {
+    return 'Payment already confirmed';
+  }
+
+  if (!isCashPayment(reservation.payment_method)) {
+    return 'Only available for cash payments awaiting collection';
+  }
+
+  return 'Cash payment is not pending confirmation';
 }

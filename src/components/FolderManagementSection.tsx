@@ -5,11 +5,12 @@ import {
   Plus,
   Trash2,
   ChevronRight,
-  Video,
   Upload,
   X,
   Home,
   Play,
+  FileText,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { MediaFolder, MediaFile } from '../types/settings';
 import { FileUpload } from '@/app/[locale]/(hydrogen)/attachments/components/ui/FileUpload';
@@ -23,6 +24,23 @@ interface FolderManagementSectionProps {
 
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+function getFileExtension(nameOrUrl?: string): string {
+  if (!nameOrUrl) return '';
+  return nameOrUrl.split('?')[0].split('.').pop()?.toLowerCase() ?? '';
+}
+
+function isVideoFile(nameOrUrl?: string): boolean {
+  return ['mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv', 'flv', 'm4v'].includes(
+    getFileExtension(nameOrUrl)
+  );
+}
+
+function isImageFile(nameOrUrl?: string): boolean {
+  return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'avif'].includes(
+    getFileExtension(nameOrUrl)
+  );
 }
 
 /** Walk the tree and return the folder at the given path of IDs */
@@ -111,8 +129,11 @@ interface VideoModalProps {
   onClose: () => void;
 }
 
-const VideoModal: React.FC<VideoModalProps> = ({ file, onClose }) => {
+const FilePreviewModal: React.FC<VideoModalProps> = ({ file, onClose }) => {
   const src = file.attachment?.original || file.attachment?.thumbnail || '';
+  const isVideo = isVideoFile(file.name || src);
+  const isImage = !isVideo && isImageFile(file.name || src);
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
@@ -122,10 +143,9 @@ const VideoModal: React.FC<VideoModalProps> = ({ file, onClose }) => {
         className="relative w-full max-w-4xl bg-black rounded-2xl overflow-hidden shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="flex items-center justify-between px-5 py-3 bg-gray-900">
           <p className="text-white font-medium truncate max-w-[80%]" title={file.name}>
-            {file.name || 'Video Preview'}
+            {file.name || 'File Preview'}
           </p>
           <button
             onClick={onClose}
@@ -135,9 +155,8 @@ const VideoModal: React.FC<VideoModalProps> = ({ file, onClose }) => {
             <X className="w-5 h-5" />
           </button>
         </div>
-        {/* Video */}
-        <div className="aspect-video bg-black">
-          {src ? (
+        <div className={`bg-black ${isVideo || isImage ? 'aspect-video' : 'min-h-[200px]'}`}>
+          {src && isVideo ? (
             <video
               src={src}
               className="w-full h-full"
@@ -145,10 +164,29 @@ const VideoModal: React.FC<VideoModalProps> = ({ file, onClose }) => {
               autoPlay
               preload="auto"
             />
+          ) : src && isImage ? (
+            <img
+              src={src}
+              alt={file.name || 'Preview'}
+              className="w-full h-full object-contain"
+            />
+          ) : src ? (
+            <div className="w-full h-full flex flex-col items-center justify-center gap-4 p-8 text-gray-300">
+              <FileText className="w-16 h-16 text-gray-400" />
+              <p className="text-center break-all">{file.name || 'File'}</p>
+              <a
+                href={src}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-colors"
+              >
+                Open / Download
+              </a>
+            </div>
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-gray-500">
-              <Video className="w-16 h-16" />
-              <p>No video source available</p>
+              <FileText className="w-16 h-16" />
+              <p>No file source available</p>
             </div>
           )}
         </div>
@@ -166,31 +204,51 @@ interface FileCardProps {
 }
 
 const FileCard: React.FC<FileCardProps> = ({ file, onDelete, onPreview }) => {
-  // thumbnail may be null from API — fall back to original
   const src = file.attachment?.original || file.attachment?.thumbnail || '';
+  const isVideo = isVideoFile(file.name || src);
+  const isImage = !isVideo && isImageFile(file.name || src);
+
   return (
     <div className="group relative bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md hover:border-blue-300 transition-all">
-      {/* Thumbnail / preview area — click opens modal */}
       <button
         onClick={onPreview}
         className="w-full aspect-video bg-gray-100 flex items-center justify-center overflow-hidden relative"
       >
-        {src ? (
+        {src && isVideo ? (
           <video
             src={src}
             className="w-full h-full object-cover"
             muted
             preload="metadata"
           />
+        ) : src && isImage ? (
+          <img
+            src={src}
+            alt={file.name || 'Preview'}
+            className="w-full h-full object-cover"
+          />
         ) : (
-          <Video className="w-10 h-10 text-gray-300" />
-        )}
-        {/* Play overlay */}
-        <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-all">
-          <div className="opacity-0 group-hover:opacity-100 transition-all bg-white/90 rounded-full p-3 shadow-lg">
-            <Play className="w-6 h-6 text-blue-600 fill-blue-600" />
+          <div className="flex flex-col items-center gap-2 p-3">
+            <FileText className="w-10 h-10 text-gray-300" />
+            <span className="text-xs text-gray-400 text-center line-clamp-2 break-all">
+              {file.name || 'File'}
+            </span>
           </div>
-        </div>
+        )}
+        {isVideo && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-all">
+            <div className="opacity-0 group-hover:opacity-100 transition-all bg-white/90 rounded-full p-3 shadow-lg">
+              <Play className="w-6 h-6 text-blue-600 fill-blue-600" />
+            </div>
+          </div>
+        )}
+        {!isVideo && (isImage || src) && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/20 transition-all">
+            <div className="opacity-0 group-hover:opacity-100 transition-all bg-white/90 rounded-full p-3 shadow-lg">
+              <ImageIcon className="w-6 h-6 text-blue-600" />
+            </div>
+          </div>
+        )}
       </button>
 
       <div className="p-3">
@@ -253,12 +311,12 @@ const UploadPanel: React.FC<UploadPanelProps> = ({ onUpload, onClose }) => {
       </div>
 
       <FileUpload
-        label="Select Video / File"
+        label="Select File"
         onUpload={(files) => setPendingFiles(files)}
         onRemove={() => setPendingFiles([])}
         currentFiles={pendingFiles}
         multiple={false}
-        accept="video/*,image/*,application/pdf"
+        accept="*/*"
       />
 
       <button
@@ -520,9 +578,8 @@ const FolderManagementSection: React.FC<FolderManagementSectionProps> = ({
         />
       )}
 
-      {/* Video Preview Modal */}
       {previewFile && (
-        <VideoModal
+        <FilePreviewModal
           file={previewFile}
           onClose={() => setPreviewFile(null)}
         />

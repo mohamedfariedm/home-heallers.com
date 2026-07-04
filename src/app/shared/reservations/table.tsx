@@ -51,6 +51,7 @@ export default function ReservationsTable({
   canDelete = false,
   canInviteDoctors = false,
   canSendPaymentWhatsapp = false,
+  canSendInvoiceWhatsapp = false,
 }: { 
   data: any[], 
   getSelectedColumns: React.Dispatch<React.SetStateAction<any[]>>, 
@@ -61,6 +62,7 @@ export default function ReservationsTable({
   canDelete?: boolean,
   canInviteDoctors?: boolean,
   canSendPaymentWhatsapp?: boolean,
+  canSendInvoiceWhatsapp?: boolean,
 }) {
   const { mutate: deleteReservation } = useDeleteReservation();
   const searchParams = useSearchParams();
@@ -177,8 +179,9 @@ export default function ReservationsTable({
         canDelete,
         canInviteDoctors,
         canSendPaymentWhatsapp,
+        canSendInvoiceWhatsapp,
       }),
-    [selectedRowKeys, onHeaderCellClick, sortConfig.key, sortConfig.direction, onDeleteItem, handleRowSelect, handleSelectAll, canView, canEdit, canDelete, canInviteDoctors, canSendPaymentWhatsapp]
+    [selectedRowKeys, onHeaderCellClick, sortConfig.key, sortConfig.direction, onDeleteItem, handleRowSelect, handleSelectAll, canView, canEdit, canDelete, canInviteDoctors, canSendPaymentWhatsapp, canSendInvoiceWhatsapp]
   );
 
   const { visibleColumns, checkedColumns, setCheckedColumns } = useColumn(columns);

@@ -15,6 +15,8 @@ import ChatSolidIcon from '@/components/icons/chat-solid';
 import InviteDoctorsButton from '@/app/shared/reservations/invite-doctors-button';
 import { canEditReservationWithPermission } from '@/app/shared/reservations/reservation-source';
 import { ReservationViewContent } from '@/app/shared/reservations/reservation-view-modal';
+import { resolveReservationsPermissions } from '@/app/shared/reservations/permissions';
+import { usePermissions } from '@/context/PermissionsContext';
 import toast from 'react-hot-toast';
 
 interface KanbanCardModalProps {
@@ -27,6 +29,8 @@ export default function KanbanCardModal({
   canEdit = false,
 }: KanbanCardModalProps) {
   const { closeModal } = useModal();
+  const { permissions } = usePermissions();
+  const reservationPermissions = resolveReservationsPermissions(permissions);
   const [activeTab, setActiveTab] = useState(0);
   const [reservations, setReservations] = useState<any[]>([]);
   const [selectedReservation, setSelectedReservation] = useState<any | null>(null);
@@ -244,7 +248,11 @@ export default function KanbanCardModal({
                     <span>Back to Reservations List</span>
                   </button>
                   <div className="overflow-hidden rounded-xl border border-gray-200 bg-gray-50/50 p-2 dark:border-gray-700 dark:bg-gray-100/50">
-                    <ReservationViewContent reservation={viewingReservation} />
+                    <ReservationViewContent
+                      reservation={viewingReservation}
+                      canSendPaymentWhatsapp={reservationPermissions.sendPaymentWhatsapp}
+                      canSendInvoiceWhatsapp={reservationPermissions.sendInvoiceWhatsapp}
+                    />
                   </div>
                 </div>
               ) : (selectedReservation &&
