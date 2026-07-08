@@ -209,13 +209,28 @@ class Client {
             },
         }),
         createPaymentWhatsapp: (input: { reservation_id: number }) => HttpClient.post('/reservations/create-payment-whatsapp', input),
+        sendInvoiceWhatsapp: (reservationId: number) =>
+            HttpClient.post(`/reservations/${reservationId}/send-invoice-whatsapp`),
+        updateStatus: (input: { reservation_id: number; status: number; paid?: boolean; notes?: string }) =>
+            HttpClient.patch(`${routes.reservations.index}/${input.reservation_id}/status`, {
+                status: input.status,
+                ...(input.paid !== undefined && { paid: input.paid }),
+                ...(input.notes !== undefined && { notes: input.notes }),
+            }),
         inviteDoctors: (input: { reservation_id: number; doctor_ids: number[] }) => HttpClient.post(`${routes.reservations.index}/invite-doctors/${input.reservation_id}`, { doctor_ids: input.doctor_ids }),
     };
     coupons = {
         all: (param: string) => HttpClient.get(`${routes.coupons.index}?${param}`),
+        show: (couponId: string) => HttpClient.get(`${routes.coupons.index}/${couponId}`),
         create: (input: any) => HttpClient.post(`${routes.coupons.index}`, input),
-        update: (input: any) => HttpClient.patch(`${routes.coupons.index}/${input.coupon_id}`, input),
-        delete: (input: { region_id: number[] }) => HttpClient.delete(`${routes.coupons.index}/${input.region_id}`)
+        update: (input: any) => {
+            const { coupon_id, ...body } = input;
+            return HttpClient.patch(`${routes.coupons.index}/${coupon_id}`, body);
+        },
+        delete: (input: { coupon_id: string | string[] }) => {
+            const id = Array.isArray(input.coupon_id) ? input.coupon_id[0] : input.coupon_id;
+            return HttpClient.delete(`${routes.coupons.index}/${id}`);
+        },
     }
 
     cities = {
@@ -320,11 +335,44 @@ class Client {
         }
     }
     notifications = {
-        all: (param: string) => HttpClient.get(`${routes.notifications.index}/index?${param}`),
-        findAllData: () => HttpClient.get(`${routes.notifications.index}/create`),
-        create: (input: notifications) => HttpClient.post(`${routes.notifications.index}/store`, input),
-        // update: (input : Products) => HttpClient.post(`${routes.products.index}/update`, input) ,
-        // delete: (input: {product_id: number[]}) => HttpClient.post(`${routes.products.index}/delete`, input)
+        sendGlobal: async (input: notifications) => {
+            const response = await HttpClient.post(`${routes.notifications.index}/send-global`, input);
+            return response.data;
+        },
+        sendToClients: async (input: notifications) => {
+            const response = await HttpClient.post(`${routes.notifications.index}/send-to-clients`, input);
+            return response.data;
+        },
+        sendToDoctors: async (input: notifications) => {
+            const response = await HttpClient.post(`${routes.notifications.index}/send-to-doctors`, input);
+            return response.data;
+        },
+        sendToSpecific: async (input: notifications) => {
+            const response = await HttpClient.post(`${routes.notifications.index}/send-to-specific`, input);
+            return response.data;
+        },
+        scheduled: {
+            all: (param: string) =>
+                HttpClient.get(`${routes.notifications.index}/scheduled?${param}`),
+            findOne: (id: number) =>
+                HttpClient.get(`${routes.notifications.index}/scheduled/${id}`),
+            create: async (input: unknown) => {
+                const response = await HttpClient.post(`${routes.notifications.index}/scheduled`, input);
+                return response.data;
+            },
+            update: (id: number, input: unknown) =>
+                HttpClient.put(`${routes.notifications.index}/scheduled/${id}`, input),
+            cancel: (id: number) =>
+                HttpClient.delete(`${routes.notifications.index}/scheduled/${id}`),
+        },
+        sent: {
+            filterOptions: () =>
+                HttpClient.get(`${routes.notifications.index}/sent/filter-options`),
+            all: (param: string) =>
+                HttpClient.get(`${routes.notifications.index}/sent?${param}`),
+            findOne: (id: number) =>
+                HttpClient.get(`${routes.notifications.index}/sent/${id}`),
+        },
     }
 
     checkin = {

@@ -3,6 +3,8 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useSession } from 'next-auth/react';
+import Cookies from 'js-cookie';
+import { AUTH_TOKEN } from '@/config/constants';
 
 interface PermissionsContextType {
   permissions: string[];
@@ -49,7 +51,7 @@ export function PermissionsProvider({ children, initialPermissions = [] }: { chi
       // If session exists without permissions, keep using persisted local permissions
       const stored = getStoredPermissions();
       setPermissions(stored);
-    } else if (status === 'unauthenticated') {
+    } else if (status === 'unauthenticated' && !Cookies.get(AUTH_TOKEN)) {
       console.log('PermissionsProvider - Clearing permissions');
       setPermissions([]);
       localStorage.removeItem('permissions');

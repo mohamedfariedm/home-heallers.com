@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { isReservationLockedSource } from "@/app/shared/reservations/reservation-source"
 
 export const reservationFormSchema = z
   .object({
@@ -30,14 +31,15 @@ export const reservationFormSchema = z
     fees: z.string().min(1, "Fees is required"),
     fees_type: z.string().min(1, "Fees is required"),
     total_amount: z.string().min(1, "Total amount is required"),
-    transaction_reference: z.string().min(1, "Transaction reference is required"),
+    transaction_reference: z.string().optional(),
     status: z
-      .enum(["1", "2", "3", "4", "5", "6"], {
+      .enum(["1", "2", "3", "4", "5", "6", "8"], {
         errorMap: () => ({ message: "Status is required" }),
       })
       .default("2"),
     pain_location: z.string().min(1, "Pain location is required"),
     notes: z.string().optional(),
+    operation_notes: z.string().optional(),
     customer_tier: z.string().optional(),
     cc: z
       .string()
@@ -58,6 +60,7 @@ export const reservationFormSchema = z
     // New fields
     paid: z.number().optional().default(0),
     source_campaign: z.string().optional(),
+    reservation_source: z.string().optional(),
     center_id: z.string().optional(),
 
     // Lead-related fields
@@ -71,7 +74,9 @@ export const reservationFormSchema = z
           time: z.string().optional(),
           time_period: z.enum(["morning", "afternoon", "evening"]).default("morning"),
           doctor_id: z.string().optional(),
-          status: z.string().optional(),
+          status: z
+            .enum(["pending", "confirmed", "completed", "cancelled"])
+            .default("pending"),
         }),
       )
       .min(1, "At least one date is required"),
@@ -130,6 +135,17 @@ export const reservationFormSchema = z
         code: z.ZodIssueCode.custom,
         message: "Patient is required",
         path: ["patient_id"],
+      });
+    }
+
+    if (
+      !isReservationLockedSource({ reservation_source: data.reservation_source }) &&
+      (!data.transaction_reference || data.transaction_reference.trim() === "")
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Transaction reference is required",
+        path: ["transaction_reference"],
       });
     }
   })

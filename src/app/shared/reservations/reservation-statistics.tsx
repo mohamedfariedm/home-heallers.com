@@ -53,6 +53,11 @@ interface ReservationStatistics {
     total_amount?: number;
     link?: string;
   };
+  cash_pending_statistics?: {
+    count?: number;
+    total_amount?: number;
+    link?: string;
+  };
   remaining_payment_statistics?: {
     count?: number;
     total_remaining?: number;
@@ -464,7 +469,7 @@ export default function ReservationStatistics({
       compact: true,
     },
     {
-      title: 'Unpaid',
+      title: 'Unpaid (online)',
       value: stats.unpaid_statistics?.count || 0,
       subtitle: `${(stats.unpaid_statistics?.total_amount || 0).toLocaleString()} SAR`,
       icon: PiXCircleBold,
@@ -478,7 +483,21 @@ export default function ReservationStatistics({
       compact: true,
     },
     {
-      title: 'Remaining Payment',
+      title: 'Cash to collect',
+      value: stats.cash_pending_statistics?.count || 0,
+      subtitle: `${(stats.cash_pending_statistics?.total_amount || 0).toLocaleString()} SAR`,
+      icon: PiMoneyBold,
+      bgColor: 'bg-orange-50',
+      textColor: 'text-orange-600',
+      darkBgColor: 'dark:bg-orange-900/20',
+      darkTextColor: 'dark:text-orange-400',
+      blurColor: 'bg-orange-50/50',
+      darkBlurColor: 'dark:bg-orange-900/10',
+      link: stats.cash_pending_statistics?.link,
+      compact: true,
+    },
+    {
+      title: 'Outstanding (online)',
       value: stats.remaining_payment_statistics?.count || 0,
       subtitle: `${(stats.remaining_payment_statistics?.total_remaining || 0).toLocaleString()} SAR`,
       icon: PiCreditCardBold,

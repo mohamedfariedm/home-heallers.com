@@ -128,6 +128,36 @@ export const getColumns = ({
       width: 150,
       render: (type: string) => type,
     },
+    {
+      title: <HeaderCell title="Categories" />,
+      dataIndex: 'categories',
+      key: 'categories',
+      width: 200,
+      render: (_: unknown, row: { categories?: { id: number; name?: Record<string, string> }[]; category_ids?: number[] }) => {
+        if (row?.categories?.length) {
+          return (
+            <div className="flex flex-wrap gap-1">
+              {row.categories.map((category) => (
+                <span
+                  key={category.id}
+                  className="inline-block rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700"
+                >
+                  {category?.name?.[lang] ?? category?.name?.en ?? `Category ${category.id}`}
+                </span>
+              ))}
+            </div>
+          );
+        }
+        if (row?.category_ids?.length) {
+          return (
+            <span className="text-gray-500">
+              {row.category_ids.join(', ')}
+            </span>
+          );
+        }
+        return <span className="text-gray-400">—</span>;
+      },
+    },
     // {
     //   title: <HeaderCell title="Doctors" />,
     //   dataIndex: 'doctors',

@@ -23,7 +23,7 @@ export function toDoctorActivityQuery(
   if (!p.get('per_page')) p.set('per_page', '25');
 
   if (!options?.forDetail) {
-    if (!p.get('sort_by')) p.set('sort_by', 'total_actions');
+    if (!p.get('sort_by')) p.set('sort_by', 'reservations_count');
     if (!p.get('sort_direction')) p.set('sort_direction', 'desc');
   } else if (!p.get('sort_direction')) {
     p.set('sort_direction', 'desc');
@@ -92,6 +92,89 @@ export function formatReservationStatusLabel(
     '4': 'Canceled',
     '5': 'Completed',
     '6': 'Failed',
+    '8': 'Pending Payment',
   };
   return labels[String(status)] ?? String(status);
+}
+
+export function formatSourceCampaignLabel(value: string | null): string {
+  if (value == null || value === '' || value === 'null') return 'No campaign';
+  if (value === 'unknown') return 'Unknown';
+  return value;
+}
+
+/** Toggle detail reservations filter from API drill-down link (`source_campaign` / `status`). */
+export function toggleReservationFilterFromLink(
+  current: URLSearchParams,
+  apiLink: string
+): URLSearchParams {
+  const parsed = parseDoctorApiLinkToSearchParams(apiLink);
+  const params = new URLSearchParams(current.toString());
+
+  const sourceCampaign = parsed.get('source_campaign');
+  const status = parsed.get('status');
+
+  if (sourceCampaign !== null) {
+    const isActive = params.get('source_campaign') === sourceCampaign;
+    params.delete('source_campaign');
+    params.delete('status');
+    if (!isActive) params.set('source_campaign', sourceCampaign);
+  } else if (status !== null) {
+    const isActive = params.get('status') === status;
+    params.delete('source_campaign');
+    params.delete('status');
+    if (!isActive) params.set('status', status);
+  }
+
+  params.set('page', '1');
+  params.delete('tab');
+  params.delete('actor_id');
+  return params;
+}
+
+export function isReservationFilterLinkActive(
+  current: URLSearchParams,
+  apiLink: string
+): boolean {
+  const parsed = parseDoctorApiLinkToSearchParams(apiLink);
+  const sourceCampaign = parsed.get('source_campaign');
+  const status = parsed.get('status');
+
+  if (sourceCampaign !== null) {
+    return current.get('source_campaign') === sourceCampaign;
+  }
+  if (status !== null) {
+    return current.get('status') === status;
+  }
+  return false;
+}
+
+export function buildDoctorReservationFilterPathFromLink(
+  locale: string,
+  doctorId: number,
+  current: URLSearchParams,
+  apiLink: string
+): string {
+  const params = toggleReservationFilterFromLink(current, apiLink);
+  return buildDoctorActivityDetailPath(locale, doctorId, params);
+}
+
+export function buildDoctorActivityPathFromApiLink(
+  locale: string,
+  link: string,
+  doctorId?: number
+): string {
+  const params = parseDoctorApiLinkToSearchParams(link);
+  params.delete('tab');
+
+  const pathDoctorMatch = link.match(/\/doctor-activity\/(\d+)/);
+  const targetDoctorId = pathDoctorMatch
+    ? Number(pathDoctorMatch[1])
+    : doctorId ?? (params.get('actor_id') ? Number(params.get('actor_id')) : null);
+
+  if (targetDoctorId) {
+    return buildDoctorActivityDetailPath(locale, targetDoctorId, params);
+  }
+
+  return buildDoctorActivityListPath(locale, params);
 }

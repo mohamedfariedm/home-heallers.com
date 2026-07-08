@@ -30,14 +30,15 @@ export default function Sidebar({ className }: { className?: string }) {
     return segments[0].concat('/', segments[1], selectedPath);
   };
 
+  const hasAuthToken = Boolean(Cookies.get('auth_token'));
   const effectivePermissions = session?.user?.permissions || permissions;
   const filteredMenuItems = filterMenuItemsByPermissions(menuItemsHaydrogen, effectivePermissions);
 
-  if (status === 'loading') {
-    return <div>Loading...</div>;
-  }
+  // Middleware gates routes on auth_token; NextAuth session can lag or briefly
+  // refetch as unauthenticated — keep sidebar visible when the token exists.
+  const showSidebar = status === 'authenticated' || hasAuthToken;
 
-  if (status !== 'authenticated') {
+  if (!showSidebar) {
     return null;
   }
 

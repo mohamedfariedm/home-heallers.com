@@ -37,6 +37,7 @@ function isImageFile(accept?: string, src?: string | null): boolean {
 
 /** Human-readable hint for the drop zone */
 function acceptHint(accept: string): string {
+  if (accept === '*/*') return 'All file types';
   if (accept === 'image/*') return 'PNG, JPG, GIF, WEBP';
   if (accept === 'video/*') return 'MP4, WEBM, MOV, AVI';
   if (accept.includes('video') && accept.includes('image')) return 'Images & Videos';

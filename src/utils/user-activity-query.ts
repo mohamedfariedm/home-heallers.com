@@ -93,6 +93,26 @@ export function buildUserActivityDetailPath(
   return `/${locale}/kpis/users/${userId}${qs ? `?${qs}` : ''}`;
 }
 
+export function buildUserActivityPathFromApiLink(
+  locale: string,
+  link: string,
+  userId?: number
+): string {
+  const params = parseUserApiLinkToSearchParams(link);
+  params.delete('tab');
+
+  const pathUserMatch = link.match(/\/user-activity\/(\d+)/);
+  const targetUserId = pathUserMatch
+    ? Number(pathUserMatch[1])
+    : userId ?? (params.get('actor_id') ? Number(params.get('actor_id')) : null);
+
+  if (targetUserId) {
+    return buildUserActivityDetailPath(locale, targetUserId, params);
+  }
+
+  return buildUserActivityListPath(locale, params);
+}
+
 /** Synthetic by_log_name entries on list + detail (not real Spatie channels). */
 export function formatUserActivityLogName(logName: string): string {
   if (logName === 'inbound') return 'Inbound';

@@ -1,22 +1,21 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { PiXBold } from 'react-icons/pi';
-import { SubmitHandler } from 'react-hook-form';
+import { Controller, SubmitHandler } from 'react-hook-form';
 import { Form } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Title } from '@/components/ui/text';
 import { useModal } from '@/app/shared/modal-views/use-modal';
-import Select from 'react-select';
 import {
   packageFormSchema,
   PackageFormInput,
 } from '@/utils/validators/package-form.schema';
-import { Checkbox } from 'rizzui';
 import Spinner from '@/components/ui/spinner';
 import { useCreatePackages, useUpdatePackages } from '@/framework/packages';
-import { useDoctors } from '@/framework/doctors';
+import { useCategories } from '@/framework/categories';
+import SelectBox, { type SelectOption } from '@/components/ui/select';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import toast from 'react-hot-toast';
@@ -31,10 +30,9 @@ export default function CreateOrUpdatePackages({
   const { closeModal } = useModal();
   const { mutate: createPackage, isPending: isCreating } = useCreatePackages();
   const { mutate: updatePackage, isPending: isUpdating } = useUpdatePackages();
-  const [lang, setLang] = useState<'en' | 'ar'>('en');
-  const { data: doctors } = useDoctors('');
+  const [lang] = useState<'en' | 'ar'>('en');
+  const { data: categories, isLoading: isLoadingCategories } = useCategories('');
 
-  const [selectedDoctors, setSelectedDoctors] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [isLoading, setImageLoading] = useState(false);
   const [isImageData, setImage] = useState(initValues?.image || null);
@@ -62,40 +60,18 @@ export default function CreateOrUpdatePackages({
       .catch(() => toast.error('Please Try Again'))
       .finally(() => setImageLoading(false));
   };
-  // ✅ Initialize language and selected doctors for edit mode
-  useEffect(() => {
-    if (initValues) {
-      const selectedLang = initValues?.lang || 'en';
-      setLang(selectedLang);
-
-      const formattedDoctors =
-        initValues?.doctors?.map((doctor: any) => ({
-          value: doctor.id,
-          label:
-            doctor.name?.[selectedLang] ??
-            doctor.name?.en ??
-            doctor.name ??
-            'Unknown',
-        })) || [];
-
-      setSelectedDoctors(formattedDoctors);
-    }
-  }, [initValues]);
-
-  // ✅ Update selected doctor labels when switching language
-  useEffect(() => {
-    if (selectedDoctors.length > 0 && doctors?.data) {
-      setSelectedDoctors((prev) =>
-        prev.map((doctor) => {
-          const found = doctors.data.find((d: any) => d.id === doctor.value);
-          return {
-            ...doctor,
-            label: found?.name?.[lang] ?? found?.name?.en ?? doctor.label,
-          };
-        })
-      );
-    }
-  }, [lang, doctors]);
+  const categoryOptions: SelectOption[] = useMemo(() => {
+    const list = (categories?.data ?? []).filter((c: any) => {
+      if (c.active === false || c.active === 0) return false;
+      if (c.is_active === 0) return false;
+      return true;
+    });
+    return list.map((c: any) => ({
+      value: String(c.id),
+      name: (c?.name?.[lang] ?? c?.name?.en ?? `Category ${c.id}`) as string,
+      label: (c?.name?.[lang] ?? c?.name?.en ?? `Category ${c.id}`) as string,
+    }));
+  }, [categories?.data, lang]);
 
   const onSubmit: SubmitHandler<PackageFormInput> = (data) => {
     // Validate image is required
@@ -116,7 +92,7 @@ export default function CreateOrUpdatePackages({
       price: data.price,
       sessions_count: data.sessions_count,
       type: data.type,
-      // doctors: selectedDoctors.map((doctor) => doctor.value),
+      category_ids: (data.category_ids || []).map((id) => Number(id)),
     };
 
     if (initValues) {
@@ -153,13 +129,17 @@ export default function CreateOrUpdatePackages({
           discount: initValues?.discount || '',
           price: initValues?.price || '',
           type: initValues?.type || 'offer',
-          // doctors: initValues?.doctors || [],
           sessions_count: initValues?.sessions_count || '',
+          category_ids: Array.isArray(initValues?.category_ids)
+            ? initValues.category_ids.map((id: number | string) => String(id))
+            : Array.isArray(initValues?.categories)
+              ? initValues.categories.map((c: { id: number }) => String(c.id))
+              : [],
         },
       }}
       className="flex flex-grow flex-col gap-6 p-6"
     >
-      {({ register, formState: { errors } }) => (
+      {({ register, formState: { errors }, control }) => (
         <>
           {/* Header */}
           <div className="flex items-center justify-between">
@@ -279,31 +259,50 @@ export default function CreateOrUpdatePackages({
             </div>
           </FormGroup>
 
-          {/* Doctors Multi-Select */}
-          {/* <div>
-            <label className="block mb-2 font-medium">Doctors</label>
-            {!doctors ? (
-              <p className="text-sm text-gray-500">Loading doctors...</p>
-            ) : doctors?.data?.length === 0 ? (
-              <p className="text-sm text-gray-500">No doctors found.</p>
-            ) : (
-              <Select
-                isMulti
-                options={doctors.data.map((doctor: any) => ({
-                  value: doctor.id,
-                  label: doctor.name?.[lang] ?? doctor.name?.en ?? doctor.name,
-                }))}
-                value={selectedDoctors}
-                onChange={(selected) => setSelectedDoctors(selected || [])}
-                menuPortalTarget={document.body}
-                styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
-                placeholder={lang === "ar" ? "اختر الأطباء" : "Select doctors"}
-              />
-            )}
-            {errors.doctors && (
-              <p className="text-sm text-red-500 mt-1">{errors.doctors.message}</p>
-            )}
-          </div> */}
+          <div>
+            <Controller
+              name="category_ids"
+              control={control}
+              render={({ field: { value, onChange } }) => {
+                const selectedOptions = Array.isArray(value)
+                  ? categoryOptions.filter((opt) =>
+                      value.includes(String(opt.value))
+                    )
+                  : [];
+
+                return (
+                  <SelectBox
+                    multiple
+                    options={categoryOptions}
+                    value={selectedOptions}
+                    onChange={(opts: SelectOption[] | SelectOption) => {
+                      const ids = Array.isArray(opts)
+                        ? opts.map((o) => String(o.value))
+                        : opts
+                          ? [String((opts as SelectOption).value)]
+                          : [];
+                      onChange(ids);
+                    }}
+                    disabled={isLoadingCategories}
+                    label="Categories"
+                    placeholder="Select categories (optional)"
+                    error={(errors.category_ids as { message?: string })?.message}
+                    displayValue={(val: SelectOption | SelectOption[]) => {
+                      if (Array.isArray(val)) {
+                        if (val.length === 0) return '';
+                        return val
+                          .map((o) => o?.label ?? o?.name ?? o?.value)
+                          .join(', ');
+                      }
+                      if (val?.label) return val.label;
+                      if (val?.name) return val.name;
+                      return String(val ?? '');
+                    }}
+                  />
+                );
+              }}
+            />
+          </div>
 
           {/* Action Buttons */}
           <div className="mt-6 flex justify-end gap-4">

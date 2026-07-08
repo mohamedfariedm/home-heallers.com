@@ -10,6 +10,7 @@ import {
 import { zodResolver } from '@hookform/resolvers/zod';
 import { PiXBold } from 'react-icons/pi';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { ActionIcon } from 'rizzui';
 import { useModal } from '../modal-views/use-modal';
@@ -34,6 +35,7 @@ import { useStates } from '@/framework/states';
 import { Badge } from '@/components/ui/badge';
 import { CC_OPTIONS } from '@/app/shared/cc-options';
 import { resolveLocalizedName } from '@/utils/resolve-localized-name';
+import { isReservationLockedSource } from './reservation-source';
 
 const timePeriods = [
   { id: 'morning', name: 'Morning' },
@@ -48,6 +50,14 @@ const statusOptions = [
   { value: '4', en: 'Canceled', ar: 'تم الإلغاء' },
   { value: '5', en: 'Completed', ar: 'مكتمل' },
   { value: '6', en: 'Failed', ar: 'فشل' },
+  { value: '8', en: 'Pending Payment', ar: 'في انتظار الدفع' },
+];
+
+const dateStatusOptions = [
+  { value: 'pending', en: 'Pending', ar: 'قيد الانتظار' },
+  { value: 'confirmed', en: 'Confirmed', ar: 'تم التأكيد' },
+  { value: 'completed', en: 'Completed', ar: 'مكتمل' },
+  { value: 'cancelled', en: 'Cancelled', ar: 'تم الإلغاء' },
 ];
 
 const genderOptions = [
@@ -180,6 +190,7 @@ export default function CreateOrUpdateReservation({
       reservation_type: (isExistingPatient || hasExistingReservations) ? 'existing' : 'guest',
       paid: initValues?.paid !== undefined && initValues?.paid !== null ? Number(initValues.paid) : 0,
       source_campaign: initValues?.source_campaign || leadData?.source_campaign || '',
+      reservation_source: initValues?.reservation_source || '',
       center_id: initValues?.center_id?.toString() || '',
       // 🧩 base IDs
       patient_id: initValues?.patient?.id?.toString() || leadPatientId?.toString() || '',
@@ -207,6 +218,7 @@ export default function CreateOrUpdateReservation({
       status: initValues?.status?.toString() || '2',
       pain_location: initValues?.pain_location || '',
       notes: initValues?.notes || leadData?.notes || '',
+      operation_notes: initValues?.operation_notes || '',
       cc: initValues?.cc || '',
       address_city:
         resolveLocalizedName(initValues?.address?.city) ||
@@ -260,7 +272,7 @@ export default function CreateOrUpdateReservation({
               : (d?.end_time && typeof d.end_time === 'string' ? d.end_time.split('T')[1]?.substring(0, 5) : '') || '',
             time_period: d?.time_period || 'morning',
             doctor_id: d?.doctor?.id?.toString() || '',
-            status: d?.status?.toString() || '1',
+            status: d?.status || 'pending',
           }))
         : [
         {
@@ -268,7 +280,7 @@ export default function CreateOrUpdateReservation({
           time: '',
           time_period: 'morning',
           doctor_id: '',
-          status: '1',
+          status: 'pending',
         },
       ],
     },
@@ -283,8 +295,8 @@ export default function CreateOrUpdateReservation({
   const watchSubTotal = useWatch({ control, name: 'sub_total' });
   const watchFeesType = useWatch({ control, name: 'fees_type' });
   const watchFees = useWatch({ control, name: 'fees' });
-  const watchReservationStatus = useWatch({ control, name: 'status' });
   const watchSourceCampaign = useWatch({ control, name: 'source_campaign' });
+  const watchReservationSource = useWatch({ control, name: 'reservation_source' });
   const watchCustomerTier = useWatch({ control, name: 'customer_tier' as any });
 
   // Log validation errors whenever they change
@@ -299,24 +311,6 @@ export default function CreateOrUpdateReservation({
     // eslint-disable-next-line no-console
     console.log('Reservation Form Submit Errors:', formErrors);
   };
-  const prevStatusRef = useRef<string | undefined>();
-  useEffect(() => {
-    if (
-      watchReservationStatus &&
-      watchReservationStatus !== prevStatusRef.current
-    ) {
-      prevStatusRef.current = watchReservationStatus;
-      const currentDates = getValues('dates') || [];
-      if (currentDates.length > 0) {
-        const updatedDates = currentDates.map((date: any) => ({
-          ...date,
-          status: watchReservationStatus,
-        }));
-        setValue('dates', updatedDates, { shouldValidate: false });
-      }
-    }
-  }, [watchReservationStatus, setValue, getValues]);
-
   const lang: 'en' | 'ar' = 'en';
 
   // Pretty badge (same mapping as table) for live preview
@@ -379,7 +373,7 @@ export default function CreateOrUpdateReservation({
         time: currentDates[i]?.time || '',
         time_period: currentDates[i]?.time_period || 'morning',
         doctor_id: currentDates[i]?.doctor_id || '',
-        status: currentDates[i]?.status || '1',
+        status: currentDates[i]?.status || 'pending',
       }));
       setValue('dates', newDates, { shouldValidate: true });
     }
@@ -486,11 +480,16 @@ export default function CreateOrUpdateReservation({
         ? Number(data.remaining_payment)
         : undefined,
       total_amount: data.total_amount ? Number(data.total_amount) : undefined,
-      transaction_reference: data.transaction_reference,
+      transaction_reference: isReservationLockedSource({
+        reservation_source: data.reservation_source,
+      })
+        ? initValues?.transaction_reference
+        : data.transaction_reference,
       customer_tier: (data as any)?.customer_tier || 'عادي',
       status: data.status ? Number(data.status) : undefined,
       pain_location: data.pain_location,
       notes: data.notes,
+      operation_notes: data.operation_notes,
       ...(data.cc ? { cc: data.cc } : {}),
       address_city: data.address_city,
       address_state: data.address_state,
@@ -504,7 +503,7 @@ export default function CreateOrUpdateReservation({
             time: date?.time || '',
             time_period: date?.time_period || 'morning',
             doctor_id: date?.doctor_id ? Number(date.doctor_id) : undefined,
-            status: date?.status ? Number(date.status) : undefined,
+            status: date?.status || undefined,
           }))
         : [],
 
@@ -571,7 +570,11 @@ export default function CreateOrUpdateReservation({
   const canEdit =
     !isInvoicesAssistant ||
     initialStatus === '4' ||
-    initialDates.some((d: any) => d?.status?.toString() === '4');
+    initialDates.some((d: any) => d?.status === 'cancelled');
+
+  const isLockedSource = isReservationLockedSource({
+    reservation_source: watchReservationSource || initValues?.reservation_source,
+  });
 
   const inputProps = { disabled: !canEdit };
 
@@ -588,6 +591,7 @@ export default function CreateOrUpdateReservation({
       onSubmit={handleSubmit(onSubmit as any, onInvalid)}
       className="flex flex-grow flex-col gap-6 overflow-y-auto p-6"
     >
+      <input type="hidden" {...register('reservation_source')} />
       <div className="flex items-center justify-between">
         <h4 className="text-lg font-semibold">
           {initValues ? 'Update Reservation' : 'Create Reservation'}
@@ -1018,9 +1022,9 @@ export default function CreateOrUpdateReservation({
         <div>
           <label className="text-sm text-gray-700">Transaction Reference</label>
           <select
-            {...inputProps}
             {...register('transaction_reference')}
-            className="w-full rounded-lg border border-gray-300 p-2"
+            disabled={!canEdit || isLockedSource}
+            className="w-full rounded-lg border border-gray-300 p-2 disabled:cursor-not-allowed disabled:bg-gray-100"
           >
             <option value="">Select Transaction Type</option>
             <option value="تحويل بنكي">تحويل بنكي</option>
@@ -1193,6 +1197,15 @@ export default function CreateOrUpdateReservation({
         error={errors.notes?.message}
       />
 
+      <Textarea
+        {...inputProps}
+        label="Operation Notes"
+        placeholder="e.g., ملاحظات العملية"
+        rows={4}
+        {...register('operation_notes')}
+        error={errors.operation_notes?.message}
+      />
+
       <div className="space-y-4 border-l-4 border-orange-500 pl-4">
         <h5 className="text-sm font-semibold">Reservation Dates</h5>
 
@@ -1258,7 +1271,7 @@ export default function CreateOrUpdateReservation({
                 {...register(`dates.${index}.status` as const)}
                 className="w-full rounded-lg border border-gray-300 p-2"
               >
-                {statusOptions.map((s) => (
+                {dateStatusOptions.map((s) => (
                   <option key={s.value} value={s.value}>
                     {s.en}
                   </option>

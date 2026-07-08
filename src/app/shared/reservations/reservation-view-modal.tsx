@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import {
   PiXBold,
   PiUser,
@@ -8,17 +9,39 @@ import {
   PiMapPin,
   PiNotePencil,
   PiClock,
+  PiReceipt,
 } from 'react-icons/pi';
 import { Title, Text } from '@/components/ui/text';
 import { useModal } from '@/app/shared/modal-views/use-modal';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, modalTooltipClassName } from '@/components/ui/tooltip';
 import cn from '@/utils/class-names';
+import ConfirmCashPaymentModal from './confirm-cash-payment-modal';
+import client from '@/framework/utils';
+import toast from 'react-hot-toast';
+import ChatSolidIcon from '@/components/icons/chat-solid';
 
 import {
   getReservationPatientName,
   resolveLocalizedNameOrFallback,
 } from '@/utils/resolve-localized-name';
+import {
+  canConfirmCashPayment,
+  getConfirmCashPaymentDisabledReason,
+  getPaymentStatusBadgeClasses,
+  getPaymentStatusBadgeLabel,
+  getPaymentStatusColorClass,
+  getPaymentStatusLabel,
+  getPaymentWhatsappDisabledReason,
+  isCashPayment,
+  shouldHidePaymentLink,
+} from '@/utils/reservation-payment';
+import {
+  canSendInvoiceWhatsapp as canSendInvoiceWhatsappForRow,
+  getReservationClientMobile,
+  getSendInvoiceWhatsappDisabledReason,
+} from '@/utils/reservation-invoice-whatsapp';
 
 function formatSessionLabel(session: {
   start_time?: string;
@@ -68,6 +91,7 @@ function getStatusColor(status: string | number | undefined) {
   if (s === '4') return 'bg-red-50 text-red-800 border-red-200';
   if (s === '5') return 'bg-violet-50 text-violet-800 border-violet-200';
   if (s === '6') return 'bg-gray-50 text-gray-800 border-gray-200';
+  if (s === '8') return 'bg-rose-50 text-rose-800 border-rose-200';
   return 'bg-gray-50 text-gray-700 border-gray-200';
 }
 
@@ -210,7 +234,20 @@ function useReservationDetails(reservation: any) {
   };
 }
 
-export function ReservationViewContent({ reservation }: { reservation: any }) {
+export function ReservationViewContent({
+  reservation,
+  canEdit = false,
+  canSendPaymentWhatsapp = false,
+  canSendInvoiceWhatsapp = false,
+  onReservationUpdate,
+}: {
+  reservation: any;
+  canEdit?: boolean;
+  canSendPaymentWhatsapp?: boolean;
+  canSendInvoiceWhatsapp?: boolean;
+  onReservationUpdate?: (updated: any) => void;
+}) {
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const {
     patientName,
     serviceName,
@@ -221,12 +258,52 @@ export function ReservationViewContent({ reservation }: { reservation: any }) {
     addressText,
   } = useReservationDetails(reservation);
 
-  const paidLabel =
-    reservation?.paid === null || reservation?.paid === undefined
-      ? '—'
-      : reservation.paid
-        ? 'Yes'
-        : 'No';
+  const paidLabel = getPaymentStatusLabel(reservation);
+  const paymentStatusBadge = getPaymentStatusBadgeLabel(reservation?.payment_status);
+  const confirmCashEnabled = canEdit && canConfirmCashPayment(reservation);
+  const confirmCashDisabledReason = getConfirmCashPaymentDisabledReason(reservation);
+  const clientMobile = getReservationClientMobile(reservation);
+  const paymentWhatsappEnabled =
+    canSendPaymentWhatsapp && !shouldHidePaymentLink(reservation);
+  const paymentWhatsappDisabledReason = getPaymentWhatsappDisabledReason(reservation);
+  const invoiceWhatsappEnabled =
+    canSendInvoiceWhatsapp && canSendInvoiceWhatsappForRow(reservation);
+  const invoiceWhatsappDisabledReason =
+    getSendInvoiceWhatsappDisabledReason(reservation);
+
+  const handleWhatsAppPayment = async () => {
+    if (!paymentWhatsappEnabled) return;
+
+    try {
+      await client.reservations.createPaymentWhatsapp({
+        reservation_id: reservation.id,
+      });
+      toast.success('Payment WhatsApp message sent successfully');
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message ||
+          'Failed to send payment WhatsApp message'
+      );
+    }
+  };
+
+  const handleSendInvoiceWhatsapp = async () => {
+    if (!invoiceWhatsappEnabled) return;
+
+    if (clientMobile && !window.confirm(`Send invoice PDF to ${clientMobile}?`)) {
+      return;
+    }
+
+    try {
+      await client.reservations.sendInvoiceWhatsapp(reservation.id);
+      toast.success('Invoice is being sent to the client on WhatsApp.');
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message ||
+          'Failed to send invoice via WhatsApp'
+      );
+    }
+  };
 
   return (
     <div className="space-y-5">
@@ -261,6 +338,21 @@ export function ReservationViewContent({ reservation }: { reservation: any }) {
                 {reservation.reservation_source}
               </span>
             )}
+            {paymentStatusBadge && (
+              <span
+                className={cn(
+                  'rounded-full border px-3 py-1 text-xs font-semibold',
+                  getPaymentStatusBadgeClasses(reservation?.payment_status)
+                )}
+              >
+                {paymentStatusBadge}
+              </span>
+            )}
+            {isCashPayment(reservation?.payment_method) && (
+              <span className="rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-800">
+                Cash
+              </span>
+            )}
             <CustomerTierBadge tier={reservation?.customer_tier} />
           </div>
         </div>
@@ -289,11 +381,11 @@ export function ReservationViewContent({ reservation }: { reservation: any }) {
             </p>
           </div>
           <div className="rounded-lg bg-white/80 px-3 py-2.5 ring-1 ring-gray-100">
-            <p className="text-xs text-gray-500">Paid</p>
+            <p className="text-xs text-gray-500">Payment</p>
             <p
               className={cn(
                 'text-base font-bold',
-                reservation?.paid ? 'text-emerald-600' : 'text-amber-600'
+                getPaymentStatusColorClass(reservation)
               )}
             >
               {paidLabel}
@@ -308,9 +400,7 @@ export function ReservationViewContent({ reservation }: { reservation: any }) {
             <DetailItem label="Full Name" value={patientName} className="sm:col-span-2" />
             <DetailItem
               label="Mobile"
-              value={
-                reservation?.patient?.mobile ?? reservation?.guest_info?.mobile
-              }
+              value={clientMobile}
             />
             <DetailItem
               label="Email"
@@ -366,8 +456,32 @@ export function ReservationViewContent({ reservation }: { reservation: any }) {
 
         <Section title="Payment" icon={PiCurrencyDollar}>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <DetailItem label="Payment Method" value={reservation?.payment_method} />
-            <DetailItem label="Paid" value={paidLabel} />
+            <DetailItem
+              label="Payment Method"
+              value={
+                isCashPayment(reservation?.payment_method)
+                  ? 'Cash'
+                  : reservation?.payment_method
+              }
+            />
+            <DetailItem
+              label="Payment Status"
+              value={paymentStatusBadge ?? paidLabel}
+            />
+            {reservation?.payment_discount != null &&
+              Number(reservation.payment_discount) > 0 && (
+                <DetailItem
+                  label="Payment Discount"
+                  value={`${reservation.payment_discount}%`}
+                />
+              )}
+            {reservation?.provider_fee != null &&
+              Number(reservation.provider_fee) > 0 && (
+                <DetailItem
+                  label="Provider Fee"
+                  value={`${reservation.provider_fee} SAR`}
+                />
+              )}
             <DetailItem
               label="Sub Total"
               value={
@@ -448,6 +562,102 @@ export function ReservationViewContent({ reservation }: { reservation: any }) {
         </div>
       )}
 
+      {(canEdit || canSendPaymentWhatsapp || canSendInvoiceWhatsapp) && (
+        <div className="flex flex-wrap justify-end gap-2 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+          {canSendPaymentWhatsapp && (
+            <Tooltip
+              size="sm"
+              content={() =>
+                paymentWhatsappEnabled
+                  ? 'Send payment link via WhatsApp'
+                  : paymentWhatsappDisabledReason ?? 'Send Payment WhatsApp'
+              }
+              placement="top"
+              color="invert"
+              className={modalTooltipClassName}
+            >
+              <span className="inline-flex">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={!paymentWhatsappEnabled}
+                  className={cn(!paymentWhatsappEnabled && 'cursor-not-allowed')}
+                  onClick={handleWhatsAppPayment}
+                >
+                  <ChatSolidIcon className="me-1.5 h-4 w-4" />
+                  Send Payment WhatsApp
+                </Button>
+              </span>
+            </Tooltip>
+          )}
+
+          {canSendInvoiceWhatsapp && (
+            <Tooltip
+              size="sm"
+              content={() =>
+                invoiceWhatsappEnabled
+                  ? 'Send invoice PDF via WhatsApp'
+                  : invoiceWhatsappDisabledReason ?? 'Send invoice on WhatsApp'
+              }
+              placement="top"
+              color="invert"
+              className={modalTooltipClassName}
+            >
+              <span className="inline-flex">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={!invoiceWhatsappEnabled}
+                  className={cn(
+                    invoiceWhatsappEnabled
+                      ? 'text-emerald-700 hover:text-emerald-800'
+                      : 'cursor-not-allowed'
+                  )}
+                  onClick={handleSendInvoiceWhatsapp}
+                >
+                  <PiReceipt className="me-1.5 h-4 w-4" />
+                  Send Invoice on WhatsApp
+                </Button>
+              </span>
+            </Tooltip>
+          )}
+
+          {canEdit && (
+            <Tooltip
+              size="sm"
+              content={() =>
+                confirmCashEnabled
+                  ? 'Confirm cash collection and mark as paid'
+                  : confirmCashDisabledReason ?? 'Confirm & mark paid'
+              }
+              placement="top"
+              color="invert"
+              className={modalTooltipClassName}
+            >
+              <span className="inline-flex">
+                <Button
+                  size="sm"
+                  disabled={!confirmCashEnabled}
+                  className={cn(!confirmCashEnabled && 'cursor-not-allowed')}
+                  onClick={() => confirmCashEnabled && setConfirmModalOpen(true)}
+                >
+                  Confirm & mark paid
+                </Button>
+              </span>
+            </Tooltip>
+          )}
+        </div>
+      )}
+
+      <ConfirmCashPaymentModal
+        isOpen={confirmModalOpen}
+        onClose={() => setConfirmModalOpen(false)}
+        reservationId={Number(reservation?.id)}
+        onSuccess={(updatedReservation) => {
+          onReservationUpdate?.(updatedReservation);
+        }}
+      />
+
       <div className="flex flex-wrap gap-4 rounded-lg border border-dashed border-gray-200 bg-gray-50/50 px-4 py-3 text-xs text-gray-500">
         <span>
           <span className="font-medium text-gray-600">Created:</span>{' '}
@@ -464,10 +674,21 @@ export function ReservationViewContent({ reservation }: { reservation: any }) {
 
 export default function ReservationViewModal({
   reservation,
+  canEdit = false,
+  canSendPaymentWhatsapp = false,
+  canSendInvoiceWhatsapp = false,
 }: {
   reservation: any;
+  canEdit?: boolean;
+  canSendPaymentWhatsapp?: boolean;
+  canSendInvoiceWhatsapp?: boolean;
 }) {
   const { closeModal } = useModal();
+  const [localReservation, setLocalReservation] = useState(reservation);
+
+  useEffect(() => {
+    setLocalReservation(reservation);
+  }, [reservation]);
 
   return (
     <div className="flex max-h-[90vh] flex-col overflow-hidden bg-gray-50/50">
@@ -477,7 +698,9 @@ export default function ReservationViewModal({
             Reservation Details
           </Title>
           <Text as="p" className="mt-0.5 text-sm text-gray-500">
-            Read-only view
+            {canEdit
+              ? 'Review details, send WhatsApp messages, or confirm cash collection'
+              : 'Read-only view'}
           </Text>
         </div>
         <Button onClick={closeModal} variant="outline" size="sm" className="shrink-0">
@@ -485,7 +708,13 @@ export default function ReservationViewModal({
         </Button>
       </div>
       <div className="flex-1 overflow-y-auto p-6">
-        <ReservationViewContent reservation={reservation} />
+        <ReservationViewContent
+          reservation={localReservation}
+          canEdit={canEdit}
+          canSendPaymentWhatsapp={canSendPaymentWhatsapp}
+          canSendInvoiceWhatsapp={canSendInvoiceWhatsapp}
+          onReservationUpdate={setLocalReservation}
+        />
       </div>
     </div>
   );

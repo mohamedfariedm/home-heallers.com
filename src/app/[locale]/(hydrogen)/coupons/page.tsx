@@ -43,9 +43,10 @@ export default function CouponsTablePage() {
           ),
         rows: selectedRowKeys,
       }}
-      fileName="Coupons/index"
-      header="User,Created At"
-      createName="Create Coupons"
+      fileName="coupons"
+      header="excel"
+      createName="Create Coupon"
+      customSize="960px"
       createElementButton={<CreateOrUpdateCoupon />}
     >
       {isLoading ? (

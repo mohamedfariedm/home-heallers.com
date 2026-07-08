@@ -1,4 +1,10 @@
-export const RESERVATION_SOURCES_LOCKED = ['Application', 'Website'] as const;
+export const RESERVATION_SOURCE_APPLICATION = 'Application' as const;
+export const RESERVATION_SOURCE_WEBSITE = 'Website' as const;
+
+export const RESERVATION_SOURCES_LOCKED = [
+  RESERVATION_SOURCE_APPLICATION,
+  RESERVATION_SOURCE_WEBSITE,
+] as const;
 
 export type ReservationSource =
   | (typeof RESERVATION_SOURCES_LOCKED)[number]
@@ -6,20 +12,23 @@ export type ReservationSource =
   | string
   | null;
 
+export const isReservationLockedSource = (reservation: {
+  reservation_source?: ReservationSource;
+}) => {
+  const source = reservation?.reservation_source;
+  return (
+    source === RESERVATION_SOURCE_APPLICATION ||
+    source === RESERVATION_SOURCE_WEBSITE
+  );
+};
+
 export const isReservationEditable = (reservation: {
   reservation_source?: ReservationSource;
 }) => {
   const source = reservation?.reservation_source;
   if (source == null || source === '') return true;
-  return !RESERVATION_SOURCES_LOCKED.includes(
-    source as (typeof RESERVATION_SOURCES_LOCKED)[number]
-  );
+  return !isReservationLockedSource(reservation);
 };
-
-export const isReservationLockedSource = (reservation: {
-  reservation_source?: ReservationSource;
-}) => !isReservationEditable(reservation);
-
 export const canEditReservationWithPermission = (
   canEdit: boolean,
   reservation: { reservation_source?: ReservationSource }

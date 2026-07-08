@@ -14,90 +14,17 @@ import WidgetCard from '@/components/cards/widget-card';
 import { Badge } from '@/components/ui/badge';
 import DateCell from '@/components/ui/date-cell';
 import AvatarCard from '@/components/ui/avatar-card';
-import KpiStatCard, { type KpiStatCardColor } from '@/app/shared/kpis/kpi-stat-card';
-import KpiBreakdownWidget from '@/app/shared/kpis/kpi-breakdown-widget';
-import UserActivityDrillDownLink from '@/app/shared/user-activity-reports/drill-down-link';
+import KpiStatCard from '@/app/shared/kpis/kpi-stat-card';
+import KpiBreakdownCardsSection from '@/app/shared/kpis/kpi-breakdown-cards-section';
 import {
   buildUserActivityLeadFilterPathFromLink,
+  buildUserActivityPathFromApiLink,
   formatLeadStatusLabel,
   formatSourceCampaignLabel,
   formatUserActivityLogName,
   isLeadFilterLinkActive,
 } from '@/utils/user-activity-query';
-import type {
-  LeadStatusBucket,
-  SourceCampaignBucket,
-  UserActivitySummary,
-  UserRef,
-} from '@/types/user-activity-report';
-
-const LEAD_STAT_COLORS: KpiStatCardColor[] = [
-  'purple',
-  'blue',
-  'green',
-  'amber',
-  'indigo',
-  'emerald',
-  'cyan',
-  'sky',
-  'orange',
-];
-
-function LeadStatCardsSection<T extends { count: number; link: string }>({
-  title,
-  description,
-  items,
-  icon,
-  userId,
-  getLabel,
-  getKey,
-}: {
-  title: string;
-  description: string;
-  items: T[];
-  icon: typeof PiMegaphoneBold;
-  userId: number;
-  getLabel: (item: T) => string;
-  getKey: (item: T, index: number) => string;
-}) {
-  const searchParams = useSearchParams();
-  const current = new URLSearchParams(searchParams.toString());
-  const locale = Cookies.get('NEXT_LOCALE') || 'en';
-
-  if (!items.length) return null;
-
-  return (
-    <div className="space-y-3">
-      <div>
-        <p className="text-base font-semibold text-gray-900 dark:text-white">{title}</p>
-        <p className="text-sm text-gray-500 dark:text-gray-400">{description}</p>
-      </div>
-      <div className="flex w-full flex-wrap gap-5">
-        {items.map((item, index) => (
-          <KpiStatCard
-            key={getKey(item, index)}
-            title={getLabel(item)}
-            value={item.count}
-            icon={icon}
-            color={LEAD_STAT_COLORS[index % LEAD_STAT_COLORS.length]}
-            subtitle={
-              isLeadFilterLinkActive(current, item.link)
-                ? 'Records filter active'
-                : 'Distinct leads'
-            }
-            href={buildUserActivityLeadFilterPathFromLink(
-              locale,
-              userId,
-              current,
-              item.link
-            )}
-            selected={isLeadFilterLinkActive(current, item.link)}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
+import type { UserActivitySummary, UserRef } from '@/types/user-activity-report';
 
 export default function UserActivitySummaryPanel({
   user,
@@ -106,9 +33,12 @@ export default function UserActivitySummaryPanel({
   user: UserRef;
   summary: UserActivitySummary;
 }) {
+  const searchParams = useSearchParams();
+  const current = new URLSearchParams(searchParams.toString());
+  const locale = Cookies.get('NEXT_LOCALE') || 'en';
+
   const campaigns = summary.by_source_campaign ?? [];
   const statuses = summary.by_status ?? [];
-  const hasLeadStats = campaigns.length > 0 || statuses.length > 0;
 
   return (
     <div className="space-y-6">
@@ -201,82 +131,82 @@ export default function UserActivitySummaryPanel({
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-        {summary.by_event?.length > 0 && (
-          <div className="lg:col-span-4">
-            <KpiBreakdownWidget
-              title="By Event"
-              items={summary.by_event.slice(0, 6).map((item, index) => ({
-                key: `${String(item.event)}-${index}`,
-                label:
-                  item.event == null || item.event === ''
-                    ? 'Uncategorized'
-                    : String(item.event),
-                count: item.count,
-                countNode: item.link ? (
-                  <UserActivityDrillDownLink link={item.link} userId={user.id}>
-                    {item.count}
-                  </UserActivityDrillDownLink>
-                ) : undefined,
-              }))}
-            />
-          </div>
-        )}
-        {summary.by_log_name?.length > 0 && (
-          <div className="lg:col-span-4">
-            <KpiBreakdownWidget
-              title="By Log Name"
-              items={summary.by_log_name.slice(0, 8).map((item, index) => ({
-                key: `${String(item.log_name)}-${index}`,
-                label: formatUserActivityLogName(String(item.log_name)),
-                count: item.count,
-                countNode: item.link ? (
-                  <UserActivityDrillDownLink link={item.link} userId={user.id}>
-                    {item.count}
-                  </UserActivityDrillDownLink>
-                ) : undefined,
-              }))}
-            />
-          </div>
-        )}
-        {summary.most_modified_models?.length > 0 && (
-          <div className="lg:col-span-4">
-            <KpiBreakdownWidget
-              title="Most Modified Models"
-              items={summary.most_modified_models.slice(0, 6).map((item) => ({
-                key: item.type,
-                label: item.type,
-                count: item.count,
-              }))}
-            />
-          </div>
-        )}
-      </div>
+      <KpiBreakdownCardsSection
+        title="By Event"
+        items={(summary.by_event ?? []).map((item, index) => ({
+          key: `${String(item.event)}-${index}`,
+          label:
+            item.event == null || item.event === ''
+              ? 'Uncategorized'
+              : String(item.event),
+          count: item.count,
+          href: buildUserActivityPathFromApiLink(locale, item.link, user.id),
+        }))}
+        icon={PiListChecksBold}
+      />
 
-      {hasLeadStats && (
-        <div className="space-y-6">
-          <LeadStatCardsSection<SourceCampaignBucket>
-            title="Leads by Source Campaign"
-            description="Filters activity records below; summary stays unchanged"
-            items={campaigns}
-            icon={PiMegaphoneBold}
-            userId={user.id}
-            getLabel={(item) => formatSourceCampaignLabel(item.source_campaign)}
-            getKey={(item, index) =>
-              `campaign-${String(item.source_campaign)}-${index}`
-            }
-          />
-          <LeadStatCardsSection<LeadStatusBucket>
-            title="Leads by Status"
-            description="Filters activity records below; summary stays unchanged"
-            items={statuses}
-            icon={PiFlagBold}
-            userId={user.id}
-            getLabel={(item) => formatLeadStatusLabel(item.status)}
-            getKey={(item, index) => `status-${String(item.status)}-${index}`}
-          />
-        </div>
-      )}
+      <KpiBreakdownCardsSection
+        title="By Log Name"
+        items={(summary.by_log_name ?? []).map((item, index) => ({
+          key: `${String(item.log_name)}-${index}`,
+          label: formatUserActivityLogName(String(item.log_name)),
+          count: item.count,
+          href: buildUserActivityPathFromApiLink(locale, item.link, user.id),
+        }))}
+        icon={PiListChecksBold}
+      />
+
+      <KpiBreakdownCardsSection
+        title="Most Modified Models"
+        items={(summary.most_modified_models ?? []).map((item) => ({
+          key: item.type,
+          label: item.type,
+          count: item.count,
+        }))}
+        icon={PiChartBarBold}
+      />
+
+      <KpiBreakdownCardsSection
+        title="By Source Campaign"
+        description="Click to filter records below; summary stays unchanged"
+        items={campaigns.map((item, index) => ({
+          key: `campaign-${String(item.source_campaign)}-${index}`,
+          label: formatSourceCampaignLabel(item.source_campaign),
+          count: item.count,
+          href: buildUserActivityLeadFilterPathFromLink(
+            locale,
+            user.id,
+            current,
+            item.link
+          ),
+          selected: isLeadFilterLinkActive(current, item.link),
+          subtitle: isLeadFilterLinkActive(current, item.link)
+            ? 'Filter active'
+            : 'Distinct leads',
+        }))}
+        icon={PiMegaphoneBold}
+      />
+
+      <KpiBreakdownCardsSection
+        title="By Status"
+        description="Click to filter records below; summary stays unchanged"
+        items={statuses.map((item, index) => ({
+          key: `status-${String(item.status)}-${index}`,
+          label: formatLeadStatusLabel(item.status),
+          count: item.count,
+          href: buildUserActivityLeadFilterPathFromLink(
+            locale,
+            user.id,
+            current,
+            item.link
+          ),
+          selected: isLeadFilterLinkActive(current, item.link),
+          subtitle: isLeadFilterLinkActive(current, item.link)
+            ? 'Filter active'
+            : 'Distinct leads',
+        }))}
+        icon={PiFlagBold}
+      />
     </div>
   );
 }

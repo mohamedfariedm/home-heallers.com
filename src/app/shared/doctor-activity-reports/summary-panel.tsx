@@ -1,19 +1,19 @@
 'use client';
 
-import {
-  PiCalendarCheckBold,
-  PiChartBarBold,
-  PiClockBold,
-  PiListChecksBold,
-  PiStethoscopeBold,
-} from 'react-icons/pi';
+import { PiCalendarCheckBold, PiFlagBold, PiMegaphoneBold, PiStethoscopeBold } from 'react-icons/pi';
+import { useSearchParams } from 'next/navigation';
+import Cookies from 'js-cookie';
 import WidgetCard from '@/components/cards/widget-card';
 import { Badge } from '@/components/ui/badge';
-import DateCell from '@/components/ui/date-cell';
 import AvatarCard from '@/components/ui/avatar-card';
 import KpiStatCard from '@/app/shared/kpis/kpi-stat-card';
-import KpiBreakdownWidget from '@/app/shared/kpis/kpi-breakdown-widget';
-import DoctorActivityDrillDownLink from '@/app/shared/doctor-activity-reports/drill-down-link';
+import KpiBreakdownCardsSection from '@/app/shared/kpis/kpi-breakdown-cards-section';
+import {
+  buildDoctorReservationFilterPathFromLink,
+  formatReservationStatusLabel,
+  formatSourceCampaignLabel,
+  isReservationFilterLinkActive,
+} from '@/utils/doctor-activity-query';
 import type { DoctorActivitySummary, DoctorRef } from '@/types/doctor-activity-report';
 
 export default function DoctorActivitySummaryPanel({
@@ -23,6 +23,14 @@ export default function DoctorActivitySummaryPanel({
   doctor: DoctorRef;
   summary: DoctorActivitySummary;
 }) {
+  const searchParams = useSearchParams();
+  const current = new URLSearchParams(searchParams.toString());
+  const locale = Cookies.get('NEXT_LOCALE') || 'en';
+
+  const statuses = summary.by_status ?? [];
+  const campaigns = summary.by_source_campaign ?? [];
+  const sessionsStats = summary.sessions_statistics;
+
   return (
     <div className="space-y-6">
       <WidgetCard
@@ -64,125 +72,74 @@ export default function DoctorActivitySummaryPanel({
 
       <div className="flex w-full flex-wrap gap-5">
         <KpiStatCard
-          title="Total Actions"
-          value={summary.total_actions}
-          icon={PiListChecksBold}
-          color="blue"
-        />
-        <KpiStatCard
           title="Reservations"
           value={summary.reservations_count}
           icon={PiStethoscopeBold}
           color="purple"
         />
-        <KpiStatCard
-          title="Today"
-          value={summary.today}
-          icon={PiClockBold}
-          color="green"
-        />
-        <KpiStatCard
-          title="This Week"
-          value={summary.this_week}
-          icon={PiCalendarCheckBold}
-          color="amber"
-        />
-        <KpiStatCard
-          title="This Month"
-          value={summary.this_month}
-          icon={PiChartBarBold}
-          color="indigo"
-        />
-        <KpiStatCard
-          title="Active Days"
-          value={summary.active_days}
-          icon={PiListChecksBold}
-          color="cyan"
-          subtitle={
-            summary.most_modified_models?.[0]?.type
-              ? `Top model: ${summary.most_modified_models[0].type}`
-              : undefined
-          }
-        />
-        <KpiStatCard
-          title="First Activity"
-          value={
-            summary.first_activity_at ? (
-              <DateCell date={new Date(summary.first_activity_at)} />
-            ) : (
-              '—'
-            )
-          }
-          icon={PiClockBold}
-          color="sky"
-          className="[&_.text-3xl]:text-xl [&_.text-3xl]:font-semibold"
-        />
-        <KpiStatCard
-          title="Last Activity"
-          value={
-            summary.last_activity_at ? (
-              <DateCell date={new Date(summary.last_activity_at)} />
-            ) : (
-              '—'
-            )
-          }
-          icon={PiClockBold}
-          color="orange"
-          className="[&_.text-3xl]:text-xl [&_.text-3xl]:font-semibold"
-        />
+        {sessionsStats != null && (
+          <KpiStatCard
+            title="Total Sessions"
+            value={sessionsStats.total_sessions}
+            icon={PiCalendarCheckBold}
+            color="amber"
+            subtitle={`${sessionsStats.total_reservations} reservations`}
+          />
+        )}
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-        {summary.by_event?.length > 0 && (
-          <div className="lg:col-span-4">
-            <KpiBreakdownWidget
-              title="By Event"
-              items={summary.by_event.slice(0, 6).map((item, index) => ({
-                key: `${String(item.event)}-${index}`,
-                label:
-                  item.event == null || item.event === ''
-                    ? 'Uncategorized'
-                    : String(item.event),
-                count: item.count,
-                countNode: item.link ? (
-                  <DoctorActivityDrillDownLink link={item.link} doctorId={doctor.id}>
-                    {item.count}
-                  </DoctorActivityDrillDownLink>
-                ) : undefined,
-              }))}
-            />
-          </div>
-        )}
-        {summary.by_log_name?.length > 0 && (
-          <div className="lg:col-span-4">
-            <KpiBreakdownWidget
-              title="By Log Name"
-              items={summary.by_log_name.slice(0, 6).map((item, index) => ({
-                key: `${String(item.log_name)}-${index}`,
-                label: String(item.log_name),
-                count: item.count,
-                countNode: item.link ? (
-                  <DoctorActivityDrillDownLink link={item.link} doctorId={doctor.id}>
-                    {item.count}
-                  </DoctorActivityDrillDownLink>
-                ) : undefined,
-              }))}
-            />
-          </div>
-        )}
-        {summary.most_modified_models?.length > 0 && (
-          <div className="lg:col-span-4">
-            <KpiBreakdownWidget
-              title="Most Modified Models"
-              items={summary.most_modified_models.slice(0, 6).map((item) => ({
-                key: item.type,
-                label: item.type,
-                count: item.count,
-              }))}
-            />
-          </div>
-        )}
-      </div>
+      <KpiBreakdownCardsSection
+        title="By Status"
+        description="Click to filter reservations below; summary stays unchanged"
+        items={statuses.map((item, index) => ({
+          key: `${String(item.status)}-${index}`,
+          label: formatReservationStatusLabel(item.status),
+          count: item.count,
+          href: buildDoctorReservationFilterPathFromLink(
+            locale,
+            doctor.id,
+            current,
+            item.link
+          ),
+          selected: isReservationFilterLinkActive(current, item.link),
+          subtitle: isReservationFilterLinkActive(current, item.link)
+            ? 'Filter active'
+            : undefined,
+        }))}
+        icon={PiFlagBold}
+      />
+
+      <KpiBreakdownCardsSection
+        title="By Source Campaign"
+        description="Click to filter reservations below; summary stays unchanged"
+        items={campaigns.map((item) => ({
+          key: item.source_campaign,
+          label: formatSourceCampaignLabel(item.source_campaign),
+          count: item.count,
+          href: buildDoctorReservationFilterPathFromLink(
+            locale,
+            doctor.id,
+            current,
+            item.link
+          ),
+          selected: isReservationFilterLinkActive(current, item.link),
+          subtitle: isReservationFilterLinkActive(current, item.link)
+            ? 'Filter active'
+            : undefined,
+        }))}
+        icon={PiMegaphoneBold}
+      />
+
+      <KpiBreakdownCardsSection
+        title="By Session Count"
+        items={(sessionsStats?.by_session_count ?? []).map((item) => ({
+          key: String(item.sessions_count),
+          label: `${item.sessions_count} session${item.sessions_count !== 1 ? 's' : ''}`,
+          count: item.reservations_count,
+          subtitle: `${item.total_sessions} slots`,
+        }))}
+        icon={PiCalendarCheckBold}
+      />
     </div>
   );
 }

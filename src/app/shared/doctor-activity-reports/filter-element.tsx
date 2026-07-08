@@ -10,13 +10,6 @@ import { formatDate } from '@/utils/format-date';
 import { useDoctorActivityReportFilterOptions } from '@/framework/doctor-activity-reports';
 import type { DoctorActivityFilterOptions } from '@/types/doctor-activity-report';
 
-const eventOptions = [
-  { value: '', name: 'all', label: 'All events' },
-  { value: 'created', name: 'created', label: 'Created' },
-  { value: 'updated', name: 'updated', label: 'Updated' },
-  { value: 'deleted', name: 'deleted', label: 'Deleted' },
-];
-
 type FilterElementProps = {
   filters: Record<string, unknown>;
   updateFilter: (columnId: string, filterValue: string | unknown[]) => void;
@@ -64,26 +57,6 @@ export default function DoctorActivityFilterElement({
     })),
   ];
 
-  const logNameOptions = [
-    { value: '', name: 'all', label: 'All log names' },
-    ...(filterOptions?.log_names ?? []).map((name: string) => ({
-      value: name,
-      name,
-      label: name,
-    })),
-  ];
-
-  const subjectTypeOptions = [
-    { value: '', name: 'all', label: 'All entity types' },
-    ...(filterOptions?.subject_types ?? []).map(
-      (item: { value: string; label: string }) => ({
-        value: item.value,
-        name: item.value,
-        label: item.label,
-      })
-    ),
-  ];
-
   return (
     <div className="flex w-full min-w-0 flex-col gap-5">
       <FilterField label="Doctor">
@@ -98,54 +71,6 @@ export default function DoctorActivityFilterElement({
             selected
           }
           placeholder="Select doctor"
-          selectClassName="h-10 w-full min-w-0"
-        />
-      </FilterField>
-
-      <FilterField label="Event type">
-        <StatusField
-          className="w-full"
-          options={eventOptions}
-          value={toSelectValue(filters.event)}
-          onChange={(value) => updateFilter('event', toSelectValue(value))}
-          getOptionValue={(option) => option.value}
-          displayValue={(selected: string) =>
-            eventOptions.find((option) => option.value === selected)?.label ??
-            selected
-          }
-          placeholder="Select event"
-          selectClassName="h-10 w-full min-w-0"
-        />
-      </FilterField>
-
-      <FilterField label="Log name">
-        <StatusField
-          className="w-full"
-          options={logNameOptions}
-          value={toSelectValue(filters.log_name)}
-          onChange={(value) => updateFilter('log_name', toSelectValue(value))}
-          getOptionValue={(option) => option.value}
-          displayValue={(selected: string) =>
-            logNameOptions.find((option) => option.value === selected)?.label ??
-            selected
-          }
-          placeholder="Select log name"
-          selectClassName="h-10 w-full min-w-0"
-        />
-      </FilterField>
-
-      <FilterField label="Entity type">
-        <StatusField
-          className="w-full"
-          options={subjectTypeOptions}
-          value={toSelectValue(filters.subject_type)}
-          onChange={(value) => updateFilter('subject_type', toSelectValue(value))}
-          getOptionValue={(option) => option.value}
-          displayValue={(selected: string) =>
-            subjectTypeOptions.find((option) => option.value === selected)
-              ?.label ?? selected
-          }
-          placeholder="Select entity type"
           selectClassName="h-10 w-full min-w-0"
         />
       </FilterField>
@@ -201,24 +126,6 @@ export default function DoctorActivityFilterElement({
           }}
           placeholderText="Select end date"
           inputProps={{ labelClassName: 'font-medium text-gray-700' }}
-        />
-      </FilterField>
-
-      <FilterField label="Time from">
-        <Input
-          type="time"
-          className="h-10 w-full"
-          value={toSelectValue(filters.time_from || filters.time)}
-          onChange={(e) => updateFilter('time_from', e.target.value)}
-        />
-      </FilterField>
-
-      <FilterField label="Time to">
-        <Input
-          type="time"
-          className="h-10 w-full"
-          value={toSelectValue(filters.time_to)}
-          onChange={(e) => updateFilter('time_to', e.target.value)}
         />
       </FilterField>
 

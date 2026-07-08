@@ -7,6 +7,7 @@ export interface ReservationsPagePermissions {
   delete: boolean;
   inviteDoctors: boolean;
   sendPaymentWhatsapp: boolean;
+  sendInvoiceWhatsapp: boolean;
 }
 
 const hasAny = (userPermissions: string[], keys: string[]) =>
@@ -25,5 +26,6 @@ export function resolveReservationsPermissions(
     delete: hasAny(userPermissions, ['reservations_delete']),
     inviteDoctors: hasAny(userPermissions, ['reservations_invite_doctors']),
     sendPaymentWhatsapp: hasAny(userPermissions, ['reservations_send_payment_whatsapp']),
+    sendInvoiceWhatsapp: hasAny(userPermissions, ['reservations']),
   };
 }

@@ -23,6 +23,7 @@ export const kanbanSourceCampaignOptions = [
   { label: 'YouTube', value: 'youtube' },
   { label: 'Website', value: 'website' },
   { label: 'Referral', value: 'referral' },
+  { label: 'Center', value: 'center' },
   { label: 'Other', value: 'other' },
 ];
 

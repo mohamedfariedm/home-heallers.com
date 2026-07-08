@@ -1,16 +1,21 @@
 'use client';
 
+import Cookies from 'js-cookie';
 import {
   PiCalendarCheckBold,
   PiChartBarBold,
-  PiClockBold,
-  PiListChecksBold,
+  PiFlagBold,
+  PiMegaphoneBold,
   PiStethoscopeBold,
 } from 'react-icons/pi';
 import cn from '@/utils/class-names';
 import KpiStatCard from '@/app/shared/kpis/kpi-stat-card';
-import KpiBreakdownWidget from '@/app/shared/kpis/kpi-breakdown-widget';
-import DoctorActivityDrillDownLink from '@/app/shared/doctor-activity-reports/drill-down-link';
+import KpiBreakdownCardsSection from '@/app/shared/kpis/kpi-breakdown-cards-section';
+import {
+  buildDoctorActivityPathFromApiLink,
+  formatReservationStatusLabel,
+  formatSourceCampaignLabel,
+} from '@/utils/doctor-activity-query';
 import type { DoctorActivityStatistics } from '@/types/doctor-activity-report';
 
 interface DoctorActivityStatisticsCardsProps {
@@ -19,11 +24,18 @@ interface DoctorActivityStatisticsCardsProps {
 }
 
 const cards = [
-  { key: 'total_doctors', title: 'Active Doctors', icon: PiStethoscopeBold, color: 'purple' as const },
-  { key: 'total_actions', title: 'Total Actions', icon: PiListChecksBold, color: 'blue' as const },
-  { key: 'today', title: 'Today', icon: PiClockBold, color: 'green' as const },
-  { key: 'this_week', title: 'This Week', icon: PiCalendarCheckBold, color: 'amber' as const },
-  { key: 'this_month', title: 'This Month', icon: PiChartBarBold, color: 'indigo' as const },
+  {
+    key: 'total_doctors',
+    title: 'Doctors with Reservations',
+    icon: PiStethoscopeBold,
+    color: 'purple' as const,
+  },
+  {
+    key: 'total_reservations',
+    title: 'Total Reservations',
+    icon: PiChartBarBold,
+    color: 'blue' as const,
+  },
 ] as const;
 
 export default function DoctorActivityStatisticsCards({
@@ -32,11 +44,8 @@ export default function DoctorActivityStatisticsCards({
 }: DoctorActivityStatisticsCardsProps) {
   if (!statistics) return null;
 
-  const hasBreakdowns =
-    statistics.by_event?.length > 0 ||
-    statistics.by_log_name?.length > 0 ||
-    statistics.top_doctors?.length > 0 ||
-    statistics.most_modified_models?.length > 0;
+  const locale = Cookies.get('NEXT_LOCALE') || 'en';
+  const sessionsStats = statistics.sessions_statistics;
 
   return (
     <div className={cn('space-y-6', className)}>
@@ -50,78 +59,49 @@ export default function DoctorActivityStatisticsCards({
             color={card.color}
           />
         ))}
+        {sessionsStats != null && (
+          <KpiStatCard
+            title="Total Sessions"
+            value={sessionsStats.total_sessions}
+            icon={PiCalendarCheckBold}
+            color="amber"
+            subtitle={`${sessionsStats.total_reservations} reservations`}
+          />
+        )}
       </div>
 
-      {hasBreakdowns && (
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-          {statistics.by_event?.length > 0 && (
-            <div className="lg:col-span-3">
-              <KpiBreakdownWidget
-                title="By Event"
-                items={statistics.by_event.slice(0, 5).map((bucket) => ({
-                  key: bucket.event ?? 'uncategorized',
-                  label: bucket.event ?? 'Uncategorized',
-                  count: bucket.count,
-                  countNode: (
-                    <DoctorActivityDrillDownLink link={bucket.link}>
-                      {bucket.count}
-                    </DoctorActivityDrillDownLink>
-                  ),
-                }))}
-              />
-            </div>
-          )}
+      <KpiBreakdownCardsSection
+        title="By Status"
+        items={(statistics.by_status ?? []).map((bucket, index) => ({
+          key: `${String(bucket.status)}-${index}`,
+          label: formatReservationStatusLabel(bucket.status),
+          count: bucket.count,
+          href: buildDoctorActivityPathFromApiLink(locale, bucket.link),
+        }))}
+        icon={PiFlagBold}
+      />
 
-          {statistics.by_log_name?.length > 0 && (
-            <div className="lg:col-span-3">
-              <KpiBreakdownWidget
-                title="By Log Name"
-                items={statistics.by_log_name.slice(0, 5).map((bucket) => ({
-                  key: bucket.log_name,
-                  label: bucket.log_name,
-                  count: bucket.count,
-                  countNode: (
-                    <DoctorActivityDrillDownLink link={bucket.link}>
-                      {bucket.count}
-                    </DoctorActivityDrillDownLink>
-                  ),
-                }))}
-              />
-            </div>
-          )}
+      <KpiBreakdownCardsSection
+        title="By Source Campaign"
+        items={(statistics.by_source_campaign ?? []).map((bucket) => ({
+          key: bucket.source_campaign,
+          label: formatSourceCampaignLabel(bucket.source_campaign),
+          count: bucket.count,
+          href: buildDoctorActivityPathFromApiLink(locale, bucket.link),
+        }))}
+        icon={PiMegaphoneBold}
+      />
 
-          {statistics.top_doctors?.length > 0 && (
-            <div className="lg:col-span-3">
-              <KpiBreakdownWidget
-                title="Top Doctors"
-                items={statistics.top_doctors.slice(0, 5).map((doctor) => ({
-                  key: String(doctor.id),
-                  label: doctor.name,
-                  count: doctor.count,
-                  countNode: (
-                    <DoctorActivityDrillDownLink link={doctor.link}>
-                      {doctor.count}
-                    </DoctorActivityDrillDownLink>
-                  ),
-                }))}
-              />
-            </div>
-          )}
-
-          {statistics.most_modified_models?.length > 0 && (
-            <div className="lg:col-span-3">
-              <KpiBreakdownWidget
-                title="Most Modified Models"
-                items={statistics.most_modified_models.slice(0, 5).map((model) => ({
-                  key: model.type,
-                  label: model.type,
-                  count: model.count,
-                }))}
-              />
-            </div>
-          )}
-        </div>
-      )}
+      <KpiBreakdownCardsSection
+        title="By Session Count"
+        items={(sessionsStats?.by_session_count ?? []).map((bucket) => ({
+          key: String(bucket.sessions_count),
+          label: `${bucket.sessions_count} session${bucket.sessions_count !== 1 ? 's' : ''}`,
+          count: bucket.reservations_count,
+          subtitle: `${bucket.total_sessions} slots`,
+        }))}
+        icon={PiCalendarCheckBold}
+      />
     </div>
   );
 }

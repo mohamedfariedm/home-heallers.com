@@ -46,7 +46,7 @@ export default function DoctorKpiDetailPage() {
     (data as DoctorActivityDetailResponse | undefined)?.meta?.total ?? 0;
 
   const pageHeader = {
-    title: detail?.doctor?.name ?? 'Doctor Activity',
+    title: detail?.doctor?.name ?? 'Doctor KPIs',
     breadcrumb: [
       { href: '/', name: 'Home' },
       {
@@ -71,7 +71,7 @@ export default function DoctorKpiDetailPage() {
       breadcrumb={pageHeader.breadcrumb}
       data={{ columns: [], rows: [] }}
       fileName="doctor-activity-reservations"
-      header="Reservation,Actions,Activities"
+      header="Reservation ID,Status,Patient,Sessions,Total"
       canExport={false}
       canCreate={false}
       canImport={false}
@@ -90,10 +90,10 @@ export default function DoctorKpiDetailPage() {
           </div>
         ) : isError ? (
           <div className="rounded-md border border-red-200 bg-red-50 p-6 text-sm text-red-700 dark:border-red-900 dark:bg-red-900/20 dark:text-red-300">
-            {error?.message ?? 'Failed to load doctor activity detail.'}
+            {error?.message ?? 'Failed to load doctor KPI detail.'}
           </div>
         ) : !detail ? (
-          <Text className="text-gray-500">Doctor activity not found.</Text>
+          <Text className="text-gray-500">Doctor not found.</Text>
         ) : (
           <>
             <DoctorActivitySummaryPanel
