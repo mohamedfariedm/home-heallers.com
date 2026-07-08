@@ -329,6 +329,10 @@ class Client {
         findOne: (id: number) => HttpClient.get(`/contracts/${id}`),
         create: (input: any) => HttpClient.post('/contracts', input),
         update: (input: any) => HttpClient.patch(`/contracts/${input.id}`, input),
+        addCommunication: (input: { id: number; communication_date: string }) =>
+            HttpClient.post(`/contracts/${input.id}/communication`, {
+                communication_date: input.communication_date,
+            }),
         delete: (input: { contract_id: number[] }) => {
             const promises = input.contract_id.map(id => HttpClient.delete(`/contracts/${id}`));
             return Promise.all(promises);

@@ -825,7 +825,13 @@ export default function CreateOrUpdateCoupon({
   );
 
   const onSubmit: SubmitHandler<CouponFormInput> = (data) => {
-    const payload = buildCouponPayload(data, insuranceTypes);
+    const payload = buildCouponPayload(
+      {
+        ...data,
+        description: normalizeTranslatedField(data.description),
+      },
+      insuranceTypes
+    );
 
     if (initValues?.id) {
       updateCoupon({ coupon_id: initValues.id, ...payload });

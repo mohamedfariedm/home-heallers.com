@@ -43,8 +43,9 @@ export default function ContractsTablePage() {
         rows: selectedRowKeys,
       }}
       fileName="contracts/index"
-      header="Company Name,Service Manager,Created At"
+      header="Name,Owner Type,Contract Type,Service Manager,Visit Date,Created At"
       createName="Create Contract"
+      customSize="960px"
       createElementButton={<ContractForm />}
     >
       {isLoading ? (

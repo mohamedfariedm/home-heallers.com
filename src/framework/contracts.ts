@@ -58,3 +58,20 @@ export const useCreateContract = () => {
     })
   }
 
+  export const useAddContractCommunication = () => {
+    const queryClient = useQueryClient();
+    const { closeModal } = useModal();
+
+    return useMutation({
+      mutationFn: client.contracts.addCommunication,
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: [routes.contracts.index] });
+        toast.success('Communication date added successfully');
+        closeModal();
+      },
+      onError: (error) => {
+        toast.error(`Error ${error?.message}`);
+      },
+    });
+  };
+

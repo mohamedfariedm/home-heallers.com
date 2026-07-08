@@ -19,16 +19,18 @@ export const couponFormSchema = z
       en: z.string().min(1, 'English coupon name is required'),
       ar: z.string().min(1, 'Arabic coupon name is required'),
     }),
-    description: z.object({
-      en: z.preprocess(
-        (val) => (val == null ? '' : String(val)),
-        z.string()
-      ),
-      ar: z.preprocess(
-        (val) => (val == null ? '' : String(val)),
-        z.string()
-      ),
-    }),
+    description: z
+      .object({
+        en: z.preprocess(
+          (val) => (val == null ? '' : String(val)),
+          z.string()
+        ),
+        ar: z.preprocess(
+          (val) => (val == null ? '' : String(val)),
+          z.string()
+        ),
+      })
+      .default({ en: '', ar: '' }),
     code: z.string().min(1, 'Coupon code is required'),
     type: z.enum(['percent', 'fixed', 'free_service', 'free_delivery'], {
       message: 'Invalid coupon type',

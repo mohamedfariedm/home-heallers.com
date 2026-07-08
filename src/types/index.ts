@@ -272,20 +272,43 @@ export interface notifications {
   users?:any,
 }
 
+export type ContractOwnerType = 'company' | 'doctor';
+export type ContractType = 'offline' | 'online';
+
 export interface Contract {
   id: number;
+  contract_owner_type?: ContractOwnerType | null;
+  contract_type?: ContractType | null;
   visit_date: string;
-  last_date: string;
+  last_date?: string | null;
   visit_time: string;
-  last_time: string;
-  service_manager_name: string;
-  last_service_manager: string;
+  last_time?: string | null;
+  communication_date?: string | null;
+  communication_times_count?: number | null;
+  service_manager_name?: string | null;
+  last_service_manager?: string | null;
   company_activity: string;
+  company_activity_custom?: string | null;
   company_location: string;
   company_name: string;
-  manager_mobile: string;
-  manager_email: string;
+  manager_name?: string | null;
+  manager_mobile?: string | null;
+  manager_email?: string | null;
   visit_summary: string;
+  visit_type?: string | null;
+  next_visit_at?: string | null;
+  meeting_postponed_note?: string | null;
+  requirements?: string | null;
+  sales_rep_notes?: string | null;
+  center_interest_level?: number | null;
+  document_signed_contract_path?: string | null;
+  document_signed_contract_url?: string | null;
+  document_manager_id_path?: string | null;
+  document_manager_id_url?: string | null;
+  document_commercial_reg_path?: string | null;
+  document_commercial_reg_url?: string | null;
+  document_optional_path?: string | null;
+  document_optional_url?: string | null;
   created_by?: number | null;
   updated_by?: number | null;
   created_at: string;
@@ -318,16 +341,22 @@ export interface ContractResponse {
 }
 
 export interface ContractFormInput {
+  contract_owner_type?: ContractOwnerType | null;
+  contract_type: ContractType;
   visit_date: string;
-  last_date: string;
   visit_time: string;
-  last_time: string;
-  service_manager_name: string;
-  last_service_manager: string;
-  company_activity: string;
-  company_location: string;
-  company_name: string;
-  manager_mobile: string;
-  manager_email: string;
+  visit_type?: string;
   visit_summary: string;
+  company_location: string;
+  center_interest_level?: number | null;
+  company_name: string;
+  company_activity: string;
+  company_activity_custom?: string;
+  manager_name?: string;
+  manager_mobile?: string;
+  manager_email?: string;
+  requirements?: string;
+  sales_rep_notes?: string;
+  communication_date?: string | null;
+  communication_times_count?: number | null;
 }

@@ -4,7 +4,6 @@ import React, { useCallback, useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useTable } from '@/hooks/use-table';
 import { useColumn } from '@/hooks/use-column';
-import { Button } from '@/components/ui/button';
 import ControlledTable from '@/components/controlled-table';
 import { getColumns } from '@/app/shared/contracts/columns';
 import { useDeleteContract } from '@/framework/contracts';
@@ -20,27 +19,28 @@ const TableFooter = dynamic(() => import('@/app/shared/table-footer'), {
   ssr: false,
 });
 
-export default function ContractsTable({ 
-  data = [], 
-  getSelectedColumns, 
-  getSelectedRowKeys, 
-  totalItems 
-}: { 
-  data: any[], 
-  getSelectedColumns: React.Dispatch<React.SetStateAction<any[]>>, 
-  getSelectedRowKeys: React.Dispatch<React.SetStateAction<any[]>>, 
-  totalItems: number 
+export default function ContractsTable({
+  data = [],
+  getSelectedColumns,
+  getSelectedRowKeys,
+  totalItems,
+}: {
+  data: any[];
+  getSelectedColumns: React.Dispatch<React.SetStateAction<any[]>>;
+  getSelectedRowKeys: React.Dispatch<React.SetStateAction<any[]>>;
+  totalItems: number;
 }) {
   const { mutate: deleteContract } = useDeleteContract();
   const searchParams = useSearchParams();
   const params = new URLSearchParams(searchParams);
-  const [pageSize, setPageSize] = useState(Number(params.get('limit')));
+  const [pageSize, setPageSize] = useState(Number(params.get('limit')) || 10);
 
   const filterState = {
     company_name: params.get('company_name') || '',
-    company_activity: params.get('company_activity') || '',
+    company_location: params.get('company_location') || '',
     service_manager_name: params.get('service_manager_name') || '',
-    manager_email: params.get('manager_email') || '',
+    contract_owner_type: params.get('contract_owner_type') || '',
+    contract_type: params.get('contract_type') || '',
   };
 
   const onHeaderCellClick = (value: string) => ({
@@ -50,16 +50,15 @@ export default function ContractsTable({
   });
 
   const handleDelete = (ids: string[]) => {
-    const data = ids?.map(id => Number(id));
-    deleteContract({ contract_id: data }, {
-      onSuccess: () => {
-        toast.success(
-          <Text>
-            Contract(s) deleted successfully
-          </Text>
-        );
+    const contractIds = ids?.map((id) => Number(id));
+    deleteContract(
+      { contract_id: contractIds },
+      {
+        onSuccess: () => {
+          toast.success(<Text>Contract deleted successfully</Text>);
+        },
       }
-    });
+    );
   };
 
   const onDeleteItem = useCallback((id: string[]) => {
@@ -97,8 +96,8 @@ export default function ContractsTable({
         handleSelectAll,
       }),
     [
+      data,
       selectedRowKeys,
-      onHeaderCellClick,
       sortConfig.key,
       sortConfig.direction,
       onDeleteItem,
@@ -107,13 +106,12 @@ export default function ContractsTable({
     ]
   );
 
-  const { visibleColumns, checkedColumns, setCheckedColumns } =
-    useColumn(columns);
+  const { visibleColumns, checkedColumns, setCheckedColumns } = useColumn(columns);
 
   useEffect(() => {
     getSelectedColumns(checkedColumns);
     getSelectedRowKeys(selectedRowKeys);
-  }, [checkedColumns, selectedRowKeys]);
+  }, [checkedColumns, selectedRowKeys, getSelectedColumns, getSelectedRowKeys]);
 
   return (
     <>
@@ -143,13 +141,14 @@ export default function ContractsTable({
           columns,
           checkedColumns,
           setCheckedColumns,
-          filters
+          filters,
         }}
         filterElement={
           <FilterElement
             isFiltered={isFiltered}
             filters={filters}
             updateFilter={updateFilter}
+            handleReset={handleReset}
           />
         }
         tableFooter={
@@ -159,13 +158,10 @@ export default function ContractsTable({
               setSelectedRowKeys([]);
               handleDelete(ids);
             }}
-          >
-            {/* Additional action buttons can be added here */}
-          </TableFooter>
+          />
         }
         className="overflow-hidden rounded-md border border-gray-200 text-sm shadow-sm [&_.rc-table-placeholder_.rc-table-expanded-row-fixed>div]:h-60 [&_.rc-table-placeholder_.rc-table-expanded-row-fixed>div]:justify-center [&_.rc-table-row:last-child_td.rc-table-cell]:border-b-0 [&_thead.rc-table-thead]:border-t-0"
       />
     </>
   );
 }
-
