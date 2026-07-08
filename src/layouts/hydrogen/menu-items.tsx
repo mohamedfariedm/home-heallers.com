@@ -253,6 +253,12 @@ export const menuItemsHaydrogen = [
     icon: <PiChatCenteredDotsDuotone />,
     permissions: 'whatsapp.manage',
   },
+  {
+    name: 'Push Notifications',
+    href: routes.notifications.index,
+    icon: <IoNotificationsSharp />,
+    permissions: 'notifications',
+  },
 
   { name: 'master Mangement ' },
   {

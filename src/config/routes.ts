@@ -136,7 +136,8 @@ export const routes = {
     detail: (doctorId: number | string) => `/reports/doctor-activity/${doctorId}`,
   },
   notifications: {
-    index: '/notifications'
+    index: '/notifications',
+    sentDetail: (id: string | number) => `/notifications/sent/${id}`,
   },
   // categories: {
   //   index: '/categories'

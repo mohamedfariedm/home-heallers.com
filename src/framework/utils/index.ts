@@ -335,11 +335,44 @@ class Client {
         }
     }
     notifications = {
-        all: (param: string) => HttpClient.get(`${routes.notifications.index}/index?${param}`),
-        findAllData: () => HttpClient.get(`${routes.notifications.index}/create`),
-        create: (input: notifications) => HttpClient.post(`${routes.notifications.index}/store`, input),
-        // update: (input : Products) => HttpClient.post(`${routes.products.index}/update`, input) ,
-        // delete: (input: {product_id: number[]}) => HttpClient.post(`${routes.products.index}/delete`, input)
+        sendGlobal: async (input: notifications) => {
+            const response = await HttpClient.post(`${routes.notifications.index}/send-global`, input);
+            return response.data;
+        },
+        sendToClients: async (input: notifications) => {
+            const response = await HttpClient.post(`${routes.notifications.index}/send-to-clients`, input);
+            return response.data;
+        },
+        sendToDoctors: async (input: notifications) => {
+            const response = await HttpClient.post(`${routes.notifications.index}/send-to-doctors`, input);
+            return response.data;
+        },
+        sendToSpecific: async (input: notifications) => {
+            const response = await HttpClient.post(`${routes.notifications.index}/send-to-specific`, input);
+            return response.data;
+        },
+        scheduled: {
+            all: (param: string) =>
+                HttpClient.get(`${routes.notifications.index}/scheduled?${param}`),
+            findOne: (id: number) =>
+                HttpClient.get(`${routes.notifications.index}/scheduled/${id}`),
+            create: async (input: unknown) => {
+                const response = await HttpClient.post(`${routes.notifications.index}/scheduled`, input);
+                return response.data;
+            },
+            update: (id: number, input: unknown) =>
+                HttpClient.put(`${routes.notifications.index}/scheduled/${id}`, input),
+            cancel: (id: number) =>
+                HttpClient.delete(`${routes.notifications.index}/scheduled/${id}`),
+        },
+        sent: {
+            filterOptions: () =>
+                HttpClient.get(`${routes.notifications.index}/sent/filter-options`),
+            all: (param: string) =>
+                HttpClient.get(`${routes.notifications.index}/sent?${param}`),
+            findOne: (id: number) =>
+                HttpClient.get(`${routes.notifications.index}/sent/${id}`),
+        },
     }
 
     checkin = {

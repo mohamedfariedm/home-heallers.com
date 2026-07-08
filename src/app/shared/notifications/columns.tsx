@@ -1,93 +1,164 @@
 'use client';
 
-import { Tooltip } from '@/components/ui/tooltip';
+import Link from 'next/link';
 import { HeaderCell } from '@/components/ui/table';
-import { Checkbox } from '@/components/ui/checkbox';
-import { ActionIcon } from '@/components/ui/action-icon';
-import PencilIcon from '@/components/icons/pencil';
-import AvatarCard from '@/components/ui/avatar-card';
 import DateCell from '@/components/ui/date-cell';
-import CreateButton from '../create-button';
-import ProductForm from './product-form';
-import { Region } from '@/types';
-import TrashIcon from '@/components/icons/trash';
+import { Text } from '@/components/ui/text';
+import { ScheduledRowActions } from '@/app/shared/notifications/scheduled-actions';
+import {
+  formatRecipientType,
+  statusBadgeClass,
+} from '@/app/shared/notifications/constants';
+import type { ScheduledNotification } from '@/types/admin-notifications';
 
-type Columns = {
-  data: any[];
-  sortConfig?: any;
-  handleSelectAll: any;
-  checkedItems: string[];
-  onDeleteItem: (id: string[]) => void;
-  onHeaderCellClick: (value: string) => void;
-  onChecked?: (id: string) => void;
+type ScheduledColumnsProps = {
+  onCancel: (id: number) => void;
+  isCanceling: boolean;
 };
 
-export const getColumns = ({
-  data,
-  sortConfig,
-  checkedItems,
-  onDeleteItem,
-  onHeaderCellClick,
-  handleSelectAll,
-  onChecked,
-}: Columns) => [
-  {
-    title: <HeaderCell title="Notification" />,
-    dataIndex: 'user_type',
-    key: 'Notification',
-    width: 100,
-    hidden: 'user_type',
+export function getScheduledColumns({
+  onCancel,
+  isCanceling,
+}: ScheduledColumnsProps) {
+  return [
+    {
+      title: <HeaderCell title="Title" />,
+      dataIndex: 'title',
+      key: 'title',
+      width: 180,
+      render: (_: string, row: ScheduledNotification) => (
+        <Text className="font-medium text-gray-900">{row.title}</Text>
+      ),
+    },
+    {
+      title: <HeaderCell title="Audience" />,
+      dataIndex: 'recipient_type',
+      key: 'recipient_type',
+      width: 140,
+      render: (_: string, row: ScheduledNotification) =>
+        formatRecipientType(row.recipient_type),
+    },
+    {
+      title: <HeaderCell title="Status" />,
+      dataIndex: 'status',
+      key: 'status',
+      width: 120,
+      render: (_: string, row: ScheduledNotification) => (
+        <span
+          className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${statusBadgeClass(row.status)}`}
+        >
+          {row.status}
+        </span>
+      ),
+    },
+    {
+      title: <HeaderCell title="Scheduled at" />,
+      dataIndex: 'scheduled_at',
+      key: 'scheduled_at',
+      width: 160,
+      render: (value: string) => <DateCell date={new Date(value)} />,
+    },
+    {
+      title: <HeaderCell title="Language" />,
+      dataIndex: 'lang',
+      key: 'lang',
+      width: 80,
+      render: (value: string) => value?.toUpperCase(),
+    },
+    {
+      title: <HeaderCell title="Created by" />,
+      dataIndex: 'creator',
+      key: 'creator',
+      width: 140,
+      render: (_: string, row: ScheduledNotification) => row.creator?.name ?? '—',
+    },
+    {
+      title: <HeaderCell title="Actions" />,
+      dataIndex: 'action',
+      key: 'action',
+      width: 120,
+      render: (_: string, row: ScheduledNotification) => (
+        <ScheduledRowActions
+          row={row}
+          onCancel={onCancel}
+          isCanceling={isCanceling}
+        />
+      ),
+    },
+  ];
+}
 
-    render: (_: string, row: any) => (
-      <AvatarCard
-        src={row?.image}
-        name={row?.user_type || ''}
-        description={`ID-${row?.id}`}
-      />
-    ),
-  },
-  {
-    title: <HeaderCell title="type" />,
-    dataIndex: 'type',
-    key: 'type',
-    width: 100,
-    hidden: 'type',
-
-    render: (_: string, row: any) => row?.type,
-  },
-  {
-    title: <HeaderCell title="title" />,
-    dataIndex: 'title',
-    key: 'title',
-    width: 100,
-    hidden: 'title',
-
-    render: (_: string, row: any) => row?.title,
-  },
-  {
-    title: <HeaderCell title="body" />,
-    dataIndex: 'body',
-    key: 'body',
-    width: 100,
-    hidden: 'body',
-
-    render: (_: string, row: any) => row?.body,
-  },
-  {
-    title: (
-      <HeaderCell
-        title="Created"
-        sortable
-        ascending={
-          sortConfig?.direction === 'asc' && sortConfig?.key === 'created_at'
-        }
-      />
-    ),
-    onHeaderCell: () => onHeaderCellClick('created_at'),
-    dataIndex: 'created_at',
-    key: 'created_at',
-    width: 50,
-    render: (value: Date) => <DateCell date={value} />,
-  },
-  
-];
+export function getSentColumns(localePrefix: string) {
+  return [
+    {
+      title: <HeaderCell title="Title" />,
+      dataIndex: 'title',
+      key: 'title',
+      width: 180,
+      render: (_: string, row: { id: number; title: string }) => (
+        <Link
+          href={`${localePrefix}/notifications/sent/${row.id}`}
+          className="font-medium text-primary hover:underline"
+        >
+          {row.title}
+        </Link>
+      ),
+    },
+    {
+      title: <HeaderCell title="Source" />,
+      dataIndex: 'source',
+      key: 'source',
+      width: 110,
+      render: (value: string) => value,
+    },
+    {
+      title: <HeaderCell title="Audience" />,
+      dataIndex: 'recipient_type',
+      key: 'recipient_type',
+      width: 140,
+      render: (value: string) => formatRecipientType(value),
+    },
+    {
+      title: <HeaderCell title="Status" />,
+      dataIndex: 'status',
+      key: 'status',
+      width: 100,
+      render: (value: string) => (
+        <span
+          className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${statusBadgeClass(value)}`}
+        >
+          {value}
+        </span>
+      ),
+    },
+    {
+      title: <HeaderCell title="Queued jobs" />,
+      dataIndex: 'queued_count',
+      key: 'queued_count',
+      width: 110,
+      render: (value: number) => value ?? '—',
+    },
+    {
+      title: <HeaderCell title="Sent at" />,
+      dataIndex: 'sent_at',
+      key: 'sent_at',
+      width: 160,
+      render: (value: string) => <DateCell date={new Date(value)} />,
+    },
+    {
+      title: <HeaderCell title="Language" />,
+      dataIndex: 'lang',
+      key: 'lang',
+      width: 80,
+      render: (value: string) => value?.toUpperCase(),
+    },
+    {
+      title: <HeaderCell title="Created by" />,
+      dataIndex: 'creator',
+      key: 'creator',
+      width: 140,
+      render: (_: string, row: { creator?: { name?: string } }) =>
+        row.creator?.name ?? '—',
+    },
+  ];
+}
