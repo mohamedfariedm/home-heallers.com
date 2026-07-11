@@ -16,6 +16,7 @@ export interface InstallationStats {
     inactive_30_days: number;
     total: number;
   };
+  unregistered: number;
   reinstalls: number;
 }
 

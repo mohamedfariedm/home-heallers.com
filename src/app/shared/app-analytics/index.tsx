@@ -40,7 +40,7 @@ export default function AppAnalyticsDashboard() {
   const usingMockData =
     Boolean(overviewResponse?.data) && isAppAnalyticsEmpty(overviewResponse.data);
 
-  const { data: activeUsersResponse, isFetching: isActiveUsersFetching } =
+  const { data: activeUsersResponse, isFetching: isActiveUsersFetching, isError: isActiveUsersError, error: activeUsersError } =
     useAppAnalyticsActiveUsers(
       effectiveDate,
       canView && Boolean(effectiveDate) && !usingMockData
@@ -121,6 +121,19 @@ export default function AppAnalyticsDashboard() {
         <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-900/20 dark:text-amber-200">
           Preview data — live app analytics is not available yet. These numbers are sample
           data so you can review the dashboard layout.
+        </div>
+      )}
+
+      {!usingMockData && isActiveUsersError && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-200">
+          {activeUsersError?.message || 'Invalid date for active user metrics. Please choose a valid date.'}
+        </div>
+      )}
+
+      {!usingMockData && isActiveUsersFetching && (
+        <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+          <Loader size="sm" />
+          Updating active user metrics…
         </div>
       )}
 

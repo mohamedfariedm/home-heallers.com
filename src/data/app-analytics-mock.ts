@@ -49,6 +49,7 @@ export function getMockAppAnalyticsOverview(
         inactive_30_days: 120,
         total: 165,
       },
+      unregistered: 12,
       reinstalls: 28,
     },
     devices: {

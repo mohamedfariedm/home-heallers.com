@@ -7,6 +7,7 @@ import {
   PiDownloadSimpleBold,
   PiRepeatBold,
   PiShieldWarningBold,
+  PiUserMinusBold,
   PiUsersBold,
   PiWarningCircleBold,
 } from 'react-icons/pi';
@@ -48,7 +49,7 @@ export default function AppAnalyticsStatCards({
         <KpiStatCard
           title="Active Installations"
           value={installations.active_installations.toLocaleString()}
-          subtitle="Seen in last 30 days"
+          subtitle="Seen in last 30 days, excluding uninstalled & unregistered"
           icon={PiCellSignalFullBold}
           color="emerald"
         />
@@ -64,6 +65,13 @@ export default function AppAnalyticsStatCards({
           value={installations.reinstalls.toLocaleString()}
           icon={PiRepeatBold}
           color="indigo"
+        />
+        <KpiStatCard
+          title="Account Unregistered"
+          value={(installations.unregistered ?? 0).toLocaleString()}
+          subtitle="Linked client deleted their account"
+          icon={PiUserMinusBold}
+          color="orange"
         />
       </div>
 
@@ -177,6 +185,11 @@ export default function AppAnalyticsStatCards({
             key: 'total',
             label: 'Total Uninstalled',
             count: installations.uninstalled.total,
+          },
+          {
+            key: 'unregistered',
+            label: 'Account Unregistered',
+            count: installations.unregistered ?? 0,
           },
         ]}
         icon={PiWarningCircleBold}
