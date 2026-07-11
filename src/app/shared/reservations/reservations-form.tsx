@@ -220,6 +220,7 @@ export default function CreateOrUpdateReservation({
       notes: initValues?.notes || leadData?.notes || '',
       operation_notes: initValues?.operation_notes || '',
       cc: initValues?.cc || '',
+      rework: initValues?.rework ?? 0,
       address_city:
         resolveLocalizedName(initValues?.address?.city) ||
         resolveLocalizedName(initValues?.patient?.city?.name) ||
@@ -490,6 +491,7 @@ export default function CreateOrUpdateReservation({
       pain_location: data.pain_location,
       notes: data.notes,
       operation_notes: data.operation_notes,
+      rework: Number(data.rework ?? 0),
       ...(data.cc ? { cc: data.cc } : {}),
       address_city: data.address_city,
       address_state: data.address_state,
@@ -1204,6 +1206,15 @@ export default function CreateOrUpdateReservation({
         rows={4}
         {...register('operation_notes')}
         error={errors.operation_notes?.message}
+      />
+
+      <Input
+        {...inputProps}
+        label="Rework"
+        type="number"
+        min={0}
+        {...register('rework', { valueAsNumber: true })}
+        error={errors.rework?.message}
       />
 
       <div className="space-y-4 border-l-4 border-orange-500 pl-4">

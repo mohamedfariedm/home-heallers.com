@@ -342,4 +342,7 @@ export const routes = {
   statistics: {
     index: '/statistics',
   },
+  appAnalytics: {
+    index: '/app-analytics',
+  },
 };

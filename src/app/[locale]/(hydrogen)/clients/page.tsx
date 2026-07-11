@@ -4,6 +4,7 @@ import Spinner from '@/components/ui/spinner';
 import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import PationtsTable from '@/app/shared/patients/table';
+import ClientStatistics from '@/app/shared/patients/client-statistics';
 import { usePatients } from '@/framework/patients';
 import CreateOrUpdatePationts from '@/app/shared/patients/pationts-form';
 // export const metadata = {
@@ -31,6 +32,7 @@ export default function PatientsTablePage() {
   });
   if (!queryParams.get('page')) queryParams.set('page', '1');
   if (!queryParams.get('limit')) queryParams.set('limit', '10');
+  queryParams.set('include_statistics', 'true');
   const { data, isLoading } = usePatients(queryParams.toString());
   const [selectedColumns, setSelectedColumns] = useState<any[]>([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState<any[]>([]);
@@ -56,12 +58,15 @@ export default function PatientsTablePage() {
           <Spinner size="lg" />
         </div>
       ) : (
-        <PationtsTable
-          data={data?.data}
-          getSelectedColumns={setSelectedColumns}
-          getSelectedRowKeys={setSelectedRowKeys}
-          totalItems={data?.meta?.total}
-        />
+        <>
+          <ClientStatistics statistics={data?.statistics} className="mb-6" />
+          <PationtsTable
+            data={data?.data}
+            getSelectedColumns={setSelectedColumns}
+            getSelectedRowKeys={setSelectedRowKeys}
+            totalItems={data?.meta?.total}
+          />
+        </>
       )}
     </TableLayout>
   );

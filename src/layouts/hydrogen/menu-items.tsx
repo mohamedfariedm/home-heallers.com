@@ -49,6 +49,7 @@ import {
   PiSquareHalf,
   PiChartBar,
   PiCubeFocusThin,
+  PiDeviceMobileBold,
   PiFinnTheHuman,
   PiCircleDashedBold,
   PiPhoneCall,
@@ -87,6 +88,12 @@ export const menuItemsHaydrogen = [
     href: '/',
     permissions: 'dashboard', // optional custom
     icon: <PiChartBar />,
+  },
+  {
+    name: 'App Analytics',
+    href: routes.appAnalytics.index,
+    icon: <PiDeviceMobileBold />,
+    permissions: 'app_analytics',
   },
 
   { name: 'Home Management' },

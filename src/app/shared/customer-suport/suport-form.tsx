@@ -319,6 +319,8 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
         created_by: data.created_by || '',
         event_agent_name: data.event_agent_name || '',
         communication_channel: data.communication_channel || '',
+        rework: Number(data.rework ?? 0),
+        communication_times: Number(data.communication_times ?? 0),
         ...(data.cc ? { cc: data.cc } : {}),
       };
 
@@ -406,6 +408,8 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
           event_agent_name: initValues?.event_agent_name || '',
           communication_channel: initValues?.communication_channel || '',
           cc: initValues?.cc || '',
+          rework: initValues?.rework ?? 0,
+          communication_times: initValues?.communication_times ?? 0,
         },
       }}
       className="flex flex-grow flex-col gap-6 p-6"
@@ -554,6 +558,23 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
             {errors.cc && (
               <p className="mt-1 text-sm text-red-500">{errors.cc.message}</p>
             )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              label="Rework"
+              type="number"
+              min={0}
+              {...register('rework', { valueAsNumber: true })}
+              error={errors.rework?.message}
+            />
+            <Input
+              label="Communication Times"
+              type="number"
+              min={0}
+              {...register('communication_times', { valueAsNumber: true })}
+              error={errors.communication_times?.message}
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">

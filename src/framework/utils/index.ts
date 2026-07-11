@@ -647,6 +647,16 @@ class Client {
                         }) as SendWhatsAppMessageResult
                 ),
     };
+
+    appAnalytics = {
+        overview: () => HttpClient.get('/analytics/overview'),
+        installations: () => HttpClient.get('/analytics/installations'),
+        devices: () => HttpClient.get('/analytics/devices'),
+        activeUsers: (date?: string) =>
+            HttpClient.get(
+                date ? `/analytics/active-users?date=${date}` : '/analytics/active-users'
+            ),
+    };
 }
 
 

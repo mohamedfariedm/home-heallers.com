@@ -149,6 +149,27 @@ export default function BenchmarkModal({ row }: { row: any }) {
           </div>
 
           <div>
+            <Title as="h6" className="mt-6 font-inter text-sm font-semibold">Rework</Title>
+            <Text as="p" className="pb-2 leading-relaxed">
+              {row?.rework ?? 0}
+            </Text>
+          </div>
+
+          <div>
+            <Title as="h6" className="mt-6 font-inter text-sm font-semibold">Communication Times</Title>
+            <Text as="p" className="pb-2 leading-relaxed">
+              {row?.communication_times ?? 0}
+            </Text>
+          </div>
+
+          <div>
+            <Title as="h6" className="mt-6 font-inter text-sm font-semibold">Call Count</Title>
+            <Text as="p" className="pb-2 leading-relaxed">
+              {row?.call_count ?? 0}
+            </Text>
+          </div>
+
+          <div>
             <Title as="h6" className="mt-6 font-inter text-sm font-semibold">Activity Code</Title>
             <Text as="p" className="pb-2 leading-relaxed">
               {row?.activity_code}
