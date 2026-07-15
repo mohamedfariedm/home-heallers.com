@@ -4,8 +4,10 @@ import { Controller, type Control, type FieldErrors, type FieldValues, type UseF
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import SelectBox from '@/components/ui/select';
-import FormGroup from '@/app/shared/form-group';
-import { LANG_OPTIONS } from '@/app/shared/notifications/constants';
+import {
+  LANG_OPTIONS,
+  NOTIFICATION_TYPE_OPTIONS,
+} from '@/app/shared/notifications/constants';
 
 type NotificationContentFieldsProps<T extends FieldValues> = {
   register: UseFormRegister<T>;
@@ -34,13 +36,15 @@ export default function NotificationContentFields<T extends FieldValues>({
         error={errors.body?.message as string}
       />
 
-      <div className="grid gap-4 @xl:grid-cols-2">
-        <FormGroup title="Language">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="min-w-0 w-full space-y-1.5">
+          <label className="text-sm font-medium text-gray-900">Language</label>
           <Controller
             control={control}
             name={'lang' as never}
             render={({ field: { value, onChange } }) => (
               <SelectBox
+                className="w-full"
                 placeholder="Language"
                 options={LANG_OPTIONS.map((option) => ({
                   ...option,
@@ -57,14 +61,46 @@ export default function NotificationContentFields<T extends FieldValues>({
               />
             )}
           />
-        </FormGroup>
+        </div>
 
-        <Input
-          label="Type (optional)"
-          placeholder="promotion"
-          {...register('type' as never)}
-          error={errors.type?.message as string}
-        />
+        <div className="min-w-0 w-full space-y-1.5">
+          <label className="text-sm font-medium text-gray-900">Type (optional)</label>
+          <Controller
+            control={control}
+            name={'type' as never}
+            render={({ field: { value, onChange } }) => {
+              const current = String(value ?? '');
+              const typeOptions: Array<{ value: string; label: string }> = [
+                ...NOTIFICATION_TYPE_OPTIONS,
+              ];
+              if (
+                current &&
+                !NOTIFICATION_TYPE_OPTIONS.some((option) => option.value === current)
+              ) {
+                typeOptions.push({ value: current, label: current });
+              }
+
+              return (
+                <SelectBox
+                  className="w-full"
+                  placeholder="Select type"
+                  options={typeOptions.map((option) => ({
+                    ...option,
+                    name: option.value || 'none',
+                  }))}
+                  value={current}
+                  onChange={onChange}
+                  getOptionValue={(option) => option.value}
+                  displayValue={(selected) =>
+                    typeOptions.find((option) => option.value === selected)?.label ??
+                    'None'
+                  }
+                  error={errors.type?.message as string}
+                />
+              );
+            }}
+          />
+        </div>
       </div>
 
       <div className="grid gap-4 @xl:grid-cols-2">
@@ -81,20 +117,6 @@ export default function NotificationContentFields<T extends FieldValues>({
           error={errors.url?.message as string}
         />
       </div>
-
-      {/* Extra data (optional JSON) — hidden for now
-      <div>
-        <Textarea
-          label="Extra data (optional JSON)"
-          placeholder='{"campaign_id": "42"}'
-          {...register('extra_data_json' as never)}
-          error={errors.extra_data_json?.message as string}
-        />
-        <Text className="mt-1 text-xs text-gray-500">
-          Values are stringified server-side before FCM delivery.
-        </Text>
-      </div>
-      */}
     </>
   );
 }

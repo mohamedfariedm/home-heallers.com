@@ -13,11 +13,14 @@ import DeletePopover from '@/app/shared/delete-popover';
 import CreateButton from '../create-button';
 import ContractForm from '@/app/shared/contracts/contract-form';
 import CommunicationForm from '@/app/shared/contracts/communication-form';
+import AttachmentsForm from '@/app/shared/contracts/attachments-form';
 import { Contract } from '@/types';
-import { PiChatCircle } from 'react-icons/pi';
+import { PiChatCircle, PiPaperclip } from 'react-icons/pi';
 import {
   CONTRACT_TYPE_LABELS,
+  formatContractDate,
   OWNER_TYPE_LABELS,
+  resolveLocalizedName,
 } from '@/app/shared/contracts/contract-utils';
 
 type Columns = {
@@ -82,7 +85,7 @@ export const getColumns = ({
     title: <></>,
     dataIndex: 'action',
     key: 'action',
-    width: 20,
+    width: 40,
     render: (_: string, row: Contract) => (
       <div className="flex items-center gap-3">
         <Tooltip size="sm" content={() => 'Edit contract'} placement="top" color="invert">
@@ -100,6 +103,29 @@ export const getColumns = ({
             view={<ContractForm initValues={row} />}
             label=""
             customSize="960px"
+            className="m-0 bg-transparent p-0 text-gray-700"
+          />
+        </Tooltip>
+        <Tooltip
+          size="sm"
+          content={() => 'Upload documents'}
+          placement="top"
+          color="invert"
+        >
+          <CreateButton
+            icon={
+              <ActionIcon
+                tag="span"
+                size="sm"
+                variant="outline"
+                className="hover:!border-gray-900 hover:text-gray-700"
+              >
+                <PiPaperclip className="h-4 w-4" />
+              </ActionIcon>
+            }
+            view={<AttachmentsForm contract={row} />}
+            label=""
+            customSize="720px"
             className="m-0 bg-transparent p-0 text-gray-700"
           />
         </Tooltip>
@@ -148,7 +174,7 @@ export const getColumns = ({
     dataIndex: 'company_name',
     key: 'company_name',
     width: 220,
-    render: (company_name: string) => (
+    render: (company_name?: string | null) => (
       <span className="font-medium text-gray-900">{company_name || '—'}</span>
     ),
   },
@@ -175,7 +201,7 @@ export const getColumns = ({
     dataIndex: 'company_activity',
     key: 'company_activity',
     width: 160,
-    render: (company_activity: string) => (
+    render: (company_activity?: string | null) => (
       <span className="text-gray-600">{company_activity || '—'}</span>
     ),
   },
@@ -184,19 +210,82 @@ export const getColumns = ({
     dataIndex: 'company_location',
     key: 'company_location',
     width: 180,
-    render: (company_location: string) => (
+    render: (company_location?: string | null) => (
       <span className="text-gray-600">{company_location || '—'}</span>
     ),
   },
   {
-    title: <HeaderCell title="Service Manager" />,
-    dataIndex: 'service_manager_name',
-    key: 'service_manager_name',
+    title: <HeaderCell title="Assigned To" />,
+    dataIndex: 'assigned_user',
+    key: 'assigned_user',
     width: 160,
-    render: (service_manager_name?: string | null) => (
-      <span className="font-medium capitalize text-gray-700">
-        {service_manager_name || '—'}
-      </span>
+    render: (_: unknown, row: Contract) => {
+      const assignedName = resolveLocalizedName(
+        row.assigned_user?.name as
+          | string
+          | { en?: string; ar?: string }
+          | null
+          | undefined
+      );
+      return (
+        <span className="font-medium capitalize text-gray-700">
+          {assignedName ||
+            row.service_manager_name ||
+            (row.assigned_to != null ? `#${row.assigned_to}` : '—')}
+        </span>
+      );
+    },
+  },
+  {
+    title: <HeaderCell title="Creator" />,
+    dataIndex: 'creator',
+    key: 'creator',
+    width: 150,
+    render: (_: unknown, row: Contract) => {
+      const name = resolveLocalizedName(
+        row.creator?.name as string | { en?: string; ar?: string } | null | undefined
+      );
+      return (
+        <span className="font-medium capitalize text-gray-700">
+          {name || (row.created_by != null ? `#${row.created_by}` : '—')}
+        </span>
+      );
+    },
+  },
+  {
+    title: <HeaderCell title="Updater" />,
+    dataIndex: 'updater',
+    key: 'updater',
+    width: 150,
+    render: (_: unknown, row: Contract) => {
+      const name = resolveLocalizedName(
+        row.updater?.name as string | { en?: string; ar?: string } | null | undefined
+      );
+      return (
+        <span className="font-medium capitalize text-gray-700">
+          {name || (row.updated_by != null ? `#${row.updated_by}` : '—')}
+        </span>
+      );
+    },
+  },
+  {
+    title: <HeaderCell title="Communication" />,
+    dataIndex: 'communication_date',
+    key: 'communication_date',
+    width: 150,
+    render: (value?: string | null) => (
+      <span className="text-gray-600">{formatContractDate(value)}</span>
+    ),
+  },
+  {
+    title: <HeaderCell title="Times" />,
+    dataIndex: 'communication_times_count',
+    key: 'communication_times_count',
+    width: 90,
+    render: (value?: number | null) => (
+      <Badge variant="flat" color="info">
+        {value ?? 0}
+      </Badge>
     ),
   },
   {
@@ -204,7 +293,7 @@ export const getColumns = ({
     dataIndex: 'visit_date',
     key: 'visit_date',
     width: 140,
-    render: (visit_date: string) =>
+    render: (visit_date?: string | null) =>
       visit_date ? <DateCell date={new Date(visit_date)} dateFormat="MMM D, YYYY" /> : '—',
   },
   {
@@ -221,6 +310,6 @@ export const getColumns = ({
     dataIndex: 'created_at',
     key: 'created_at',
     width: 140,
-    render: (value: string) => (value ? <DateCell date={new Date(value)} /> : '—'),
+    render: (value?: string) => (value ? <DateCell date={new Date(value)} /> : '—'),
   },
 ];

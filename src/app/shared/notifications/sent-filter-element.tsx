@@ -9,19 +9,12 @@ import { Text } from '@/components/ui/text';
 import { formatDate } from '@/utils/format-date';
 import { useSentNotificationFilterOptions } from '@/framework/notifications';
 import type { SentFilterOptions } from '@/types/admin-notifications';
-import { AUDIENCE_OPTIONS, LANG_OPTIONS } from '@/app/shared/notifications/constants';
-
-const sourceOptions = [
-  { value: '', name: 'all', label: 'All sources' },
-  { value: 'immediate', name: 'immediate', label: 'Immediate' },
-  { value: 'scheduled', name: 'scheduled', label: 'Scheduled' },
-];
-
-const sentStatusOptions = [
-  { value: '', name: 'all', label: 'All statuses' },
-  { value: 'sent', name: 'sent', label: 'Sent' },
-  { value: 'failed', name: 'failed', label: 'Failed' },
-];
+import {
+  AUDIENCE_OPTIONS,
+  LANG_OPTIONS,
+  SENT_SOURCE_OPTIONS,
+  SENT_STATUS_OPTIONS,
+} from '@/app/shared/notifications/constants';
 
 type FilterElementProps = {
   filters: Record<string, unknown>;
@@ -54,6 +47,20 @@ export default function SentNotificationFilterElement({
   const { data: filterOptionsData } = useSentNotificationFilterOptions();
   const filterOptions = (filterOptionsData as { data?: SentFilterOptions } | undefined)
     ?.data;
+
+  const sourceOptions =
+    filterOptions?.sources?.length
+      ? [
+          { value: '', name: 'all', label: 'All sources' },
+          ...filterOptions.sources.map((source) => ({
+            value: source,
+            name: source,
+            label:
+              SENT_SOURCE_OPTIONS.find((option) => option.value === source)?.label ??
+              source,
+          })),
+        ]
+      : [...SENT_SOURCE_OPTIONS];
 
   const typeOptions = [
     { value: '', name: 'all', label: 'All types' },
@@ -132,12 +139,12 @@ export default function SentNotificationFilterElement({
       <FilterField label="Status">
         <StatusField
           placeholder="Status"
-          options={sentStatusOptions}
+          options={[...SENT_STATUS_OPTIONS]}
           value={String(filters.status ?? '')}
           onChange={(value: string) => updateFilter('status', value)}
           getOptionValue={(option) => option.value}
           displayValue={(selected: string) =>
-            sentStatusOptions.find((option) => option.value === selected)?.label ??
+            SENT_STATUS_OPTIONS.find((option) => option.value === selected)?.label ??
             selected
           }
         />

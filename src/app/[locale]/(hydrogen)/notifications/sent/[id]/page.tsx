@@ -11,10 +11,11 @@ export default function SentNotificationDetailPage() {
   return (
     <>
       <PageHeader
-        title="Sent notification"
+        title="Notification details"
         breadcrumb={[
           { href: '/', name: 'Home' },
           { href: '/notifications?tab=sent', name: 'Push Notifications' },
+          { href: '/notifications?tab=sent', name: 'Sent history' },
           { name: `#${params?.id ?? ''}` },
         ]}
       />

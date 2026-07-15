@@ -1,7 +1,6 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import dynamic from 'next/dynamic';
 import StatusField from '@/components/controlled-table/status-field';
 import { useTable } from '@/hooks/use-table';
 import { useColumn } from '@/hooks/use-column';
@@ -11,6 +10,9 @@ import { useCancelScheduledNotification } from '@/framework/notifications';
 import { SCHEDULED_STATUS_OPTIONS } from '@/app/shared/notifications/constants';
 import type { ScheduledNotification } from '@/types/admin-notifications';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+
+const TABLE_CLASS =
+  'overflow-hidden rounded-md border border-gray-200 text-sm shadow-sm [&_.rc-table-placeholder_.rc-table-expanded-row-fixed>div]:h-60 [&_.rc-table-placeholder_.rc-table-expanded-row-fixed>div]:justify-center [&_.rc-table-row:last-child_td.rc-table-cell]:border-b-0 [&_thead.rc-table-thead]:sticky [&_thead.rc-table-thead]:top-0 [&_thead.rc-table-thead]:z-10 [&_thead.rc-table-thead]:bg-white';
 
 export default function ScheduledNotificationsTable({
   data = [],
@@ -22,8 +24,10 @@ export default function ScheduledNotificationsTable({
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
-  const [pageSize, setPageSize] = useState(Number(searchParams.get('per_page')) || 20);
-  const { mutate: cancel, isPending: isCanceling } = useCancelScheduledNotification();
+  const [pageSize, setPageSize] = useState(
+    Number(searchParams.get('per_page')) || 10
+  );
+  const { mutate: cancel } = useCancelScheduledNotification();
 
   const pushParams = (next: Record<string, string>) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -45,13 +49,16 @@ export default function ScheduledNotificationsTable({
     () =>
       getScheduledColumns({
         onCancel: (id) => cancel(id),
-        isCanceling,
       }),
-    [cancel, isCanceling]
+    [cancel]
   );
 
   const { visibleColumns, checkedColumns, setCheckedColumns } = useColumn(columns);
-  const { isLoading, currentPage } = useTable(data, pageSize, filterState);
+  const { isLoading, tableData, currentPage, handlePaginate } = useTable(
+    data,
+    pageSize,
+    filterState
+  );
 
   return (
     <div className="space-y-4">
@@ -74,17 +81,25 @@ export default function ScheduledNotificationsTable({
 
       <ControlledTable
         variant="modern"
-        data={data}
+        data={tableData}
         isLoading={isLoading}
         showLoadingText
         // @ts-ignore
         columns={visibleColumns}
         paginatorOptions={{
           pageSize,
-          setPageSize,
+          setPageSize: ((size: number) => {
+            setPageSize(size);
+            const params = new URLSearchParams(searchParams.toString());
+            params.set('per_page', String(size));
+            params.set('page', '1');
+            params.delete('limit');
+            router.push(`${pathname}?${params.toString()}`);
+          }) as React.Dispatch<React.SetStateAction<number>>,
           total: totalItems,
           current: currentPage,
           onChange: (page: number) => {
+            handlePaginate(page);
             const params = new URLSearchParams(searchParams.toString());
             params.set('page', String(page));
             params.set('per_page', String(pageSize));
@@ -101,7 +116,7 @@ export default function ScheduledNotificationsTable({
           setCheckedColumns,
           enableDrawerFilter: false,
         }}
-        className="overflow-hidden rounded-md border border-gray-200"
+        className={TABLE_CLASS}
         scroll={{ x: 1100 }}
       />
     </div>

@@ -1,6 +1,6 @@
 import { HttpClient } from './request';
 import request from './request';
-import { CreateRuleInput, UserInput, Region, City, Retailer, Store, LoginInput, AuthResponse, Category, Journey, Products, stock, Target, Inquerie, notifications } from '@/types'
+import { CreateRuleInput, UserInput, Region, City, Retailer, Store, LoginInput, AuthResponse, Category, Journey, Products, stock, Target, Inquerie } from '@/types'
 import { routes } from '@/config/routes';
 import { CreateBrandInput } from '@/utils/validators/create-brand.schema ';
 import { CreateToDoInput } from '@/utils/validators/create-todo.schema';
@@ -329,29 +329,41 @@ class Client {
         findOne: (id: number) => HttpClient.get(`/contracts/${id}`),
         create: (input: any) => HttpClient.post('/contracts', input),
         update: (input: any) => HttpClient.patch(`/contracts/${input.id}`, input),
+        updateNotes: (input: { id: number; sales_rep_notes?: string; requirements?: string }) =>
+            HttpClient.patch(`/contracts/${input.id}/notes`, {
+                sales_rep_notes: input.sales_rep_notes,
+                requirements: input.requirements,
+            }),
         addCommunication: (input: { id: number; communication_date: string }) =>
             HttpClient.post(`/contracts/${input.id}/communication`, {
                 communication_date: input.communication_date,
             }),
+        listAttachments: (id: number) => HttpClient.get(`/contracts/${id}/attachments`),
+        uploadAttachments: (input: { id: number; formData: FormData }) =>
+            HttpClient.post(`/contracts/${input.id}/attachments`, input.formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            }),
+        deleteAttachment: (input: { id: number; attachmentId: number }) =>
+            HttpClient.delete(`/contracts/${input.id}/attachments/${input.attachmentId}`),
         delete: (input: { contract_id: number[] }) => {
             const promises = input.contract_id.map(id => HttpClient.delete(`/contracts/${id}`));
             return Promise.all(promises);
         }
     }
     notifications = {
-        sendGlobal: async (input: notifications) => {
+        sendGlobal: async (input: unknown) => {
             const response = await HttpClient.post(`${routes.notifications.index}/send-global`, input);
             return response.data;
         },
-        sendToClients: async (input: notifications) => {
+        sendToClients: async (input: unknown) => {
             const response = await HttpClient.post(`${routes.notifications.index}/send-to-clients`, input);
             return response.data;
         },
-        sendToDoctors: async (input: notifications) => {
+        sendToDoctors: async (input: unknown) => {
             const response = await HttpClient.post(`${routes.notifications.index}/send-to-doctors`, input);
             return response.data;
         },
-        sendToSpecific: async (input: notifications) => {
+        sendToSpecific: async (input: unknown) => {
             const response = await HttpClient.post(`${routes.notifications.index}/send-to-specific`, input);
             return response.data;
         },
@@ -376,6 +388,10 @@ class Client {
                 HttpClient.get(`${routes.notifications.index}/sent?${param}`),
             findOne: (id: number) =>
                 HttpClient.get(`${routes.notifications.index}/sent/${id}`),
+            recipients: (id: number, param = '') =>
+                HttpClient.get(
+                    `${routes.notifications.index}/sent/${id}/recipients${param ? `?${param}` : ''}`
+                ),
         },
     }
 

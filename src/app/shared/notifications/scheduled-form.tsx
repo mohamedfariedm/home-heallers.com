@@ -1,6 +1,5 @@
 'use client';
 
-import { useMemo } from 'react';
 import { Controller, type SubmitHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { PiXBold } from 'react-icons/pi';
@@ -15,13 +14,11 @@ import {
   useCreateScheduledNotification,
   useUpdateScheduledNotification,
 } from '@/framework/notifications';
-import { usePatients } from '@/framework/patients';
-import { useDoctors } from '@/framework/doctors';
 import NotificationContentFields from '@/app/shared/notifications/notification-content-fields';
-import {
-  AUDIENCE_OPTIONS,
-  RECIPIENT_KIND_OPTIONS,
-} from '@/app/shared/notifications/constants';
+import SpecificRecipientsPicker, {
+  recipientsFromLegacy,
+} from '@/app/shared/notifications/specific-recipients-picker';
+import { AUDIENCE_OPTIONS } from '@/app/shared/notifications/constants';
 import {
   buildNotificationPayload,
   scheduledNotificationSchema,
@@ -52,9 +49,6 @@ export default function ScheduledNotificationForm({
   const { mutate: create, isPending: isCreating } = useCreateScheduledNotification();
   const { mutate: update, isPending: isUpdating } = useUpdateScheduledNotification();
 
-  const { data: clientsData, isLoading: clientsLoading } = usePatients('limit=500');
-  const { data: doctorsData, isLoading: doctorsLoading } = useDoctors('limit=500');
-
   const {
     register,
     control,
@@ -74,34 +68,18 @@ export default function ScheduledNotificationForm({
         ? JSON.stringify(initValues.extra_data, null, 2)
         : '',
       recipient_type: initValues?.recipient_type ?? 'clients',
-      recipient_kind: 'client',
-      recipient_id: initValues?.recipient_id ?? undefined,
+      recipients: recipientsFromLegacy(initValues),
       scheduled_at: toDatetimeLocalValue(initValues?.scheduled_at),
     },
   });
 
   const recipientType = watch('recipient_type');
-  const recipientKind = watch('recipient_kind') ?? 'client';
-
-  const recipientOptions = useMemo(() => {
-    const source =
-      recipientKind === 'doctor' ? doctorsData?.data ?? [] : clientsData?.data ?? [];
-
-    return source.map((item: { id: number; name?: { en?: string; ar?: string } | string }) => {
-      const label =
-        typeof item.name === 'string'
-          ? item.name
-          : item.name?.en || item.name?.ar || `#${item.id}`;
-      return { value: item.id, name: String(item.id), label };
-    }) as Array<{ value: number; name: string; label: string }>;
-  }, [clientsData?.data, doctorsData?.data, recipientKind]);
 
   const onSubmit: SubmitHandler<ScheduledNotificationInput> = (data) => {
     const payload = {
       ...buildNotificationPayload({
         ...data,
-        recipient_id:
-          data.recipient_type === 'specific' ? Number(data.recipient_id) : undefined,
+        recipients: data.recipient_type === 'specific' ? data.recipients : undefined,
       }),
       recipient_type: data.recipient_type,
       scheduled_at: toApiDatetime(data.scheduled_at),
@@ -155,60 +133,17 @@ export default function ScheduledNotificationForm({
       </FormGroup>
 
       {recipientType === 'specific' && (
-        <div className="grid gap-4 @xl:grid-cols-2">
-          <FormGroup title="User type">
-            <Controller
-              control={control}
-              name="recipient_kind"
-              render={({ field: { value, onChange } }) => (
-                <SelectBox
-                  placeholder="User type"
-                  options={RECIPIENT_KIND_OPTIONS.map((option) => ({
-                    ...option,
-                    name: option.value,
-                  }))}
-                  value={value}
-                  onChange={onChange}
-                  getOptionValue={(option) => String(option.value)}
-                  displayValue={(selected) =>
-                    RECIPIENT_KIND_OPTIONS.find((option) => option.value === selected)
-                      ?.label ?? String(selected)
-                  }
-                />
-              )}
+        <Controller
+          control={control}
+          name="recipients"
+          render={({ field: { value, onChange } }) => (
+            <SpecificRecipientsPicker
+              value={value ?? []}
+              onChange={onChange}
+              error={errors.recipients?.message as string}
             />
-          </FormGroup>
-
-          <FormGroup title="Recipient">
-            <Controller
-              control={control}
-              name="recipient_id"
-              render={({ field: { value, onChange } }) => (
-                <SelectBox
-                  placeholder={
-                    recipientKind === 'doctor'
-                      ? doctorsLoading
-                        ? 'Loading doctors...'
-                        : 'Select doctor'
-                      : clientsLoading
-                        ? 'Loading clients...'
-                        : 'Select client'
-                  }
-                  options={recipientOptions}
-                  value={value ? String(value) : ''}
-                  onChange={(next) => onChange(next ? Number(next) : undefined)}
-                  getOptionValue={(option) => String(option.value)}
-                  displayValue={(selected) =>
-                    recipientOptions.find(
-                      (item) => String(item.value) === String(selected)
-                    )?.label ?? String(selected)
-                  }
-                  error={errors.recipient_id?.message as string}
-                />
-              )}
-            />
-          </FormGroup>
-        </div>
+          )}
+        />
       )}
 
       <Input

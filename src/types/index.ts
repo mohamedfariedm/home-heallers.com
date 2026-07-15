@@ -275,32 +275,66 @@ export interface notifications {
 export type ContractOwnerType = 'company' | 'doctor';
 export type ContractType = 'offline' | 'online';
 
+export type ContractAttachmentType =
+  | 'signed_contract'
+  | 'manager_id'
+  | 'commercial_registration'
+  | 'national_address'
+  | 'bank_iban'
+  | 'vat_certificate'
+  | 'national_id'
+  | 'other';
+
+export interface ContractAssignedUser {
+  id: number;
+  name: string | { en?: string; ar?: string };
+  email?: string | null;
+}
+
+export interface ContractAttachment {
+  id: number;
+  type: ContractAttachmentType | string;
+  notes?: string | null;
+  file_url: string;
+  file_name?: string | null;
+  created_at?: string | null;
+  thumbnail?: string | null;
+}
+
 export interface Contract {
   id: number;
   contract_owner_type?: ContractOwnerType | null;
   contract_type?: ContractType | null;
-  visit_date: string;
+  visit_date?: string | null;
   last_date?: string | null;
-  visit_time: string;
+  visit_time?: string | null;
   last_time?: string | null;
   communication_date?: string | null;
   communication_times_count?: number | null;
   service_manager_name?: string | null;
   last_service_manager?: string | null;
-  company_activity: string;
+  company_activity?: string | null;
   company_activity_custom?: string | null;
-  company_location: string;
-  company_name: string;
+  company_location?: string | null;
+  company_name?: string | null;
   manager_name?: string | null;
   manager_mobile?: string | null;
   manager_email?: string | null;
-  visit_summary: string;
+  visit_summary?: string | null;
   visit_type?: string | null;
   next_visit_at?: string | null;
   meeting_postponed_note?: string | null;
   requirements?: string | null;
   sales_rep_notes?: string | null;
   center_interest_level?: number | null;
+  website?: string | null;
+  social_media_links?: string[] | null;
+  attachments?: ContractAttachment[] | null;
+  assigned_to?: number | null;
+  assigned_user?: ContractAssignedUser | null;
+  creator?: ContractAssignedUser | null;
+  updater?: ContractAssignedUser | null;
+  /** @deprecated Use attachments endpoint instead */
   document_signed_contract_path?: string | null;
   document_signed_contract_url?: string | null;
   document_manager_id_path?: string | null;
@@ -311,8 +345,8 @@ export interface Contract {
   document_optional_url?: string | null;
   created_by?: number | null;
   updated_by?: number | null;
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface ContractResponse {
@@ -342,15 +376,15 @@ export interface ContractResponse {
 
 export interface ContractFormInput {
   contract_owner_type?: ContractOwnerType | null;
-  contract_type: ContractType;
-  visit_date: string;
-  visit_time: string;
+  contract_type?: ContractType | null;
+  visit_date?: string;
+  visit_time?: string;
   visit_type?: string;
-  visit_summary: string;
-  company_location: string;
+  visit_summary?: string;
+  company_location?: string;
   center_interest_level?: number | null;
-  company_name: string;
-  company_activity: string;
+  company_name?: string;
+  company_activity?: string;
   company_activity_custom?: string;
   manager_name?: string;
   manager_mobile?: string;
@@ -359,4 +393,12 @@ export interface ContractFormInput {
   sales_rep_notes?: string;
   communication_date?: string | null;
   communication_times_count?: number | null;
+  website?: string;
+  social_media_links?: string;
+  assigned_to?: number | null;
+}
+
+export interface ContractNotesInput {
+  sales_rep_notes?: string;
+  requirements?: string;
 }

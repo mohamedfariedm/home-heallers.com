@@ -37,7 +37,7 @@ function buildQuery(searchParams: URLSearchParams, tab: NotificationTab) {
     if (key !== 'tab') params.set(key, value);
   });
   if (!params.get('page')) params.set('page', '1');
-  if (!params.get('per_page')) params.set('per_page', '20');
+  if (!params.get('per_page')) params.set('per_page', '10');
   params.delete('limit');
   return params;
 }
