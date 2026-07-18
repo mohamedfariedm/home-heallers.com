@@ -38,6 +38,7 @@ export default function SendNotificationForm() {
     register,
     control,
     watch,
+    setValue,
     handleSubmit,
     formState: { errors },
   } = useForm<SendNotificationInput>({
@@ -132,7 +133,13 @@ export default function SendNotificationForm() {
         />
       )}
 
-      <NotificationContentFields register={register} control={control} errors={errors} />
+      <NotificationContentFields
+        register={register}
+        control={control}
+        errors={errors}
+        watch={watch}
+        setValue={setValue}
+      />
 
       {lastResult?.logId ? (
         <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">

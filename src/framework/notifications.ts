@@ -5,6 +5,7 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import client from '@/framework/utils';
+import { HttpClient } from '@/framework/utils/request';
 import toast from 'react-hot-toast';
 import { useModal } from '@/app/shared/modal-views/use-modal';
 import { routes } from '@/config/routes';
@@ -170,8 +171,28 @@ export function useUpdateScheduledNotification() {
   const { closeModal } = useModal();
 
   return useMutation({
-    mutationFn: ({ id, payload }: { id: number; payload: Record<string, unknown> }) =>
-      client.notifications.scheduled.update(id, payload),
+    mutationFn: async ({
+      id,
+      payload,
+    }: {
+      id: number;
+      payload: Record<string, unknown>;
+    }) => {
+      try {
+        return await client.notifications.scheduled.update(id, payload);
+      } catch (error: unknown) {
+        const status = (error as { response?: { status?: number } })?.response
+          ?.status;
+        // Fallback when API only accepts PATCH
+        if (status === 405 || status === 404) {
+          return HttpClient.patch(
+            `${routes.notifications.index}/scheduled/${id}`,
+            payload
+          );
+        }
+        throw error;
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: [routes.notifications.index, 'scheduled'],

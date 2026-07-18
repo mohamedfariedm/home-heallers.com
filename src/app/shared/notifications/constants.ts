@@ -13,9 +13,54 @@ export const LANG_OPTIONS = [
 export const NOTIFICATION_TYPE_OPTIONS = [
   { value: '', label: 'None' },
   { value: 'offers', label: 'Offers' },
+  { value: 'doctors', label: 'Doctors' },
   { value: 'categories', label: 'Categories' },
   { value: 'coupon', label: 'Coupon' },
 ] as const;
+
+/** Types that resolve deep_link from an entity picker (API still receives deep_link as id). */
+export const DEEP_LINK_ENTITY_TYPES = [
+  'offers',
+  'doctors',
+  'categories',
+  'coupon',
+] as const;
+
+export type DeepLinkEntityType = (typeof DEEP_LINK_ENTITY_TYPES)[number];
+
+export function isDeepLinkEntityType(type?: string | null): type is DeepLinkEntityType {
+  return DEEP_LINK_ENTITY_TYPES.includes(type as DeepLinkEntityType);
+}
+
+const EXTERNAL_URL_BASE = 'https://home-healers.com';
+
+export function deepLinkPathForType(type: DeepLinkEntityType, id: string | number) {
+  switch (type) {
+    case 'offers':
+      return `${EXTERNAL_URL_BASE}/offers/${id}`;
+    case 'doctors':
+      return `${EXTERNAL_URL_BASE}/doctors/${id}`;
+    case 'categories':
+      return `${EXTERNAL_URL_BASE}/categories/${id}`;
+    case 'coupon':
+      return `${EXTERNAL_URL_BASE}/coupons/${id}`;
+  }
+}
+
+export function deepLinkEntityLabel(type?: string | null) {
+  switch (type) {
+    case 'offers':
+      return 'Offer';
+    case 'doctors':
+      return 'Doctor';
+    case 'categories':
+      return 'Category';
+    case 'coupon':
+      return 'Coupon';
+    default:
+      return 'Deep link target';
+  }
+}
 
 export const RECIPIENT_KIND_OPTIONS = [
   { value: 'client', label: 'Client' },
