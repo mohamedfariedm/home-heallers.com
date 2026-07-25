@@ -32,16 +32,16 @@ export function useLogin() {
         localStorage.setItem('permissions', JSON.stringify(permissions));
         setStoredRoles(roles);
 
-        // Pass user data directly to next-auth session
+        // Keep JWT small: permissions live in localStorage / PermissionsContext only.
+        // Stuffing 100+ permissions into the session cookie causes nginx 502
+        // ("upstream sent too big header") behind reverse proxies.
         const signInResponse = await signIn('credentials', {
           redirect: false,
-          // Pass the full user object to avoid another API call in authorize
           user: JSON.stringify({
             id: userId.toString(),
             email: data?.data?.user?.email,
             name: data?.data?.user?.name?.en,
             token,
-            permissions,
             roles,
           }),
         });

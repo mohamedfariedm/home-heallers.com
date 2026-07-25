@@ -41,24 +41,15 @@ export function PermissionsProvider({ children, initialPermissions = [] }: { chi
   }, [initialPermissions]);
 
   useEffect(() => {
-    const sessionPermissions = (session?.user as any)?.permissions as string[] | undefined;
-    console.log('PermissionsProvider - Session status:', status, 'Session:', session);
-    if (status === 'authenticated' && Array.isArray(sessionPermissions)) {
-      console.log('PermissionsProvider - Updating permissions:', sessionPermissions);
-      setPermissions(sessionPermissions);
-      localStorage.setItem('permissions', JSON.stringify(sessionPermissions));
-    } else if (status === 'authenticated') {
-      // If session exists without permissions, keep using persisted local permissions
+    if (status === 'authenticated') {
+      // Permissions are stored client-side only (not in the NextAuth JWT)
       const stored = getStoredPermissions();
       setPermissions(stored);
     } else if (status === 'unauthenticated' && !Cookies.get(AUTH_TOKEN)) {
-      console.log('PermissionsProvider - Clearing permissions');
       setPermissions([]);
       localStorage.removeItem('permissions');
     }
   }, [session, status]);
-
-  console.log('PermissionsProvider - Current permissions:', permissions);
 
   return (
     <PermissionsContext.Provider value={{ permissions, setPermissions }}>

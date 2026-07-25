@@ -60,7 +60,7 @@ export default async function RootLayout({
         <Provider>
           <AuthProvider session={session}>
             <ThemeProvider>
-              <PermissionsProvider initialPermissions={session?.user?.permissions || []}>
+              <PermissionsProvider>
                 <DashboardPushProvider>
                   <NextProgress />
                   {children}
