@@ -58,6 +58,8 @@ import {
   PiGearDuotone,
   PiGlobe,
   PiReceipt,
+  PiTarget,
+  PiWallet,
 } from 'react-icons/pi';
 import {
   IoWarningOutline,
@@ -334,6 +336,19 @@ export const menuItemsHaydrogen = [
     href: routes.doctors.index,
     icon: <PiUserCircle />,
     permissions: 'doctors',
+  },
+  {
+    name: 'Doctor Targets',
+    href: routes.doctorTargets.index,
+    icon: <PiTarget />,
+    permissions:
+      'doctor_targets.edit,doctor_targets.create,doctor_targets.approve,doctor_targets.reports,dashboard.doctor_targets',
+  },
+  {
+    name: 'Withdrawals',
+    href: routes.withdrawals.index,
+    icon: <PiWallet />,
+    permissions: 'withdrawals.approve',
   },
 
   {

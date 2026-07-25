@@ -20,6 +20,7 @@ const NextProgress = dynamic(() => import('@/components/next-progress'), {
 // styles
 import '@/app/globals.css';
 import { PermissionsProvider } from '@/context/PermissionsContext';
+import DashboardPushProvider from '@/components/dashboard-push-provider';
 
 
 
@@ -60,11 +61,13 @@ export default async function RootLayout({
           <AuthProvider session={session}>
             <ThemeProvider>
               <PermissionsProvider initialPermissions={session?.user?.permissions || []}>
-                <NextProgress />
-                {children}
-                <Toaster />
-                <GlobalDrawer />
-                <GlobalModal />
+                <DashboardPushProvider>
+                  <NextProgress />
+                  {children}
+                  <Toaster />
+                  <GlobalDrawer />
+                  <GlobalModal />
+                </DashboardPushProvider>
               </PermissionsProvider>
             </ThemeProvider>
           </AuthProvider>

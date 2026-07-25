@@ -20,6 +20,7 @@ type TableLayoutProps = {
   canExport?: boolean;
   canImport?: boolean;
   canCreate?: boolean;
+  exportElement?: React.ReactNode;
 } & PageHeaderTypes;
 
 export default function TableLayout({
@@ -37,6 +38,7 @@ export default function TableLayout({
   canExport = true,
   canImport = true,
   canCreate = true,
+  exportElement,
   ...props
 }: React.PropsWithChildren<TableLayoutProps>) {
 
@@ -45,9 +47,10 @@ export default function TableLayout({
       <PageHeader {...props}>
         <div className="mt-4 flex items-center gap-3 @lg:mt-0">
           {canImport && importButton ? <ImportButton url={importButton} /> : ''}
-          {canExport && (
-            <ExportButton data={data} fileName={fileName} header={'excel'} type={type} role={role} />
-          )}
+          {canExport &&
+            (exportElement ?? (
+              <ExportButton data={data} fileName={fileName} header={'excel'} type={type} role={role} />
+            ))}
           {/* <ExportButton data={data} fileName={fileName} header={'pdf'} type={type} role={role} /> */}
           {canCreate && createName && 
           <CreateButton

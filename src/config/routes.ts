@@ -327,6 +327,14 @@ export const routes = {
     index: '/doctors',
     detail: (id: string | number) => `/doctors/${id}`,
   },
+  doctorTargets: {
+    index: '/doctor-targets',
+    dashboard: '/doctor-targets/dashboard',
+    detail: (id: string | number) => `/doctor-targets/${id}`,
+  },
+  withdrawals: {
+    index: '/withdrawals',
+  },
   groups: {
     index: '/groups',
   },

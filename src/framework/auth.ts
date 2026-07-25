@@ -10,6 +10,7 @@ import toast from 'react-hot-toast';
 import Cookies from 'js-cookie';
 import { usePermissions } from '@/context/PermissionsContext';
 import { signIn, signOut } from 'next-auth/react';
+import { revokePushTokenBeforeLogout } from '@/lib/firebase/push-token-lifecycle';
 
 export function useLogin() {
   const { setPermissions } = usePermissions();
@@ -80,7 +81,10 @@ export function useLogout() {
   const { setPermissions } = usePermissions();
 
   return useMutation({
-    mutationFn: client.auth.logout,
+    mutationFn: async () => {
+      await revokePushTokenBeforeLogout();
+      return client.auth.logout();
+    },
     onSuccess: () => {
       console.log('useLogout - Logout successful');
       setAuthCredentials('');

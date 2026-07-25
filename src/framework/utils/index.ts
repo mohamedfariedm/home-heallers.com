@@ -187,6 +187,72 @@ class Client {
         update: (input: any) => HttpClient.patch(`${routes.doctors.index}/${input.doctor_id}`, input),
         delete: (input: { doctor_id: number[] }) => HttpClient.delete(`${routes.doctors.index}/${input.doctor_id}`)
     }
+    doctorTargets = {
+        all: (param: string) => HttpClient.get(`/doctor-targets?${param}`),
+        findOne: (id: number | string) => HttpClient.get(`/doctor-targets/${id}`),
+        create: (input: {
+            doctor_ids: number[];
+            start_date: string;
+            end_date: string;
+            required_sessions: number;
+            incentive_amount: number;
+            notes?: string | null;
+        }) => HttpClient.post('/doctor-targets', input),
+        update: (input: {
+            id: number | string;
+            start_date?: string;
+            end_date?: string;
+            required_sessions?: number;
+            incentive_amount?: number;
+            notes?: string | null;
+        }) => {
+            const { id, ...payload } = input;
+            return HttpClient.patch(`/doctor-targets/${id}`, payload);
+        },
+        activate: (id: number | string) => HttpClient.post(`/doctor-targets/${id}/activate`),
+        retarget: (input: {
+            id: number | string;
+            start_date: string;
+            end_date: string;
+        }) => {
+            const { id, ...payload } = input;
+            return HttpClient.post(`/doctor-targets/${id}/retarget`, payload);
+        },
+        adjust: (input: {
+            id: number | string;
+            completed_sessions: number;
+            reason: string;
+        }) => {
+            const { id, ...payload } = input;
+            return HttpClient.post(`/doctor-targets/${id}/adjust`, payload);
+        },
+        preview: (id: number | string) => HttpClient.get(`/doctor-targets/${id}/preview`),
+        approve: (input: { id: number | string; approval_note?: string }) => {
+            const { id, approval_note } = input;
+            return HttpClient.post(`/doctor-targets/${id}/approve`, {
+                ...(approval_note ? { approval_note } : {}),
+            });
+        },
+        timeline: (id: number | string) => HttpClient.get(`/doctor-targets/${id}/timeline`),
+        dashboard: () => HttpClient.get('/doctor-targets/dashboard'),
+        reportsBlob: async (param: string) => {
+            const res = await request.get(`/doctor-targets/reports?${param}`, {
+                responseType: 'blob',
+            });
+            return res.data as Blob;
+        },
+    }
+    withdrawals = {
+        all: (param: string) => HttpClient.get(`/withdrawal-requests?${param}`),
+        approve: (id: number | string) =>
+            HttpClient.post(`/withdrawal-requests/${id}/approve`),
+        reject: (input: { id: number | string; rejection_reason: string }) => {
+            const { id, rejection_reason } = input;
+            return HttpClient.post(`/withdrawal-requests/${id}/reject`, {
+                rejection_reason,
+            });
+        },
+    }
     groups = {
         all: (param: string) => HttpClient.get(`${routes.groups.index}?${param}`),
         findOne: (id: number) => HttpClient.get(`${routes.groups.index}/${id}`),
@@ -393,6 +459,24 @@ class Client {
                     `${routes.notifications.index}/sent/${id}/recipients${param ? `?${param}` : ''}`
                 ),
         },
+    }
+
+    dashboardNotifications = {
+        all: (param = '') =>
+            HttpClient.get(`/dashboard-notifications${param ? `?${param}` : ''}`),
+        unreadCount: () =>
+            HttpClient.get(`/dashboard-notifications/unread-count`),
+        markAllAsRead: () =>
+            HttpClient.post(`/dashboard-notifications/mark-all-as-read`, {}),
+        markAsRead: (id: string) =>
+            HttpClient.post(`/dashboard-notifications/${id}/mark-as-read`, {}),
+    }
+
+    pushTokens = {
+        register: (input: { platform?: 'web'; token: string; user_agent?: string }) =>
+            HttpClient.post(`/push-tokens`, { platform: 'web', ...input }),
+        revoke: (input: { token: string }) =>
+            HttpClient.delete(`/push-tokens`, input),
     }
 
     checkin = {
