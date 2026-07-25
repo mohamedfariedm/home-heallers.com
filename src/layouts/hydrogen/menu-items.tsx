@@ -237,6 +237,11 @@ export const menuItemsHaydrogen = [
     permissions: 'activity-logs',
   },
   {
+    name: 'OTP Codes',
+    href: routes.otpCodes.index,
+    icon: <PiLockKeyDuotone />,
+  },
+  {
     name: 'KPIs',
     href: routes.kpis.index,
     icon: <PiChartLineUpDuotone />,

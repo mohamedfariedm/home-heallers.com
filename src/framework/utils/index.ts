@@ -531,6 +531,25 @@ class Client {
         findOne: (id: number) => HttpClient.get(`${routes.activityLogs.index}/${id}`),
         filterOptions: () => HttpClient.get(`${routes.activityLogs.index}/filter-options`),
     }
+    otpCodes = {
+        all: (params: string) => HttpClient.get(`${routes.otpCodes.index}?${params}`),
+        update: (input: {
+            type: 'client' | 'doctor';
+            id: number;
+            otp?: string | null;
+            otp_expires_at?: string | null;
+        }) => {
+            const { type, id, ...body } = input;
+            return HttpClient.put(`${routes.otpCodes.index}/${type}/${id}`, body);
+        },
+        extendExpiration: async (input: { type: 'client' | 'doctor'; id: number }) => {
+            const response = await HttpClient.post(
+                `${routes.otpCodes.index}/${input.type}/${input.id}/extend-expiration`,
+                {}
+            );
+            return (response as any)?.data ?? response;
+        },
+    }
     userActivityReports = {
         all: (params: string) => HttpClient.get(`${routes.userActivityReports.index}?${params}`),
         findOne: (userId: number, params: string) =>

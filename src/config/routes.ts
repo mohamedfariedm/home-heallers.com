@@ -122,6 +122,9 @@ export const routes = {
   activityLogs: {
     index: '/activity-logs',
   },
+  otpCodes: {
+    index: '/otp-codes',
+  },
   kpis: {
     index: '/kpis',
     users: (userId: number | string) => `/kpis/users/${userId}`,
