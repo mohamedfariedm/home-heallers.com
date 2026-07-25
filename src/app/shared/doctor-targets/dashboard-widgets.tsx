@@ -22,7 +22,6 @@ import {
   formatAchievement,
   formatMoney,
 } from './status-badge';
-import { routes } from '@/config/routes';
 
 export default function DoctorTargetsDashboardWidgets({
   className,
@@ -64,28 +63,28 @@ export default function DoctorTargetsDashboardWidgets({
           value={counts.draft ?? 0}
           icon={PiTargetBold}
           color="sky"
-          href={`${routes.doctorTargets.index}?tab=targets&status=draft`}
+          href="?tab=targets&status=draft"
         />
         <KpiStatCard
           title="Active"
           value={counts.active ?? 0}
           icon={PiChartPieSliceBold}
           color="blue"
-          href={`${routes.doctorTargets.index}?tab=targets&status=active`}
+          href="?tab=targets&status=active"
         />
         <KpiStatCard
           title="Approved"
           value={counts.approved ?? 0}
           icon={PiCheckCircleBold}
           color="amber"
-          href={`${routes.doctorTargets.index}?tab=targets&status=approved`}
+          href="?tab=targets&status=approved"
         />
         <KpiStatCard
           title="Externally paid"
           value={counts.paid ?? 0}
           icon={PiWalletBold}
           color="green"
-          href={`${routes.doctorTargets.index}?tab=targets&status=paid`}
+          href="?tab=targets&status=paid"
         />
       </div>
 

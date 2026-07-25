@@ -15,19 +15,43 @@ export function resolveDoctorTargetsPermissions(
   userPermissions: string[] = []
 ): DoctorTargetsPermissions {
   return {
+    // List / detail access (do NOT use dashboard permission alone)
     view: hasAny(userPermissions, [
       'doctor_targets.edit',
       'doctor_targets.create',
       'doctor_targets.approve',
       'doctor_targets.reports',
-      'dashboard.doctor_targets',
+      'doctor_targets',
+      'doctor_targets_edit',
+      'doctor_targets_create',
+      'doctor_targets_approve',
+      'doctor_targets_reports',
     ]),
-    create: hasAny(userPermissions, ['doctor_targets.create']),
-    edit: hasAny(userPermissions, ['doctor_targets.edit']),
-    adjust: hasAny(userPermissions, ['doctor_targets.adjust']),
-    approve: hasAny(userPermissions, ['doctor_targets.approve']),
-    reports: hasAny(userPermissions, ['doctor_targets.reports']),
-    dashboard: hasAny(userPermissions, ['dashboard.doctor_targets']),
+    create: hasAny(userPermissions, [
+      'doctor_targets.create',
+      'doctor_targets_create',
+    ]),
+    edit: hasAny(userPermissions, [
+      'doctor_targets.edit',
+      'doctor_targets_edit',
+      'doctor_targets',
+    ]),
+    adjust: hasAny(userPermissions, [
+      'doctor_targets.adjust',
+      'doctor_targets_adjust',
+    ]),
+    approve: hasAny(userPermissions, [
+      'doctor_targets.approve',
+      'doctor_targets_approve',
+    ]),
+    reports: hasAny(userPermissions, [
+      'doctor_targets.reports',
+      'doctor_targets_reports',
+    ]),
+    dashboard: hasAny(userPermissions, [
+      'dashboard.doctor_targets',
+      'dashboard_doctor_targets',
+    ]),
   };
 }
 

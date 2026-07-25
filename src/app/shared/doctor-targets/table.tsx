@@ -99,7 +99,11 @@ export default function DoctorTargetsTable({
   };
 
   const handleReset = () => {
-    router.push('?page=1&per_page=10');
+    const params = new URLSearchParams();
+    params.set('page', '1');
+    params.set('per_page', '10');
+    params.set('tab', 'targets');
+    router.push(`?${params.toString()}`);
   };
 
   const isFiltered = Object.values(filterState).some(Boolean) ||

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import TableLayout from '@/app/[locale]/(hydrogen)/tables/table-layout';
 import Spinner from '@/components/ui/spinner';
@@ -24,6 +24,20 @@ const pageHeader = {
 
 type TargetsView = 'overview' | 'targets';
 
+function resolveViewFromParams(
+  tab: string | null,
+  canDashboard: boolean,
+  canViewList: boolean
+): TargetsView {
+  if (tab === 'targets' && canViewList) return 'targets';
+  if (tab === 'overview' && canDashboard) return 'overview';
+  if (tab === 'targets' && !canViewList && canDashboard) return 'overview';
+  if (canDashboard && !canViewList) return 'overview';
+  if (canViewList && !canDashboard) return 'targets';
+  if (canDashboard) return 'overview';
+  return 'targets';
+}
+
 export default function DoctorTargetsPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -31,14 +45,21 @@ export default function DoctorTargetsPage() {
   const { permissions } = usePermissions();
   const targetPermissions = resolveDoctorTargetsPermissions(permissions);
 
-  const activeView: TargetsView = (() => {
-    const tab = searchParams.get('tab');
-    if (tab === 'overview' && targetPermissions.dashboard) return 'overview';
-    if (tab === 'targets' && targetPermissions.view) return 'targets';
-    if (targetPermissions.dashboard) return 'overview';
-    if (targetPermissions.view) return 'targets';
-    return 'targets';
-  })();
+  const canDashboard = targetPermissions.dashboard;
+  const canViewList = targetPermissions.view;
+
+  const tabParam = searchParams.get('tab');
+
+  const [activeView, setActiveView] = useState<TargetsView>(() =>
+    resolveViewFromParams(tabParam, canDashboard, canViewList)
+  );
+
+  // Keep tab in sync with URL (back/forward, KPI card links)
+  useEffect(() => {
+    setActiveView(
+      resolveViewFromParams(tabParam, canDashboard, canViewList)
+    );
+  }, [tabParam, canDashboard, canViewList]);
 
   const queryParams = new URLSearchParams();
   searchParams.forEach((value, key) => {
@@ -52,22 +73,39 @@ export default function DoctorTargetsPage() {
 
   const { data, isLoading, isFetching } = useDoctorTargets(
     queryParams.toString(),
-    activeView === 'targets' && targetPermissions.view
+    activeView === 'targets' && canViewList
   );
 
   const [selectedColumns, setSelectedColumns] = useState<any[]>([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState<any[]>([]);
 
   const setView = (view: TargetsView) => {
+    if (view === 'targets' && !canViewList) return;
+    if (view === 'overview' && !canDashboard) return;
+
+    setActiveView(view);
+
     const next = new URLSearchParams(searchParams.toString());
     next.set('tab', view);
-    if (view === 'targets' && !next.get('page')) next.set('page', '1');
-    router.push(`${pathname}?${next.toString()}`);
+    if (view === 'overview') {
+      next.delete('status');
+      next.delete('doctor_id');
+      next.delete('achievement_min');
+      next.delete('achievement_max');
+      next.delete('start_date');
+      next.delete('end_date');
+    } else if (!next.get('page')) {
+      next.set('page', '1');
+    }
+    router.push(`${pathname}?${next.toString()}`, { scroll: false });
   };
 
-  const showTabs = targetPermissions.dashboard && targetPermissions.view;
+  const tabs = [
+    ...(canDashboard ? [{ id: 'overview', label: 'Overview' }] : []),
+    ...(canViewList ? [{ id: 'targets', label: 'Targets' }] : []),
+  ];
 
-  if (!targetPermissions.view && !targetPermissions.dashboard) {
+  if (!canViewList && !canDashboard) {
     return (
       <div className="rounded-md border border-gray-200 bg-white p-6 text-sm text-gray-600 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300">
         You do not have permission to view doctor targets.
@@ -110,12 +148,9 @@ export default function DoctorTargetsPage() {
     >
       <div className="@container space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          {showTabs ? (
+          {tabs.length > 1 ? (
             <KpiViewTabs
-              tabs={[
-                { id: 'overview', label: 'Overview' },
-                { id: 'targets', label: 'Targets' },
-              ]}
+              tabs={tabs}
               activeTab={activeView}
               onChange={(tabId) => setView(tabId as TargetsView)}
             />
@@ -127,13 +162,17 @@ export default function DoctorTargetsPage() {
         </div>
 
         {activeView === 'overview' ? (
-          targetPermissions.dashboard ? (
+          canDashboard ? (
             <DoctorTargetsDashboardWidgets />
           ) : (
             <div className="rounded-md border border-gray-200 bg-white p-6 text-sm text-gray-600">
               You do not have permission to view the targets overview.
             </div>
           )
+        ) : !canViewList ? (
+          <div className="rounded-md border border-gray-200 bg-white p-6 text-sm text-gray-600">
+            You do not have permission to view the targets list.
+          </div>
         ) : isLoading ? (
           <div className="m-auto py-16">
             <Spinner size="lg" />
