@@ -17,6 +17,10 @@ import { resolveLocalizedName } from '@/utils/resolve-localized-name';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 
+const INBOUND_SOURCE_CAMPAIGN_OPTIONS = [
+  { label: 'Call', value: 'call' },
+];
+
 function getLocationLabel(nameField: unknown): string {
   return resolveLocalizedName(nameField);
 }
@@ -179,6 +183,10 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
 
     
   const { closeModal } = useModal();
+  const isInbound = type === 'operation';
+  const sourceCampaignOptions = isInbound
+    ? INBOUND_SOURCE_CAMPAIGN_OPTIONS
+    : kanbanSourceCampaignOptions;
   const [lang, setLang] = useState<'en' | 'ar'>('en');
     const { mutate: createSupport, isPending: isCreating } = useCreateCustomerSupport();
     const { mutate: updateSupport, isPending: isUpdating } = useUpdateCustomerSupport();
@@ -375,7 +383,8 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
           address_1: initValues?.address_1 || '',
           city: initValues?.city || '',
           state: initValues?.state || '',
-          source_campaign: initValues?.source_campaign || '',
+          source_campaign:
+            initValues?.source_campaign || (isInbound ? 'call' : ''),
           activity_code: initValues?.activity_code || '',
           call_sub_result: initValues?.call_sub_result || '',
           will_call_us_again_reason: initValues?.will_call_us_again_reason || '',
@@ -517,8 +526,8 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
                 {...register('source_campaign')} 
                 className="w-full border border-gray-300 rounded-md p-2 h-10 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
               >
-                <option value="">Select Source</option>
-                {kanbanSourceCampaignOptions.map((option) => (
+                {!isInbound && <option value="">Select Source</option>}
+                {sourceCampaignOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
