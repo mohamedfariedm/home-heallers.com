@@ -100,8 +100,8 @@ export class HttpClient {
     return response.data;
   }
 
-  static async delete<T>(url: string) {
-    const response = await request.delete<T>(url);
+  static async delete<T>(url: string, data?: unknown) {
+    const response = await request.delete<T>(url, data !== undefined ? { data } : undefined);
     return response.data;
   }
 

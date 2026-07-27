@@ -582,6 +582,32 @@ export const getColumns = ({
     },
   },
 
+  // ✅ Rework
+  {
+    title: (
+      <div className="flex items-center gap-1">
+        <HeaderCell title="Rework" />
+        {onFilterChange && (
+          <ColumnFilterPopover
+            columnKey="rework"
+            onFilterChange={onFilterChange}
+          />
+        )}
+      </div>
+    ),
+    dataIndex: 'rework',
+    key: 'rework',
+    render: (rework: number | null | undefined) => {
+      const value = Number(rework ?? 0);
+      if (value <= 0) return '0';
+      return (
+        <Badge variant="flat" color="warning">
+          {value}
+        </Badge>
+      );
+    },
+  },
+
   // ✅ Pain Location
   {
     title: (

@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import Cookies from 'js-cookie';
 import { useTable } from '@/hooks/use-table';
 import { useColumn } from '@/hooks/use-column';
 import ControlledTable from '@/components/controlled-table';
@@ -15,6 +14,9 @@ const FilterElement = dynamic(
   { ssr: false }
 );
 
+const TABLE_CLASS =
+  'overflow-hidden rounded-md border border-gray-200 text-sm shadow-sm [&_.rc-table-placeholder_.rc-table-expanded-row-fixed>div]:h-60 [&_.rc-table-placeholder_.rc-table-expanded-row-fixed>div]:justify-center [&_.rc-table-row:last-child_td.rc-table-cell]:border-b-0 [&_thead.rc-table-thead]:sticky [&_thead.rc-table-thead]:top-0 [&_thead.rc-table-thead]:z-10 [&_thead.rc-table-thead]:bg-white';
+
 export default function SentNotificationsTable({
   data = [],
   totalItems,
@@ -25,9 +27,10 @@ export default function SentNotificationsTable({
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
-  const locale = Cookies.get('NEXT_LOCALE') || 'en';
-  const localePrefix = `/${locale}`;
-  const [pageSize, setPageSize] = useState(Number(searchParams.get('per_page')) || 20);
+  const localePrefix = `/${pathname.split('/')[1] || 'en'}`;
+  const [pageSize, setPageSize] = useState(
+    Number(searchParams.get('per_page')) || 10
+  );
   const [searchInput, setSearchInput] = useState(searchParams.get('search') ?? '');
 
   useEffect(() => {
@@ -78,14 +81,18 @@ export default function SentNotificationsTable({
   const {
     isLoading,
     isFiltered,
+    tableData,
     currentPage,
     handlePaginate,
     filters,
     searchTerm,
     handleSearch,
+    handleReset: resetTable,
   } = useTable(data, pageSize, filterState);
 
   const handleReset = () => {
+    resetTable();
+    setSearchInput('');
     const params = new URLSearchParams(searchParams.toString());
     [
       'search',
@@ -99,15 +106,14 @@ export default function SentNotificationsTable({
       'to',
     ].forEach((key) => params.delete(key));
     params.set('page', '1');
+    params.set('per_page', String(pageSize));
     router.push(`${pathname}?${params.toString()}`);
-    setSearchInput('');
-    handleSearch('');
   };
 
   return (
     <ControlledTable
       variant="modern"
-      data={data}
+      data={tableData}
       isLoading={isLoading}
       showLoadingText
       // @ts-ignore
@@ -118,12 +124,19 @@ export default function SentNotificationsTable({
           setPageSize(size);
           const params = new URLSearchParams(searchParams.toString());
           params.set('per_page', String(size));
+          params.set('page', '1');
           params.delete('limit');
           router.push(`${pathname}?${params.toString()}`);
         }) as React.Dispatch<React.SetStateAction<number>>,
         total: totalItems,
         current: currentPage,
-        onChange: handlePaginate,
+        onChange: (page: number) => {
+          handlePaginate(page);
+          const params = new URLSearchParams(searchParams.toString());
+          params.set('page', String(page));
+          params.set('per_page', String(pageSize));
+          router.push(`${pathname}?${params.toString()}`);
+        },
       }}
       filterOptions={{
         searchTerm: searchInput || searchTerm,
@@ -154,8 +167,8 @@ export default function SentNotificationsTable({
           handleReset={handleReset}
         />
       }
-      className="overflow-hidden rounded-md border border-gray-200"
-      scroll={{ x: 1200 }}
+      className={TABLE_CLASS}
+      scroll={{ x: 1500 }}
     />
   );
 }

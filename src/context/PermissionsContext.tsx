@@ -1,7 +1,15 @@
 // context/PermissionsContext.tsx
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+  useEffect,
+  ReactNode,
+} from 'react';
 import { useSession } from 'next-auth/react';
 import Cookies from 'js-cookie';
 import { AUTH_TOKEN } from '@/config/constants';
@@ -13,23 +21,38 @@ interface PermissionsContextType {
 
 const PermissionsContext = createContext<PermissionsContextType | undefined>(undefined);
 
+const EMPTY_PERMISSIONS: string[] = [];
+
+const permissionsEqual = (a: string[], b: string[]) =>
+  a.length === b.length && a.every((value, index) => value === b[index]);
+
 const getStoredPermissions = (): string[] => {
-  if (typeof window === 'undefined') return [];
+  if (typeof window === 'undefined') return EMPTY_PERMISSIONS;
   try {
     const raw = localStorage.getItem('permissions');
-    if (!raw) return [];
+    if (!raw) return EMPTY_PERMISSIONS;
     const parsed: unknown = JSON.parse(raw);
     return Array.isArray(parsed)
       ? parsed.filter((item): item is string => typeof item === 'string')
-      : [];
+      : EMPTY_PERMISSIONS;
   } catch {
-    return [];
+    return EMPTY_PERMISSIONS;
   }
 };
 
-export function PermissionsProvider({ children, initialPermissions = [] }: { children: ReactNode; initialPermissions?: string[] }) {
-  const { data: session, status } = useSession();
-  const [permissions, setPermissions] = useState<string[]>(initialPermissions);
+export function PermissionsProvider({
+  children,
+  initialPermissions = EMPTY_PERMISSIONS,
+}: {
+  children: ReactNode;
+  initialPermissions?: string[];
+}) {
+  const { status } = useSession();
+  const [permissions, setPermissionsState] = useState<string[]>(initialPermissions);
+
+  const setPermissions = useCallback((next: string[]) => {
+    setPermissionsState((prev) => (permissionsEqual(prev, next) ? prev : next));
+  }, []);
 
   useEffect(() => {
     // Fallback to persisted permissions on first client mount
@@ -38,30 +61,25 @@ export function PermissionsProvider({ children, initialPermissions = [] }: { chi
     if (stored.length > 0) {
       setPermissions(stored);
     }
-  }, [initialPermissions]);
+  }, [initialPermissions, setPermissions]);
 
   useEffect(() => {
-    const sessionPermissions = (session?.user as any)?.permissions as string[] | undefined;
-    console.log('PermissionsProvider - Session status:', status, 'Session:', session);
-    if (status === 'authenticated' && Array.isArray(sessionPermissions)) {
-      console.log('PermissionsProvider - Updating permissions:', sessionPermissions);
-      setPermissions(sessionPermissions);
-      localStorage.setItem('permissions', JSON.stringify(sessionPermissions));
-    } else if (status === 'authenticated') {
-      // If session exists without permissions, keep using persisted local permissions
-      const stored = getStoredPermissions();
-      setPermissions(stored);
+    if (status === 'authenticated') {
+      // Permissions are stored client-side only (not in the NextAuth JWT)
+      setPermissions(getStoredPermissions());
     } else if (status === 'unauthenticated' && !Cookies.get(AUTH_TOKEN)) {
-      console.log('PermissionsProvider - Clearing permissions');
-      setPermissions([]);
+      setPermissions(EMPTY_PERMISSIONS);
       localStorage.removeItem('permissions');
     }
-  }, [session, status]);
+  }, [status, setPermissions]);
 
-  console.log('PermissionsProvider - Current permissions:', permissions);
+  const value = useMemo(
+    () => ({ permissions, setPermissions }),
+    [permissions, setPermissions]
+  );
 
   return (
-    <PermissionsContext.Provider value={{ permissions, setPermissions }}>
+    <PermissionsContext.Provider value={value}>
       {children}
     </PermissionsContext.Provider>
   );

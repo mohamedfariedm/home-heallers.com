@@ -107,7 +107,7 @@ export default function KanbanCard({
     e.stopPropagation();
     e.preventDefault();
     openModal({
-      view: <KanbanCardViewModal item={item} />,
+      view: <KanbanCardViewModal item={item} canEdit={canEdit} />,
       customSize: '1000px',
     });
   };
@@ -164,7 +164,7 @@ export default function KanbanCard({
           });
         } else if (canViewDetails) {
           openModal({
-            view: <KanbanCardViewModal item={item} />,
+            view: <KanbanCardViewModal item={item} canEdit={canEdit} />,
             customSize: '1000px',
           });
         }
@@ -181,7 +181,7 @@ export default function KanbanCard({
         view: canEdit ? (
           <KanbanCardModal item={item} canEdit={canEdit} />
         ) : (
-          <KanbanCardViewModal item={item} />
+          <KanbanCardViewModal item={item} canEdit={canEdit} />
         ),
         customSize: canEdit ? '90vw' : '1000px',
       });
@@ -358,6 +358,21 @@ export default function KanbanCard({
         {item.lead_source && (
           <div className="text-xs text-gray-500 dark:text-gray-400">
             Source: {item.lead_source}
+          </div>
+        )}
+
+        {(Number(item.communication_times) > 0 || Number(item.rework) > 0) && (
+          <div className="flex flex-wrap gap-1.5">
+            {Number(item.communication_times) > 0 && (
+              <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                Contacts: {item.communication_times}
+              </span>
+            )}
+            {Number(item.rework) > 0 && (
+              <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+                Rework: {item.rework}
+              </span>
+            )}
           </div>
         )}
 

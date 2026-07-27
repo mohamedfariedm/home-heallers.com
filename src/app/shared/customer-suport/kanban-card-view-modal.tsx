@@ -1,17 +1,41 @@
 'use client';
 
+import { useState } from 'react';
 import { PiXBold } from 'react-icons/pi';
 import { Title, Text } from '@/components/ui/text';
 import { useModal } from '@/app/shared/modal-views/use-modal';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import DateCell from '@/components/ui/date-cell';
+import { useIncrementLeadCommunication } from '@/framework/customer-suport';
 
 interface KanbanCardViewModalProps {
   item: any;
+  canEdit?: boolean;
 }
 
-export default function KanbanCardViewModal({ item }: KanbanCardViewModalProps) {
+export default function KanbanCardViewModal({
+  item,
+  canEdit = false,
+}: KanbanCardViewModalProps) {
   const { closeModal } = useModal();
+  const [communicationTimes, setCommunicationTimes] = useState(
+    Number(item?.communication_times ?? 0)
+  );
+  const rework = Number(item?.rework ?? 0);
+  const { mutate: incrementCommunication, isPending } =
+    useIncrementLeadCommunication();
+
+  const handleIncrementCommunication = () => {
+    if (!item?.id) return;
+    const nextCount = communicationTimes + 1;
+    incrementCommunication(
+      { lead_id: item.id, communication_times: nextCount },
+      {
+        onSuccess: () => setCommunicationTimes(nextCount),
+      }
+    );
+  };
 
   return (
     <div className="flex flex-grow flex-col gap-6 p-6 @container [&_.rizzui-input-label]:font-medium [&_.rizzui-input-label]:text-gray-900">
@@ -23,6 +47,36 @@ export default function KanbanCardViewModal({ item }: KanbanCardViewModalProps) 
           <PiXBold className="h-4 w-4" />
         </Button>
       </div>
+
+      <div className="flex flex-wrap items-center gap-3 rounded-lg border border-gray-200 bg-gray-50/80 p-4">
+        <div className="flex items-center gap-2">
+          <Text className="text-sm text-gray-600">Communication Times</Text>
+          <Badge variant="flat" color="info">
+            {communicationTimes}
+          </Badge>
+        </div>
+        <div className="flex items-center gap-2">
+          <Text className="text-sm text-gray-600">Rework</Text>
+          <Badge
+            variant="flat"
+            color={rework > 0 ? 'warning' : 'secondary'}
+          >
+            {rework}
+          </Badge>
+        </div>
+        {canEdit && (
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={isPending}
+            onClick={handleIncrementCommunication}
+            className="ms-auto"
+          >
+            {isPending ? 'Saving...' : '+1 Contact'}
+          </Button>
+        )}
+      </div>
+
       <div className="grid grid-cols-2 gap-x-4">
         {/* User Information */}
         <div>
@@ -156,6 +210,13 @@ export default function KanbanCardViewModal({ item }: KanbanCardViewModalProps) 
           <Title as="h6" className="mt-6 font-inter text-sm font-semibold">CC</Title>
           <Text as="p" className="pb-2 leading-relaxed">
             {item?.cc || '-'}
+          </Text>
+        </div>
+
+        <div>
+          <Title as="h6" className="mt-6 font-inter text-sm font-semibold">Call Count</Title>
+          <Text as="p" className="pb-2 leading-relaxed">
+            {item?.call_count ?? 0}
           </Text>
         </div>
 

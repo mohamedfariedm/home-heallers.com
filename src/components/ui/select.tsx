@@ -4,13 +4,14 @@ import isEmpty from 'lodash/isEmpty';
 import isNumber from 'lodash/isNumber';
 import isString from 'lodash/isString';
 import { FieldHelperText } from 'rizzui';
-import { Listbox, Transition } from '@headlessui/react';
+import { Listbox } from '@headlessui/react';
 import { ExtractProps } from '@/components/ui/table';
 import cn from '@/utils/class-names';
 import { PiCaretUpDown } from 'react-icons/pi';
 import { FieldError } from '@/components/ui/field-error';
 import {
   type Placement,
+  FloatingPortal,
   flip,
   shift,
   offset,
@@ -18,7 +19,7 @@ import {
   useFloating,
 } from '@floating-ui/react';
 import { useElementSize } from '@/hooks/use-element-size';
-import React, { Fragment, useMemo } from 'react';
+import React, { useMemo } from 'react';
 
 /* -------------------- Styles -------------------- */
 
@@ -111,7 +112,7 @@ const selectClasses = {
 };
 
 const optionsClasses = {
-  base: 'max-h-[220px] p-1.5 w-full overflow-auto border border-gray-100 focus:outline-none z-40 bg-gray-0 dark:bg-gray-100 [&>ul]:outline-none [&>ul]:ring-0',
+  base: 'max-h-[220px] p-1.5 overflow-auto border border-gray-100 focus:outline-none z-[9999] bg-gray-0 dark:bg-gray-100 [&>ul]:outline-none [&>ul]:ring-0',
   shadow: {
     sm: 'drop-shadow-md',
     DEFAULT: 'drop-shadow-lg',
@@ -304,7 +305,8 @@ export default function SelectBox<OptionType extends SelectOption>({
   const [ref, { width }] = useElementSize();
   const { x, y, refs, strategy } = useFloating({
     placement,
-    middleware: [flip(), shift(), offset({ mainAxis: 6 })],
+    strategy: 'fixed',
+    middleware: [flip(), shift({ padding: 8 }), offset({ mainAxis: 6 })],
     whileElementsMounted: autoUpdate,
   });
 
@@ -337,7 +339,7 @@ export default function SelectBox<OptionType extends SelectOption>({
   };
 
   return (
-    <div ref={refs.setReference} className={cn('grid', className)}>
+    <div className={cn('grid', className)}>
       <Listbox
         value={value as any}
         multiple={multiple}
@@ -362,7 +364,13 @@ export default function SelectBox<OptionType extends SelectOption>({
               </Listbox.Label>
             )}
 
-            <div ref={ref} className="h-full">
+            <div
+              ref={(node) => {
+                ref(node);
+                refs.setReference(node);
+              }}
+              className="h-full"
+            >
               <Listbox.Button
                 className={cn(
                   selectClasses.base,
@@ -453,62 +461,66 @@ export default function SelectBox<OptionType extends SelectOption>({
                   </span>
                 )}
               </Listbox.Button>
-
-              {/* dropdown */}
-              <Transition
-                as={Fragment}
-                ref={refs.setFloating}
-                leave="transition ease-in duration-100"
-                leaveFrom="opacity-100"
-                leaveTo="opacity-0"
-                className={cn(
-                  optionsClasses.base,
-                  optionsClasses.shadow[size],
-                  optionsClasses.rounded[rounded],
-                  dropdownClassName
-                )}
-                style={{
-                  position: strategy,
-                  left: x ?? 0,
-                  ...(useContainerWidth && { width }),
-                }}
-              >
-                <Listbox.Options>
-                  {isEmpty(options) ? (
-                    <li
-                      className={cn(
-                        optionClasses.notFound,
-                        selectClasses.size[size],
-                        'h-auto py-2'
-                      )}
-                    >
-                      {emptyText}
-                    </li>
-                  ) : (
-                    options.map((option) => (
-                      <Listbox.Option
-                        key={option.value}
-                        {...(option?.disabled && { disabled: option?.disabled })}
-                        className={({ active, selected }) =>
-                          cn(
-                            optionClasses.base,
-                            'px-2 py-1.5 rounded',
-                            active && optionClasses.color[color],
-                            selected && 'font-medium',
-                            option?.disabled && selectClasses.disabled,
-                            option?.disabled && 'text-gray-500',
-                            optionClassName
-                          )
-                        }
-                        value={getOptionValue(option)}
-                      >
-                        {getOptionDisplayValue(option)}
-                      </Listbox.Option>
-                    ))
-                  )}
-                </Listbox.Options>
-              </Transition>
             </div>
+
+            {/* Portal keeps options above modals and outside overflow clipping */}
+            {open ? (
+              <FloatingPortal>
+                <div
+                  ref={refs.setFloating}
+                  className={cn(
+                    optionsClasses.base,
+                    optionsClasses.shadow[size],
+                    optionsClasses.rounded[rounded],
+                    dropdownClassName
+                  )}
+                  style={{
+                    position: strategy,
+                    top: y ?? 0,
+                    left: x ?? 0,
+                    zIndex: 9999,
+                    width: useContainerWidth ? width || undefined : undefined,
+                  }}
+                >
+                  <Listbox.Options static className="outline-none">
+                    {isEmpty(options) ? (
+                      <li
+                        className={cn(
+                          optionClasses.notFound,
+                          selectClasses.size[size],
+                          'h-auto py-2'
+                        )}
+                      >
+                        {emptyText}
+                      </li>
+                    ) : (
+                      options.map((option) => (
+                        <Listbox.Option
+                          key={option.value}
+                          {...(option?.disabled && {
+                            disabled: option?.disabled,
+                          })}
+                          className={({ active, selected }) =>
+                            cn(
+                              optionClasses.base,
+                              'px-2 py-1.5 rounded',
+                              active && optionClasses.color[color],
+                              selected && 'font-medium',
+                              option?.disabled && selectClasses.disabled,
+                              option?.disabled && 'text-gray-500',
+                              optionClassName
+                            )
+                          }
+                          value={getOptionValue(option)}
+                        >
+                          {getOptionDisplayValue(option)}
+                        </Listbox.Option>
+                      ))
+                    )}
+                  </Listbox.Options>
+                </div>
+              </FloatingPortal>
+            ) : null}
           </>
         )}
       </Listbox>

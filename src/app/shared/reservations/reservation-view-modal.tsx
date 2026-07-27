@@ -354,6 +354,11 @@ export function ReservationViewContent({
               </span>
             )}
             <CustomerTierBadge tier={reservation?.customer_tier} />
+            {Number(reservation?.rework) > 0 && (
+              <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800">
+                Rework: {reservation.rework}
+              </span>
+            )}
           </div>
         </div>
 
@@ -422,6 +427,18 @@ export function ReservationViewContent({
             <DetailItem label="Service" value={serviceName} />
             <DetailItem label="Seen" value={reservation?.seen ? 'Yes' : 'No'} />
             <DetailItem label="CC" value={reservation?.cc} />
+            <DetailItem
+              label="Rework"
+              value={
+                Number(reservation?.rework) > 0 ? (
+                  <Badge variant="flat" color="warning">
+                    {reservation.rework}
+                  </Badge>
+                ) : (
+                  reservation?.rework ?? 0
+                )
+              }
+            />
             <DetailItem
               label="Source Campaign"
               value={reservation?.source_campaign}

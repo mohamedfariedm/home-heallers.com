@@ -64,6 +64,8 @@ export const leadFormSchema = z.object({
         val === 'Rework - Call',
       { message: 'Please select a valid CC option' },
     ),
+  rework: z.coerce.number().int().min(0).optional(),
+  communication_times: z.coerce.number().int().min(0).optional(),
 
   created_at: z.string().optional(),
   updated_at: z.string().optional(),

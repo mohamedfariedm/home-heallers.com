@@ -51,6 +51,7 @@ export const reservationFormSchema = z
           val === "Rework - Call",
         { message: "Please select a valid CC option" }
       ),
+    rework: z.coerce.number().int().min(0).optional(),
 
     // Address fields
     address_city: z.string().min(1, "Address city is required"),

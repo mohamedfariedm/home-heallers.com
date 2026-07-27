@@ -20,8 +20,8 @@ export async function GET(request: NextRequest) {
       filteredData = filteredData.filter(contract =>
         contract.company_name.toLowerCase().includes(search.toLowerCase()) ||
         contract.company_activity.toLowerCase().includes(search.toLowerCase()) ||
-        contract.service_manager_name.toLowerCase().includes(search.toLowerCase()) ||
-        contract.manager_email.toLowerCase().includes(search.toLowerCase())
+        (contract.service_manager_name ?? '').toLowerCase().includes(search.toLowerCase()) ||
+        (contract.manager_email ?? '').toLowerCase().includes(search.toLowerCase())
       );
     }
 
@@ -39,13 +39,13 @@ export async function GET(request: NextRequest) {
 
     if (service_manager_name) {
       filteredData = filteredData.filter(contract =>
-        contract.service_manager_name.toLowerCase().includes(service_manager_name.toLowerCase())
+        (contract.service_manager_name ?? '').toLowerCase().includes(service_manager_name.toLowerCase())
       );
     }
 
     if (manager_email) {
       filteredData = filteredData.filter(contract =>
-        contract.manager_email.toLowerCase().includes(manager_email.toLowerCase())
+        (contract.manager_email ?? '').toLowerCase().includes(manager_email.toLowerCase())
       );
     }
 

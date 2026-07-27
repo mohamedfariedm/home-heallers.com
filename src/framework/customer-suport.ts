@@ -45,6 +45,22 @@ export const useCreateCustomerSupport = () => {
     })
   }
 
+  export const useIncrementLeadCommunication = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+      mutationFn: (input: { lead_id: number; communication_times: number }) =>
+        client.customerSupport.update(input),
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: [routes.customerSupport.index] });
+        toast.success('Communication count updated');
+      },
+      onError: (error) => {
+        toast.error(`Error ${error?.message}`);
+      },
+    });
+  };
+
 
   export const useDeleteCustomerSupport = () => {
 

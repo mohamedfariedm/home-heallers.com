@@ -17,6 +17,10 @@ import { resolveLocalizedName } from '@/utils/resolve-localized-name';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 
+const INBOUND_SOURCE_CAMPAIGN_OPTIONS = [
+  { label: 'Call', value: 'call' },
+];
+
 function getLocationLabel(nameField: unknown): string {
   return resolveLocalizedName(nameField);
 }
@@ -179,6 +183,10 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
 
     
   const { closeModal } = useModal();
+  const isInbound = type === 'operation';
+  const sourceCampaignOptions = isInbound
+    ? INBOUND_SOURCE_CAMPAIGN_OPTIONS
+    : kanbanSourceCampaignOptions;
   const [lang, setLang] = useState<'en' | 'ar'>('en');
     const { mutate: createSupport, isPending: isCreating } = useCreateCustomerSupport();
     const { mutate: updateSupport, isPending: isUpdating } = useUpdateCustomerSupport();
@@ -319,6 +327,8 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
         created_by: data.created_by || '',
         event_agent_name: data.event_agent_name || '',
         communication_channel: data.communication_channel || '',
+        rework: Number(data.rework ?? 0),
+        communication_times: Number(data.communication_times ?? 0),
         ...(data.cc ? { cc: data.cc } : {}),
       };
 
@@ -373,7 +383,8 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
           address_1: initValues?.address_1 || '',
           city: initValues?.city || '',
           state: initValues?.state || '',
-          source_campaign: initValues?.source_campaign || '',
+          source_campaign:
+            initValues?.source_campaign || (isInbound ? 'call' : ''),
           activity_code: initValues?.activity_code || '',
           call_sub_result: initValues?.call_sub_result || '',
           will_call_us_again_reason: initValues?.will_call_us_again_reason || '',
@@ -406,6 +417,8 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
           event_agent_name: initValues?.event_agent_name || '',
           communication_channel: initValues?.communication_channel || '',
           cc: initValues?.cc || '',
+          rework: initValues?.rework ?? 0,
+          communication_times: initValues?.communication_times ?? 0,
         },
       }}
       className="flex flex-grow flex-col gap-6 p-6"
@@ -513,8 +526,8 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
                 {...register('source_campaign')} 
                 className="w-full border border-gray-300 rounded-md p-2 h-10 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
               >
-                <option value="">Select Source</option>
-                {kanbanSourceCampaignOptions.map((option) => (
+                {!isInbound && <option value="">Select Source</option>}
+                {sourceCampaignOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
@@ -554,6 +567,23 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
             {errors.cc && (
               <p className="mt-1 text-sm text-red-500">{errors.cc.message}</p>
             )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              label="Rework"
+              type="number"
+              min={0}
+              {...register('rework', { valueAsNumber: true })}
+              error={errors.rework?.message}
+            />
+            <Input
+              label="Communication Times"
+              type="number"
+              min={0}
+              {...register('communication_times', { valueAsNumber: true })}
+              error={errors.communication_times?.message}
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import TableLayout from '@/app/[locale]/(hydrogen)/tables/table-layout';
@@ -47,6 +47,27 @@ const pageHeader = {
 
 type KpiView = 'users' | 'doctors';
 
+function resolveKpiView(
+  tab: string | null,
+  viewUsers: boolean,
+  viewDoctors: boolean
+): KpiView {
+  if (tab === 'doctors' && viewDoctors) return 'doctors';
+  if (tab === 'users' && viewUsers) return 'users';
+  if (viewUsers) return 'users';
+  if (viewDoctors) return 'doctors';
+  return 'users';
+}
+
+/** Keep only shared pagination params when switching KPI tabs. */
+function cleanParamsForTab(view: KpiView) {
+  const next = new URLSearchParams();
+  next.set('tab', view);
+  next.set('page', '1');
+  next.set('per_page', '25');
+  return next;
+}
+
 export default function KpisPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -58,14 +79,24 @@ export default function KpisPage() {
     (session?.user as { permissions?: string[] })?.permissions ?? permissions;
   const kpisPermissions = resolveKpisPermissions(effectivePermissions);
 
-  const activeView: KpiView = (() => {
-    const tab = searchParams.get('tab');
-    if (tab === 'doctors' && kpisPermissions.viewDoctors) return 'doctors';
-    if (tab === 'users' && kpisPermissions.viewUsers) return 'users';
-    if (kpisPermissions.viewUsers) return 'users';
-    if (kpisPermissions.viewDoctors) return 'doctors';
-    return 'users';
-  })();
+  const tabParam = searchParams.get('tab');
+  const [activeView, setActiveView] = useState<KpiView>(() =>
+    resolveKpiView(
+      tabParam,
+      kpisPermissions.viewUsers,
+      kpisPermissions.viewDoctors
+    )
+  );
+
+  useEffect(() => {
+    setActiveView(
+      resolveKpiView(
+        tabParam,
+        kpisPermissions.viewUsers,
+        kpisPermissions.viewDoctors
+      )
+    );
+  }, [tabParam, kpisPermissions.viewUsers, kpisPermissions.viewDoctors]);
 
   const userActivityQuery = toUserActivityQuery(
     new URLSearchParams(searchParams.toString())
@@ -110,10 +141,13 @@ export default function KpisPage() {
     : [];
 
   const setView = (view: KpiView) => {
-    const next = new URLSearchParams(searchParams.toString());
-    next.set('tab', view);
-    next.set('page', '1');
-    router.push(`${pathname}?${next.toString()}`);
+    if (view === 'users' && !kpisPermissions.viewUsers) return;
+    if (view === 'doctors' && !kpisPermissions.viewDoctors) return;
+
+    setActiveView(view);
+    router.push(`${pathname}?${cleanParamsForTab(view).toString()}`, {
+      scroll: false,
+    });
   };
 
   const showTabs = kpisPermissions.viewUsers && kpisPermissions.viewDoctors;
@@ -159,8 +193,12 @@ export default function KpisPage() {
 
   const hasFilters =
     activeView === 'doctors'
-      ? hasActiveDoctorActivityFilters(new URLSearchParams(searchParams.toString()))
-      : hasActiveUserActivityFilters(new URLSearchParams(searchParams.toString()));
+      ? hasActiveDoctorActivityFilters(
+          new URLSearchParams(searchParams.toString())
+        )
+      : hasActiveUserActivityFilters(
+          new URLSearchParams(searchParams.toString())
+        );
 
   return (
     <TableLayout
@@ -174,7 +212,11 @@ export default function KpisPage() {
           ),
         rows: selectedRowKeys,
       }}
-      fileName={activeView === 'doctors' ? 'doctor-activity-report' : 'user-activity-report'}
+      fileName={
+        activeView === 'doctors'
+          ? 'doctor-activity-report'
+          : 'user-activity-report'
+      }
       header={
         activeView === 'doctors'
           ? 'Doctor,Reservations,By Status,By Source Campaign'
@@ -213,75 +255,79 @@ export default function KpisPage() {
           </div>
         )}
 
-      {isLoading ? (
-        <div className="m-auto py-16">
-          <Spinner size="lg" />
-        </div>
-      ) : isError ? (
-        <div className="rounded-md border border-red-200 bg-red-50 p-6 text-sm text-red-700 dark:border-red-900 dark:bg-red-900/20 dark:text-red-300">
-          {error?.message ?? 'Something went wrong loading KPI data.'}
-        </div>
-      ) : activeView === 'doctors' ? (
-        <>
-          <DoctorActivityStatisticsCards statistics={doctorListData?.statistics} />
+        {isLoading ? (
+          <div className="m-auto py-16">
+            <Spinner size="lg" />
+          </div>
+        ) : isError ? (
+          <div className="rounded-md border border-red-200 bg-red-50 p-6 text-sm text-red-700 dark:border-red-900 dark:bg-red-900/20 dark:text-red-300">
+            {error?.message ?? 'Something went wrong loading KPI data.'}
+          </div>
+        ) : activeView === 'doctors' ? (
+          <>
+            <DoctorActivityStatisticsCards
+              statistics={doctorListData?.statistics}
+            />
 
-          {totalItems === 0 && (
-            <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-6 text-center dark:border-gray-700 dark:bg-gray-800/50">
-              <Text className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                {hasFilters || searchParams.get('search')
-                  ? 'No doctors match your filters.'
-                  : 'No doctors with reservations found.'}
-              </Text>
-              <Text className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                {hasFilters || searchParams.get('search')
-                  ? 'Use the Filters button to adjust or clear your filters.'
-                  : 'Doctors with reservations in the selected date range will appear here with reservation KPIs.'}
-              </Text>
-            </div>
-          )}
+            {totalItems === 0 && (
+              <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-6 text-center dark:border-gray-700 dark:bg-gray-800/50">
+                <Text className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {hasFilters || searchParams.get('search')
+                    ? 'No doctors match your filters.'
+                    : 'No doctors with reservations found.'}
+                </Text>
+                <Text className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  {hasFilters || searchParams.get('search')
+                    ? 'Use the Filters button to adjust or clear your filters.'
+                    : 'Doctors with reservations in the selected date range will appear here with reservation KPIs.'}
+                </Text>
+              </div>
+            )}
 
-          <DoctorActivityReportsTable
-            data={doctorRows}
-            totalItems={totalItems}
-            getSelectedColumns={setSelectedColumns}
-            getSelectedRowKeys={setSelectedRowKeys}
-          />
+            <DoctorActivityReportsTable
+              data={doctorRows}
+              totalItems={totalItems}
+              getSelectedColumns={setSelectedColumns}
+              getSelectedRowKeys={setSelectedRowKeys}
+            />
 
-          {isFetching && !isLoading && (
-            <Text className="mt-3 text-xs text-gray-500">Refreshing…</Text>
-          )}
-        </>
-      ) : (
-        <>
-          <UserActivityStatisticsCards statistics={userListData?.statistics} />
+            {isFetching && !isLoading && (
+              <Text className="mt-3 text-xs text-gray-500">Refreshing…</Text>
+            )}
+          </>
+        ) : (
+          <>
+            <UserActivityStatisticsCards
+              statistics={userListData?.statistics}
+            />
 
-          {totalItems === 0 && (
-            <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-6 text-center dark:border-gray-700 dark:bg-gray-800/50">
-              <Text className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                {hasFilters || searchParams.get('search')
-                  ? 'No staff users match your filters.'
-                  : 'No staff user activity has been recorded yet.'}
-              </Text>
-              <Text className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                {hasFilters || searchParams.get('search')
-                  ? 'Use the Filters button to adjust or clear your filters.'
-                  : 'Staff actions across the platform will appear here as KPI summaries.'}
-              </Text>
-            </div>
-          )}
+            {totalItems === 0 && (
+              <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-6 text-center dark:border-gray-700 dark:bg-gray-800/50">
+                <Text className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {hasFilters || searchParams.get('search')
+                    ? 'No staff users match your filters.'
+                    : 'No staff user activity has been recorded yet.'}
+                </Text>
+                <Text className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  {hasFilters || searchParams.get('search')
+                    ? 'Use the Filters button to adjust or clear your filters.'
+                    : 'Staff actions across the platform will appear here as KPI summaries.'}
+                </Text>
+              </div>
+            )}
 
-          <UserActivityReportsTable
-            data={userRows}
-            totalItems={totalItems}
-            getSelectedColumns={setSelectedColumns}
-            getSelectedRowKeys={setSelectedRowKeys}
-          />
+            <UserActivityReportsTable
+              data={userRows}
+              totalItems={totalItems}
+              getSelectedColumns={setSelectedColumns}
+              getSelectedRowKeys={setSelectedRowKeys}
+            />
 
-          {isFetching && !isLoading && (
-            <Text className="mt-3 text-xs text-gray-500">Refreshing…</Text>
-          )}
-        </>
-      )}
+            {isFetching && !isLoading && (
+              <Text className="mt-3 text-xs text-gray-500">Refreshing…</Text>
+            )}
+          </>
+        )}
       </div>
     </TableLayout>
   );

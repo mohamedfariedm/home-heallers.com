@@ -1,6 +1,6 @@
 import { HttpClient } from './request';
 import request from './request';
-import { CreateRuleInput, UserInput, Region, City, Retailer, Store, LoginInput, AuthResponse, Category, Journey, Products, stock, Target, Inquerie, notifications } from '@/types'
+import { CreateRuleInput, UserInput, Region, City, Retailer, Store, LoginInput, AuthResponse, Category, Journey, Products, stock, Target, Inquerie } from '@/types'
 import { routes } from '@/config/routes';
 import { CreateBrandInput } from '@/utils/validators/create-brand.schema ';
 import { CreateToDoInput } from '@/utils/validators/create-todo.schema';
@@ -187,6 +187,72 @@ class Client {
         update: (input: any) => HttpClient.patch(`${routes.doctors.index}/${input.doctor_id}`, input),
         delete: (input: { doctor_id: number[] }) => HttpClient.delete(`${routes.doctors.index}/${input.doctor_id}`)
     }
+    doctorTargets = {
+        all: (param: string) => HttpClient.get(`/doctor-targets?${param}`),
+        findOne: (id: number | string) => HttpClient.get(`/doctor-targets/${id}`),
+        create: (input: {
+            doctor_ids: number[];
+            start_date: string;
+            end_date: string;
+            required_sessions: number;
+            incentive_amount: number;
+            notes?: string | null;
+        }) => HttpClient.post('/doctor-targets', input),
+        update: (input: {
+            id: number | string;
+            start_date?: string;
+            end_date?: string;
+            required_sessions?: number;
+            incentive_amount?: number;
+            notes?: string | null;
+        }) => {
+            const { id, ...payload } = input;
+            return HttpClient.patch(`/doctor-targets/${id}`, payload);
+        },
+        activate: (id: number | string) => HttpClient.post(`/doctor-targets/${id}/activate`),
+        retarget: (input: {
+            id: number | string;
+            start_date: string;
+            end_date: string;
+        }) => {
+            const { id, ...payload } = input;
+            return HttpClient.post(`/doctor-targets/${id}/retarget`, payload);
+        },
+        adjust: (input: {
+            id: number | string;
+            completed_sessions: number;
+            reason: string;
+        }) => {
+            const { id, ...payload } = input;
+            return HttpClient.post(`/doctor-targets/${id}/adjust`, payload);
+        },
+        preview: (id: number | string) => HttpClient.get(`/doctor-targets/${id}/preview`),
+        approve: (input: { id: number | string; approval_note?: string }) => {
+            const { id, approval_note } = input;
+            return HttpClient.post(`/doctor-targets/${id}/approve`, {
+                ...(approval_note ? { approval_note } : {}),
+            });
+        },
+        timeline: (id: number | string) => HttpClient.get(`/doctor-targets/${id}/timeline`),
+        dashboard: () => HttpClient.get('/doctor-targets/dashboard'),
+        reportsBlob: async (param: string) => {
+            const res = await request.get(`/doctor-targets/reports?${param}`, {
+                responseType: 'blob',
+            });
+            return res.data as Blob;
+        },
+    }
+    withdrawals = {
+        all: (param: string) => HttpClient.get(`/withdrawal-requests?${param}`),
+        approve: (id: number | string) =>
+            HttpClient.post(`/withdrawal-requests/${id}/approve`),
+        reject: (input: { id: number | string; rejection_reason: string }) => {
+            const { id, rejection_reason } = input;
+            return HttpClient.post(`/withdrawal-requests/${id}/reject`, {
+                rejection_reason,
+            });
+        },
+    }
     groups = {
         all: (param: string) => HttpClient.get(`${routes.groups.index}?${param}`),
         findOne: (id: number) => HttpClient.get(`${routes.groups.index}/${id}`),
@@ -329,25 +395,41 @@ class Client {
         findOne: (id: number) => HttpClient.get(`/contracts/${id}`),
         create: (input: any) => HttpClient.post('/contracts', input),
         update: (input: any) => HttpClient.patch(`/contracts/${input.id}`, input),
+        updateNotes: (input: { id: number; sales_rep_notes?: string; requirements?: string }) =>
+            HttpClient.patch(`/contracts/${input.id}/notes`, {
+                sales_rep_notes: input.sales_rep_notes,
+                requirements: input.requirements,
+            }),
+        addCommunication: (input: { id: number; communication_date: string }) =>
+            HttpClient.post(`/contracts/${input.id}/communication`, {
+                communication_date: input.communication_date,
+            }),
+        listAttachments: (id: number) => HttpClient.get(`/contracts/${id}/attachments`),
+        uploadAttachments: (input: { id: number; formData: FormData }) =>
+            HttpClient.post(`/contracts/${input.id}/attachments`, input.formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            }),
+        deleteAttachment: (input: { id: number; attachmentId: number }) =>
+            HttpClient.delete(`/contracts/${input.id}/attachments/${input.attachmentId}`),
         delete: (input: { contract_id: number[] }) => {
             const promises = input.contract_id.map(id => HttpClient.delete(`/contracts/${id}`));
             return Promise.all(promises);
         }
     }
     notifications = {
-        sendGlobal: async (input: notifications) => {
+        sendGlobal: async (input: unknown) => {
             const response = await HttpClient.post(`${routes.notifications.index}/send-global`, input);
             return response.data;
         },
-        sendToClients: async (input: notifications) => {
+        sendToClients: async (input: unknown) => {
             const response = await HttpClient.post(`${routes.notifications.index}/send-to-clients`, input);
             return response.data;
         },
-        sendToDoctors: async (input: notifications) => {
+        sendToDoctors: async (input: unknown) => {
             const response = await HttpClient.post(`${routes.notifications.index}/send-to-doctors`, input);
             return response.data;
         },
-        sendToSpecific: async (input: notifications) => {
+        sendToSpecific: async (input: unknown) => {
             const response = await HttpClient.post(`${routes.notifications.index}/send-to-specific`, input);
             return response.data;
         },
@@ -372,7 +454,29 @@ class Client {
                 HttpClient.get(`${routes.notifications.index}/sent?${param}`),
             findOne: (id: number) =>
                 HttpClient.get(`${routes.notifications.index}/sent/${id}`),
+            recipients: (id: number, param = '') =>
+                HttpClient.get(
+                    `${routes.notifications.index}/sent/${id}/recipients${param ? `?${param}` : ''}`
+                ),
         },
+    }
+
+    dashboardNotifications = {
+        all: (param = '') =>
+            HttpClient.get(`/dashboard-notifications${param ? `?${param}` : ''}`),
+        unreadCount: () =>
+            HttpClient.get(`/dashboard-notifications/unread-count`),
+        markAllAsRead: () =>
+            HttpClient.post(`/dashboard-notifications/mark-all-as-read`, {}),
+        markAsRead: (id: string) =>
+            HttpClient.post(`/dashboard-notifications/${id}/mark-as-read`, {}),
+    }
+
+    pushTokens = {
+        register: (input: { platform?: 'web'; token: string; user_agent?: string }) =>
+            HttpClient.post(`/push-tokens`, { platform: 'web', ...input }),
+        revoke: (input: { token: string }) =>
+            HttpClient.delete(`/push-tokens`, input),
     }
 
     checkin = {
@@ -426,6 +530,25 @@ class Client {
         all: (params: string) => HttpClient.get(`${routes.activityLogs.index}?${params}`),
         findOne: (id: number) => HttpClient.get(`${routes.activityLogs.index}/${id}`),
         filterOptions: () => HttpClient.get(`${routes.activityLogs.index}/filter-options`),
+    }
+    otpCodes = {
+        all: (params: string) => HttpClient.get(`${routes.otpCodes.index}?${params}`),
+        update: (input: {
+            type: 'client' | 'doctor';
+            id: number;
+            otp?: string | null;
+            otp_expires_at?: string | null;
+        }) => {
+            const { type, id, ...body } = input;
+            return HttpClient.put(`${routes.otpCodes.index}/${type}/${id}`, body);
+        },
+        extendExpiration: async (input: { type: 'client' | 'doctor'; id: number }) => {
+            const response = await HttpClient.post(
+                `${routes.otpCodes.index}/${input.type}/${input.id}/extend-expiration`,
+                {}
+            );
+            return (response as any)?.data ?? response;
+        },
     }
     userActivityReports = {
         all: (params: string) => HttpClient.get(`${routes.userActivityReports.index}?${params}`),
@@ -642,6 +765,16 @@ class Client {
                             ...r.data,
                         }) as SendWhatsAppMessageResult
                 ),
+    };
+
+    appAnalytics = {
+        overview: () => HttpClient.get('/analytics/overview'),
+        installations: () => HttpClient.get('/analytics/installations'),
+        devices: () => HttpClient.get('/analytics/devices'),
+        activeUsers: (date?: string) =>
+            HttpClient.get(
+                date ? `/analytics/active-users?date=${date}` : '/analytics/active-users'
+            ),
     };
 }
 

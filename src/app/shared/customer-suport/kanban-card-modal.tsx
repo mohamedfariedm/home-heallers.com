@@ -370,6 +370,11 @@ export default function KanbanCardModal({
                                 }`}>
                                   {reservation.status_label || 'Unknown'}
                                 </span>
+                                {Number(reservation.rework) > 0 && (
+                                  <span className="rounded bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800">
+                                    Rework: {reservation.rework}
+                                  </span>
+                                )}
                               </div>
                               
                               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm text-gray-600">

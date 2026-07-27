@@ -16,20 +16,29 @@ export function useTable<T extends AnyObject>(
    * Dummy loading state.
    */
   const [isLoading, setLoading] = useState(true);
-  const searchParams = useSearchParams()
-  const params = new URLSearchParams(searchParams)
-  const pathName = usePathname()
-  const { push } = useRouter()
+  const searchParams = useSearchParams();
+  const pathName = usePathname();
+  const { push } = useRouter();
   useEffect(() => {
     setLoading(false);
   }, []);
 
+  // Only sync `limit` when the page already uses that query key.
+  // Do not inject `limit` onto pages that use `per_page` (KPIs, doctor-targets),
+  // and never depend on a new URLSearchParams instance each render.
   useEffect(() => {
-    if(Number(params.get('limit')) !== countPerPage && countPerPage > 0) {
-      params.set('limit', String(countPerPage))
-      push(`${pathName}?${params.toString()}`)
-    }
-  },[params])
+    if (!countPerPage || countPerPage <= 0) return;
+    const urlLimit = searchParams.get('limit');
+    if (urlLimit === null) return;
+    if (Number(urlLimit) === countPerPage) return;
+
+    const next = new URLSearchParams(searchParams.toString());
+    next.set('limit', String(countPerPage));
+    push(`${pathName}?${next.toString()}`);
+  }, [searchParams, countPerPage, pathName, push]);
+
+  // Keep a mutable params helper for pagination helpers below
+  const params = new URLSearchParams(searchParams.toString());
 
   /*
    * Handle row selection

@@ -34,7 +34,7 @@ export default function ExportButton({
     const params = new URLSearchParams();
     // Convert ReadonlyURLSearchParams to regular object and filter out page/limit
     for (const [key, value] of searchParams.entries()) {
-      if(key !== 'page' && key !== 'limit') {
+      if(key !== 'page' && key !== 'limit' && key !== 'per_page' && key !== 'tab') {
         params.set(key, value);
       }
     }

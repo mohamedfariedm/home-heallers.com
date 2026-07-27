@@ -122,6 +122,9 @@ export const routes = {
   activityLogs: {
     index: '/activity-logs',
   },
+  otpCodes: {
+    index: '/otp-codes',
+  },
   kpis: {
     index: '/kpis',
     users: (userId: number | string) => `/kpis/users/${userId}`,
@@ -327,6 +330,14 @@ export const routes = {
     index: '/doctors',
     detail: (id: string | number) => `/doctors/${id}`,
   },
+  doctorTargets: {
+    index: '/doctor-targets',
+    dashboard: '/doctor-targets/dashboard',
+    detail: (id: string | number) => `/doctor-targets/${id}`,
+  },
+  withdrawals: {
+    index: '/withdrawals',
+  },
   groups: {
     index: '/groups',
   },
@@ -341,5 +352,8 @@ export const routes = {
   },
   statistics: {
     index: '/statistics',
+  },
+  appAnalytics: {
+    index: '/app-analytics',
   },
 };

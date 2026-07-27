@@ -117,16 +117,28 @@ export default function CustomerSupportKanban({
     return result;
   })();
 
-  // Build a map of item IDs to their current status for tracking
+  const statusMapsEqual = (
+    a: Record<number, string>,
+    b: Record<number, string>
+  ) => {
+    const aKeys = Object.keys(a);
+    const bKeys = Object.keys(b);
+    if (aKeys.length !== bKeys.length) return false;
+    return aKeys.every((key) => a[Number(key)] === b[Number(key)]);
+  };
+
+  // Sync status maps from server data; only update state when values change
   useEffect(() => {
     const statusMap: Record<number, string> = {};
     columns.forEach((column) => {
-      const items = itemsByStatus[column.status] || [];
+      const items = baseItemsByStatus[column.status] || [];
       items.forEach((item) => {
         statusMap[item.id] = column.status;
       });
     });
-    setOldStatusMap(statusMap);
+
+    setOldStatusMap((prev) => (statusMapsEqual(prev, statusMap) ? prev : statusMap));
+
     // Clear optimistic moves that are now reflected in server data
     setMovedStatusMap((prev) => {
       const next: Record<number, string> = {};
@@ -135,8 +147,9 @@ export default function CustomerSupportKanban({
           next[Number(id)] = status;
         }
       });
-      return next;
+      return statusMapsEqual(prev, next) ? prev : next;
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- sync only when server column payloads change
   }, [columnData, columns]);
 
   const handleDragStart = (event: DragStartEvent) => {

@@ -41,6 +41,12 @@ export const env = createEnv({
   client: {
     NEXT_PUBLIC_APP_NAME: z.string().optional(),
     NEXT_PUBLIC_GOOGLE_MAP_API_KEY: z.string().optional(),
+    NEXT_PUBLIC_FIREBASE_API_KEY: z.string().optional(),
+    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: z.string().optional(),
+    NEXT_PUBLIC_FIREBASE_PROJECT_ID: z.string().optional(),
+    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: z.string().optional(),
+    NEXT_PUBLIC_FIREBASE_APP_ID: z.string().optional(),
+    NEXT_PUBLIC_FIREBASE_VAPID_KEY: z.string().optional(),
   },
   runtimeEnv: process.env,
 });
