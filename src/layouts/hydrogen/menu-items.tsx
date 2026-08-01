@@ -363,6 +363,12 @@ export const menuItemsHaydrogen = [
     permissions: 'categories',
   },
   {
+    name: 'Exercises',
+    href: routes.exercises.index,
+    icon: <PiStepsDuotone />,
+    permissions: 'exercises',
+  },
+  {
     name: 'Services',
     href: routes.services.index,
     icon: <PiRoadHorizon />,
@@ -439,6 +445,12 @@ export const menuItemsHaydrogen = [
   {
     name: 'Looker Studio Report',
     href: '/looker-studio-report',
+    icon: <PiChartBarDuotone />,
+    permissions: 'looker_studio_report',
+  },
+  {
+    name: 'Looker Studio Mobile App',
+    href: '/looker-studio-mobile-app',
     icon: <PiChartBarDuotone />,
     permissions: 'looker_studio_report',
   },

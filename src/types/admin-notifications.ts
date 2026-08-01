@@ -115,6 +115,7 @@ export interface SentNotificationRecipient {
   id: number;
   type: NotificationRecipientKind;
   name: string;
+  mobile: string | null;
   delivered_at: string | null;
   read_at: string | null;
   push_status: PushStatus;

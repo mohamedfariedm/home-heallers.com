@@ -93,6 +93,38 @@ class Client {
         update: (input: any) => HttpClient.patch(`${routes.packages.index}/${input.coupon_id}`, input),
         delete: (input: { region_id: number[] }) => HttpClient.delete(`${routes.packages.index}/${input.region_id}`)
     }
+    exercises = {
+        filterOptions: () => HttpClient.get('/exercises-filter-options'),
+        all: (param: string) => HttpClient.get(`/exercises?${param}`),
+        findOne: (id: number) => HttpClient.get(`/exercises/${id}`),
+        create: (input: unknown) => {
+            if (input instanceof FormData) {
+                return HttpClient.post('/exercises', input, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                });
+            }
+            return HttpClient.post('/exercises', input);
+        },
+        update: (input: { id: number; body: unknown }) => {
+            if (input.body instanceof FormData) {
+                return HttpClient.patch(`/exercises/${input.id}`, input.body, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                });
+            }
+            return HttpClient.patch(`/exercises/${input.id}`, input.body);
+        },
+        delete: (input: { id: number | number[] }) => {
+            const id = Array.isArray(input.id) ? input.id[0] : input.id;
+            return HttpClient.delete(`/exercises/${id}`);
+        },
+        import: (input: {
+            source?: string | null;
+            body_part?: string | null;
+            limit?: number | null;
+            skip_media?: boolean;
+            fresh?: boolean;
+        }) => HttpClient.post('/exercises/import', input),
+    }
     customerSupport = {
         all: (param: string) => HttpClient.get(`${routes.customerSupport.index}?${param}`),
         create: (input: any) => HttpClient.post(`${routes.customerSupport.index}`, input),

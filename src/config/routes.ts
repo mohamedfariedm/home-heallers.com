@@ -216,6 +216,9 @@ export const routes = {
   packages: {
     index: '/packages'
   },
+  exercises: {
+    index: '/exercises',
+  },
   customerSupport: {
     index: '/customer-supports'
   },

@@ -101,6 +101,13 @@ export const PUSH_STATUS_LABELS: Record<string, string> = {
   skipped: 'Skipped (no FCM token)',
 };
 
+export const PUSH_STATUS_FILTER_OPTIONS = [
+  { value: '', name: 'all', label: 'All push statuses' },
+  { value: 'sent', name: 'sent', label: 'Sent' },
+  { value: 'failed', name: 'failed', label: 'Failed' },
+  { value: 'skipped', name: 'skipped', label: 'Skipped (no FCM token)' },
+] as const;
+
 export function formatRecipientType(value?: string | null) {
   switch (value) {
     case 'all':
