@@ -16,7 +16,10 @@ export interface OtpCodeRow {
   otp: string | null;
   otp_expires_at: string | null;
   is_expired: boolean;
+  otp_verified_at: string | null;
+  is_otp_verified: boolean;
   created_at: string;
+  updated_at: string;
 }
 
 /** Table row with composite key so client/doctor ids never collide in rc-table. */

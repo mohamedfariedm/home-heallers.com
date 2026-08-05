@@ -28,6 +28,9 @@ const FILTER_KEYS = [
   'target',
   'muscle_group',
   'is_active',
+  'is_rehabilitation',
+  'rehab_category_id',
+  'rehabilitation_review_status',
 ] as const;
 
 export default function ExercisesTable({
@@ -35,11 +38,13 @@ export default function ExercisesTable({
   getSelectedColumns,
   getSelectedRowKeys,
   totalItems,
+  rehabilitationReviewMode = false,
 }: {
   data: Exercise[];
   getSelectedColumns: React.Dispatch<React.SetStateAction<any[]>>;
   getSelectedRowKeys: React.Dispatch<React.SetStateAction<any[]>>;
   totalItems: number;
+  rehabilitationReviewMode?: boolean;
 }) {
   const { mutate: deleteExercise } = useDeleteExercise();
   const searchParams = useSearchParams();
@@ -87,6 +92,10 @@ export default function ExercisesTable({
     target: searchParams.get('target') || '',
     muscle_group: searchParams.get('muscle_group') || '',
     is_active: searchParams.get('is_active') || '',
+    is_rehabilitation: searchParams.get('is_rehabilitation') || '',
+    rehab_category_id: searchParams.get('rehab_category_id') || '',
+    rehabilitation_review_status:
+      searchParams.get('rehabilitation_review_status') || '',
   };
 
   const handleDelete = (ids: string[]) => {
@@ -124,6 +133,7 @@ export default function ExercisesTable({
         onDeleteItem,
         onChecked: handleRowSelect,
         handleSelectAll,
+        rehabilitationReviewMode,
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
@@ -132,6 +142,7 @@ export default function ExercisesTable({
       handleRowSelect,
       handleSelectAll,
       data,
+      rehabilitationReviewMode,
     ]
   );
 
@@ -207,9 +218,10 @@ export default function ExercisesTable({
             pushParams({ [columnId]: String(filterValue ?? '') })
           }
           handleReset={handleReset}
+          rehabilitationReviewMode={rehabilitationReviewMode}
         />
       }
-      tableFooter={
+      tableFooter={!rehabilitationReviewMode ? (
         <TableFooter
           checkedItems={selectedRowKeys}
           handleDelete={(ids: string[]) => {
@@ -217,7 +229,7 @@ export default function ExercisesTable({
             handleDelete(ids);
           }}
         />
-      }
+      ) : undefined}
       className={TABLE_CLASS}
       scroll={{ x: 1200 }}
     />

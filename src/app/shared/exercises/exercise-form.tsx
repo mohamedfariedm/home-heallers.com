@@ -287,7 +287,7 @@ export default function CreateOrUpdateExercise({
           target: initValues?.target || '',
           muscle_group: initValues?.muscle_group || '',
           secondary_muscles: Array.isArray(initValues?.secondary_muscles)
-            ? initValues.secondary_muscles.join(', ')
+            ? initValues?.secondary_muscles.join(', ')
             : '',
           media_type: initValues?.media_type || 'image',
           is_active: initValues?.is_active ?? true,

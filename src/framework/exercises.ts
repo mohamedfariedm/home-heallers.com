@@ -15,12 +15,18 @@ import type {
   ExerciseImportInput,
   ExerciseImportResult,
   ExercisesListResponse,
+  RehabilitationCategory,
+  RehabilitationReviewInput,
 } from '@/types/admin-exercises';
 
 export const exerciseKeys = {
   all: (param: string) => [routes.exercises.index, param] as const,
   detail: (id: number) => [routes.exercises.index, id] as const,
   filterOptions: () => [routes.exercises.index, 'filter-options'] as const,
+  rehabilitationReview: (param: string) =>
+    [routes.exercises.index, 'rehabilitation-review', param] as const,
+  rehabilitationCategories: () =>
+    [routes.exercises.index, 'rehabilitation-categories'] as const,
 };
 
 export function useExercises(param: string, enabled = true) {
@@ -47,6 +53,49 @@ export function useExercisesFilterOptions(enabled = true) {
       client.exercises.filterOptions() as Promise<ExerciseFilterOptionsResponse>,
     enabled,
     staleTime: 5 * 60_000,
+  });
+}
+
+export function useRehabilitationReviewCandidates(
+  param: string,
+  enabled = true
+) {
+  return useQuery<ExercisesListResponse, Error>({
+    queryKey: exerciseKeys.rehabilitationReview(param),
+    queryFn: () =>
+      client.exercises.rehabilitationReview(param) as Promise<ExercisesListResponse>,
+    enabled,
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useRehabilitationCategories(enabled = true) {
+  return useQuery<ApiResponse<RehabilitationCategory[]>, Error>({
+    queryKey: exerciseKeys.rehabilitationCategories(),
+    queryFn: () =>
+      client.exercises.rehabilitationCategories() as Promise<
+        ApiResponse<RehabilitationCategory[]>
+      >,
+    enabled,
+    staleTime: 5 * 60_000,
+  });
+}
+
+export function useReviewExerciseRehabilitation() {
+  const queryClient = useQueryClient();
+  const { closeModal } = useModal();
+
+  return useMutation({
+    mutationFn: (input: RehabilitationReviewInput) =>
+      client.exercises.reviewRehabilitation(input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [routes.exercises.index] });
+      toast.success('Rehabilitation review saved successfully');
+      closeModal();
+    },
+    onError: (error) => {
+      toast.error(`Error ${error?.message}`);
+    },
   });
 }
 

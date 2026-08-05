@@ -96,6 +96,21 @@ class Client {
     exercises = {
         filterOptions: () => HttpClient.get('/exercises-filter-options'),
         all: (param: string) => HttpClient.get(`/exercises?${param}`),
+        rehabilitationReview: (param: string) =>
+            HttpClient.get(`/exercises/rehabilitation/review?${param}`),
+        rehabilitationCategories: () =>
+            HttpClient.get('/exercises/rehabilitation-categories'),
+        reviewRehabilitation: (input: {
+            id: number;
+            status: 'approved' | 'rejected';
+            rehab_category_id?: number | null;
+            difficulty?: 'beginner' | 'intermediate' | 'advanced' | null;
+            clinical_notes?: string | null;
+            contraindications?: string | null;
+        }) => {
+            const { id, ...body } = input;
+            return HttpClient.patch(`/exercises/${id}/rehabilitation-review`, body);
+        },
         findOne: (id: number) => HttpClient.get(`/exercises/${id}`),
         create: (input: unknown) => {
             if (input instanceof FormData) {
@@ -123,6 +138,7 @@ class Client {
             limit?: number | null;
             skip_media?: boolean;
             fresh?: boolean;
+            rehabilitation_only?: boolean;
         }) => HttpClient.post('/exercises/import', input),
     }
     customerSupport = {
@@ -575,6 +591,7 @@ class Client {
             return HttpClient.put(`${routes.otpCodes.index}/${type}/${id}`, body);
         },
         extendExpiration: async (input: { type: 'client' | 'doctor'; id: number }) => {
+            // HttpClient.post returns the full axios response; unwrap to API body.
             const response = await HttpClient.post(
                 `${routes.otpCodes.index}/${input.type}/${input.id}/extend-expiration`,
                 {}

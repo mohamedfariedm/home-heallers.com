@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { PiDownloadSimpleBold } from 'react-icons/pi';
+import Link from 'next/link';
+import { PiDownloadSimpleBold, PiStethoscopeBold } from 'react-icons/pi';
 import TableLayout from '@/app/[locale]/(hydrogen)/tables/table-layout';
 import Spinner from '@/components/ui/spinner';
 import CreateButton from '@/app/shared/create-button';
@@ -10,6 +11,8 @@ import CreateOrUpdateExercise from '@/app/shared/exercises/exercise-form';
 import ImportExerciseForm from '@/app/shared/exercises/import-form';
 import ExercisesTable from '@/app/shared/exercises/table';
 import { useExercises } from '@/framework/exercises';
+import { Button } from '@/components/ui/button';
+import { routes } from '@/config/routes';
 
 const pageHeader = {
   title: 'Exercises',
@@ -52,13 +55,21 @@ export default function ExercisesPage() {
       createElementButton={<CreateOrUpdateExercise />}
       customSize="720px"
       exportElement={
-        <CreateButton
-          label="Import Dataset"
-          view={<ImportExerciseForm />}
-          customSize="520px"
-          icon={<PiDownloadSimpleBold className="me-1.5 h-[17px] w-[17px]" />}
-          className="mt-0 w-full text-xs capitalize @lg:w-auto dark:bg-gray-100 dark:text-white dark:active:bg-gray-100 sm:text-sm lg:mt-0"
-        />
+        <div className="flex items-center gap-3">
+          <Link href={routes.exercises.rehabilitationReview}>
+            <Button variant="outline" className="gap-2">
+              <PiStethoscopeBold className="h-[17px] w-[17px]" />
+              Review Candidates
+            </Button>
+          </Link>
+          <CreateButton
+            label="Import Dataset"
+            view={<ImportExerciseForm />}
+            customSize="520px"
+            icon={<PiDownloadSimpleBold className="me-1.5 h-[17px] w-[17px]" />}
+            className="mt-0 w-full text-xs capitalize @lg:w-auto dark:bg-gray-100 dark:text-white dark:active:bg-gray-100 sm:text-sm lg:mt-0"
+          />
+        </div>
       }
     >
       {isLoading ? (

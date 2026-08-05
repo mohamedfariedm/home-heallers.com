@@ -46,9 +46,10 @@ export default function ImportExerciseForm() {
     importExercises({
       source: data.source?.trim() || null,
       body_part: data.body_part?.trim() || null,
-      limit: data.limit ?? null,
+      limit: data.limit ? Number(data.limit) : null,
       skip_media: data.skip_media ?? false,
       fresh: data.fresh ?? false,
+      rehabilitation_only: data.rehabilitation_only ?? false,
     });
   };
 
@@ -68,9 +69,10 @@ export default function ImportExerciseForm() {
         defaultValues: {
           source: '',
           body_part: '',
-          limit: 50,
+          limit: '50',
           skip_media: false,
           fresh: false,
+          rehabilitation_only: false,
         },
       }}
       className="flex flex-grow flex-col gap-5 p-6"
@@ -154,6 +156,24 @@ export default function ImportExerciseForm() {
                 checked={Boolean(value)}
                 onChange={onChange}
               />
+            )}
+          />
+
+          <Controller
+            name="rehabilitation_only"
+            control={control}
+            render={({ field: { value, onChange } }) => (
+              <div>
+                <Switch
+                  label="Import rehabilitation candidates only"
+                  checked={Boolean(value)}
+                  onChange={onChange}
+                />
+                <Text className="mt-1 text-xs text-gray-500">
+                  Matching exercises are marked pending for clinical review;
+                  they are not auto-approved.
+                </Text>
+              </div>
             )}
           />
 

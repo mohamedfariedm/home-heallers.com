@@ -1,9 +1,24 @@
 export type ExerciseMediaType = 'image' | 'video' | 'pdf' | 'other';
+export type RehabilitationReviewStatus =
+  | 'not_reviewed'
+  | 'pending'
+  | 'approved'
+  | 'rejected';
+export type ExerciseDifficulty = 'beginner' | 'intermediate' | 'advanced';
 
 export type LocalizedString = {
   en: string;
   ar: string;
 };
+
+export interface RehabilitationCategory {
+  id: number;
+  name_en: string;
+  name_ar: string;
+  description_en?: string | null;
+  description_ar?: string | null;
+  is_active: boolean;
+}
 
 export interface Exercise {
   id: number;
@@ -22,6 +37,13 @@ export interface Exercise {
   thumbnail_url: string | null;
   is_active: boolean;
   is_public: boolean;
+  is_rehabilitation: boolean;
+  rehabilitation_review_status: RehabilitationReviewStatus;
+  rehab_category_id: number | null;
+  rehab_category: RehabilitationCategory | null;
+  difficulty: ExerciseDifficulty | null;
+  clinical_notes: string | null;
+  contraindications: string | null;
   created_by_doctor_id: number | null;
   created_at: string;
   updated_at: string;
@@ -32,6 +54,8 @@ export interface ExerciseFilterOptions {
   equipment: string[];
   targets: string[];
   muscle_groups: string[];
+  rehabilitation_review_statuses: RehabilitationReviewStatus[];
+  rehabilitation_categories: RehabilitationCategory[];
 }
 
 export interface ApiResponse<T> {
@@ -62,6 +86,16 @@ export interface ExerciseImportInput {
   limit?: number | null;
   skip_media?: boolean;
   fresh?: boolean;
+  rehabilitation_only?: boolean;
+}
+
+export interface RehabilitationReviewInput {
+  id: number;
+  status: 'approved' | 'rejected';
+  rehab_category_id?: number | null;
+  difficulty?: ExerciseDifficulty | null;
+  clinical_notes?: string | null;
+  contraindications?: string | null;
 }
 
 export interface ExerciseImportResult {

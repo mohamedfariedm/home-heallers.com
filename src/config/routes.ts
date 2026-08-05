@@ -218,6 +218,7 @@ export const routes = {
   },
   exercises: {
     index: '/exercises',
+    rehabilitationReview: '/exercises/rehabilitation-review',
   },
   customerSupport: {
     index: '/customer-supports'

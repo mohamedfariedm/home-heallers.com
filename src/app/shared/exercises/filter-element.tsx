@@ -12,6 +12,7 @@ type FilterElementProps = {
   filters: Record<string, unknown>;
   updateFilter: (columnId: string, filterValue: string | unknown[]) => void;
   handleReset: () => void;
+  rehabilitationReviewMode?: boolean;
 };
 
 function FilterField({
@@ -48,10 +49,17 @@ const ACTIVE_OPTIONS = [
   { value: '0', name: 'inactive', label: 'Inactive' },
 ];
 
+const REHABILITATION_OPTIONS = [
+  { value: '', name: 'all', label: 'All exercises' },
+  { value: '1', name: 'rehabilitation', label: 'Rehabilitation' },
+  { value: '0', name: 'general', label: 'Not rehabilitation' },
+];
+
 export default function ExerciseFilterElement({
   filters,
   updateFilter,
   handleReset,
+  rehabilitationReviewMode = false,
 }: FilterElementProps) {
   const { data: filterOptionsData } = useExercisesFilterOptions();
   const filterOptions = (filterOptionsData as { data?: ExerciseFilterOptions } | undefined)
@@ -64,6 +72,22 @@ export default function ExerciseFilterElement({
     filterOptions?.muscle_groups,
     'All muscle groups'
   );
+  const reviewStatusOptions = [
+    { value: '', name: 'all', label: 'All review statuses' },
+    ...(filterOptions?.rehabilitation_review_statuses ?? []).map((value) => ({
+      value,
+      name: value,
+      label: value.replace(/_/g, ' '),
+    })),
+  ];
+  const rehabilitationCategoryOptions = [
+    { value: '', name: 'all', label: 'All rehabilitation categories' },
+    ...(filterOptions?.rehabilitation_categories ?? []).map((category) => ({
+      value: String(category.id),
+      name: String(category.id),
+      label: category.name_en || category.name_ar,
+    })),
+  ];
 
   return (
     <div className="grid grid-cols-1 gap-5 @lg:grid-cols-2 @4xl:grid-cols-3">
@@ -103,7 +127,7 @@ export default function ExerciseFilterElement({
         />
       </FilterField>
 
-      <FilterField label="Target">
+      {!rehabilitationReviewMode && <FilterField label="Target">
         <StatusField
           placeholder="Target"
           options={targetOptions}
@@ -115,9 +139,9 @@ export default function ExerciseFilterElement({
             selected
           }
         />
-      </FilterField>
+      </FilterField>}
 
-      <FilterField label="Muscle group">
+      {!rehabilitationReviewMode && <FilterField label="Muscle group">
         <StatusField
           placeholder="Muscle group"
           options={muscleGroupOptions}
@@ -129,9 +153,9 @@ export default function ExerciseFilterElement({
               ?.label ?? selected
           }
         />
-      </FilterField>
+      </FilterField>}
 
-      <FilterField label="Status">
+      {!rehabilitationReviewMode && <FilterField label="Status">
         <StatusField
           placeholder="Status"
           options={ACTIVE_OPTIONS}
@@ -143,7 +167,57 @@ export default function ExerciseFilterElement({
             selected
           }
         />
-      </FilterField>
+      </FilterField>}
+
+      {!rehabilitationReviewMode && <FilterField label="Rehabilitation">
+        <StatusField
+          placeholder="Rehabilitation"
+          options={REHABILITATION_OPTIONS}
+          value={String(filters.is_rehabilitation ?? '')}
+          onChange={(value: string) =>
+            updateFilter('is_rehabilitation', value)
+          }
+          getOptionValue={(option) => option.value}
+          displayValue={(selected: string) =>
+            REHABILITATION_OPTIONS.find(
+              (option) => option.value === selected
+            )?.label ?? selected
+          }
+        />
+      </FilterField>}
+
+      {!rehabilitationReviewMode && <FilterField label="Review status">
+        <StatusField
+          placeholder="Review status"
+          options={reviewStatusOptions}
+          value={String(filters.rehabilitation_review_status ?? '')}
+          onChange={(value: string) =>
+            updateFilter('rehabilitation_review_status', value)
+          }
+          getOptionValue={(option) => option.value}
+          displayValue={(selected: string) =>
+            reviewStatusOptions.find((option) => option.value === selected)
+              ?.label ?? selected
+          }
+        />
+      </FilterField>}
+
+      {!rehabilitationReviewMode && <FilterField label="Rehabilitation category">
+        <StatusField
+          placeholder="Rehabilitation category"
+          options={rehabilitationCategoryOptions}
+          value={String(filters.rehab_category_id ?? '')}
+          onChange={(value: string) =>
+            updateFilter('rehab_category_id', value)
+          }
+          getOptionValue={(option) => option.value}
+          displayValue={(selected: string) =>
+            rehabilitationCategoryOptions.find(
+              (option) => option.value === selected
+            )?.label ?? selected
+          }
+        />
+      </FilterField>}
 
       <div className="col-span-full flex justify-end">
         <Button
