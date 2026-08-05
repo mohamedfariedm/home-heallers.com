@@ -141,6 +141,22 @@ class Client {
             rehabilitation_only?: boolean;
         }) => HttpClient.post('/exercises/import', input),
     }
+    exercisePrograms = {
+        all: (param: string) => HttpClient.get(`/exercise-programs?${param}`),
+        findOne: (id: number) => HttpClient.get(`/exercise-programs/${id}`),
+        clients: (param: string) =>
+            HttpClient.get(`/exercise-programs/clients?${param}`),
+        sessions: (param: string) =>
+            HttpClient.get(`/exercise-programs/sessions?${param}`),
+        exercises: (param: string) =>
+            HttpClient.get(`/exercise-programs/exercises?${param}`),
+        create: (input: unknown) => HttpClient.post('/exercise-programs', input),
+        update: (input: { id: number } & Record<string, unknown>) => {
+            const { id, ...body } = input;
+            return HttpClient.put(`/exercise-programs/${id}`, body);
+        },
+        send: (id: number) => HttpClient.post(`/exercise-programs/${id}/send`, {}),
+    }
     customerSupport = {
         all: (param: string) => HttpClient.get(`${routes.customerSupport.index}?${param}`),
         create: (input: any) => HttpClient.post(`${routes.customerSupport.index}`, input),

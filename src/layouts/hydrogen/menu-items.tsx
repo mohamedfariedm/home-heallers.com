@@ -369,6 +369,12 @@ export const menuItemsHaydrogen = [
     permissions: 'exercises',
   },
   {
+    name: 'Exercise Programs',
+    href: routes.exercisePrograms.index,
+    icon: <PiFileText />,
+    permissions: 'exercises',
+  },
+  {
     name: 'Services',
     href: routes.services.index,
     icon: <PiRoadHorizon />,

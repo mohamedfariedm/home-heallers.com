@@ -220,6 +220,9 @@ export const routes = {
     index: '/exercises',
     rehabilitationReview: '/exercises/rehabilitation-review',
   },
+  exercisePrograms: {
+    index: '/exercise-programs',
+  },
   customerSupport: {
     index: '/customer-supports'
   },
