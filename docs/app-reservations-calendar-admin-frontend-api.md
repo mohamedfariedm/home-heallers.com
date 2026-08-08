@@ -54,9 +54,21 @@ When no pagination is used (default):
 ```json
 {
   "data": [ ],
+  "statistics": {
+    "total": 42,
+    "by_status": [
+      { "status": "pending", "count": 10 },
+      { "status": "confirmed", "count": 18 },
+      { "status": "completed", "count": 8 },
+      { "status": "cancelled", "count": 4 },
+      { "status": "failed", "count": 2 }
+    ]
+  },
   "message": "Reservation calendar fetched successfully"
 }
 ```
+
+**Statistics vs list filtering:** `statistics` is computed from the date/month (and optional `doctor_id`) scope **without** the `status` filter. When `?status=confirmed` is sent, `data` contains only confirmed sessions, but `statistics.by_status` still shows counts for all statuses in that period.
 
 When `limit` is provided, Laravel pagination meta is included alongside `data`:
 
@@ -118,7 +130,7 @@ Accept: application/json
 |-------|------|----------|---------|-------------|
 | `month` | `YYYY-MM` | No | Current month | Filter sessions within the given month |
 | `date` | `YYYY-MM-DD` | No | — | Filter sessions on a single day. Takes precedence over `month` when both are sent |
-| `status` | string | No | — | Filter by session status: `pending`, `confirmed`, `completed`, `cancelled`, `failed` |
+| `status` | string | No | — | Filter **list `data` only** by session status: `pending`, `confirmed`, `completed`, `cancelled`, `failed`. Does not change `statistics` |
 | `doctor_id` | integer | No | — | Filter by session-level doctor id (`reservation_dates.doctor_id`) |
 | `limit` | integer | No | — | If set, paginate results (1–500). Omit to return all matching sessions |
 | `page` | integer | No | `1` | Page number when `limit` is used |
@@ -166,9 +178,32 @@ Accept: application/json
       }
     }
   ],
+  "statistics": {
+    "total": 42,
+    "by_status": [
+      { "status": "pending", "count": 10 },
+      { "status": "confirmed", "count": 18 },
+      { "status": "completed", "count": 8 },
+      { "status": "cancelled", "count": 4 },
+      { "status": "failed", "count": 2 }
+    ]
+  },
   "message": "Reservation calendar fetched successfully"
 }
 ```
+
+---
+
+## Statistics reference
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `statistics.total` | integer | Total sessions in the date/month scope (ignores `status` filter) |
+| `statistics.by_status` | array | Count per session status in the same scope (ignores `status` filter) |
+| `statistics.by_status[].status` | string | `pending`, `confirmed`, `completed`, `cancelled`, or `failed` |
+| `statistics.by_status[].count` | integer | Number of sessions with that status |
+
+All known statuses are always returned (zero-filled when none exist). Use `statistics` for calendar summary chips; use filtered `data` for the active list view.
 
 ---
 
@@ -285,8 +320,14 @@ interface ReservationCalendarSession {
   service: CalendarService | null;
 }
 
+interface ReservationCalendarStatistics {
+  total: number;
+  by_status: Array<{ status: SessionStatus; count: number }>;
+}
+
 interface ReservationCalendarResponse {
   data: ReservationCalendarSession[];
+  statistics: ReservationCalendarStatistics;
   message: string;
   meta?: {
     current_page: number;
@@ -381,9 +422,10 @@ const params = new URLSearchParams({
 4. **Default to current month** — Omitting both `date` and `month` returns all sessions in the current month.
 5. **Sort order** — Results are pre-sorted by `date` then `time` ascending; no client-side sort required.
 6. **Two status layers** — Display session status (`status`) for the calendar chip/color. Use `reservation.status` only when you need booking-level context (e.g. tooltip or detail drawer).
-7. **Guest patients** — When `patient.id === null`, treat as a guest booking; still show `patient.name` and `patient.mobile`.
-8. **Doctor display** — Always use the top-level `doctor` field; it already resolves session vs reservation doctor.
-9. **Link to reservation detail** — Use `reservation_id` to navigate to the existing reservation detail page (`GET /api/admin/reservations/{id}`).
+7. **Status filter vs statistics** — When filtering by `status`, update `data` only. Keep summary chips driven by `statistics.by_status` (unchanged by the status filter).
+8. **Guest patients** — When `patient.id === null`, treat as a guest booking; still show `patient.name` and `patient.mobile`.
+9. **Doctor display** — Always use the top-level `doctor` field; it already resolves session vs reservation doctor.
+10. **Link to reservation detail** — Use `reservation_id` to navigate to the existing reservation detail page (`GET /api/admin/reservations/{id}`).
 
 ---
 

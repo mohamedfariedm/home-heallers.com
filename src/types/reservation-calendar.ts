@@ -56,8 +56,14 @@ export interface ReservationCalendarSession {
   service: CalendarService | null;
 }
 
+export interface ReservationCalendarStatistics {
+  total: number;
+  by_status: Array<{ status: SessionStatus; count: number }>;
+}
+
 export interface ReservationCalendarResponse {
   data: ReservationCalendarSession[];
+  statistics: ReservationCalendarStatistics;
   message: string;
   meta?: {
     current_page: number;
@@ -72,6 +78,7 @@ export interface ReservationsCalendarParams {
   month?: string;
   /** `YYYY-MM-DD` — single day (overrides `month` when both are sent) */
   date?: string;
+  /** Filters list `data` only — does not change `statistics` */
   status?: SessionStatus | '';
   doctor_id?: number | string;
   limit?: number;

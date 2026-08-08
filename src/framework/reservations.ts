@@ -5,7 +5,6 @@ import { useModal } from '@/app/shared/modal-views/use-modal';
 import { routes } from '@/config/routes';
 import type {
   ReservationCalendarResponse,
-  ReservationCalendarSession,
   ReservationsCalendarParams,
   SessionStatus,
 } from '@/types/reservation-calendar';
@@ -40,7 +39,7 @@ export function useReservationsCalendarMonth(params: {
   const { year, month, status, doctor_id } = params;
   const monthParam = `${year}-${String(month).padStart(2, '0')}`;
 
-  return useQuery<ReservationCalendarSession[], Error>({
+  return useQuery<ReservationCalendarResponse, Error>({
     queryKey: [
       routes.reservations.index,
       'calendar-month',
@@ -63,7 +62,21 @@ export function useReservationsCalendarMonth(params: {
         ) as Record<string, string | number>
       )) as ReservationCalendarResponse;
 
-      return Array.isArray(response?.data) ? response.data : [];
+      return {
+        data: Array.isArray(response?.data) ? response.data : [],
+        statistics: response?.statistics ?? {
+          total: 0,
+          by_status: [
+            { status: 'pending', count: 0 },
+            { status: 'confirmed', count: 0 },
+            { status: 'completed', count: 0 },
+            { status: 'cancelled', count: 0 },
+            { status: 'failed', count: 0 },
+          ],
+        },
+        message: response?.message ?? '',
+        meta: response?.meta,
+      };
     },
     staleTime: 60_000,
   });

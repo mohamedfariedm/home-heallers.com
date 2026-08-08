@@ -407,13 +407,16 @@ export default function ReservationsCalendar({ className }: { className?: string
   const year = dayjs(currentDate).year();
   const month = dayjs(currentDate).month() + 1;
 
-  const { data: sessions = [], isLoading, isFetching, error, refetch } =
+  const { data: calendarResponse, isLoading, isFetching, error, refetch } =
     useReservationsCalendarMonth({
       year,
       month,
       status: status || undefined,
       doctor_id: doctorId || undefined,
     });
+
+  const sessions = calendarResponse?.data ?? [];
+  const statistics = calendarResponse?.statistics;
 
   useEffect(() => {
     const fetchDoctors = async () => {
@@ -442,6 +445,7 @@ export default function ReservationsCalendar({ className }: { className?: string
     fetchDoctors();
   }, []);
 
+  // Summary chips use API statistics (ignores status filter per contract)
   const statusCounts = useMemo(() => {
     const counts: Record<string, number> = {
       pending: 0,
@@ -450,11 +454,13 @@ export default function ReservationsCalendar({ className }: { className?: string
       cancelled: 0,
       failed: 0,
     };
-    sessions.forEach((s) => {
-      if (counts[s.status] != null) counts[s.status] += 1;
+    statistics?.by_status?.forEach((item) => {
+      if (counts[item.status] != null) counts[item.status] = item.count;
     });
     return counts;
-  }, [sessions]);
+  }, [statistics]);
+
+  const totalSessions = statistics?.total ?? sessions.length;
 
   const events = useMemo<CalendarEvent[]>(
     () =>
@@ -575,8 +581,11 @@ export default function ReservationsCalendar({ className }: { className?: string
                 {dayjs(currentDate).format('MMMM YYYY')}
               </h2>
               <p className="mt-1 text-sm text-gray-500">
-                {sessions.length} session{sessions.length === 1 ? '' : 's'} this
+                {totalSessions} session{totalSessions === 1 ? '' : 's'} this
                 month
+                {status
+                  ? ` · showing ${sessions.length} ${status}`
+                  : ''}
                 {isLoading || isFetching ? ' · refreshing…' : ''}
               </p>
             </div>
