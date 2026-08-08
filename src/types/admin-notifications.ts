@@ -4,9 +4,10 @@ export type NotificationRecipientType =
   | 'all'
   | 'clients'
   | 'doctors'
+  | 'guests'
   | 'specific';
 
-export type NotificationRecipientKind = 'client' | 'doctor';
+export type NotificationRecipientKind = 'client' | 'doctor' | 'guest';
 
 export type ScheduledNotificationStatus =
   | 'pending'
@@ -115,6 +116,7 @@ export interface SentNotificationRecipient {
   id: number;
   type: NotificationRecipientKind;
   name: string;
+  mobile: string | null;
   delivered_at: string | null;
   read_at: string | null;
   push_status: PushStatus;

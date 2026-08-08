@@ -363,6 +363,18 @@ export const menuItemsHaydrogen = [
     permissions: 'categories',
   },
   {
+    name: 'Exercises',
+    href: routes.exercises.index,
+    icon: <PiStepsDuotone />,
+    permissions: 'exercises',
+  },
+  {
+    name: 'Exercise Programs',
+    href: routes.exercisePrograms.index,
+    icon: <PiFileText />,
+    permissions: 'exercises',
+  },
+  {
     name: 'Services',
     href: routes.services.index,
     icon: <PiRoadHorizon />,
@@ -405,6 +417,43 @@ export const menuItemsHaydrogen = [
     permissions: 'Contracts',
   },
 
+  // { name: 'Work Management' },
+  // {
+  //   name: 'WM Dashboard',
+  //   href: routes.work.dashboard,
+  //   icon: <PiChartBarDuotone />,
+  // },
+  // {
+  //   name: 'Departments',
+  //   href: routes.work.departments,
+  //   icon: <PiBuildingsFill />,
+  // },
+  // {
+  //   name: 'Projects',
+  //   href: routes.work.projects,
+  //   icon: <PiStackDuotone />,
+  // },
+  // {
+  //   name: 'Work Items',
+  //   href: routes.work.items,
+  //   icon: <PiListChecks />,
+  // },
+  // {
+  //   name: 'My Work',
+  //   href: routes.work.myWork,
+  //   icon: <PiUserDuotone />,
+  // },
+  // {
+  //   name: 'Kanban Board',
+  //   href: routes.work.board,
+  //   icon: <PiGridFourDuotone />,
+  // },
+  // {
+  //   name: 'Workflows',
+  //   href: routes.work.workflows,
+  //   icon: <PiStepsDuotone />,
+  // },
+
   { name: 'Settings Mangement ' },
   {
     name: 'Settings',
@@ -439,6 +488,12 @@ export const menuItemsHaydrogen = [
   {
     name: 'Looker Studio Report',
     href: '/looker-studio-report',
+    icon: <PiChartBarDuotone />,
+    permissions: 'looker_studio_report',
+  },
+  {
+    name: 'Looker Studio Mobile App',
+    href: '/looker-studio-mobile-app',
     icon: <PiChartBarDuotone />,
     permissions: 'looker_studio_report',
   },

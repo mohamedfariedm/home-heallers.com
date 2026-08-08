@@ -66,6 +66,9 @@ export function toOtpCodeTableRows(
   if (!Array.isArray(rows)) return [];
   return rows.map((row) => ({
     ...row,
+    otp_verified_at: row.otp_verified_at ?? null,
+    is_otp_verified: row.is_otp_verified ?? Boolean(row.otp_verified_at),
+    updated_at: row.updated_at ?? row.created_at,
     entity_id: row.id,
     id: `${row.type}-${row.id}`,
   }));

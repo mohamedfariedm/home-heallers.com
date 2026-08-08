@@ -93,6 +93,70 @@ class Client {
         update: (input: any) => HttpClient.patch(`${routes.packages.index}/${input.coupon_id}`, input),
         delete: (input: { region_id: number[] }) => HttpClient.delete(`${routes.packages.index}/${input.region_id}`)
     }
+    exercises = {
+        filterOptions: () => HttpClient.get('/exercises-filter-options'),
+        all: (param: string) => HttpClient.get(`/exercises?${param}`),
+        rehabilitationReview: (param: string) =>
+            HttpClient.get(`/exercises/rehabilitation/review?${param}`),
+        rehabilitationCategories: () =>
+            HttpClient.get('/exercises/rehabilitation-categories'),
+        reviewRehabilitation: (input: {
+            id: number;
+            status: 'approved' | 'rejected';
+            rehab_category_id?: number | null;
+            difficulty?: 'beginner' | 'intermediate' | 'advanced' | null;
+            clinical_notes?: string | null;
+            contraindications?: string | null;
+        }) => {
+            const { id, ...body } = input;
+            return HttpClient.patch(`/exercises/${id}/rehabilitation-review`, body);
+        },
+        findOne: (id: number) => HttpClient.get(`/exercises/${id}`),
+        create: (input: unknown) => {
+            if (input instanceof FormData) {
+                return HttpClient.post('/exercises', input, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                });
+            }
+            return HttpClient.post('/exercises', input);
+        },
+        update: (input: { id: number; body: unknown }) => {
+            if (input.body instanceof FormData) {
+                return HttpClient.patch(`/exercises/${input.id}`, input.body, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                });
+            }
+            return HttpClient.patch(`/exercises/${input.id}`, input.body);
+        },
+        delete: (input: { id: number | number[] }) => {
+            const id = Array.isArray(input.id) ? input.id[0] : input.id;
+            return HttpClient.delete(`/exercises/${id}`);
+        },
+        import: (input: {
+            source?: string | null;
+            body_part?: string | null;
+            limit?: number | null;
+            skip_media?: boolean;
+            fresh?: boolean;
+            rehabilitation_only?: boolean;
+        }) => HttpClient.post('/exercises/import', input),
+    }
+    exercisePrograms = {
+        all: (param: string) => HttpClient.get(`/exercise-programs?${param}`),
+        findOne: (id: number) => HttpClient.get(`/exercise-programs/${id}`),
+        clients: (param: string) =>
+            HttpClient.get(`/exercise-programs/clients?${param}`),
+        sessions: (param: string) =>
+            HttpClient.get(`/exercise-programs/sessions?${param}`),
+        exercises: (param: string) =>
+            HttpClient.get(`/exercise-programs/exercises?${param}`),
+        create: (input: unknown) => HttpClient.post('/exercise-programs', input),
+        update: (input: { id: number } & Record<string, unknown>) => {
+            const { id, ...body } = input;
+            return HttpClient.put(`/exercise-programs/${id}`, body);
+        },
+        send: (id: number) => HttpClient.post(`/exercise-programs/${id}/send`, {}),
+    }
     customerSupport = {
         all: (param: string) => HttpClient.get(`${routes.customerSupport.index}?${param}`),
         create: (input: any) => HttpClient.post(`${routes.customerSupport.index}`, input),
@@ -265,6 +329,9 @@ class Client {
     }
     reservations = {
         all: (param: string) => HttpClient.get(`${routes.reservations.index}?${param}`),
+        findOne: (id: number) => HttpClient.get(`${routes.reservations.index}/${id}`),
+        calendar: (params?: Record<string, string | number | undefined>) =>
+            HttpClient.get('/reservations-calendar', params),
         create: (input: any) => HttpClient.post(`${routes.reservations.index}`, input),
         update: (input: any) => HttpClient.patch(`${routes.reservations.index}/${input.reservation_id}`, input),
         delete: (input: { reservation_id: number[] }) => HttpClient.delete(`${routes.reservations.index}/${input.reservation_id}`),
@@ -429,6 +496,10 @@ class Client {
             const response = await HttpClient.post(`${routes.notifications.index}/send-to-doctors`, input);
             return response.data;
         },
+        sendToGuests: async (input: unknown) => {
+            const response = await HttpClient.post(`${routes.notifications.index}/send-to-guests`, input);
+            return response.data;
+        },
         sendToSpecific: async (input: unknown) => {
             const response = await HttpClient.post(`${routes.notifications.index}/send-to-specific`, input);
             return response.data;
@@ -543,6 +614,7 @@ class Client {
             return HttpClient.put(`${routes.otpCodes.index}/${type}/${id}`, body);
         },
         extendExpiration: async (input: { type: 'client' | 'doctor'; id: number }) => {
+            // HttpClient.post returns the full axios response; unwrap to API body.
             const response = await HttpClient.post(
                 `${routes.otpCodes.index}/${input.type}/${input.id}/extend-expiration`,
                 {}
@@ -768,13 +840,69 @@ class Client {
     };
 
     appAnalytics = {
-        overview: () => HttpClient.get('/analytics/overview'),
-        installations: () => HttpClient.get('/analytics/installations'),
-        devices: () => HttpClient.get('/analytics/devices'),
-        activeUsers: (date?: string) =>
-            HttpClient.get(
-                date ? `/analytics/active-users?date=${date}` : '/analytics/active-users'
-            ),
+        overview: (params?: { from?: string; to?: string }) =>
+            HttpClient.get('/analytics/overview', params),
+        installations: (params?: { from?: string; to?: string }) =>
+            HttpClient.get('/analytics/installations', params),
+        devices: (params?: { from?: string; to?: string }) =>
+            HttpClient.get('/analytics/devices', params),
+        activeUsers: (params?: { date?: string; from?: string; to?: string }) =>
+            HttpClient.get('/analytics/active-users', params),
+    };
+
+    /**
+     * Work Management — Laravel endpoints (Phase 7).
+     * Enable via NEXT_PUBLIC_WM_BACKEND=laravel after these routes exist.
+     * Frontend currently uses MockWorkManagementRepository (localStorage).
+     */
+    workManagement = {
+        departments: {
+            all: () => HttpClient.get('/work/departments'),
+            create: (input: any) => HttpClient.post('/work/departments', input),
+            update: (input: any) =>
+                HttpClient.patch(`/work/departments/${input.id}`, input),
+            archive: (id: string) =>
+                HttpClient.post(`/work/departments/${id}/archive`),
+        },
+        projects: {
+            all: (departmentId?: string) =>
+                HttpClient.get(
+                    departmentId
+                        ? `/work/projects?department_id=${departmentId}`
+                        : '/work/projects'
+                ),
+            create: (input: any) => HttpClient.post('/work/projects', input),
+            update: (input: any) =>
+                HttpClient.patch(`/work/projects/${input.id}`, input),
+        },
+        workItems: {
+            all: (params?: string) =>
+                HttpClient.get(`/work/items${params ? `?${params}` : ''}`),
+            findOne: (idOrKey: string) =>
+                HttpClient.get(`/work/items/${idOrKey}`),
+            create: (input: any) => HttpClient.post('/work/items', input),
+            update: (input: any) =>
+                HttpClient.patch(`/work/items/${input.id}`, input),
+            assign: (input: {
+                id: string;
+                assigneeId: string | null;
+            }) => HttpClient.post(`/work/items/${input.id}/assign`, input),
+            transition: (input: { id: string; toStatus: string }) =>
+                HttpClient.post(`/work/items/${input.id}/transition`, input),
+        },
+        comments: {
+            all: (workItemId: string) =>
+                HttpClient.get(`/work/items/${workItemId}/comments`),
+            create: (input: any) =>
+                HttpClient.post(`/work/items/${input.workItemId}/comments`, input),
+        },
+        dashboard: {
+            kpis: () => HttpClient.get('/work/dashboard/kpis'),
+        },
+        workflows: {
+            all: () => HttpClient.get('/work/workflows'),
+            upsert: (input: any) => HttpClient.put(`/work/workflows/${input.id}`, input),
+        },
     };
 }
 

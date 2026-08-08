@@ -8,6 +8,7 @@ import {
   PiRepeatBold,
   PiShieldWarningBold,
   PiUserMinusBold,
+  PiUserPlusBold,
   PiUsersBold,
   PiWarningCircleBold,
 } from 'react-icons/pi';
@@ -28,14 +29,34 @@ export default function AppAnalyticsStatCards({
   activeUsers,
 }: AppAnalyticsStatCardsProps) {
   const installations = data.installations;
+  const funnel = installations.funnel ?? {
+    installed_not_registered: 0,
+    registered: 0,
+    total: installations.total_installs ?? 0,
+  };
   const active = activeUsers ?? data.active_users;
 
   return (
     <div className="space-y-6">
       <div className="flex w-full flex-wrap gap-5">
         <KpiStatCard
+          title="Installed (not registered)"
+          value={funnel.installed_not_registered.toLocaleString()}
+          subtitle="Anonymous installs before login"
+          icon={PiDeviceMobileBold}
+          color="sky"
+        />
+        <KpiStatCard
+          title="Registered"
+          value={funnel.registered.toLocaleString()}
+          subtitle="Logged-in installations"
+          icon={PiUserPlusBold}
+          color="cyan"
+        />
+        <KpiStatCard
           title="Total Installs"
           value={installations.total_installs.toLocaleString()}
+          subtitle={`Funnel total: ${funnel.total.toLocaleString()}`}
           icon={PiDownloadSimpleBold}
           color="blue"
         />
@@ -75,32 +96,32 @@ export default function AppAnalyticsStatCards({
         />
       </div>
 
-      {/* <div className="space-y-3">
+      <div className="space-y-3">
         <p className="text-base font-semibold text-gray-900 dark:text-white">
           Active Users — Installations
         </p>
         <div className="flex w-full flex-wrap gap-5">
           <KpiStatCard
-            title="Daily Active Users"
+            title="Daily Active Installs"
             value={active.installations.dau.toLocaleString()}
             subtitle={`Reference date: ${active.date}`}
             icon={PiUsersBold}
             color="purple"
           />
           <KpiStatCard
-            title="Weekly Active Users"
+            title="Weekly Active Installs"
             value={active.installations.wau.toLocaleString()}
             icon={PiUsersBold}
             color="cyan"
           />
           <KpiStatCard
-            title="Monthly Active Users"
+            title="Monthly Active Installs"
             value={active.installations.mau.toLocaleString()}
             icon={PiUsersBold}
             color="sky"
           />
         </div>
-      </div> */}
+      </div>
 
       <div className="space-y-3">
         <p className="text-base font-semibold text-gray-900 dark:text-white">

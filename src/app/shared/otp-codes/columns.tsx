@@ -152,9 +152,31 @@ export const getColumns = ({ onExtend, extendingId }: Columns) => [
       value ? <DateCell date={new Date(value)} /> : '—',
   },
   {
-    title: <HeaderCell title="Created At" />,
-    dataIndex: 'created_at',
-    key: 'created_at',
+    title: <HeaderCell title="Verified" />,
+    dataIndex: 'is_otp_verified',
+    key: 'is_otp_verified',
+    width: 180,
+    render: (value: boolean, row: OtpCodeTableRow) => (
+      <div className="flex flex-col gap-1">
+        <Badge
+          variant="flat"
+          color={value ? 'success' : 'warning'}
+          className="w-fit"
+        >
+          {value ? 'Verified' : 'Not verified'}
+        </Badge>
+        {row.otp_verified_at ? (
+          <DateCell date={new Date(row.otp_verified_at)} />
+        ) : (
+          <Text className="text-xs text-gray-500">Never logged in with OTP</Text>
+        )}
+      </div>
+    ),
+  },
+  {
+    title: <HeaderCell title="Updated At" />,
+    dataIndex: 'updated_at',
+    key: 'updated_at',
     width: 180,
     render: (value: string) =>
       value ? <DateCell date={new Date(value)} /> : '—',

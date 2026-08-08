@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { Input } from '@/components/ui/input';
 import { Loader } from '@/components/ui/loader';
 import {
   useAppAnalyticsActiveUsers,
@@ -13,6 +12,9 @@ import {
   getMockAppAnalyticsOverview,
   isAppAnalyticsEmpty,
 } from '@/data/app-analytics-mock';
+import AppAnalyticsFiltersComponent, {
+  type AppAnalyticsFilters,
+} from './filters';
 import AppAnalyticsStatCards from './stat-cards';
 import AppAnalyticsCharts from './charts';
 import OutdatedInstallationsTable from './outdated-installations-table';
@@ -24,7 +26,15 @@ function toDateInputValue(date = new Date()) {
 export default function AppAnalyticsDashboard() {
   const { permissions } = usePermissions();
   const canView = permissions.includes('app_analytics');
-  const [selectedDate, setSelectedDate] = useState('');
+  const [filters, setFilters] = useState<AppAnalyticsFilters>({});
+
+  const dateRange =
+    filters.from || filters.to
+      ? {
+          ...(filters.from ? { from: filters.from } : {}),
+          ...(filters.to ? { to: filters.to } : {}),
+        }
+      : undefined;
 
   const {
     data: overviewResponse,
@@ -32,19 +42,30 @@ export default function AppAnalyticsDashboard() {
     isError,
     error,
     refetch,
-  } = useAppAnalyticsOverview(canView);
+  } = useAppAnalyticsOverview(canView, dateRange);
 
   const effectiveDate =
-    selectedDate || overviewResponse?.data?.active_users?.date || toDateInputValue();
+    filters.date || overviewResponse?.data?.active_users?.date || toDateInputValue();
 
   const usingMockData =
     Boolean(overviewResponse?.data) && isAppAnalyticsEmpty(overviewResponse.data);
 
-  const { data: activeUsersResponse, isFetching: isActiveUsersFetching, isError: isActiveUsersError, error: activeUsersError } =
-    useAppAnalyticsActiveUsers(
-      effectiveDate,
-      canView && Boolean(effectiveDate) && !usingMockData
-    );
+  const {
+    data: activeUsersResponse,
+    isFetching: isActiveUsersFetching,
+    isError: isActiveUsersError,
+    error: activeUsersError,
+  } = useAppAnalyticsActiveUsers(
+    {
+      date: effectiveDate,
+      ...(dateRange ?? {}),
+    },
+    canView && Boolean(effectiveDate) && !usingMockData
+  );
+
+  const handleFilter = (newFilters: AppAnalyticsFilters) => {
+    setFilters(newFilters);
+  };
 
   if (!canView) {
     return (
@@ -56,27 +77,33 @@ export default function AppAnalyticsDashboard() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <Loader size="xl" />
+      <div className="space-y-6">
+        <AppAnalyticsFiltersComponent onFilter={handleFilter} />
+        <div className="flex min-h-[400px] items-center justify-center">
+          <Loader size="xl" />
+        </div>
       </div>
     );
   }
 
   if (isError || !overviewResponse?.data) {
     return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <div className="text-center">
-          <p className="text-lg font-medium text-red-600">Error loading app analytics</p>
-          <p className="mt-2 text-sm text-gray-500">
-            {error?.message || 'Failed to fetch analytics data'}
-          </p>
-          <button
-            type="button"
-            onClick={() => refetch()}
-            className="mt-4 rounded-lg bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
-          >
-            Try Again
-          </button>
+      <div className="space-y-6">
+        <AppAnalyticsFiltersComponent onFilter={handleFilter} />
+        <div className="flex min-h-[400px] items-center justify-center">
+          <div className="text-center">
+            <p className="text-lg font-medium text-red-600">Error loading app analytics</p>
+            <p className="mt-2 text-sm text-gray-500">
+              {error?.message || 'Failed to fetch analytics data'}
+            </p>
+            <button
+              type="button"
+              onClick={() => refetch()}
+              className="mt-4 rounded-lg bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+            >
+              Try Again
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -92,41 +119,19 @@ export default function AppAnalyticsDashboard() {
 
   return (
     <div className="@container space-y-8">
-      {/* <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 @xl:text-3xl dark:text-white">
-            App Analytics
-          </h1>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Mobile installation, device, and active-user metrics
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
-            Active users date
-          </label>
-          <Input
-            type="date"
-            value={effectiveDate}
-            onChange={(event) => setSelectedDate(event.target.value)}
-            className="w-44"
-            inputClassName="border-gray-200 dark:border-gray-700 rounded-lg h-9 text-sm"
-          />
-          {isActiveUsersFetching && <Loader size="sm" />}
-        </div>
-      </div> */}
+      <AppAnalyticsFiltersComponent onFilter={handleFilter} className="mb-2" />
 
       {usingMockData && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-900/20 dark:text-amber-200">
-          Preview data — live app analytics is not available yet. These numbers are sample
+          Waiting for app data — live analytics counts are still zero. Showing sample
           data so you can review the dashboard layout.
         </div>
       )}
 
       {!usingMockData && isActiveUsersError && (
         <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-200">
-          {activeUsersError?.message || 'Invalid date for active user metrics. Please choose a valid date.'}
+          {activeUsersError?.message ||
+            'Invalid date for active user metrics. Please choose a valid date.'}
         </div>
       )}
 

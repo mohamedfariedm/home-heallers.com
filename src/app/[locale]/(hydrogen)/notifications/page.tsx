@@ -145,10 +145,12 @@ export default function NotificationsPage() {
       {activeTab === 'send' && (
         <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 p-8 text-center dark:border-gray-700 dark:bg-gray-900/40">
           <Text className="text-sm font-medium text-gray-800 dark:text-gray-200">
-            Queue an immediate push notification and in-app inbox entry.
+            Queue an immediate push notification. Clients and doctors also get an in-app
+            inbox entry; guests receive push only.
           </Text>
           <Text className="mt-2 text-xs text-gray-500 dark:text-gray-400">
             Success means jobs were queued — not that every device received the push.
+            “Everyone” includes clients, doctors, and anonymous guest installs.
           </Text>
           <div className="mt-5 flex justify-center">
             <CreateButton

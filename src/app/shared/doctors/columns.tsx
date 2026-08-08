@@ -4,6 +4,7 @@ import { HeaderCell } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ActionIcon } from '@/components/ui/action-icon';
 import { Tooltip } from '@/components/ui/tooltip';
+import { Button } from '@/components/ui/button';
 import TrashIcon from '@/components/icons/trash';
 import PencilIcon from '@/components/icons/pencil';
 import EyeIcon from '@/components/icons/eye';
@@ -15,6 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import ColumnFilterPopover from '@/app/shared/customer-suport/column-filter-popover';
 import LookupColumnFilterPopover from '@/app/shared/lookup-column-filter-popover';
 import { resolveLocalizedNameOrFallback } from '@/utils/resolve-localized-name';
+import { PiToggleLeft, PiToggleRight } from 'react-icons/pi';
 
 interface Columns {
   data: any[];
@@ -25,6 +27,8 @@ interface Columns {
   onHeaderCellClick: (value: string) => void;
   onChecked?: (id: string) => void;
   onFilterChange?: (key: string, value: any) => void;
+  onToggleStatus?: (row: any) => void;
+  togglingDoctorId?: number | null;
 }
 
 export const getColumns = ({
@@ -36,6 +40,8 @@ export const getColumns = ({
   handleSelectAll,
   onChecked,
   onFilterChange,
+  onToggleStatus,
+  togglingDoctorId,
 }: Columns) => [
   {
     title: (
@@ -336,11 +342,42 @@ export const getColumns = ({
     ),
     dataIndex: 'status',
     key: 'status',
-    render: (status: boolean) => (
-      <Badge >
-        {status ? 'Active' : 'Inactive'}
-      </Badge>
-    ),
+    width: 140,
+    render: (status: boolean, row: any) => {
+      const isActive = Boolean(status);
+      const isToggling = togglingDoctorId === row.id;
+
+      return (
+        <div className="flex items-center gap-2">
+          <Badge color={isActive ? 'success' : 'danger'}>
+            {isActive ? 'Active' : 'Inactive'}
+          </Badge>
+          {onToggleStatus && (
+            <Tooltip
+              size="sm"
+              content={() => (isActive ? 'Deactivate doctor' : 'Activate doctor')}
+              placement="top"
+              color="invert"
+            >
+              <Button
+                variant="text"
+                size="sm"
+                isLoading={isToggling}
+                disabled={isToggling}
+                onClick={() => onToggleStatus(row)}
+                className="hover:!text-gray-900"
+              >
+                {isActive ? (
+                  <PiToggleRight className="h-6 w-6 text-green-600" />
+                ) : (
+                  <PiToggleLeft className="h-6 w-6 text-gray-400" />
+                )}
+              </Button>
+            </Tooltip>
+          )}
+        </div>
+      );
+    },
   },
   {
     title: <HeaderCell title="Languages" />,

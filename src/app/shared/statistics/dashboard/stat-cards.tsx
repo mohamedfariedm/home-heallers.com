@@ -77,14 +77,48 @@ interface AggregateData {
   };
 }
 
+export type StatisticsSection = 'market' | 'finance' | 'operations';
+
 interface StatCardsProps {
   data: AggregateData | null;
   className?: string;
+  section?: StatisticsSection;
   hasPermission?: (permission: string) => boolean;
   rateColors?: RateColorsByMetric;
   onSaveRateColors?: (rateColors: RateColorsByMetric, onSuccess?: () => void) => void;
   isSavingRateColors?: boolean;
 }
+
+const SECTION_RATE_TITLES: Record<StatisticsSection, string[]> = {
+  market: [
+    'Conversion Rate',
+    'Lead Quality Rate',
+    'Inbound Quality Rate',
+    'Outbound Quality Rate',
+  ],
+  finance: [],
+  operations: ['Reservation Rate', 'Package Conversion'],
+};
+
+const SECTION_STATIC_TITLES: Record<StatisticsSection, string[]> = {
+  market: [
+    'Support Tickets',
+    'Total Leads',
+    'Inbound Leads',
+    'Outbound Leads',
+    'Qualified Leads',
+    'Inbound Qualified',
+    'Outbound Qualified',
+  ],
+  finance: ['Total Invoices', 'Total Revenue'],
+  operations: [
+    'Total Reservations',
+    'Support Tickets',
+    'Active Doctors',
+    'Total Clients',
+    'Total Sessions',
+  ],
+};
 
 function computeOverallConversionRate(
   items: ConversionRateItem[] | undefined,
@@ -124,6 +158,7 @@ function getMatchedRateRange(rate: number, ranges?: RateColorRange[]) {
 export default function StatCards({
   data,
   className,
+  section,
   hasPermission,
   rateColors,
   onSaveRateColors,
@@ -409,14 +444,20 @@ export default function StatCards({
   const visibleRateCards = rateCards.filter(
     (card) =>
       card.show &&
-      (hasPermission ? hasPermission(card.permission) : true)
+      (hasPermission ? hasPermission(card.permission) : true) &&
+      (!section || SECTION_RATE_TITLES[section].includes(card.title))
   );
 
   const visibleStaticCards = staticCards.filter(
     (card) =>
       card.show &&
-      (hasPermission ? hasPermission(card.permission) : true)
+      (hasPermission ? hasPermission(card.permission) : true) &&
+      (!section || SECTION_STATIC_TITLES[section].includes(card.title))
   );
+
+  if (visibleRateCards.length === 0 && visibleStaticCards.length === 0) {
+    return null;
+  }
 
   return (
     <>
@@ -430,7 +471,7 @@ export default function StatCards({
 
         return (
           <div
-            key={card.permission}
+            key={card.title}
             role={canEditRateColors ? 'button' : undefined}
             tabIndex={canEditRateColors ? 0 : undefined}
             onClick={
@@ -532,7 +573,7 @@ export default function StatCards({
 
       {visibleStaticCards.map((card) => (
         <div
-          key={card.permission}
+          key={card.title}
           className="relative min-w-[180px] flex-1 basis-[calc(20%-16px)] overflow-hidden rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
         >
           <div className="flex items-center justify-between">

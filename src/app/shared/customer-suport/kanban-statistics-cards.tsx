@@ -13,6 +13,8 @@ import {
   PiListChecksBold,
   PiMapPinBold,
   PiBuildingsBold,
+  PiArrowsClockwiseBold,
+  PiChatCircleBold,
 } from 'react-icons/pi';
 import cn from '@/utils/class-names';
 import { useRouter, usePathname } from 'next/navigation';
@@ -306,6 +308,9 @@ export default function KanbanStatisticsCards({
   const [offersExpanded, setOffersExpanded] = useState(false);
   const [cityExpanded, setCityExpanded] = useState(false);
   const [stateExpanded, setStateExpanded] = useState(false);
+  const [reworkExpanded, setReworkExpanded] = useState(false);
+  const [communicationTimesExpanded, setCommunicationTimesExpanded] =
+    useState(false);
   
   // State to track checked source campaigns
   const [checkedSourceCampaigns, setCheckedSourceCampaigns] = useState<Set<string>>(new Set());
@@ -652,6 +657,61 @@ export default function KanbanStatisticsCards({
     ? allStateCards
     : allStateCards.slice(0, STATES_PER_ROW);
 
+  // Row 9: Rework buckets
+  const allReworkCards = (statistics.by_rework || [])
+    .sort((a, b) => (b.count || 0) - (a.count || 0))
+    .map((item) => ({
+      title: `Rework ${item.rework ?? 0}`,
+      value: item.count || 0,
+      icon: PiArrowsClockwiseBold,
+      bgColor: Number(item.rework) > 0 ? 'bg-amber-50' : 'bg-slate-50',
+      textColor: Number(item.rework) > 0 ? 'text-amber-600' : 'text-slate-600',
+      darkBgColor:
+        Number(item.rework) > 0
+          ? 'dark:bg-amber-900/20'
+          : 'dark:bg-slate-900/20',
+      darkTextColor:
+        Number(item.rework) > 0
+          ? 'dark:text-amber-400'
+          : 'dark:text-slate-400',
+      blurColor: Number(item.rework) > 0 ? 'bg-amber-50/50' : 'bg-slate-50/50',
+      darkBlurColor:
+        Number(item.rework) > 0
+          ? 'dark:bg-amber-900/10'
+          : 'dark:bg-slate-900/10',
+      link: item.link,
+      compact: true,
+    }));
+
+  const REWORK_PER_ROW = 6;
+  const reworkCards = reworkExpanded
+    ? allReworkCards
+    : allReworkCards.slice(0, REWORK_PER_ROW);
+
+  // Row 10: Communication times (booked leads only)
+  const allCommunicationTimesCards = (
+    statistics.by_communication_times || []
+  )
+    .sort((a, b) => (b.count || 0) - (a.count || 0))
+    .map((item) => ({
+      title: `Contacts ${item.communication_times ?? 0}`,
+      value: item.count || 0,
+      icon: PiChatCircleBold,
+      bgColor: 'bg-sky-50',
+      textColor: 'text-sky-600',
+      darkBgColor: 'dark:bg-sky-900/20',
+      darkTextColor: 'dark:text-sky-400',
+      blurColor: 'bg-sky-50/50',
+      darkBlurColor: 'dark:bg-sky-900/10',
+      link: item.link,
+      compact: true,
+    }));
+
+  const COMMUNICATION_TIMES_PER_ROW = 6;
+  const communicationTimesCards = communicationTimesExpanded
+    ? allCommunicationTimesCards
+    : allCommunicationTimesCards.slice(0, COMMUNICATION_TIMES_PER_ROW);
+
   const rows = [
     { title: 'Status Statistics', cards: statusCards },
     ...(leadCards.length > 0
@@ -699,6 +759,26 @@ export default function KanbanStatisticsCards({
           expanded: stateExpanded,
           setExpanded: setStateExpanded,
           perRow: STATES_PER_ROW,
+        }]
+      : []),
+    ...(allReworkCards.length > 0
+      ? [{
+          title: 'Rework',
+          cards: reworkCards,
+          allCards: allReworkCards,
+          expanded: reworkExpanded,
+          setExpanded: setReworkExpanded,
+          perRow: REWORK_PER_ROW,
+        }]
+      : []),
+    ...(allCommunicationTimesCards.length > 0
+      ? [{
+          title: 'Communication Times (Booked Leads)',
+          cards: communicationTimesCards,
+          allCards: allCommunicationTimesCards,
+          expanded: communicationTimesExpanded,
+          setExpanded: setCommunicationTimesExpanded,
+          perRow: COMMUNICATION_TIMES_PER_ROW,
         }]
       : []),
   ];

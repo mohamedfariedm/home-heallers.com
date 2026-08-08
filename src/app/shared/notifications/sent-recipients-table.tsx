@@ -12,16 +12,17 @@ import { HeaderCell } from '@/components/ui/table';
 import { useColumn } from '@/hooks/use-column';
 import { useSentNotificationRecipients } from '@/framework/notifications';
 import {
+  PUSH_STATUS_FILTER_OPTIONS,
   PUSH_STATUS_LABELS,
   READ_FILTER_OPTIONS,
   RECIPIENT_KIND_OPTIONS,
 } from '@/app/shared/notifications/constants';
-import type { SentNotificationRecipient } from '@/types/admin-notifications';
 
 function buildRecipientsQuery(filters: {
   search: string;
   read: string;
   type: string;
+  push_status: string;
   page: number;
   per_page: number;
 }) {
@@ -29,6 +30,7 @@ function buildRecipientsQuery(filters: {
   if (filters.search) params.set('search', filters.search);
   if (filters.read !== '') params.set('read', filters.read);
   if (filters.type) params.set('type', filters.type);
+  if (filters.push_status) params.set('push_status', filters.push_status);
   params.set('page', String(filters.page));
   params.set('per_page', String(filters.per_page));
   return params.toString();
@@ -54,6 +56,7 @@ export default function SentNotificationRecipientsTable({
   const [search, setSearch] = useState('');
   const [read, setRead] = useState('');
   const [type, setType] = useState('');
+  const [pushStatus, setPushStatus] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
@@ -69,6 +72,7 @@ export default function SentNotificationRecipientsTable({
     search,
     read,
     type,
+    push_status: pushStatus,
     page,
     per_page: pageSize,
   });
@@ -91,6 +95,18 @@ export default function SentNotificationRecipientsTable({
         render: (value: string) => (
           <Text className="font-medium text-gray-900">{value}</Text>
         ),
+      },
+      {
+        title: <HeaderCell title="Mobile" />,
+        dataIndex: 'mobile',
+        key: 'mobile',
+        width: 150,
+        render: (value: string | null) =>
+          value ? (
+            <Text className="text-gray-700">{value}</Text>
+          ) : (
+            <Text className="text-gray-400">—</Text>
+          ),
       },
       {
         title: <HeaderCell title="Type" />,
@@ -126,9 +142,11 @@ export default function SentNotificationRecipientsTable({
         dataIndex: 'read_at',
         key: 'read_at',
         width: 160,
-        render: (value: string | null) =>
+        render: (value: string | null, row: { type?: string }) =>
           value ? (
             <DateCell date={new Date(value)} />
+          ) : row.type === 'guest' ? (
+            <Text className="text-gray-400">N/A (push only)</Text>
           ) : (
             <Badge variant="flat" color="warning">
               Unread
@@ -166,7 +184,7 @@ export default function SentNotificationRecipientsTable({
         </Text>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Input
           placeholder="Search by name..."
           value={searchInput}
@@ -199,6 +217,20 @@ export default function SentNotificationRecipientsTable({
           displayValue={(selected: string) =>
             typeOptions.find((option) => option.value === selected)?.label ??
             'All types'
+          }
+        />
+        <StatusField
+          placeholder="Push status"
+          options={[...PUSH_STATUS_FILTER_OPTIONS]}
+          value={pushStatus}
+          onChange={(value: string) => {
+            setPushStatus(value);
+            setPage(1);
+          }}
+          getOptionValue={(option) => option.value}
+          displayValue={(selected: string) =>
+            PUSH_STATUS_FILTER_OPTIONS.find((option) => option.value === selected)
+              ?.label ?? 'All push statuses'
           }
         />
       </div>
@@ -240,7 +272,7 @@ export default function SentNotificationRecipientsTable({
             enableDrawerFilter: false,
           }}
           className="overflow-hidden rounded-xl border border-gray-200 text-sm shadow-sm [&_thead.rc-table-thead]:sticky [&_thead.rc-table-thead]:top-0 [&_thead.rc-table-thead]:z-10 [&_thead.rc-table-thead]:bg-white"
-          scroll={{ x: 900 }}
+          scroll={{ x: 1050 }}
         />
       )}
     </div>

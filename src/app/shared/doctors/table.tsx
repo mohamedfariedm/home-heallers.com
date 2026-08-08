@@ -11,7 +11,7 @@ import toast from 'react-hot-toast';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ActionIcon } from 'rizzui';
 import { PiCaretDownBold, PiCaretUpBold } from 'react-icons/pi';
-import { useDeleteDoctors } from '@/framework/doctors';
+import { useDeleteDoctors, useUpdateDoctors } from '@/framework/doctors';
 
 const FilterElement = dynamic(
   () => import('@/app/shared/doctors/filter-element'),
@@ -54,9 +54,11 @@ export default function DoctorsTable({
   totalItems: number;
 }) {
   const { mutate: deleteDoctor } = useDeleteDoctors();
+  const { mutate: updateDoctor, isPending: isUpdatingDoctor } = useUpdateDoctors();
   const searchParams = useSearchParams();
   const router = useRouter();
   const [pageSize, setPageSize] = useState(Number(searchParams.get('limit')) || 10);
+  const [togglingDoctorId, setTogglingDoctorId] = useState<number | null>(null);
   const [columnFilters, setColumnFilters] = useState<Record<string, any>>({});
   const [dateFilters, setDateFilters] = useState<{ date_from?: string; date_to?: string }>({
     date_from: searchParams.get('date_from') || undefined,
@@ -98,6 +100,23 @@ export default function DoctorsTable({
     handleDelete(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const handleToggleStatus = useCallback(
+    (row: any) => {
+      if (!row?.id || isUpdatingDoctor) return;
+
+      const nextStatus = !Boolean(row.status);
+      setTogglingDoctorId(row.id);
+
+      updateDoctor(
+        { doctor_id: row.id, status: nextStatus },
+        {
+          onSettled: () => setTogglingDoctorId(null),
+        }
+      );
+    },
+    [isUpdatingDoctor, updateDoctor]
+  );
 
   const {
     isLoading,
@@ -166,6 +185,8 @@ export default function DoctorsTable({
         onChecked: handleRowSelect,
         handleSelectAll,
         onFilterChange: handleFilterChange,
+        onToggleStatus: handleToggleStatus,
+        togglingDoctorId,
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
@@ -176,6 +197,8 @@ export default function DoctorsTable({
       onDeleteItem,
       handleRowSelect,
       handleSelectAll,
+      handleToggleStatus,
+      togglingDoctorId,
     ]
   );
 

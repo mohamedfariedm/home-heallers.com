@@ -101,6 +101,15 @@ export default function OtpCodeForm({
               <Text className="mt-1 text-sm text-gray-500">
                 {displayName} · {initValues.type} #{initValues.entity_id}
               </Text>
+              <Text className="mt-1 text-xs text-gray-500">
+                {initValues.is_otp_verified
+                  ? `Verified${
+                      initValues.otp_verified_at
+                        ? ` · ${new Date(initValues.otp_verified_at).toLocaleString()}`
+                        : ''
+                    }`
+                  : 'Not verified (never logged in with OTP)'}
+              </Text>
             </div>
             <ActionIcon size="sm" variant="text" onClick={closeModal}>
               <PiXBold className="h-auto w-5" />

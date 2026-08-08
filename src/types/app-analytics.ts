@@ -1,4 +1,9 @@
 export interface InstallationStats {
+  funnel: {
+    installed_not_registered: number;
+    registered: number;
+    total: number;
+  };
   total_installs: number;
   new_installs: {
     today: number;
@@ -21,7 +26,7 @@ export interface InstallationStats {
 }
 
 export interface OutdatedInstallationItem {
-  installation_id: number;
+  install_id: string;
   platform: string;
   app_version: string | null;
   app_build: number | null;
@@ -58,4 +63,13 @@ export interface AppAnalyticsOverview {
 export interface AdminAnalyticsResponse<T> {
   message: string;
   data: T;
+}
+
+export interface AppAnalyticsDateRange {
+  from?: string;
+  to?: string;
+}
+
+export interface AppAnalyticsActiveUsersParams extends AppAnalyticsDateRange {
+  date?: string;
 }

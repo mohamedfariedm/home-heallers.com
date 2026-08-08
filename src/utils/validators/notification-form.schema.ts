@@ -79,7 +79,7 @@ export const notificationContentSchema = z.object({
 
 export const sendNotificationSchema = notificationContentSchema
   .extend({
-    audience: z.enum(['all', 'clients', 'doctors', 'specific']),
+    audience: z.enum(['all', 'clients', 'doctors', 'guests', 'specific']),
     recipients: z.array(recipientRefSchema).optional().default([]),
   })
   .superRefine((data, ctx) => {
@@ -99,7 +99,7 @@ export function createScheduledNotificationSchema(options?: {
 
   return notificationContentSchema
     .extend({
-      recipient_type: z.enum(['all', 'clients', 'doctors', 'specific']),
+      recipient_type: z.enum(['all', 'clients', 'doctors', 'guests', 'specific']),
       // Keep loose here — strict shape is checked only when audience is specific.
       recipients: z
         .array(
