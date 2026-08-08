@@ -1,8 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import {
+  PiCalendarBlankBold,
+  PiChartLineUpBold,
+  PiCurrencyDollarBold,
+  PiGearBold,
+} from 'react-icons/pi';
 import StatisticsFiltersComponent, { StatisticsFilters } from './filters';
-import StatCards from './stat-cards';
+import StatCards, { type StatisticsSection } from './stat-cards';
 import StatusBreakdown from './status-breakdown';
 import SupportTypeBreakdown from './support-type-breakdown';
 import InvoiceBreakdown from './invoice-breakdown';
@@ -16,10 +22,13 @@ import ReservationDates from './reservation-dates';
 import SessionsStatistics from './sessions-statistics';
 import TimeSeriesChart from './time-series-chart';
 import SingleMetricChart from './single-metric-chart';
+import ReservationsCalendar from './reservations-calendar';
 import { Loader } from '@/components/ui/loader';
+import { Tabs, TabList, Tab, TabPanels, TabPanel } from '@/components/ui/tabs';
 import { toast } from 'react-hot-toast';
 import { useSettings, useUpdateSettings } from '@/framework/site-settings';
 import type { RateColorsByMetric } from '@/types/settings';
+import cn from '@/utils/class-names';
 
 interface AggregateData {
   customer_support?: {
@@ -142,8 +151,42 @@ interface AggregateData {
     lead_quality_rate: number;
   };
   filters_applied?: any[];
-  [key: string]: any; // Allow any additional fields
+  [key: string]: any;
 }
+
+type DashboardTabId = StatisticsSection | 'calendar';
+
+const DASHBOARD_TABS: Array<{
+  id: DashboardTabId;
+  label: string;
+  description: string;
+  icon: typeof PiChartLineUpBold;
+}> = [
+  {
+    id: 'market',
+    label: 'Market',
+    description: 'Leads, campaigns, and conversion performance',
+    icon: PiChartLineUpBold,
+  },
+  {
+    id: 'finance',
+    label: 'Finance',
+    description: 'Revenue, invoices, and financial trends',
+    icon: PiCurrencyDollarBold,
+  },
+  {
+    id: 'operations',
+    label: 'Operations',
+    description: 'Reservations, sessions, and delivery metrics',
+    icon: PiGearBold,
+  },
+  {
+    id: 'calendar',
+    label: 'Calendar',
+    description: 'Monthly reservation sessions — Google Calendar style overview',
+    icon: PiCalendarBlankBold,
+  },
+];
 
 export default function StatisticsDashboard() {
   const [filters, setFilters] = useState<StatisticsFilters>({});
@@ -151,6 +194,7 @@ export default function StatisticsDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [permissions, setPermissions] = useState<string[]>([]);
+  const [activeTab, setActiveTab] = useState(0);
   const { data: settingsResponse } = useSettings();
   const { mutate: updateSettings, isPending: isSavingRateColors } = useUpdateSettings();
   const fullSettings = settingsResponse?.data?.[0]?.setting;
@@ -184,18 +228,9 @@ export default function StatisticsDashboard() {
   }, []);
 
   const hasPermission = (permission: string) => permissions.includes(permission);
-  const showIndividualMetricsSection =
-    hasPermission('dashboard.reservations_trend') ||
-    hasPermission('dashboard.sessions_trend') ||
-    hasPermission('dashboard.clients_trend') ||
-    hasPermission('dashboard.revenue_trend');
   const showLocationSection =
     hasPermission('dashboard.reservations_by_state') ||
     hasPermission('dashboard.top_states_performance');
-  const showFinancialSection =
-    hasPermission('dashboard.invoice_status') ||
-    hasPermission('dashboard.campaign_statistics') ||
-    hasPermission('dashboard.conversion_rate');
   const showCampaignSection =
     hasPermission('dashboard.reservations_by_campaign') ||
     hasPermission('dashboard.support_tickets_by_campaign');
@@ -209,7 +244,6 @@ export default function StatisticsDashboard() {
     setError(null);
     
     try {
-      // Build query parameters
       const params = new URLSearchParams();
       
       if (filters.date_from) params.append('date_from', filters.date_from);
@@ -231,7 +265,6 @@ export default function StatisticsDashboard() {
         });
       }
 
-      // Fetch aggregate data only
       const response = await fetch(`/api/statistics/aggregates?${params.toString()}`);
       
       if (!response.ok) {
@@ -240,12 +273,10 @@ export default function StatisticsDashboard() {
 
       const result = await response.json() as { message?: string; data: AggregateData };
       
-      // Handle response structure: { message: "...", data: { ... } }
       if (result.data) {
         setAggregateData(result.data);
         toast.success(result.message || 'تم تحديث الإحصائيات / Statistics updated');
       } else {
-        // Fallback: if data is at root level
         setAggregateData(result as unknown as AggregateData);
         toast.success('تم تحديث الإحصائيات / Statistics updated');
       }
@@ -262,15 +293,53 @@ export default function StatisticsDashboard() {
     setFilters(newFilters);
   };
 
-  if (loading && !aggregateData) {
+  const isCalendarTab = DASHBOARD_TABS[activeTab]?.id === 'calendar';
+
+  // Allow Calendar tab immediately; only block Market/Finance/Operations on first stats load
+  if (!isCalendarTab && loading && !aggregateData) {
     return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <Loader size="xl" />
+      <div className="@container">
+        <div className="mb-6 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 @xl:text-3xl dark:text-white">Statistics Dashboard</h1>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              Switch between Market, Finance, Operations, and Calendar
+            </p>
+          </div>
+        </div>
+        <Tabs selectedIndex={activeTab} onChange={setActiveTab}>
+          <div className="mb-6 border-b border-gray-200 dark:border-gray-700">
+            <TabList className="inline-flex w-full flex-wrap justify-start gap-1 border-0 p-0">
+              {DASHBOARD_TABS.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <Tab
+                    key={tab.id}
+                    className={({ selected }) =>
+                      cn(
+                        'relative flex items-center gap-2 rounded-t-lg px-4 py-3 text-sm font-medium outline-none transition-all',
+                        selected
+                          ? 'border-b-2 border-primary bg-primary/5 text-primary'
+                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white'
+                      )
+                    }
+                  >
+                    <Icon className="h-4 w-4" />
+                    {tab.label}
+                  </Tab>
+                );
+              })}
+            </TabList>
+          </div>
+          <div className="flex min-h-[400px] items-center justify-center">
+            <Loader size="xl" />
+          </div>
+        </Tabs>
       </div>
     );
   }
 
-  if (error && !aggregateData) {
+  if (!isCalendarTab && error && !aggregateData) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
         <div className="text-center">
@@ -289,183 +358,291 @@ export default function StatisticsDashboard() {
 
   return (
     <div className="@container">
-      {/* Header */}
       <div className="mb-6 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 @xl:text-3xl dark:text-white">Statistics Dashboard</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Monitor reservations, revenue, customer support, and lead quality metrics
+            Switch between Market, Finance, Operations, and Calendar
           </p>
         </div>
       </div>
 
-      {/* Filters */}
-      <StatisticsFiltersComponent onFilter={handleFilter} className="mb-8" />
+      {!isCalendarTab && (
+        <StatisticsFiltersComponent onFilter={handleFilter} className="mb-6" />
+      )}
 
-      {loading ? (
+      {loading && !isCalendarTab ? (
         <div className="flex min-h-[400px] items-center justify-center">
           <Loader size="xl" />
         </div>
       ) : (
-        <div className="space-y-6">
-          {/* Stat Cards */}
-          <StatCards
-            data={aggregateData}
-            hasPermission={hasPermission}
-            rateColors={rateColors}
-            onSaveRateColors={handleSaveRateColors}
-            isSavingRateColors={isSavingRateColors}
-          />
-
-          {/* Overview Section: Status & Support Breakdowns */}
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-            <div className="lg:col-span-6">
-              {hasPermission('dashboard.reservations_by_status') && aggregateData?.reservations && aggregateData.reservations.by_status.length > 0 && (
-                <StatusBreakdown byStatus={aggregateData.reservations.by_status} className="h-full" />
-              )}
-            </div>
-            <div className="lg:col-span-6">
-              {hasPermission('dashboard.support_tickets_by_type') && aggregateData?.customer_support && aggregateData.customer_support.by_type.length > 0 && (
-                <SupportTypeBreakdown bySupportType={aggregateData.customer_support.by_type} className="h-full" />
-              )}
-            </div>
+        <Tabs selectedIndex={activeTab} onChange={setActiveTab}>
+          <div className="mb-6 border-b border-gray-200 dark:border-gray-700">
+            <TabList className="inline-flex w-full flex-wrap justify-start gap-1 border-0 p-0">
+              {DASHBOARD_TABS.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <Tab
+                    key={tab.id}
+                    className={({ selected }) =>
+                      cn(
+                        'relative flex items-center gap-2 rounded-t-lg px-4 py-3 text-sm font-medium outline-none transition-all',
+                        selected
+                          ? 'border-b-2 border-primary bg-primary/5 text-primary'
+                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white'
+                      )
+                    }
+                  >
+                    <Icon className="h-4 w-4" />
+                    {tab.label}
+                  </Tab>
+                );
+              })}
+            </TabList>
           </div>
 
-          {/* Time Series Chart (Reservations, Sessions, Clients, Revenue) - Combined */}
-          {hasPermission('dashboard.daily_trends') && aggregateData?.chart_data && (
-            <div>
-              <TimeSeriesChart data={aggregateData.chart_data} className="h-full" />
-            </div>
-          )}
+          <p className="mb-5 text-sm text-gray-500 dark:text-gray-400">
+            {DASHBOARD_TABS[activeTab]?.description}
+          </p>
 
-          {/* Individual Metric Charts */}
-          {aggregateData?.chart_data && showIndividualMetricsSection && (
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Individual Metrics</h2>
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                {hasPermission('dashboard.reservations_trend') && aggregateData.chart_data.reservations && aggregateData.chart_data.reservations.length > 0 && (
-                  <SingleMetricChart 
-                    data={aggregateData.chart_data} 
-                    metric="reservations" 
-                    className="h-full" 
-                  />
-                )}
-                {hasPermission('dashboard.sessions_trend') && aggregateData.chart_data.sessions && aggregateData.chart_data.sessions.length > 0 && (
-                  <SingleMetricChart 
-                    data={aggregateData.chart_data} 
-                    metric="sessions" 
-                    className="h-full" 
-                  />
-                )}
-                {hasPermission('dashboard.clients_trend') && aggregateData.chart_data.clients && aggregateData.chart_data.clients.length > 0 && (
-                  <SingleMetricChart 
-                    data={aggregateData.chart_data} 
-                    metric="clients" 
-                    className="h-full" 
-                  />
-                )}
-                {hasPermission('dashboard.revenue_trend') && aggregateData.chart_data.revenue && aggregateData.chart_data.revenue.length > 0 && (
-                  <SingleMetricChart 
-                    data={aggregateData.chart_data} 
-                    metric="revenue" 
-                    className="h-full" 
-                  />
-                )}
-              </div>
-            </div>
-          )}
+          <TabPanels>
+            {/* Market */}
+            <TabPanel className="outline-none">
+              <div className="space-y-6">
+                <StatCards
+                  data={aggregateData}
+                  section="market"
+                  hasPermission={hasPermission}
+                  rateColors={rateColors}
+                  onSaveRateColors={handleSaveRateColors}
+                  isSavingRateColors={isSavingRateColors}
+                />
 
-          {/* Reservations Timeline */}
-          {hasPermission('dashboard.reservations_trend') && aggregateData?.reservation_dates && aggregateData.reservation_dates.by_date_and_status.length > 0 && (
-            <div>
-              <ReservationDates data={aggregateData.reservation_dates} className="h-full" />
-            </div>
-          )}
-
-          {/* Location Statistics: City & State */}
-          {showLocationSection && (
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Location Statistics</h2>
-              <div className="grid grid-cols-1 gap-6">
-                {hasPermission('dashboard.reservations_by_state') && aggregateData?.reservations_by_city && aggregateData.reservations_by_city.by_city && aggregateData.reservations_by_city.by_city.length > 0 && (
-                  <div className="lg:col-span-6">
-                    <ReservationsByCity data={aggregateData.reservations_by_city} className="h-full" />
-                  </div>
-                )}
-                {hasPermission('dashboard.top_states_performance') && aggregateData?.reservations_by_state && aggregateData.reservations_by_state.by_state && aggregateData.reservations_by_state.by_state.length > 0 && (
-                  <div className="lg:col-span-6">
-                    <ReservationsByState data={aggregateData.reservations_by_state} className="h-full" />
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Sessions Statistics */}
-          {hasPermission('dashboard.sessions_statistics') && aggregateData?.sessions_statistics && aggregateData.sessions_statistics.by_session_count && aggregateData.sessions_statistics.by_session_count.length > 0 && (
-            <div>
-              <SessionsStatistics data={aggregateData.sessions_statistics} className="h-full" />
-            </div>
-          )}
-
-          {/* Financial & Performance Metrics */}
-          {showFinancialSection && (
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Financial & Performance Metrics</h2>
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-                <div className="lg:col-span-6">
-                  {hasPermission('dashboard.invoice_status') && aggregateData?.invoices && aggregateData.invoices.by_status.length > 0 && (
-                    <InvoiceBreakdown byStatus={aggregateData.invoices.by_status} className="h-full" />
+                {hasPermission('dashboard.support_tickets_by_type') &&
+                  aggregateData?.customer_support &&
+                  aggregateData.customer_support.by_type.length > 0 && (
+                    <SupportTypeBreakdown
+                      bySupportType={aggregateData.customer_support.by_type}
+                      className="h-full"
+                    />
                   )}
-                </div>
-                <div className="lg:col-span-6">
-                  {hasPermission('dashboard.campaign_statistics') && aggregateData?.cost_ratio && aggregateData.cost_ratio.length > 0 && (
+
+                {hasPermission('dashboard.conversion_rate') &&
+                  aggregateData?.conversion_rate &&
+                  aggregateData.conversion_rate.length > 0 && (
+                    <ConversionRateChart
+                      data={aggregateData.conversion_rate}
+                      className="h-full"
+                    />
+                  )}
+
+                {hasPermission('dashboard.campaign_statistics') &&
+                  aggregateData?.cost_ratio &&
+                  aggregateData.cost_ratio.length > 0 && (
                     <CostRatioChart data={aggregateData.cost_ratio} className="h-full" />
                   )}
-                </div>
-                <div className="lg:col-span-12">
-                  {hasPermission('dashboard.conversion_rate') && aggregateData?.conversion_rate && aggregateData.conversion_rate.length > 0 && (
-                    <ConversionRateChart data={aggregateData.conversion_rate} className="h-full" />
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
 
-          {/* Campaign Analysis */}
-          {showCampaignSection && (
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Campaign Analysis</h2>
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-                <div className="lg:col-span-6">
-                  {hasPermission('dashboard.reservations_by_campaign') && aggregateData?.reservations && aggregateData.reservations.by_status.length > 0 && (
-                    <ReservationCampaignsChart data={aggregateData.reservations.by_status} className="h-full" />
-                  )}
-                </div>
-                <div className="lg:col-span-6">
-                  {hasPermission('dashboard.support_tickets_by_campaign') && aggregateData?.customer_support && aggregateData.customer_support.by_type.length > 0 && (
-                    <SupportCampaignsChart data={aggregateData.customer_support.by_type} className="h-full" />
-                  )}
-                </div>
+                {showCampaignSection && (
+                  <div className="space-y-4">
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                      Campaign Analysis
+                    </h2>
+                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+                      <div className="lg:col-span-6">
+                        {hasPermission('dashboard.reservations_by_campaign') &&
+                          aggregateData?.reservations &&
+                          aggregateData.reservations.by_status.length > 0 && (
+                            <ReservationCampaignsChart
+                              data={aggregateData.reservations.by_status}
+                              className="h-full"
+                            />
+                          )}
+                      </div>
+                      <div className="lg:col-span-6">
+                        {hasPermission('dashboard.support_tickets_by_campaign') &&
+                          aggregateData?.customer_support &&
+                          aggregateData.customer_support.by_type.length > 0 && (
+                            <SupportCampaignsChart
+                              data={aggregateData.customer_support.by_type}
+                              className="h-full"
+                            />
+                          )}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
-          )}
+            </TabPanel>
 
-          {/* Empty State */}
-          {aggregateData && 
-           aggregateData.reservations?.total === 0 && 
-           aggregateData.customer_support?.total === 0 &&
-           (aggregateData.leads?.total_leads ?? 0) === 0 && (
-            <div className="mt-6 rounded-lg border border-gray-200 bg-gray-50 p-12 text-center dark:border-gray-700 dark:bg-gray-800">
-              <p className="text-lg font-medium text-gray-900 dark:text-white">No data found</p>
-              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                Try adjusting your filters to see statistics
-              </p>
-            </div>
-          )}
-        </div>
+            {/* Finance */}
+            <TabPanel className="outline-none">
+              <div className="space-y-6">
+                <StatCards
+                  data={aggregateData}
+                  section="finance"
+                  hasPermission={hasPermission}
+                  rateColors={rateColors}
+                  onSaveRateColors={handleSaveRateColors}
+                  isSavingRateColors={isSavingRateColors}
+                />
+
+                {hasPermission('dashboard.invoice_status') &&
+                  aggregateData?.invoices &&
+                  aggregateData.invoices.by_status.length > 0 && (
+                    <InvoiceBreakdown
+                      byStatus={aggregateData.invoices.by_status}
+                      className="h-full"
+                    />
+                  )}
+
+                {hasPermission('dashboard.daily_trends') && aggregateData?.chart_data && (
+                  <TimeSeriesChart data={aggregateData.chart_data} className="h-full" />
+                )}
+
+                {hasPermission('dashboard.revenue_trend') &&
+                  aggregateData?.chart_data?.revenue &&
+                  aggregateData.chart_data.revenue.length > 0 && (
+                    <div className="space-y-4">
+                      <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                        Revenue Trend
+                      </h2>
+                      <SingleMetricChart
+                        data={aggregateData.chart_data}
+                        metric="revenue"
+                        className="h-full"
+                      />
+                    </div>
+                  )}
+              </div>
+            </TabPanel>
+
+            {/* Operations */}
+            <TabPanel className="outline-none">
+              <div className="space-y-6">
+                <StatCards
+                  data={aggregateData}
+                  section="operations"
+                  hasPermission={hasPermission}
+                  rateColors={rateColors}
+                  onSaveRateColors={handleSaveRateColors}
+                  isSavingRateColors={isSavingRateColors}
+                />
+
+                {hasPermission('dashboard.reservations_by_status') &&
+                  aggregateData?.reservations &&
+                  aggregateData.reservations.by_status.length > 0 && (
+                    <StatusBreakdown
+                      byStatus={aggregateData.reservations.by_status}
+                      className="h-full"
+                    />
+                  )}
+
+                {(hasPermission('dashboard.reservations_trend') ||
+                  hasPermission('dashboard.sessions_trend') ||
+                  hasPermission('dashboard.clients_trend')) &&
+                  aggregateData?.chart_data && (
+                    <div className="space-y-4">
+                      <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                        Operational Trends
+                      </h2>
+                      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                        {hasPermission('dashboard.reservations_trend') &&
+                          aggregateData.chart_data.reservations &&
+                          aggregateData.chart_data.reservations.length > 0 && (
+                            <SingleMetricChart
+                              data={aggregateData.chart_data}
+                              metric="reservations"
+                              className="h-full"
+                            />
+                          )}
+                        {hasPermission('dashboard.sessions_trend') &&
+                          aggregateData.chart_data.sessions &&
+                          aggregateData.chart_data.sessions.length > 0 && (
+                            <SingleMetricChart
+                              data={aggregateData.chart_data}
+                              metric="sessions"
+                              className="h-full"
+                            />
+                          )}
+                        {hasPermission('dashboard.clients_trend') &&
+                          aggregateData.chart_data.clients &&
+                          aggregateData.chart_data.clients.length > 0 && (
+                            <SingleMetricChart
+                              data={aggregateData.chart_data}
+                              metric="clients"
+                              className="h-full"
+                            />
+                          )}
+                      </div>
+                    </div>
+                  )}
+
+                {hasPermission('dashboard.reservations_trend') &&
+                  aggregateData?.reservation_dates &&
+                  aggregateData.reservation_dates.by_date_and_status.length > 0 && (
+                    <ReservationDates
+                      data={aggregateData.reservation_dates}
+                      className="h-full"
+                    />
+                  )}
+
+                {showLocationSection && (
+                  <div className="space-y-4">
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                      Location Statistics
+                    </h2>
+                    <div className="grid grid-cols-1 gap-6">
+                      {hasPermission('dashboard.reservations_by_state') &&
+                        aggregateData?.reservations_by_city?.by_city &&
+                        aggregateData.reservations_by_city.by_city.length > 0 && (
+                          <ReservationsByCity
+                            data={aggregateData.reservations_by_city}
+                            className="h-full"
+                          />
+                        )}
+                      {hasPermission('dashboard.top_states_performance') &&
+                        aggregateData?.reservations_by_state?.by_state &&
+                        aggregateData.reservations_by_state.by_state.length > 0 && (
+                          <ReservationsByState
+                            data={aggregateData.reservations_by_state}
+                            className="h-full"
+                          />
+                        )}
+                    </div>
+                  </div>
+                )}
+
+                {hasPermission('dashboard.sessions_statistics') &&
+                  aggregateData?.sessions_statistics?.by_session_count &&
+                  aggregateData.sessions_statistics.by_session_count.length > 0 && (
+                    <SessionsStatistics
+                      data={aggregateData.sessions_statistics}
+                      className="h-full"
+                    />
+                  )}
+              </div>
+            </TabPanel>
+
+            {/* Calendar */}
+            <TabPanel className="outline-none">
+              <ReservationsCalendar />
+            </TabPanel>
+          </TabPanels>
+
+          {!isCalendarTab &&
+            aggregateData &&
+            aggregateData.reservations?.total === 0 &&
+            aggregateData.customer_support?.total === 0 &&
+            (aggregateData.leads?.total_leads ?? 0) === 0 && (
+              <div className="mt-6 rounded-lg border border-gray-200 bg-gray-50 p-12 text-center dark:border-gray-700 dark:bg-gray-800">
+                <p className="text-lg font-medium text-gray-900 dark:text-white">No data found</p>
+                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                  Try adjusting your filters to see statistics
+                </p>
+              </div>
+            )}
+        </Tabs>
       )}
     </div>
   );
 }
-

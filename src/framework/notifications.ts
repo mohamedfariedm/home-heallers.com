@@ -34,7 +34,7 @@ export const notificationKeys = {
     [routes.notifications.index, 'sent', 'filter-options'] as const,
 };
 
-type Audience = 'all' | 'clients' | 'doctors' | 'specific';
+type Audience = 'all' | 'clients' | 'doctors' | 'guests' | 'specific';
 
 function getSendFn(audience: Audience) {
   switch (audience) {
@@ -44,6 +44,8 @@ function getSendFn(audience: Audience) {
       return client.notifications.sendToClients;
     case 'doctors':
       return client.notifications.sendToDoctors;
+    case 'guests':
+      return client.notifications.sendToGuests;
     case 'specific':
       return client.notifications.sendToSpecific;
   }

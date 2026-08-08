@@ -3,11 +3,69 @@ import client from '@/framework/utils';
 import toast from 'react-hot-toast';
 import { useModal } from '@/app/shared/modal-views/use-modal';
 import { routes } from '@/config/routes';
+import type {
+  ReservationCalendarResponse,
+  ReservationCalendarSession,
+  ReservationsCalendarParams,
+  SessionStatus,
+} from '@/types/reservation-calendar';
 
 export function useReservations(param: string) {
   return useQuery<any, Error>({
     queryKey: [routes.reservations.index, param],
     queryFn: () => client.reservations.all(param)
+  });
+}
+
+export function useReservationsCalendar(params: ReservationsCalendarParams) {
+  const queryParams = Object.fromEntries(
+    Object.entries(params).filter(
+      ([, value]) => value !== undefined && value !== '' && value !== null
+    )
+  ) as Record<string, string | number>;
+
+  return useQuery<ReservationCalendarResponse, Error>({
+    queryKey: [routes.reservations.index, 'calendar', queryParams],
+    queryFn: () => client.reservations.calendar(queryParams),
+  });
+}
+
+/** Load a full month via `month=YYYY-MM` (preferred over day-by-day fetches). */
+export function useReservationsCalendarMonth(params: {
+  year: number;
+  month: number; // 1-12
+  status?: SessionStatus | '';
+  doctor_id?: number | string;
+}) {
+  const { year, month, status, doctor_id } = params;
+  const monthParam = `${year}-${String(month).padStart(2, '0')}`;
+
+  return useQuery<ReservationCalendarSession[], Error>({
+    queryKey: [
+      routes.reservations.index,
+      'calendar-month',
+      monthParam,
+      status || '',
+      doctor_id || '',
+    ],
+    queryFn: async () => {
+      const queryParams: ReservationsCalendarParams = {
+        month: monthParam,
+        ...(status ? { status } : {}),
+        ...(doctor_id ? { doctor_id } : {}),
+      };
+
+      const response = (await client.reservations.calendar(
+        Object.fromEntries(
+          Object.entries(queryParams).filter(
+            ([, value]) => value !== undefined && value !== '' && value !== null
+          )
+        ) as Record<string, string | number>
+      )) as ReservationCalendarResponse;
+
+      return Array.isArray(response?.data) ? response.data : [];
+    },
+    staleTime: 60_000,
   });
 }
 

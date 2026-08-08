@@ -1,7 +1,8 @@
 export const AUDIENCE_OPTIONS = [
-  { value: 'all', label: 'Everyone (clients + doctors)' },
+  { value: 'all', label: 'Everyone (clients + doctors + guests)' },
   { value: 'clients', label: 'All clients' },
   { value: 'doctors', label: 'All doctors' },
+  { value: 'guests', label: 'All guests (anonymous installs)' },
   { value: 'specific', label: 'Specific users' },
 ] as const;
 
@@ -65,6 +66,7 @@ export function deepLinkEntityLabel(type?: string | null) {
 export const RECIPIENT_KIND_OPTIONS = [
   { value: 'client', label: 'Client' },
   { value: 'doctor', label: 'Doctor' },
+  { value: 'guest', label: 'Guest' },
 ] as const;
 
 export const SCHEDULED_STATUS_OPTIONS = [
@@ -116,6 +118,8 @@ export function formatRecipientType(value?: string | null) {
       return 'All clients';
     case 'doctors':
       return 'All doctors';
+    case 'guests':
+      return 'All guests';
     case 'specific':
       return 'Specific users';
     default:

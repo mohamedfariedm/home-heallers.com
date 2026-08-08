@@ -47,8 +47,8 @@ export default function OutdatedInstallationsTable({
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
             {items.map((item) => (
-              <tr key={item.installation_id} className="text-sm text-gray-700 dark:text-gray-300">
-                <td className="px-3 py-3 font-medium">{item.installation_id}</td>
+              <tr key={item.install_id} className="text-sm text-gray-700 dark:text-gray-300">
+                <td className="px-3 py-3 font-medium">{item.install_id}</td>
                 <td className="px-3 py-3 capitalize">{item.platform}</td>
                 <td className="px-3 py-3">{item.app_version ?? '—'}</td>
                 <td className="px-3 py-3">{item.app_build ?? '—'}</td>

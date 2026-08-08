@@ -26,6 +26,11 @@ export function getMockAppAnalyticsOverview(
 ): AppAnalyticsOverview {
   return {
     installations: {
+      funnel: {
+        installed_not_registered: 420,
+        registered: 830,
+        total: 1250,
+      },
       total_installs: 1250,
       new_installs: {
         today: 12,
@@ -85,7 +90,7 @@ export function getMockAppAnalyticsOverview(
         count: 75,
         items: [
           {
-            installation_id: 42,
+            install_id: 'abc-123-def',
             platform: 'android',
             app_version: '1.0.0',
             app_build: 100,
@@ -94,7 +99,7 @@ export function getMockAppAnalyticsOverview(
             latest_supported_version: '1.2.0',
           },
           {
-            installation_id: 57,
+            install_id: 'ios-57-xyz',
             platform: 'ios',
             app_version: '1.0.1',
             app_build: 101,
@@ -103,7 +108,7 @@ export function getMockAppAnalyticsOverview(
             latest_supported_version: '1.2.0',
           },
           {
-            installation_id: 63,
+            install_id: 'and-63-qrs',
             platform: 'android',
             app_version: '0.9.8',
             app_build: 98,
@@ -121,6 +126,7 @@ export function getMockAppAnalyticsOverview(
 export function isAppAnalyticsEmpty(data: AppAnalyticsOverview) {
   return (
     data.installations.total_installs === 0 &&
+    (data.installations.funnel?.total ?? 0) === 0 &&
     data.active_users.installations.dau === 0 &&
     data.active_users.installations.mau === 0 &&
     data.devices.top_device_models.length === 0 &&

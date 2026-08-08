@@ -4,9 +4,10 @@ export type NotificationRecipientType =
   | 'all'
   | 'clients'
   | 'doctors'
+  | 'guests'
   | 'specific';
 
-export type NotificationRecipientKind = 'client' | 'doctor';
+export type NotificationRecipientKind = 'client' | 'doctor' | 'guest';
 
 export type ScheduledNotificationStatus =
   | 'pending'

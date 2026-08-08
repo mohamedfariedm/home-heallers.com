@@ -142,9 +142,11 @@ export default function SentNotificationRecipientsTable({
         dataIndex: 'read_at',
         key: 'read_at',
         width: 160,
-        render: (value: string | null) =>
+        render: (value: string | null, row: { type?: string }) =>
           value ? (
             <DateCell date={new Date(value)} />
+          ) : row.type === 'guest' ? (
+            <Text className="text-gray-400">N/A (push only)</Text>
           ) : (
             <Badge variant="flat" color="warning">
               Unread

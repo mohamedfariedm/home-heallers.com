@@ -80,14 +80,25 @@ export default function SentNotificationFilterElement({
     })),
   ];
 
-  const audienceOptions = [
-    { value: '', name: 'all', label: 'All audiences' },
-    ...AUDIENCE_OPTIONS.map((option) => ({
-      value: option.value,
-      name: option.value,
-      label: option.label,
-    })),
-  ];
+  const audienceOptions = filterOptions?.recipient_types?.length
+    ? [
+        { value: '', name: 'all', label: 'All audiences' },
+        ...filterOptions.recipient_types.map((type) => ({
+          value: type,
+          name: type,
+          label:
+            AUDIENCE_OPTIONS.find((option) => option.value === type)?.label ??
+            type,
+        })),
+      ]
+    : [
+        { value: '', name: 'all', label: 'All audiences' },
+        ...AUDIENCE_OPTIONS.map((option) => ({
+          value: option.value,
+          name: option.value,
+          label: option.label,
+        })),
+      ];
 
   const languageOptions = [
     { value: '', name: 'all', label: 'All languages' },

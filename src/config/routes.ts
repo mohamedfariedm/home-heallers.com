@@ -363,4 +363,14 @@ export const routes = {
   appAnalytics: {
     index: '/app-analytics',
   },
+  work: {
+    dashboard: '/work/dashboard',
+    departments: '/work/departments',
+    projects: '/work/projects',
+    items: '/work/items',
+    item: (key: string) => `/work/items/${key}`,
+    myWork: '/work/my-work',
+    board: '/work/board',
+    workflows: '/work/workflows',
+  },
 };
