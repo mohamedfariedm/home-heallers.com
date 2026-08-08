@@ -50,5 +50,13 @@ export interface CustomerSupportStatistics {
   by_offer?: Array<{ offer: string; count: number; link: string }>;
   by_city?: Array<{ city: string; count: number; link: string }>;
   by_state?: Array<{ state: string; count: number; link: string }>;
+  /** Grouped by rework count (all filtered leads) */
+  by_rework?: Array<{ rework: number; count: number; link: string }>;
+  /** Grouped by communication_times — booked leads only (has reservation) */
+  by_communication_times?: Array<{
+    communication_times: number;
+    count: number;
+    link: string;
+  }>;
   leads?: LeadsSummary;
 }

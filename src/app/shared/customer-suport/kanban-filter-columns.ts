@@ -27,6 +27,8 @@ export const KANBAN_STANDARD_FILTER_COLUMNS = [
   'notes',
   'ads_name',
   'communication_channel',
+  'rework',
+  'communication_times',
   'specialtie_1',
   'specialtie_2',
   'specialtie_3',
