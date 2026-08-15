@@ -7,10 +7,16 @@ import {
   useWmActorId,
 } from '@/framework/work-management/keys';
 
+const isLaravelBackend =
+  typeof process !== 'undefined' &&
+  process.env.NEXT_PUBLIC_WM_BACKEND === 'laravel';
+
 export function WmActorSwitcher({ className }: { className?: string }) {
   const { data: users = [] } = useWmUsers();
   const actorId = useWmActorId();
   const [, bump] = useState(0);
+
+  if (isLaravelBackend) return null;
 
   return (
     <select

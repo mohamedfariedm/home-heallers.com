@@ -216,6 +216,11 @@ export const routes = {
   packages: {
     index: '/packages'
   },
+  offers: {
+    index: '/offers',
+    create: '/offers/create',
+    edit: (id: string | number) => `/offers/${id}/edit`,
+  },
   exercises: {
     index: '/exercises',
     rehabilitationReview: '/exercises/rehabilitation-review',

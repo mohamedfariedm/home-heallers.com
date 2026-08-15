@@ -1,30 +1,125 @@
 # Work Management API Contract
 
-**Audience:** Backend (Laravel) team  
-**Frontend status:** Implemented against a mock repository (`localStorage`). Flip to live API with `NEXT_PUBLIC_WM_BACKEND=laravel`.  
-**Base path:** `{NEXT_PUBLIC_API_ENDPOINT}` → typically `/api/admin`  
-**Auth:** `Authorization: Bearer {auth_token}` (same as existing admin APIs)  
-**Response shape:** Prefer Laravel-style `{ data, meta?, message? }`. Frontend will adapt.
+> Frontend integration guide for the **Work Management** module (admin dashboard).
+>
+> Backend status: **Live** — all endpoints below are implemented under `/api/admin/work`.
+>
+> A frontend developer should be able to wire the module from this document alone.
 
 ---
 
-## 1. Domain model
+## Table of Contents
 
-Hierarchy: **Department → Project → Work Item**
+1. [Overview](#overview)
+2. [Base URL & Conventions](#base-url--conventions)
+3. [Authentication & Permissions](#authentication--permissions)
+4. [Domain Model](#domain-model)
+5. [Enums & Workflows](#enums--workflows)
+6. [API Endpoints](#api-endpoints)
+   - [Departments](#departments)
+   - [Projects](#projects)
+   - [Work Items](#work-items)
+   - [Comments](#comments)
+   - [Attachments](#attachments)
+   - [Activity Feed](#activity-feed)
+   - [Work Logs](#work-logs)
+   - [Links & Subtasks](#links--subtasks)
+   - [Saved Views](#saved-views)
+   - [Notifications (work module)](#notifications-work-module)
+   - [Workflows](#workflows)
+   - [Dashboard KPIs](#dashboard-kpis)
+7. [Attachment Upload Flow](#attachment-upload-flow)
+8. [Global Dashboard Notifications (bell icon)](#global-dashboard-notifications-bell-icon)
+9. [Business Rules (server-enforced)](#business-rules-server-enforced)
+10. [Pagination & List Response Shape](#pagination--list-response-shape)
+11. [TypeScript Interfaces](#typescript-interfaces)
+12. [Frontend Integration Checklist](#frontend-integration-checklist)
+13. [Error Handling](#error-handling)
+
+---
+
+## Overview
+
+Work Management is a Jira-like module for internal admin users:
 
 ```
-Department
-  └── Project (key e.g. CARE)
-        └── WorkItem (key e.g. CARE-142)
-              ├── Comments
-              ├── Attachments (files uploaded via existing attachment endpoint)
-              ├── WorkLogs
-              ├── Links (blocks / blocked_by / related_to / duplicate_of)
-              ├── Activity (server-generated audit)
-              └── Children (subtasks via parent_id)
+Department → Project → Work Item
+                          ├── Comments (+ @mentions)
+                          ├── Attachments (metadata; bytes via existing upload API)
+                          ├── Work Logs
+                          ├── Links (blocks / blocked_by / related_to / duplicate_of)
+                          ├── Activity (server-generated audit)
+                          ├── Subtasks (parent_id)
+                          └── Notifications
 ```
 
-### Enums
+**Switch from mock to live API:**
+
+Set `NEXT_PUBLIC_WM_BACKEND=laravel` and point API calls to `/api/admin/work/...`.
+
+---
+
+## Base URL & Conventions
+
+| Item | Value |
+|------|-------|
+| Base URL | `/api/admin` |
+| Work prefix | `/api/admin/work` |
+| Auth header | `Authorization: Bearer {token}` |
+| Content-Type | `application/json` |
+| Field casing | **snake_case** in all JSON (backend returns snake_case; map to camelCase in your adapter if needed) |
+| Timestamps | ISO 8601 strings (e.g. `2026-08-15T10:00:00.000000Z`) |
+| Dates | `YYYY-MM-DD` for date-only fields (`due_date`, work log `date`, project dates) |
+| Single-resource responses | Wrapped in `{ data: [item], message: "..." }` (array with one element) |
+| List responses | `{ data: [...], meta: {...}, links: {...}, message: "..." }` |
+| KPI response | `{ data: { ...kpis }, message: "..." }` |
+| Delete responses | `{ message: "..." }` only |
+
+---
+
+## Authentication & Permissions
+
+Login: `POST /api/admin/login` → returns `data.permissions[]` (Spatie permission objects with `name` field).
+
+Work Management permission names (guard: `web`):
+
+| Permission | Used for |
+|------------|----------|
+| `work_items.view` | List/read work items, comments, attachments, activity, links, children, workflows |
+| `work_items.create` | Create work items |
+| `work_items.update` | Update work items, work logs, links |
+| `work_items.delete` | Delete work items |
+| `work_items.assign` | Assign / unassign |
+| `work_items.change_status` | Status transitions (Kanban drag + detail panel) |
+| `projects.manage` | Create/update projects; see `next_sequence` on project |
+| `departments.manage` | Create/update/archive departments; upsert workflows |
+| `comments.create` | Add comments |
+| `attachments.create` | Link attachment metadata; delete attachments |
+| `reports.view` | Dashboard KPIs |
+
+Missing permission → `403 Forbidden`.
+
+---
+
+## Domain Model
+
+### Hierarchy
+
+| Entity | Key fields |
+|--------|------------|
+| **Department** | `id`, `name`, `manager_id`, `member_ids[]`, `status`, `workflow_id` |
+| **Project** | `id`, `key` (e.g. `CARE`), `name`, `department_id`, `owner_id`, `member_ids[]`, `status`, `workflow_id`, `next_sequence` |
+| **Work Item** | `id`, `key` (e.g. `CARE-142`), `title`, `type`, `status`, `priority`, `project_id`, `assignee_id`, `estimate`, `bug`, `tags`, `parent_id` |
+
+### Work item key format
+
+`{PROJECT_KEY}-{sequence}` — e.g. `CARE-1`, `CARE-2`. Sequence is per-project, atomic on the server.
+
+---
+
+## Enums & Workflows
+
+### Static enums
 
 | Field | Values |
 |-------|--------|
@@ -34,84 +129,31 @@ Department
 | Priority | `critical`, `high`, `medium`, `low` |
 | Bug severity | `blocker`, `critical`, `major`, `minor`, `trivial` |
 | Link type | `blocks`, `blocked_by`, `related_to`, `duplicate_of` |
-| Default statuses | `new`, `in_progress`, `ready_to_test`, `testing`, `done`, `blocked`, `reopened`, `cancelled` |
 
-Status values can be extended per workflow (HR/Support). Do **not** hardcode only the default set in DB if workflows are configurable.
+### Workflow-driven statuses
 
----
-
-## 2. Business rules (must be server-side)
-
-1. **Archived departments** cannot receive new projects or work items.
-2. **Archived projects** cannot receive new work items.
-3. **Project key** unique, `^[A-Z][A-Z0-9]{1,9}$` (e.g. `CARE`).
-4. **Work item key** = `{PROJECT_KEY}-{sequence}` (e.g. `CARE-142`). Sequence is per-project, atomic increment.
-5. **Assignee** must be a member of the project **or** department (or project owner / department manager). `null` = unassigned.
-6. **Status transitions** must follow the project/department workflow transition map. Reject illegal transitions with `422`.
-7. **Kanban drag** and detail status change must use the **same** transition endpoint/logic.
-8. **Every important mutation** writes:
-   - Activity/audit row (server-generated message)
-   - Status history row (on status change)
-   - Assignment history row (on assign/unassign)
-9. **Comments:** author can edit/delete only their own comments (soft delete OK).
-10. **Mentions:** parse `@Name` in comments → store `mention_ids` → create notifications.
-11. **Attachments:** file bytes go to existing attachment upload endpoint; work API only stores metadata + URLs.
-
----
-
-## 3. Permissions (Spatie)
-
-Seed these permission names (`guard_name: web`):
+`status` is **not** a fixed enum — it depends on the resolved workflow:
 
 ```
-work_items.view
-work_items.create
-work_items.update
-work_items.delete
-work_items.assign
-work_items.change_status
-projects.manage
-departments.manage
-comments.create
-attachments.create
-reports.view
+project.workflow_id → department.workflow_id → wf-default-dev
 ```
 
-Return them in the login permissions payload (same as existing Spatie permissions).
+Fetch workflow for a project: `GET /work/projects/{projectId}/workflow`
 
----
+#### Seeded workflows
 
-## 4. Suggested database tables
+| ID | Name | Statuses |
+|----|------|----------|
+| `wf-default-dev` | Development | `new`, `in_progress`, `ready_to_test`, `testing`, `done`, `blocked`, `reopened`, `cancelled` |
+| `wf-hr` | HR | `new`, `under_review`, `approved`, `completed`, `cancelled` |
+| `wf-support` | Support | `open`, `investigating`, `waiting_customer`, `resolved`, `closed`, `cancelled` |
 
-Minimal set (names illustrative — snake_case OK):
+**Frontend must:**
+- Render Kanban columns from `workflow.statuses`
+- Only offer transitions listed in `workflow.transitions[currentStatus]`
+- Use `POST /work/items/{id}/transition` for both Kanban drag and detail status change
 
-| Table | Notes |
-|-------|-------|
-| `wm_departments` | name, description, manager_id, status, workflow_id |
-| `wm_department_user` | department_id, user_id |
-| `wm_projects` | key, name, description, department_id, owner_id, status, start_date, due_date, next_sequence, workflow_id |
-| `wm_project_user` | project_id, user_id |
-| `wm_work_items` | key, title, description, type, status, priority, project_id, department_id, reporter_id, assignee_id, created_by_id, due_date, parent_id, estimate fields, tags JSON, bug JSON |
-| `wm_assignment_history` | work_item_id, from_assignee_id, to_assignee_id, changed_by_id, changed_at |
-| `wm_status_history` | work_item_id, from_status, to_status, changed_by_id, changed_at |
-| `wm_activities` | work_item_id, action, actor_id, message, meta JSON |
-| `wm_comments` | work_item_id, author_id, body, mention_ids JSON, deleted_at |
-| `wm_attachments` | work_item_id, name, mime_type, size, url/original, thumbnail, server_attachment_id, uploaded_by_id |
-| `wm_work_logs` | work_item_id, user_id, hours, date, description |
-| `wm_work_item_links` | source_id, target_id, type, created_by_id |
-| `wm_saved_views` | user_id, name, filters JSON |
-| `wm_notifications` | user_id, type, title, body, work_item_id, read_at |
-| `wm_workflows` | name, statuses JSON, transitions JSON |
-
----
-
-## 5. Default workflows (seed)
-
-### Development (`wf-default-dev`)
-
-Statuses: `new → in_progress → ready_to_test → testing → done` (+ `blocked`, `reopened`, `cancelled`)
-
-Transitions:
+Example transitions (`wf-default-dev`):
 
 ```json
 {
@@ -126,33 +168,23 @@ Transitions:
 }
 ```
 
-### HR (`wf-hr`)
-
-`new → under_review → approved → completed` (+ `cancelled`)
-
-### Support (`wf-support`)
-
-`open → investigating → waiting_customer → resolved → closed` (+ `cancelled`)
-
-Resolve workflow for a work item: **project.workflow_id → department.workflow_id → default Development**.
+Illegal transition → `422` with `{ "message": "...", "errors": { "to_status": ["Illegal status transition."] } }`.
 
 ---
 
-## 6. API endpoints
+## API Endpoints
 
-All under `/work/...` relative to admin API base.
+### Departments
 
-### 6.1 Departments
+| Method | Path | Permission |
+|--------|------|------------|
+| `GET` | `/work/departments` | `departments.manage` **or** `work_items.view` |
+| `GET` | `/work/departments/{id}` | same |
+| `POST` | `/work/departments` | `departments.manage` |
+| `PATCH` | `/work/departments/{id}` | `departments.manage` |
+| `POST` | `/work/departments/{id}/archive` | `departments.manage` |
 
-| Method | Path | Permission | Description |
-|--------|------|------------|-------------|
-| `GET` | `/work/departments` | `departments.manage` or `work_items.view` | List departments |
-| `GET` | `/work/departments/{id}` | same | Get one |
-| `POST` | `/work/departments` | `departments.manage` | Create |
-| `PATCH` | `/work/departments/{id}` | `departments.manage` | Update |
-| `POST` | `/work/departments/{id}/archive` | `departments.manage` | Set status=`archived` |
-
-**Create/Update body:**
+**Create / Update body:**
 
 ```json
 {
@@ -171,26 +203,29 @@ All under `/work/...` relative to admin API base.
 {
   "id": 1,
   "name": "Engineering",
-  "description": "...",
+  "description": "Product engineering",
   "manager_id": 1,
   "member_ids": [1, 2, 3],
   "status": "active",
   "workflow_id": "wf-default-dev",
-  "created_at": "2026-08-08T10:00:00.000Z",
-  "updated_at": "2026-08-08T10:00:00.000Z"
+  "created_at": "2026-08-08T10:00:00.000000Z",
+  "updated_at": "2026-08-08T10:00:00.000000Z"
 }
 ```
 
+**List filters:** `?status=active`, `?q=search term`, `?limit=50&page=1`
+
 ---
 
-### 6.2 Projects
+### Projects
 
-| Method | Path | Permission | Description |
-|--------|------|------------|-------------|
-| `GET` | `/work/projects` | `projects.manage` or `work_items.view` | List (`?department_id=`) |
-| `GET` | `/work/projects/{id}` | same | Get one |
-| `POST` | `/work/projects` | `projects.manage` | Create |
-| `PATCH` | `/work/projects/{id}` | `projects.manage` | Update |
+| Method | Path | Permission |
+|--------|------|------------|
+| `GET` | `/work/projects` | `projects.manage` **or** `work_items.view` |
+| `GET` | `/work/projects/{id}` | same |
+| `POST` | `/work/projects` | `projects.manage` |
+| `PATCH` | `/work/projects/{id}` | `projects.manage` |
+| `GET` | `/work/projects/{projectId}/workflow` | `work_items.view` |
 
 **Create body:**
 
@@ -209,44 +244,46 @@ All under `/work/...` relative to admin API base.
 }
 ```
 
-Notes:
-- `key` immutable after create (or only Admin can change; frontend currently disables edit of key).
-- Initialize `next_sequence = 1`.
+- `key` must match `^[A-Z][A-Z0-9]{1,9}$`, unique, **immutable** after create.
+- `next_sequence` is server-managed (visible only with `projects.manage` permission).
+
+**List filters:** `?department_id=1`, `?status=active`, `?q=search`
 
 ---
 
-### 6.3 Work items
+### Work Items
 
-| Method | Path | Permission | Description |
-|--------|------|------------|-------------|
-| `GET` | `/work/items` | `work_items.view` | List + filters |
-| `GET` | `/work/items/{idOrKey}` | `work_items.view` | Get by id **or** key (`CARE-142`) |
-| `POST` | `/work/items` | `work_items.create` | Create (status starts `new`) |
-| `PATCH` | `/work/items/{id}` | `work_items.update` | Update fields |
-| `DELETE` | `/work/items/{id}` | `work_items.delete` | Delete |
-| `POST` | `/work/items/{id}/assign` | `work_items.assign` | Assign / unassign |
-| `POST` | `/work/items/{id}/transition` | `work_items.change_status` | Status change |
+| Method | Path | Permission |
+|--------|------|------------|
+| `GET` | `/work/items` | `work_items.view` |
+| `GET` | `/work/items/{idOrKey}` | `work_items.view` |
+| `POST` | `/work/items` | `work_items.create` |
+| `PATCH` | `/work/items/{id}` | `work_items.update` |
+| `DELETE` | `/work/items/{id}` | `work_items.delete` |
+| `POST` | `/work/items/{id}/assign` | `work_items.assign` |
+| `POST` | `/work/items/{id}/transition` | `work_items.change_status` |
+| `GET` | `/work/items/{id}/children` | `work_items.view` |
 
 #### List filters (query params)
 
 | Param | Type | Notes |
 |-------|------|-------|
-| `q` | string | Search key/title/description/tags |
-| `project_id` | id | |
-| `department_id` | id | |
-| `type` | enum | |
-| `status` | string | |
+| `q` | string | Search key, title, description, tags |
+| `project_id` | number | |
+| `department_id` | number | |
+| `type` | enum | `task`, `bug`, `story`, `improvement` |
+| `status` | string | Workflow-specific status slug |
 | `priority` | enum | |
-| `assignee_id` | id | |
-| `reporter_id` | id | |
-| `my_work` | `1` | Alias: assignee = current user |
-| `unassigned` | `1` | assignee is null |
-| `overdue` | `1` | due_date < now and not done/cancelled |
-| `due_from` / `due_to` | ISO date | |
-| `created_from` / `created_to` | ISO date | |
-| `parent_id` | id | |
-| `tags[]` | string[] | |
-| `page` / `limit` | pagination | Return `meta.total` |
+| `assignee_id` | number | |
+| `reporter_id` | number | |
+| `my_work` | `1` | Assignee = current user |
+| `unassigned` | `1` | `assignee_id` is null |
+| `overdue` | `1` | Due date passed, not in terminal status |
+| `due_from` / `due_to` | date | `YYYY-MM-DD` |
+| `created_from` / `created_to` | date | `YYYY-MM-DD` |
+| `parent_id` | number | Subtasks of this parent |
+| `tags[]` | string[] | Repeat param or array |
+| `limit` / `page` | number | Pagination |
 
 #### Create body
 
@@ -276,29 +313,30 @@ Notes:
 }
 ```
 
-- `bug` required/used only when `type = bug`.
-- Server sets: `key`, `department_id` (from project), `reporter_id`, `created_by_id`, `status = new`.
-- On create with assignee → write assignment history + notify assignee.
+Server sets: `key`, `department_id`, `reporter_id`, `created_by_id`, initial `status` (from workflow).
+
+- `bug` object only when `type = bug`.
+- `parent_id` must belong to the **same project** (422 if not).
+
+#### Update body
+
+Same fields as create (except `project_id`, `assignee_id`). Use dedicated assign/transition endpoints for those.
+
+Updating writes an activity row: `"Admin User updated CARE-1 (priority, due_date)"`.
 
 #### Assign body
 
 ```json
-{
-  "assignee_id": 2
-}
+{ "assignee_id": 2 }
 ```
 
-Use `assignee_id: null` to unassign. Validate membership. Write assignment history + activity + notification.
+Use `assignee_id: null` to unassign. Assignee must be project member, department member, project owner, or department manager.
 
 #### Transition body
 
 ```json
-{
-  "to_status": "in_progress"
-}
+{ "to_status": "in_progress" }
 ```
-
-Validate against workflow. Write status history + activity. If `to_status = reopened`, activity action = `reopened`. Notify assignee/reporter (except actor).
 
 #### Work item response
 
@@ -316,57 +354,73 @@ Validate against workflow. Write status history + activity. If `to_status = reop
   "reporter_id": 1,
   "assignee_id": 2,
   "created_by_id": 1,
-  "due_date": "2026-08-15T00:00:00.000Z",
+  "due_date": "2026-08-15T00:00:00.000000Z",
   "estimate": {
     "original_hours": 8,
     "remaining_hours": 3,
     "completed_hours": 5
   },
   "tags": ["api"],
-  "parent_id": 100,
+  "parent_id": null,
   "bug": null,
   "created_at": "...",
   "updated_at": "..."
 }
 ```
 
+**Lookup by key:** `GET /work/items/CARE-101` works (numeric id also works).
+
 ---
 
-### 6.4 Comments
+### Comments
 
-| Method | Path | Permission |
-|--------|------|------------|
+| Method | Path | Permission / Auth |
+|--------|------|-------------------|
 | `GET` | `/work/items/{id}/comments` | `work_items.view` |
 | `POST` | `/work/items/{id}/comments` | `comments.create` |
-| `PATCH` | `/work/comments/{commentId}` | own comment |
-| `DELETE` | `/work/comments/{commentId}` | own comment |
+| `PATCH` | `/work/comments/{commentId}` | Author only |
+| `DELETE` | `/work/comments/{commentId}` | Author only |
 
-**Create body:** `{ "body": "Started work. @Sara please review" }`
+**Create body:**
 
-Server:
-- Parse mentions → `mention_ids`
-- Activity `comment_added`
-- Notify mentioned users + assignee
+```json
+{ "body": "Started work. @Mohamed Ali please review" }
+```
+
+**Response:**
+
+```json
+{
+  "id": 5,
+  "work_item_id": 101,
+  "author_id": 1,
+  "body": "Started work. @Mohamed Ali please review",
+  "mention_ids": [2],
+  "created_at": "...",
+  "updated_at": "..."
+}
+```
+
+**Mention parsing:**
+- Format: `@Display Name` in comment body.
+- Server matches against **project members, department members, reporter, and assignee** only (not all users).
+- Matched user IDs stored in `mention_ids`; mentioned users receive notifications.
+
+Non-author edit/delete → `403`.
 
 ---
 
-### 6.5 Attachments
+### Attachments
 
-**Upload file bytes** (already exists):
-
-`POST {NEXT_PUBLIC_ATTACHMENT_URL}`  
-`multipart/form-data` field: `attachment[]`  
-Returns `{ data: [{ id, original, thumbnail, ... }] }`
-
-**Link to work item:**
+Metadata only — file bytes use the existing upload API (see [Attachment Upload Flow](#attachment-upload-flow)).
 
 | Method | Path | Permission |
 |--------|------|------------|
 | `GET` | `/work/items/{id}/attachments` | `work_items.view` |
 | `POST` | `/work/items/{id}/attachments` | `attachments.create` |
-| `DELETE` | `/work/attachments/{attachmentId}` | `attachments.create` or owner/admin |
+| `DELETE` | `/work/attachments/{attachmentId}` | `attachments.create` or uploader |
 
-**Create body (metadata only):**
+**Link metadata body (after upload):**
 
 ```json
 {
@@ -379,32 +433,71 @@ Returns `{ data: [{ id, original, thumbnail, ... }] }`
 }
 ```
 
+**Response:**
+
+```json
+{
+  "id": 1,
+  "work_item_id": 101,
+  "name": "screenshot.png",
+  "mime_type": "image/png",
+  "size": 245001,
+  "original": "https://...",
+  "thumbnail": "https://...",
+  "server_attachment_id": 987,
+  "uploaded_by_id": 1,
+  "created_at": "...",
+  "updated_at": "..."
+}
+```
+
 ---
 
-### 6.6 Activity
+### Activity Feed
 
-| Method | Path |
-|--------|------|
-| `GET` | `/work/items/{id}/activities` |
+| Method | Path | Permission |
+|--------|------|------------|
+| `GET` | `/work/items/{id}/activities` | `work_items.view` |
 
-**Do not** let the frontend invent history. Backend generates messages like:
+**Do not invent history on the frontend.** Server generates messages like:
 
 ```
-Ahmed Hassan created CARE-152
-Ahmed Hassan assigned CARE-152 to Mohamed Ali
+Admin User created CARE-152
+Admin User assigned CARE-152 to Mohamed Ali
 Mohamed Ali changed new → in_progress
+Admin User updated CARE-152 (priority)
+Admin User deleted CARE-152
 ```
+
+**Activity actions:** `created`, `assigned`, `unassigned`, `status_changed`, `reopened`, `updated`, `deleted`, `comment_added`, `attachment_added`, `work_logged`, `link_added`
+
+**Response item:**
+
+```json
+{
+  "id": 1,
+  "work_item_id": 101,
+  "action": "status_changed",
+  "actor_id": 2,
+  "message": "Mohamed Ali changed new → in_progress",
+  "meta": null,
+  "created_at": "...",
+  "updated_at": "..."
+}
+```
+
+For `updated` actions, `meta.changed_fields` contains the list of changed field names.
 
 ---
 
-### 6.7 Work logs / estimates
+### Work Logs
 
-| Method | Path |
-|--------|------|
-| `GET` | `/work/items/{id}/work-logs` |
-| `POST` | `/work/items/{id}/work-logs` |
+| Method | Path | Permission |
+|--------|------|------------|
+| `GET` | `/work/items/{id}/work-logs` | `work_items.view` |
+| `POST` | `/work/items/{id}/work-logs` | `work_items.update` |
 
-**Body:**
+**Create body:**
 
 ```json
 {
@@ -414,20 +507,20 @@ Mohamed Ali changed new → in_progress
 }
 ```
 
-On create: increase `completed_hours`, decrease `remaining_hours` (floor at 0), write activity `work_logged`.
+On create: server increases `estimate.completed_hours`, decreases `estimate.remaining_hours` (floors at 0), writes `work_logged` activity.
 
-Estimates also updatable via `PATCH /work/items/{id}` (`estimate` object).
+Estimates can also be updated via `PATCH /work/items/{id}` with an `estimate` object.
 
 ---
 
-### 6.8 Links & subtasks
+### Links & Subtasks
 
-| Method | Path |
-|--------|------|
-| `GET` | `/work/items/{id}/links` |
-| `POST` | `/work/items/{id}/links` |
-| `DELETE` | `/work/links/{linkId}` |
-| `GET` | `/work/items/{id}/children` |
+| Method | Path | Permission |
+|--------|------|------------|
+| `GET` | `/work/items/{id}/links` | `work_items.view` |
+| `POST` | `/work/items/{id}/links` | `work_items.update` |
+| `DELETE` | `/work/links/{linkId}` | `work_items.update` |
+| `GET` | `/work/items/{id}/children` | `work_items.view` |
 
 **Create link body:**
 
@@ -438,52 +531,81 @@ Estimates also updatable via `PATCH /work/items/{id}` (`estimate` object).
 }
 ```
 
-When `blocks` / `blocked_by` is created, also create the inverse link (or return both virtually). Reject self-links.
+- `blocks` / `blocked_by` auto-create the inverse link on the server.
+- Self-links rejected with `422`.
+- Deleting a link removes its inverse too.
 
-Subtasks: set `parent_id` on create/update. `GET .../children` returns items where `parent_id = {id}`.
-
----
-
-### 6.9 Saved views
-
-| Method | Path |
-|--------|------|
-| `GET` | `/work/saved-views` | current user |
-| `POST` | `/work/saved-views` | `{ "name": "My Open Bugs", "filters": { ... } }` |
-| `DELETE` | `/work/saved-views/{id}` | owner only |
+**Subtasks:** set `parent_id` on create/update. `GET .../children` returns items where `parent_id = {id}`.
 
 ---
 
-### 6.10 Notifications
+### Saved Views
 
-| Method | Path |
-|--------|------|
-| `GET` | `/work/notifications` |
-| `POST` | `/work/notifications/{id}/read` |
-| `POST` | `/work/notifications/read-all` |
+| Method | Path | Auth |
+|--------|------|------|
+| `GET` | `/work/saved-views` | Current user |
+| `POST` | `/work/saved-views` | Current user |
+| `DELETE` | `/work/saved-views/{id}` | Owner only |
 
-Create notifications when:
-- assigned
-- mentioned in comment
-- status changed on followed/assigned work
-- commented (assignee)
-- reopened
-- due soon (scheduler / cron)
+**Create body:**
 
-Optional: also push into existing `/dashboard-notifications` + FCM later.
+```json
+{
+  "name": "My Open Bugs",
+  "filters": {
+    "type": "bug",
+    "status": "new",
+    "priority": "critical"
+  }
+}
+```
+
+`filters` is an opaque JSON object — store the same keys you pass to `GET /work/items`.
 
 ---
 
-### 6.11 Workflows
+### Notifications (work module)
 
-| Method | Path |
-|--------|------|
-| `GET` | `/work/workflows` |
-| `GET` | `/work/workflows/{id}` |
-| `GET` | `/work/projects/{projectId}/workflow` |
-| `PUT` | `/work/workflows/{id}` | upsert |
+Dedicated inbox for work events. Separate from the global admin bell (see below).
 
-**Workflow payload:**
+| Method | Path | Auth |
+|--------|------|------|
+| `GET` | `/work/notifications` | Current user |
+| `POST` | `/work/notifications/{id}/read` | Owner only |
+| `POST` | `/work/notifications/read-all` | Current user |
+
+**Response item:**
+
+```json
+{
+  "id": 1,
+  "user_id": 2,
+  "type": "assigned",
+  "title": "Work item assigned",
+  "body": "You were assigned to CARE-101: Implement checkout API",
+  "work_item_id": 101,
+  "read_at": null,
+  "created_at": "...",
+  "updated_at": "..."
+}
+```
+
+**Notification types:** `assigned`, `mentioned`, `status_changed`, `reopened`, `commented`, `due_soon`
+
+Cross-user read → `403`.
+
+---
+
+### Workflows
+
+| Method | Path | Permission |
+|--------|------|------------|
+| `GET` | `/work/workflows` | `work_items.view` |
+| `GET` | `/work/workflows/{id}` | `work_items.view` |
+| `GET` | `/work/projects/{projectId}/workflow` | `work_items.view` |
+| `PUT` | `/work/workflows/{id}` | `departments.manage` |
+
+**Workflow response:**
 
 ```json
 {
@@ -492,19 +614,21 @@ Optional: also push into existing `/dashboard-notifications` + FCM later.
   "statuses": ["new", "in_progress", "ready_to_test", "testing", "done", "blocked", "reopened", "cancelled"],
   "transitions": {
     "new": ["in_progress", "blocked", "cancelled"]
-  }
+  },
+  "created_at": "...",
+  "updated_at": "..."
 }
 ```
 
 ---
 
-### 6.12 Dashboard KPIs
+### Dashboard KPIs
 
 | Method | Path | Permission |
 |--------|------|------------|
 | `GET` | `/work/dashboard/kpis` | `reports.view` |
 
-**Response:**
+**Response (`data` object):**
 
 ```json
 {
@@ -522,94 +646,361 @@ Optional: also push into existing `/dashboard-notifications` + FCM later.
 }
 ```
 
-KPI click on frontend opens filtered `/work/items` — no special endpoint needed beyond list filters.
+KPI clicks should open filtered `/work/items` using the list filters — no special endpoint needed.
 
 ---
 
-## 7. Naming convention (camelCase vs snake_case)
+## Attachment Upload Flow
 
-Frontend TypeScript currently uses **camelCase** (`assigneeId`, `projectId`).  
-Laravel typically returns **snake_case**.
+Two-step process:
 
-**Agreement options (pick one):**
-1. Backend returns snake_case; frontend adapter maps fields (recommended Laravel style), **or**
-2. Backend returns camelCase via Laravel API Resources.
-
-Either is fine — document the choice. Do **not** mix within the same resource.
-
----
-
-## 8. Suggested implementation phases for backend
-
-### Phase A — Foundation (unblocks frontend swap)
-1. Departments CRUD + archive  
-2. Projects CRUD + key uniqueness + sequence  
-3. Work items CRUD + list filters  
-4. Assign + transition + status/assignment history + activities  
-5. Seed workflows + Spatie permissions  
-
-### Phase B — Collaboration
-6. Comments + mentions + notifications  
-7. Attachments metadata endpoints (reuse existing upload)  
-8. Full activity feed  
-
-### Phase C — Structure & time
-9. Work logs + estimate updates  
-10. Parent/child  
-11. Links  
-
-### Phase D — Product polish
-12. Saved views  
-13. Dashboard KPIs  
-14. Due-soon cron  
-15. Optional FCM / dashboard-notifications bridge  
-
----
-
-## 9. Frontend switchover
-
-When Phase A is live:
-
-1. Implement `LaravelWorkManagementRepository` methods using `client.workManagement.*` in `src/framework/utils/index.ts` (stubs already exist; expand as endpoints land).
-2. Set `NEXT_PUBLIC_WM_BACKEND=laravel`.
-3. Keep mock available for local UI work without API.
-
-Existing attachment upload stays:
+### Step 1 — Upload file bytes (existing API)
 
 ```
-POST NEXT_PUBLIC_ATTACHMENT_URL
-FormData: attachment[]
+POST /api/admin/attachments
+Content-Type: multipart/form-data
 Authorization: Bearer {token}
+
+Field: attachment[]  (array of files)
+```
+
+**Response:**
+
+```json
+{
+  "status": 200,
+  "msg": "The Attachments List",
+  "data": [
+    {
+      "id": 987,
+      "original": "https://.../file.png",
+      "thumbnail": "https://.../file_thumb.png"
+    }
+  ]
+}
+```
+
+### Step 2 — Link metadata to work item
+
+```
+POST /api/admin/work/items/{workItemId}/attachments
+```
+
+```json
+{
+  "name": "file.png",
+  "mime_type": "image/png",
+  "size": 245001,
+  "original": "https://.../file.png",
+  "thumbnail": "https://.../file_thumb.png",
+  "server_attachment_id": 987
+}
 ```
 
 ---
 
-## 10. Acceptance checks for Phase A
+## Global Dashboard Notifications (bell icon)
 
-- [ ] Create department with manager + members  
-- [ ] Archive department → cannot create project/work under it  
-- [ ] Create project `CARE` → reject duplicate key  
-- [ ] Create work item → gets `CARE-1`, then `CARE-2`  
-- [ ] Assign only allowed members; unassign works  
-- [ ] Illegal status transition returns 422  
-- [ ] Legal transition writes status history + activity  
-- [ ] `GET /work/items/CARE-1` works by key  
-- [ ] Filters combine (`type=bug&priority=critical&overdue=1`)  
-- [ ] Login returns new WM permission names  
+Work events **also** push into the existing admin notification bell at `/api/admin/dashboard-notifications`.
+
+When a work notification is created (assign, mention, status change, comment, due soon), the backend:
+
+1. Writes to `wm_notifications` (work module inbox above)
+2. Writes to Laravel `notifications` table (global bell)
+3. Sends FCM web push if the user has registered push tokens
+
+**Global bell API** (already documented in `docs/frontend-dashboard-notifications-guide.md`):
+
+| Method | Path |
+|--------|------|
+| `GET` | `/api/admin/dashboard-notifications` |
+| `GET` | `/api/admin/dashboard-notifications/unread-count` |
+| `POST` | `/api/admin/dashboard-notifications/{id}/mark-as-read` |
+| `POST` | `/api/admin/dashboard-notifications/mark-all-as-read` |
+
+Work notification events appear with `event` / `type` like `work.assigned`, `work.mentioned`, etc.
+
+**Click action:** `{ type: "route", entity: "work_item", id: 101 }`  
+Resolves to: `{FIREBASE_WEB_CLICK_BASE_URL}/work_item/101`
+
+You can show work notifications in **either** inbox (or both). Recommended:
+- Work module page → use `/work/notifications`
+- Global admin header bell → use `/dashboard-notifications` (includes work events)
 
 ---
 
-## 11. Contact / code references (frontend)
+## Business Rules (server-enforced)
 
-| Area | Path |
-|------|------|
-| Domain types | `src/types/work-management.ts` |
-| Repository contract | `src/lib/work-management/repository.ts` |
-| Default workflows | `src/lib/work-management/workflow.ts` |
-| Permissions | `src/lib/work-management/permissions.ts` |
-| API client stubs | `src/framework/utils/index.ts` → `workManagement` |
-| Attachment upload helper | `src/lib/work-management/upload-attachment.ts` |
+The frontend should mirror these for good UX, but the server is authoritative:
+
+1. Archived departments cannot receive new projects or work items.
+2. Archived projects cannot receive new work items.
+3. Project key unique, regex `^[A-Z][A-Z0-9]{1,9}$`, immutable after create.
+4. Assignee must be project/department member (or owner/manager), or `null`.
+5. Status transitions must follow workflow map → illegal = `422`.
+6. Kanban drag and detail status change use the **same** `POST .../transition` endpoint.
+7. Comments: author-only edit/delete.
+8. Mentions: `@Name` matched against project/dept members + reporter/assignee.
+9. `parent_id` must be in the same project.
+10. `blocks`/`blocked_by` links auto-create inverse; self-links rejected.
+11. Activity/audit, status history, assignment history written server-side on every mutation.
 
 ---
 
-*Generated from the Home Heller Work Management frontend contract — Aug 2026.*
+## Pagination & List Response Shape
+
+All list endpoints support `?limit=` (default 100) and `?page=`.
+
+```json
+{
+  "data": [ /* items */ ],
+  "links": {
+    "first": "...",
+    "last": "...",
+    "prev": null,
+    "next": "..."
+  },
+  "meta": {
+    "current_page": 1,
+    "from": 1,
+    "last_page": 3,
+    "per_page": 100,
+    "to": 100,
+    "total": 250
+  },
+  "message": "Work items fetched successfully"
+}
+```
+
+---
+
+## TypeScript Interfaces
+
+```typescript
+// Adapter: map snake_case API → camelCase app types
+
+interface Department {
+  id: number;
+  name: string;
+  description: string | null;
+  manager_id: number | null;
+  member_ids: number[];
+  status: 'active' | 'archived';
+  workflow_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface Project {
+  id: number;
+  key: string;
+  name: string;
+  description: string | null;
+  department_id: number;
+  owner_id: number | null;
+  member_ids: number[];
+  start_date: string | null;
+  due_date: string | null;
+  status: 'active' | 'on_hold' | 'completed' | 'archived';
+  workflow_id: string | null;
+  next_sequence?: number; // only with projects.manage
+  created_at: string;
+  updated_at: string;
+}
+
+interface WorkItemEstimate {
+  original_hours: number;
+  remaining_hours: number;
+  completed_hours: number;
+}
+
+interface WorkItemBug {
+  steps_to_reproduce?: string;
+  expected_result?: string;
+  actual_result?: string;
+  environment?: string;
+  severity?: 'blocker' | 'critical' | 'major' | 'minor' | 'trivial';
+}
+
+interface WorkItem {
+  id: number;
+  key: string;
+  title: string;
+  description: string | null;
+  type: 'task' | 'bug' | 'story' | 'improvement';
+  status: string;
+  priority: 'critical' | 'high' | 'medium' | 'low';
+  project_id: number;
+  department_id: number;
+  reporter_id: number;
+  assignee_id: number | null;
+  created_by_id: number;
+  due_date: string | null;
+  estimate: WorkItemEstimate | null;
+  tags: string[];
+  parent_id: number | null;
+  bug: WorkItemBug | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface Comment {
+  id: number;
+  work_item_id: number;
+  author_id: number;
+  body: string;
+  mention_ids: number[];
+  created_at: string;
+  updated_at: string;
+}
+
+interface WorkAttachment {
+  id: number;
+  work_item_id: number;
+  name: string;
+  mime_type: string | null;
+  size: number | null;
+  original: string | null;
+  thumbnail: string | null;
+  server_attachment_id: number | null;
+  uploaded_by_id: number;
+  created_at: string;
+  updated_at: string;
+}
+
+interface Activity {
+  id: number;
+  work_item_id: number;
+  action: string;
+  actor_id: number;
+  message: string;
+  meta: { changed_fields?: string[] } | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface WorkLog {
+  id: number;
+  work_item_id: number;
+  user_id: number;
+  hours: number;
+  date: string;
+  description: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface WorkItemLink {
+  id: number;
+  source_id: number;
+  target_id: number;
+  type: 'blocks' | 'blocked_by' | 'related_to' | 'duplicate_of';
+  created_by_id: number;
+  created_at: string;
+  updated_at: string;
+}
+
+interface SavedView {
+  id: number;
+  user_id: number;
+  name: string;
+  filters: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+interface WorkNotification {
+  id: number;
+  user_id: number;
+  type: 'assigned' | 'mentioned' | 'status_changed' | 'reopened' | 'commented' | 'due_soon';
+  title: string;
+  body: string | null;
+  work_item_id: number | null;
+  read_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface Workflow {
+  id: string;
+  name: string;
+  statuses: string[];
+  transitions: Record<string, string[]>;
+  created_at: string;
+  updated_at: string;
+}
+
+interface DashboardKpis {
+  open_work: number;
+  in_progress: number;
+  ready_to_test: number;
+  overdue: number;
+  critical_bugs: number;
+  completed_this_week: number;
+  by_status: { status: string; count: number }[];
+  by_severity: { severity: string; count: number }[];
+  by_department: { department_id: number; name: string; count: number }[];
+  by_assignee: { user_id: number; name: string; count: number }[];
+  completed_trend: { date: string; count: number }[];
+}
+
+interface PaginatedResponse<T> {
+  data: T[];
+  meta: {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+    from: number | null;
+    to: number | null;
+  };
+  links: {
+    first: string | null;
+    last: string | null;
+    prev: string | null;
+    next: string | null;
+  };
+  message: string;
+}
+```
+
+---
+
+## Frontend Integration Checklist
+
+- [ ] Set `NEXT_PUBLIC_WM_BACKEND=laravel`
+- [ ] Map snake_case API responses to camelCase (or use snake_case consistently)
+- [ ] Gate UI actions by permission names from login payload
+- [ ] Fetch project workflow before rendering Kanban / status dropdown
+- [ ] Use `POST /items/{id}/transition` for Kanban drag (not PATCH status)
+- [ ] Use `POST /items/{id}/assign` for assignee changes (not PATCH)
+- [ ] Support lookup by key: `GET /items/CARE-142`
+- [ ] Two-step attachment: upload bytes → link metadata
+- [ ] Parse `@Name` mentions in comment composer; show mentionable users from project/dept members
+- [ ] Show activity feed from server (never fabricate history)
+- [ ] Wire work notifications inbox (`/work/notifications`) and/or global bell
+- [ ] KPI cards link to filtered work item list
+- [ ] Handle `422` on illegal transitions and invalid assignee/parent
+
+---
+
+## Error Handling
+
+| Status | Meaning |
+|--------|---------|
+| `401` | Missing/invalid token |
+| `403` | Missing permission or not resource owner (comment, saved view, notification) |
+| `404` | Resource not found |
+| `422` | Validation error — `{ message, errors: { field: ["..."] } }` |
+
+Common 422 cases:
+- Duplicate project key
+- Assignee not a member
+- Illegal status transition
+- Parent in different project
+- Self-link
+- Create under archived department/project
+
+---
+
+*Generated from the live Laravel Work Management backend — Aug 2026.*

@@ -14,12 +14,17 @@ export function setStoredWmActorId(id: string) {
   localStorage.setItem(WM_ACTOR_KEY, id);
 }
 
-/** Resolve actor id: mock override → session → seed Ahmed. */
+const isLaravelBackend =
+  typeof process !== 'undefined' &&
+  process.env.NEXT_PUBLIC_WM_BACKEND === 'laravel';
+
+/** Resolve actor id: mock override (mock only) → session → seed Ahmed. */
 export function useWmActorId(): string {
   const { data } = useSession();
   const [override, setOverride] = useState<string | null>(null);
 
   useEffect(() => {
+    if (isLaravelBackend) return;
     setOverride(getStoredWmActorId());
     const onStorage = () => setOverride(getStoredWmActorId());
     window.addEventListener('storage', onStorage);
@@ -30,10 +35,10 @@ export function useWmActorId(): string {
     };
   }, []);
 
-  if (override) return override;
+  if (!isLaravelBackend && override) return override;
   const id = (data?.user as { id?: string } | undefined)?.id;
   if (id) return String(id);
-  return 'u-1';
+  return isLaravelBackend ? '' : 'u-1';
 }
 
 export const WM_QUERY_KEYS = {

@@ -3,16 +3,13 @@ import Pagination, { type PaginationProps } from '@/components/ui/pagination';
 import Select from '@/components/ui/select';
 import cn from '@/utils/class-names';
 
-const paginationLimitOptions = [5, 10, 15, 20, 25].map((v, idx) => ({
-  id: idx,
-  name: String(v),
-  value: v,
-}));
+const DEFAULT_PAGE_SIZE_OPTIONS = [5, 10, 15, 20, 25];
 
 export type TablePaginationProps = {
   pageSize: number;
   setPageSize?: React.Dispatch<React.SetStateAction<number>>;
   paginatorClassName?: string;
+  pageSizeOptions?: number[];
 } & PaginationProps;
 
 export default function TablePagination({
@@ -20,8 +17,16 @@ export default function TablePagination({
   setPageSize,
   total,
   paginatorClassName = 'mt-5 xs:mt-6 sm:mt-7',
+  pageSizeOptions,
   ...props
 }: TablePaginationProps) {
+  const paginationLimitOptions = (pageSizeOptions ?? DEFAULT_PAGE_SIZE_OPTIONS).map(
+    (v, idx) => ({
+      id: idx,
+      name: String(v),
+      value: v,
+    })
+  );
   if (total && total < pageSize) {
     return null;
   }
