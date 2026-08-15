@@ -284,7 +284,7 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
         last_name: data.last_name || '',
         offer: data.offer || '',
         agent_name: data.agent_name || '',
-        status: data.status || 'new', // Default to 'new' if not provided
+        status: initValues?.id ? (initValues?.status || data.status) : 'new',
         reason: data.reason || '',
         age: data.age || '',
         gender: data.gender || '',
@@ -504,20 +504,8 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
             <Input label="Agent Name" {...register('agent_name')} error={errors.agent_name?.message} />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label>Status</label>
-              <select {...register('status')} className="w-full border border-gray-300 rounded-lg p-2">
-                <option value="new">New</option>
-                <option value="negotiation">Negotiation</option>
-                <option value="success">Success</option>
-                <option value="possible">Possible</option>
-                <option value="failed">Failed</option>
-              </select>
-              {errors.status && <p className="text-sm text-red-500">{errors.status.message}</p>}
-            </div>
-            <Input label="Chief Comment" {...register('reason')} error={errors.reason?.message} />
-          </div>
+          <input type="hidden" {...register('status')} />
+          <Input label="Chief Comment" {...register('reason')} error={errors.reason?.message} />
 
           <div className="grid grid-cols-1 gap-4">
             <div>
