@@ -96,13 +96,22 @@ export const getColumns = ({
     render: (status: string) => <TargetStatusBadge status={status} />,
   },
   {
-    title: <HeaderCell title="Actions" />,
+    title: <HeaderCell title="Actions" align="center" />,
     dataIndex: 'actions',
     key: 'actions',
     width: 160,
-    align: 'right' as const,
+    align: 'center' as const,
+    onHeaderCell: () => ({
+      className: '!text-center',
+      style: { textAlign: 'center' },
+    }),
     onCell: () => ({
-      style: { whiteSpace: 'nowrap', overflow: 'visible' },
+      className: '!text-center',
+      style: {
+        whiteSpace: 'nowrap',
+        overflow: 'visible',
+        textAlign: 'center',
+      },
     }),
     render: (_: any, row: any) => (
       <DoctorTargetRowActions row={row} permissions={permissions} />

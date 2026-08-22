@@ -3,23 +3,22 @@
 import Link from 'next/link';
 import { ActionIcon } from '@/components/ui/action-icon';
 import { Tooltip } from '@/components/ui/tooltip';
-import { Dropdown, DropdownItem } from '@/components/ui/dropdown ';
+import { Popover } from '@/components/ui/popover';
 import EyeIcon from '@/components/icons/eye';
 import PencilIcon from '@/components/icons/pencil';
 import CreateButton from '@/app/shared/create-button';
 import { useModal } from '@/app/shared/modal-views/use-modal';
 import { routes } from '@/config/routes';
 import { PiDotsThreeBold } from 'react-icons/pi';
-import toast from 'react-hot-toast';
 import EditDoctorTargetForm from './edit-form';
 import AdjustSessionsModal from './adjust-modal';
 import RetargetModal from './retarget-modal';
 import ApprovePreviewModal from './approve-preview-modal';
+import ActivateDoctorTargetModal from './activate-modal';
 import {
   getStatusActions,
   type DoctorTargetsPermissions,
 } from './permissions';
-import { useActivateDoctorTarget } from '@/framework/doctor-targets';
 
 export default function DoctorTargetRowActions({
   row,
@@ -30,19 +29,11 @@ export default function DoctorTargetRowActions({
 }) {
   const { openModal } = useModal();
   const actions = getStatusActions(row?.status, permissions);
-  const { mutate: activate, isPending: activating } = useActivateDoctorTarget();
   const hasMore =
     actions.activate || actions.adjust || actions.retarget || actions.preview;
 
-  const handleActivate = () => {
-    if (!window.confirm('Activate this Draft target?')) return;
-    activate(row.id, {
-      onError: (error) => toast.error(error?.message || 'Activate failed'),
-    });
-  };
-
   return (
-    <div className="flex items-center justify-end gap-2">
+    <div className="mx-auto inline-flex w-full items-center justify-center gap-2">
       <Tooltip
         size="sm"
         content={() => 'View details'}
@@ -75,69 +66,79 @@ export default function DoctorTargetRowActions({
       )}
 
       {hasMore && (
-        <Dropdown
-          trigger={
-            <ActionIcon
-              size="sm"
-              variant="outline"
-              aria-label="More actions"
-              disabled={activating}
-            >
-              <PiDotsThreeBold className="h-4 w-4" />
-            </ActionIcon>
-          }
-          dropdownClassName="w-48 z-50 right-0 p-2 gap-1 grid mt-1"
+        <Popover
+          placement="bottom"
+          className="z-[60] p-1"
+          content={({ setOpen }) => (
+            <div className="flex min-w-[160px] flex-col gap-0.5">
+              {actions.activate && (
+                <button
+                  type="button"
+                  className="rounded-md px-3 py-2 text-left text-sm hover:bg-gray-100"
+                  onClick={() => {
+                    setOpen(false);
+                    openModal({
+                      view: <ActivateDoctorTargetModal target={row} />,
+                    });
+                  }}
+                >
+                  Activate
+                </button>
+              )}
+              {actions.adjust && (
+                <button
+                  type="button"
+                  className="rounded-md px-3 py-2 text-left text-sm hover:bg-gray-100"
+                  onClick={() => {
+                    setOpen(false);
+                    openModal({
+                      view: <AdjustSessionsModal target={row} />,
+                    });
+                  }}
+                >
+                  Adjust sessions
+                </button>
+              )}
+              {actions.retarget && (
+                <button
+                  type="button"
+                  className="rounded-md px-3 py-2 text-left text-sm hover:bg-gray-100"
+                  onClick={() => {
+                    setOpen(false);
+                    openModal({
+                      view: <RetargetModal target={row} />,
+                    });
+                  }}
+                >
+                  Retarget
+                </button>
+              )}
+              {(actions.preview || actions.approve) && (
+                <button
+                  type="button"
+                  className="rounded-md px-3 py-2 text-left text-sm hover:bg-gray-100"
+                  onClick={() => {
+                    setOpen(false);
+                    openModal({
+                      view: <ApprovePreviewModal targetId={row.id} />,
+                      customSize: '560px',
+                    });
+                  }}
+                >
+                  Preview & approve
+                </button>
+              )}
+            </div>
+          )}
         >
-          {actions.activate && (
-            <DropdownItem
-              className="p-2 text-xs sm:text-sm"
-              activeClassName="bg-gray-100 rounded-md"
-              onClick={handleActivate}
-            >
-              Activate
-            </DropdownItem>
-          )}
-          {actions.adjust && (
-            <DropdownItem
-              className="p-2 text-xs sm:text-sm"
-              activeClassName="bg-gray-100 rounded-md"
-              onClick={() =>
-                openModal({
-                  view: <AdjustSessionsModal target={row} />,
-                })
-              }
-            >
-              Adjust sessions
-            </DropdownItem>
-          )}
-          {actions.retarget && (
-            <DropdownItem
-              className="p-2 text-xs sm:text-sm"
-              activeClassName="bg-gray-100 rounded-md"
-              onClick={() =>
-                openModal({
-                  view: <RetargetModal target={row} />,
-                })
-              }
-            >
-              Retarget
-            </DropdownItem>
-          )}
-          {(actions.preview || actions.approve) && (
-            <DropdownItem
-              className="p-2 text-xs sm:text-sm"
-              activeClassName="bg-gray-100 rounded-md"
-              onClick={() =>
-                openModal({
-                  view: <ApprovePreviewModal targetId={row.id} />,
-                  customSize: '560px',
-                })
-              }
-            >
-              Preview & approve
-            </DropdownItem>
-          )}
-        </Dropdown>
+          <ActionIcon
+            size="sm"
+            variant="outline"
+            aria-label="More actions"
+          >
+            <PiDotsThreeBold className="h-4 w-4" />
+          </ActionIcon>
+        </Popover>
       )}
     </div>
   );

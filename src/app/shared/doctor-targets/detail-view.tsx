@@ -2,13 +2,13 @@
 
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
 import { Title, Text } from '@/components/ui/text';
 import CreateButton from '@/app/shared/create-button';
 import EditDoctorTargetForm from './edit-form';
 import AdjustSessionsModal from './adjust-modal';
 import RetargetModal from './retarget-modal';
 import ApprovePreviewModal from './approve-preview-modal';
+import ActivateDoctorTargetModal from './activate-modal';
 import TargetTimeline from './timeline';
 import TargetStatusBadge, {
   doctorDisplayName,
@@ -19,9 +19,7 @@ import {
   getStatusActions,
   type DoctorTargetsPermissions,
 } from './permissions';
-import { useActivateDoctorTarget } from '@/framework/doctor-targets';
 import { routes } from '@/config/routes';
-import toast from 'react-hot-toast';
 
 function Field({ label, value }: { label: string; value: ReactNode }) {
   return (
@@ -44,14 +42,6 @@ export default function DoctorTargetDetailView({
   permissions: DoctorTargetsPermissions;
 }) {
   const actions = getStatusActions(target?.status, permissions);
-  const { mutate: activate, isPending: activating } = useActivateDoctorTarget();
-
-  const handleActivate = () => {
-    if (!window.confirm('Activate this Draft target?')) return;
-    activate(target.id, {
-      onError: (error) => toast.error(error?.message || 'Activate failed'),
-    });
-  };
 
   const adjustments = Array.isArray(target?.adjustments)
     ? target.adjustments
@@ -91,13 +81,12 @@ export default function DoctorTargetDetailView({
             />
           )}
           {actions.activate && (
-            <Button
+            <CreateButton
+              label="Activate"
+              icon={null}
+              view={<ActivateDoctorTargetModal target={target} />}
               className="h-9"
-              isLoading={activating}
-              onClick={handleActivate}
-            >
-              Activate
-            </Button>
+            />
           )}
           {actions.adjust && (
             <CreateButton
