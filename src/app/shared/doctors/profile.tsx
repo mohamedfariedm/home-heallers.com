@@ -28,6 +28,7 @@ import {
   PiMapPinBold,
 } from 'react-icons/pi';
 import { resolveLocalizedNameOrFallback } from '@/utils/resolve-localized-name';
+import { routes } from '@/config/routes';
 
 type DoctorAttachment = {
   id?: string;
@@ -495,7 +496,7 @@ function HistoryCard({ item }: { item: HistoryItem }) {
             Patient:{' '}
             {item.patient?.id ? (
               <Link
-                href={`clients/${item.patient.id}`}
+                href={routes.patients.detail(item.patient.id)}
                 className="font-medium text-primary hover:underline"
               >
                 {patientName}

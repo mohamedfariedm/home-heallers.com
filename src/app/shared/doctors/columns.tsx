@@ -16,6 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import ColumnFilterPopover from '@/app/shared/customer-suport/column-filter-popover';
 import LookupColumnFilterPopover from '@/app/shared/lookup-column-filter-popover';
 import { resolveLocalizedNameOrFallback } from '@/utils/resolve-localized-name';
+import { routes } from '@/config/routes';
 import { PiToggleLeft, PiToggleRight } from 'react-icons/pi';
 
 interface Columns {
@@ -74,7 +75,7 @@ export const getColumns = ({
       <div className="flex items-center gap-3">
         <Tooltip size="sm" content={() => 'View profile'} placement="top" color="invert">
           <Link
-            href={`doctors/${row.id}`}
+            href={routes.doctors.detail(row.id)}
             className="p-0 m-0 bg-transparent text-gray-700"
           >
             <ActionIcon tag="span" size="sm" variant="outline">

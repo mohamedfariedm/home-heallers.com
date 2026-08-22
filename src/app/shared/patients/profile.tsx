@@ -30,7 +30,7 @@ type Attachment = {
 
 type Reservation = {
   id: number;
-  status: string;
+  status: number | string;
   status_label: string;
   type: string;
   paid: number;
@@ -46,7 +46,7 @@ type Reservation = {
     start_time: string;
     end_time: string;
     time_period: string;
-    status: string;
+    status: number | string;
     status_label: string;
   }>;
   attachments?: Attachment[];
@@ -65,7 +65,9 @@ export default function PatientProfileView({ patient }: { patient: any }) {
   const kpis = useMemo(() => {
     const reservations = Array.isArray(patient?.reservations) ? patient.reservations : [];
     const sessions = reservations.flatMap((r: any) => r.sessions || []);
-    const completed = sessions.filter((s: any) => (s.status || '').toLowerCase() === 'completed').length;
+    const completed = sessions.filter(
+      (s: any) => String(s.status ?? '').toLowerCase() === 'completed'
+    ).length;
     return {
       reservationsCount: reservations.length,
       sessionsCount: sessions.length,
@@ -223,7 +225,7 @@ export default function PatientProfileView({ patient }: { patient: any }) {
                       {r.sessions.map((s) => (
                         <div key={s.id} className="flex items-center gap-3 rounded-md border border-gray-200 px-3 py-2">
                           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100">
-                            {(s.status || '').toLowerCase() === 'completed' ? (
+                            {String(s.status ?? '').toLowerCase() === 'completed' ? (
                               <PiCheckCircleBold className="h-4 w-4 text-emerald-600" />
                             ) : (
                               <PiClockBold className="h-4 w-4 text-amber-600" />
@@ -319,8 +321,14 @@ function TabBtn({
   );
 }
 
-function StatusBadge({ status, label }: { status: string; label: string }) {
-  const key = (status || '').toLowerCase();
+function StatusBadge({
+  status,
+  label,
+}: {
+  status: number | string;
+  label: string;
+}) {
+  const key = String(status ?? '').toLowerCase();
   const color =
     key === '3' || key === 'confirmed'
       ? 'success'

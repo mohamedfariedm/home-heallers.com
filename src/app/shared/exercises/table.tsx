@@ -116,6 +116,7 @@ export default function ExercisesTable({
     currentPage,
     handlePaginate,
     filters,
+    updateFilter,
     searchTerm,
     handleSearch,
     selectedRowKeys,
@@ -214,9 +215,7 @@ export default function ExercisesTable({
       filterElement={
         <FilterElement
           filters={filters}
-          updateFilter={(columnId, filterValue) =>
-            pushParams({ [columnId]: String(filterValue ?? '') })
-          }
+          updateFilter={updateFilter}
           handleReset={handleReset}
           rehabilitationReviewMode={rehabilitationReviewMode}
         />

@@ -2,7 +2,7 @@ import { routes } from '@/config/routes';
 
 const SUBJECT_ROUTE_BUILDERS: Record<string, (id: number) => string> = {
   Reservation: () => routes.reservations.index,
-  Client: (id) => `${routes.patients.index}/${id}`,
+  Client: (id) => routes.patients.detail(id),
   Doctor: (id) => routes.doctors.detail(id),
   User: () => routes.users.index,
   Invoice: (id) => routes.invoices.detail(id),

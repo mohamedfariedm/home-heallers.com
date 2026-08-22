@@ -5,12 +5,11 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useSession } from 'next-auth/react';
 import { dashboardNotificationKeys } from '@/framework/dashboard-notifications';
 import {
-  getFcmWebToken,
   isFirebaseConfigured,
   onForegroundMessage,
   requestNotificationPermission,
 } from '@/lib/firebase/messaging';
-import { registerPushTokenWithBackend } from '@/lib/firebase/push-token-lifecycle';
+import { syncFcmWebToken } from '@/lib/firebase/push-token-lifecycle';
 import { Button } from '@/components/ui/button';
 import { Text, Title } from '@/components/ui/text';
 import cn from '@/utils/class-names';
@@ -22,10 +21,11 @@ export default function DashboardPushProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const { status } = useSession();
+  const { status, data: session } = useSession();
   const queryClient = useQueryClient();
   const [showPrompt, setShowPrompt] = useState(false);
   const authenticated = status === 'authenticated';
+  const userId = session?.user?.id ?? null;
 
   const refreshInbox = useCallback(() => {
     queryClient.invalidateQueries({
@@ -42,12 +42,9 @@ export default function DashboardPushProvider({
       return;
     }
 
-    const token = await getFcmWebToken();
-    if (token) {
-      await registerPushTokenWithBackend(token);
-    }
+    await syncFcmWebToken(userId);
     setShowPrompt(false);
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
     if (!authenticated || !isFirebaseConfigured()) return;
@@ -59,9 +56,8 @@ export default function DashboardPushProvider({
       if (!('Notification' in window)) return;
 
       if (Notification.permission === 'granted') {
-        const token = await getFcmWebToken();
-        if (!cancelled && token) {
-          await registerPushTokenWithBackend(token);
+        if (!cancelled) {
+          await syncFcmWebToken(userId);
         }
       } else if (Notification.permission === 'default') {
         const dismissed = localStorage.getItem(PROMPT_DISMISSED_KEY) === '1';
@@ -75,11 +71,19 @@ export default function DashboardPushProvider({
       });
     })();
 
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible' && Notification.permission === 'granted') {
+        void syncFcmWebToken(userId);
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+
     return () => {
       cancelled = true;
       unsubscribe?.();
+      document.removeEventListener('visibilitychange', onVisibility);
     };
-  }, [authenticated, refreshInbox]);
+  }, [authenticated, refreshInbox, userId]);
 
   const dismissPrompt = () => {
     localStorage.setItem(PROMPT_DISMISSED_KEY, '1');

@@ -17,6 +17,8 @@ export function resolveDoctorTargetsPermissions(
   return {
     // List / detail access (do NOT use dashboard permission alone)
     view: hasAny(userPermissions, [
+      'doctor_targets.view',
+      'doctor_targets_view',
       'doctor_targets.edit',
       'doctor_targets.create',
       'doctor_targets.approve',

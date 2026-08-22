@@ -1,23 +1,15 @@
 'use client';
 
 import { HeaderCell } from '@/components/ui/table';
-import { ActionIcon } from '@/components/ui/action-icon';
-import { Tooltip } from '@/components/ui/tooltip';
-import EyeIcon from '@/components/icons/eye';
-import PencilIcon from '@/components/icons/pencil';
 import Link from 'next/link';
-import CreateButton from '../create-button';
-import EditDoctorTargetForm from './edit-form';
+import { routes } from '@/config/routes';
 import TargetStatusBadge, {
   doctorDisplayName,
   formatAchievement,
   formatMoney,
 } from './status-badge';
-import {
-  getStatusActions,
-  type DoctorTargetsPermissions,
-} from './permissions';
-import { routes } from '@/config/routes';
+import type { DoctorTargetsPermissions } from './permissions';
+import DoctorTargetRowActions from './row-actions';
 
 interface Columns {
   data: any[];
@@ -31,49 +23,17 @@ export const getColumns = ({
   onHeaderCellClick,
 }: Columns) => [
   {
-    title: <></>,
-    dataIndex: 'actions',
-    key: 'actions',
-    width: 90,
-    render: (_: any, row: any) => {
-      const actions = getStatusActions(row.status, permissions);
-      return (
-        <div className="flex items-center gap-2">
-          <Tooltip size="sm" content={() => 'View detail'} placement="top" color="invert">
-            <Link
-              href={routes.doctorTargets.detail(row.id)}
-              className="p-0 m-0 bg-transparent text-gray-700"
-            >
-              <ActionIcon tag="span" size="sm" variant="outline">
-                <EyeIcon className="h-4 w-4" />
-              </ActionIcon>
-            </Link>
-          </Tooltip>
-          {actions.edit && (
-            <Tooltip size="sm" content={() => 'Edit'} placement="top" color="invert">
-              <CreateButton
-                icon={
-                  <ActionIcon tag="span" size="sm" variant="outline">
-                    <PencilIcon className="h-4 w-4" />
-                  </ActionIcon>
-                }
-                view={<EditDoctorTargetForm initValues={row} />}
-                label=""
-                className="p-0 m-0 bg-transparent text-gray-700"
-              />
-            </Tooltip>
-          )}
-        </div>
-      );
-    },
-  },
-  {
     title: <HeaderCell title="ID" />,
     dataIndex: 'id',
     key: 'id',
     width: 70,
     render: (id: number) => (
-      <span className="font-semibold text-gray-800">#{id}</span>
+      <Link
+        href={routes.doctorTargets.detail(id)}
+        className="font-semibold text-gray-800 hover:underline"
+      >
+        #{id}
+      </Link>
     ),
   },
   {
@@ -134,5 +94,18 @@ export const getColumns = ({
     key: 'status',
     width: 120,
     render: (status: string) => <TargetStatusBadge status={status} />,
+  },
+  {
+    title: <HeaderCell title="Actions" />,
+    dataIndex: 'actions',
+    key: 'actions',
+    width: 160,
+    align: 'right' as const,
+    onCell: () => ({
+      style: { whiteSpace: 'nowrap', overflow: 'visible' },
+    }),
+    render: (_: any, row: any) => (
+      <DoctorTargetRowActions row={row} permissions={permissions} />
+    ),
   },
 ];

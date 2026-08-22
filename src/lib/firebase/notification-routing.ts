@@ -15,7 +15,7 @@ export function getDashboardNotificationHref(
     case 'customer_support':
       return '/customer-supports-operation-kanban';
     case 'client':
-      return id != null ? `${routes.patients.index}/${id}` : routes.patients.index;
+      return id != null ? routes.patients.detail(id) : routes.patients.index;
     default:
       return null;
   }
