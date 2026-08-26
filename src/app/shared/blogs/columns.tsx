@@ -11,6 +11,8 @@ import DeletePopover from '@/app/shared/delete-popover';
 import TrashIcon from '@/components/icons/trash';
 import CreateButton from '../create-button';
 import BlogsForm from './address-form';
+import { resolveLocalizedName } from '@/utils/resolve-localized-name';
+import { getBlogSlug, parseApiDate } from '@/utils/slugs';
 
 type Columns = {
   data: any[];
@@ -109,17 +111,29 @@ export const getColumns = ({
     width: 100,
     hidden: 'name',
 
+    render: (_: string, row: any) => {
+      const slug = getBlogSlug(row);
+      return (
+        <div className="flex w-full justify-center  text-center">
+          {
+            <AvatarCard
+              //@ts-ignore
+              src={row?.image?.original || ''}
+              name={resolveLocalizedName(row?.name, 'en') || resolveLocalizedName(row?.name, 'ar')}
+              description={slug ? `/${slug}` : `ID-${row.id}`}
+            />
+          }
+        </div>
+      );
+    },
+  },
+  {
+    title: <HeaderCell align="center" title="Slug" />,
+    dataIndex: 'slug',
+    key: 'slug',
+    width: 160,
     render: (_: string, row: any) => (
-      <div className="flex w-full justify-center  text-center">
-        {
-          <AvatarCard
-            //@ts-ignore
-            src={row?.image?.original || ''}
-            name={row?.name?.ar ?? row?.name?.ar ?? ''}
-            description={`ID-${row.id}`}
-          />
-        }
-      </div>
+      <div className="w-full text-center font-medium text-gray-700">{getBlogSlug(row) || '—'}</div>
     ),
   },
   {
@@ -130,7 +144,9 @@ export const getColumns = ({
     hidden: 'description',
 
     render: (_: string, row: any) => (
-      <div className="w-full line-clamp-3  text-center">{row?.description?.ar ?? row?.description?.ar ?? ''}</div>
+      <div className="w-full line-clamp-3  text-center">
+        {resolveLocalizedName(row?.description, 'en') || resolveLocalizedName(row?.description, 'ar')}
+      </div>
     ),
   },
   {
@@ -140,9 +156,14 @@ export const getColumns = ({
     width: 30,
     hidden: 'date',
 
-    render: (_: string, row: any) => (
-      <div className="w-full  text-center"><DateCell date={row.date} /></div>
-    ),
+    render: (_: string, row: any) => {
+      const parsed = parseApiDate(row.date);
+      return (
+        <div className="w-full  text-center">
+          {parsed ? <DateCell date={parsed} /> : (row.date || '—')}
+        </div>
+      );
+    },
   },
   {
     title: <HeaderCell align="center" title={'show in home page'} />,
@@ -173,7 +194,10 @@ export const getColumns = ({
     dataIndex: 'updated_at',
     key: 'updated_at',
     width: 100,
-    render: (value: Date) => <DateCell date={value} />,
+    render: (value: Date | string) => {
+      const parsed = parseApiDate(value);
+      return parsed ? <DateCell date={parsed} /> : (value ? String(value) : '—');
+    },
   },
   {
     title: (
@@ -190,6 +214,9 @@ export const getColumns = ({
     dataIndex: 'created_at',
     key: 'created_at',
     width: 100,
-    render: (value: Date) => <DateCell date={value} />,
+    render: (value: Date | string) => {
+      const parsed = parseApiDate(value);
+      return parsed ? <DateCell date={parsed} /> : (value ? String(value) : '—');
+    },
   },
 ];

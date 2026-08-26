@@ -17,7 +17,9 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-const FCM_TOKEN_STORAGE_KEY = 'fcm_web_push_token';
+const FCM_TOKEN_STORAGE_KEY = 'fcm_web_token';
+const FCM_TOKEN_USER_STORAGE_KEY = 'fcm_web_token_user';
+const LEGACY_FCM_TOKEN_STORAGE_KEY = 'fcm_web_push_token';
 
 export function isFirebaseConfigured(): boolean {
   return Boolean(
@@ -48,12 +50,22 @@ export function getStoredFcmToken(): string | null {
   return localStorage.getItem(FCM_TOKEN_STORAGE_KEY);
 }
 
-export function setStoredFcmToken(token: string | null): void {
+export function getStoredFcmTokenUserId(): string | null {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem(FCM_TOKEN_USER_STORAGE_KEY);
+}
+
+export function setStoredFcmToken(token: string | null, userId?: string | null): void {
   if (typeof window === 'undefined') return;
+  localStorage.removeItem(LEGACY_FCM_TOKEN_STORAGE_KEY);
   if (token) {
     localStorage.setItem(FCM_TOKEN_STORAGE_KEY, token);
+    if (userId) {
+      localStorage.setItem(FCM_TOKEN_USER_STORAGE_KEY, userId);
+    }
   } else {
     localStorage.removeItem(FCM_TOKEN_STORAGE_KEY);
+    localStorage.removeItem(FCM_TOKEN_USER_STORAGE_KEY);
   }
 }
 
@@ -91,11 +103,11 @@ export async function getFcmWebToken(): Promise<string | null> {
   if (!registration) return null;
 
   try {
+    await navigator.serviceWorker.ready;
     const token = await getToken(messaging, {
       vapidKey,
       serviceWorkerRegistration: registration,
     });
-    if (token) setStoredFcmToken(token);
     return token || null;
   } catch (error) {
     console.error('FCM getToken failed:', error);

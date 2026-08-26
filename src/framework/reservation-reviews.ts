@@ -21,7 +21,7 @@ export function useReservationReview(id: number) {
 export const useToggleReservationReview = () => {
   const queryClient = useQueryClient();
 
-  const { mutate, isPending } = useMutation({
+  const { mutate, mutateAsync, isPending } = useMutation({
     mutationFn: (id: number) => client.reservationReviews.toggle(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [routes.reservationReviews.index] });
@@ -32,5 +32,27 @@ export const useToggleReservationReview = () => {
     },
   });
 
-  return { mutate, isPending };
+  return { mutate, mutateAsync, isPending };
+};
+
+export const useToggleReviewShowOnPackage = () => {
+  const queryClient = useQueryClient();
+
+  const { mutate, mutateAsync, isPending } = useMutation({
+    mutationFn: (id: number) => client.reservationReviews.toggleShowOnPackage(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [routes.reservationReviews.index] });
+      toast.success('Offer visibility updated');
+    },
+    onError: (error: any) => {
+      const status = error?.response?.status;
+      if (status === 403) {
+        toast.error("You don't have permission to change review visibility");
+        return;
+      }
+      toast.error(error?.message || 'Failed to update offer visibility');
+    },
+  });
+
+  return { mutate, mutateAsync, isPending };
 };

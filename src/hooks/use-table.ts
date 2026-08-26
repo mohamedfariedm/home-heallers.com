@@ -136,6 +136,14 @@ export function useTable<T extends AnyObject>(
   const [filters, setFilters] = useState<Record<string, any>>(
     initialFilterState ?? {}
   );
+  const appliedFilterKey = JSON.stringify(initialFilterState ?? {});
+
+  // Keep drawer values in sync with the URL. useState only applies
+  // initialFilterState on mount, so applied params would otherwise be lost
+  // when the filter panel is reopened on an already-mounted table.
+  useEffect(() => {
+    setFilters(JSON.parse(appliedFilterKey) as Record<string, any>);
+  }, [appliedFilterKey]);
 
   function updateFilter(columnId: string, filterValue: string | any[]) {
     if (!Array.isArray(filterValue) && !isString(filterValue)) {

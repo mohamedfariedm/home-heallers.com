@@ -90,6 +90,7 @@ export default function ExerciseProgramsTable({
     currentPage,
     handlePaginate,
     filters,
+    updateFilter,
     searchTerm,
     handleSearch,
     handleReset: resetTable,
@@ -176,9 +177,7 @@ export default function ExerciseProgramsTable({
       filterElement={
         <FilterElement
           filters={filters}
-          updateFilter={(columnId, filterValue) =>
-            pushParams({ [columnId]: String(filterValue ?? '') })
-          }
+          updateFilter={updateFilter}
           handleReset={handleReset}
         />
       }

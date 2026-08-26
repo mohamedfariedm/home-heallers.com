@@ -5,8 +5,8 @@ import { LaravelWorkManagementRepository } from './laravel-repository';
 export type WorkManagementBackend = 'mock' | 'laravel';
 
 /**
- * Flip to 'laravel' when backend endpoints are ready (Phase 7).
- * Can also be driven by NEXT_PUBLIC_WM_BACKEND=laravel later.
+ * Live Laravel API when NEXT_PUBLIC_WM_BACKEND=laravel; otherwise mock/localStorage.
+ * Contract: docs/work-management-api.md
  */
 const BACKEND: WorkManagementBackend =
   (typeof process !== 'undefined' &&

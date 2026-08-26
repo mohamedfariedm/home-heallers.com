@@ -21,6 +21,8 @@ import Upload from '@/components/ui/upload';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import toast from 'react-hot-toast';
+import { resolveLocalizedName } from '@/utils/resolve-localized-name';
+import { englishSlugPair, getServiceSlug } from '@/utils/slugs';
 
 
 export default function CreateOrUpdateServices({ initValues }: { initValues?: any }) {
@@ -74,7 +76,7 @@ export default function CreateOrUpdateServices({ initValues }: { initValues?: an
       if (initValues?.category?.id) {
         setSelectedCategory({
           value: initValues?.category?.id,
-          label: category?.name?.en || category?.name?.ar || '',
+          label: resolveLocalizedName(category?.name, 'en') || '',
         });
       } else {
         setSelectedCategory({ value: null, label: 'None' });
@@ -101,9 +103,17 @@ export default function CreateOrUpdateServices({ initValues }: { initValues?: an
     
     setImageError(0);
     
-    const requestBody = {
+    const existingEn =
+      typeof initValues?.slug === 'string'
+        ? initValues.slug
+        : (initValues?.slug?.en || '');
+    const slug = existingEn
+      ? { en: existingEn, ar: existingEn }
+      : englishSlugPair(data.name.en);
+
+    const requestBody: Record<string, unknown> = {
       name: data.name,
-      slug: data.slug,
+      slug,
       meta_title: data.meta_title,
       meta_description: data.meta_description,
       category_id: (selectedCategory?.value ?? null), // allow null
@@ -112,7 +122,7 @@ export default function CreateOrUpdateServices({ initValues }: { initValues?: an
       description: data.description,
       active: active,
     };
-console.log(selectedCategory?.value, 'selectedCategory?.value');
+
     if (initValues) {
       updateService({ service_id: initValues.id, ...requestBody });
     } else {
@@ -148,10 +158,6 @@ console.log(selectedCategory?.value, 'selectedCategory?.value');
             en: initValues?.meta_title?.en || '',
             ar: initValues?.meta_title?.ar || '',
           },
-          slug: {
-            en: initValues?.slug?.en || '',
-            ar: initValues?.slug?.ar || '',
-          },
           description: {
             en: initValues?.description?.en || '',
             ar: initValues?.description?.ar || '',
@@ -162,9 +168,10 @@ console.log(selectedCategory?.value, 'selectedCategory?.value');
       
       className="flex flex-grow flex-col gap-6 p-6"
     >
-      {({ register, formState: { errors }, setValue, control }) => {
-
-console.log(errors, 'errors');
+      {({ register, formState: { errors }, setValue, control, watch }) => {
+        const slugValue = initValues
+          ? getServiceSlug(initValues)
+          : englishSlugPair(watch('name.en') || '').en;
 
        return <>
           <div className="flex items-center justify-between">
@@ -188,10 +195,11 @@ console.log(errors, 'errors');
                 error={errors.name?.en?.message}
               />
               <Input
-                key={"slug.en"}
                 label="Service Slug (English)"
-                {...register('slug.en')}
-                error={errors.slug?.en?.message}
+                value={slugValue || ''}
+                disabled
+                readOnly
+                helperText="Generated from the English name. Cannot be edited."
               />
               <QuillEditor
                 name="description.en"
@@ -228,10 +236,11 @@ console.log(errors, 'errors');
                 error={errors.name?.ar?.message}
               />
               <Input
-                key={"slug.ar"}
                 label="Service Slug (Arabic)"
-                {...register('slug.ar')}
-                error={errors.slug?.ar?.message}
+                value={slugValue || ''}
+                disabled
+                readOnly
+                helperText="Same as the English slug. Cannot be edited."
               />
               <QuillEditor
                 name="description.ar"
@@ -345,7 +354,7 @@ console.log(errors, 'errors');
                 { value: null, label: 'None' },
                 ...(categoriesData?.data?.map((category: any) => ({
                   value: category.id,
-                  label: category.name?.en || category.name?.ar || 'Unnamed',
+                  label: resolveLocalizedName(category.name, 'en') || 'Unnamed',
                 })) ?? []),
               ]}
               value={selectedCategory} // Bind selected category

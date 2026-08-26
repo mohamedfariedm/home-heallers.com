@@ -42,7 +42,7 @@ export default function DoctorTargetDetailPage() {
         >
           <PiArrowLeftBold className="h-4 w-4" />
         </ActionIcon>
-        <h1 className="text-lg font-semibold">Target detail</h1>
+        <h1 className="text-lg font-semibold">Doctor target details</h1>
       </div>
 
       {isLoading && !target ? (

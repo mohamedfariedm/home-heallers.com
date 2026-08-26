@@ -89,12 +89,14 @@ export const useUpdateDoctorTarget = () => {
 
 export const useActivateDoctorTarget = () => {
   const queryClient = useQueryClient();
+  const { closeModal } = useModal();
 
   return useMutation({
     mutationFn: (id: number | string) => client.doctorTargets.activate(id),
     onSuccess(_data, id) {
       invalidateTargets(queryClient, id);
       toast.success('Target activated');
+      closeModal();
     },
     onError: mutationError,
   });

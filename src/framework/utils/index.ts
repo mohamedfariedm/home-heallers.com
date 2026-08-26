@@ -89,9 +89,42 @@ class Client {
     }
     packages = {
         all: (param: string) => HttpClient.get(`${routes.packages.index}?${param}`),
+        findOne: (id: number | string) => HttpClient.get(`${routes.packages.index}/${id}`),
         create: (input: any) => HttpClient.post(`${routes.packages.index}`, input),
-        update: (input: any) => HttpClient.patch(`${routes.packages.index}/${input.coupon_id}`, input),
-        delete: (input: { region_id: number[] }) => HttpClient.delete(`${routes.packages.index}/${input.region_id}`)
+        update: (input: any) => {
+            const id = input.coupon_id ?? input.package_id ?? input.id;
+            const { coupon_id, package_id, id: _id, ...body } = input;
+            return HttpClient.patch(`${routes.packages.index}/${id}`, body);
+        },
+        delete: (input: { region_id?: number[]; id?: number | number[] }) => {
+            const raw = input.region_id ?? input.id;
+            return HttpClient.delete(`${routes.packages.index}/${raw}`);
+        },
+        faqs: {
+            all: (packageId: number | string) =>
+                HttpClient.get(`${routes.packages.index}/${packageId}/faqs`),
+            create: (input: { packageId: number | string; body: any }) =>
+                HttpClient.post(`${routes.packages.index}/${input.packageId}/faqs`, input.body),
+            update: (input: {
+                packageId: number | string;
+                faqId: number | string;
+                body: any;
+            }) =>
+                HttpClient.patch(
+                    `${routes.packages.index}/${input.packageId}/faqs/${input.faqId}`,
+                    input.body
+                ),
+            delete: (input: { packageId: number | string; faqId: number | string }) =>
+                HttpClient.delete(
+                    `${routes.packages.index}/${input.packageId}/faqs/${input.faqId}`
+                ),
+        },
+        exportBlob: async (param: string) => {
+            const res = await request.get(`${routes.packages.index}?${param}`, {
+                responseType: 'blob',
+            });
+            return res;
+        },
     }
     exercises = {
         filterOptions: () => HttpClient.get('/exercises-filter-options'),
@@ -769,6 +802,8 @@ class Client {
         all: (param: string) => HttpClient.get(`/reservations/reviews?${param}`),
         findOne: (id: number) => HttpClient.get(`/reservations/review/${id}`),
         toggle: (id: number) => HttpClient.post(`/reservations/review/toggle/${id}`),
+        toggleShowOnPackage: (id: number) =>
+            HttpClient.post(`/reservations/review/toggle-show-on-package/${id}`),
     };
     SiteSettings = {
         all: () => HttpClient.get('/settings'),
@@ -851,57 +886,110 @@ class Client {
     };
 
     /**
-     * Work Management — Laravel endpoints (Phase 7).
-     * Enable via NEXT_PUBLIC_WM_BACKEND=laravel after these routes exist.
-     * Frontend currently uses MockWorkManagementRepository (localStorage).
+     * Work Management — Laravel endpoints under /api/admin/work.
+     * Enable with NEXT_PUBLIC_WM_BACKEND=laravel (see docs/work-management-api.md).
      */
     workManagement = {
         departments: {
-            all: () => HttpClient.get('/work/departments'),
+            all: (params?: Record<string, unknown>) =>
+                HttpClient.get('/work/departments', params),
+            findOne: (id: string | number) =>
+                HttpClient.get(`/work/departments/${id}`),
             create: (input: any) => HttpClient.post('/work/departments', input),
-            update: (input: any) =>
-                HttpClient.patch(`/work/departments/${input.id}`, input),
-            archive: (id: string) =>
+            update: (id: string | number, input: any) =>
+                HttpClient.patch(`/work/departments/${id}`, input),
+            archive: (id: string | number) =>
                 HttpClient.post(`/work/departments/${id}/archive`),
         },
         projects: {
-            all: (departmentId?: string) =>
-                HttpClient.get(
-                    departmentId
-                        ? `/work/projects?department_id=${departmentId}`
-                        : '/work/projects'
-                ),
+            all: (params?: Record<string, unknown>) =>
+                HttpClient.get('/work/projects', params),
+            findOne: (id: string | number) =>
+                HttpClient.get(`/work/projects/${id}`),
             create: (input: any) => HttpClient.post('/work/projects', input),
-            update: (input: any) =>
-                HttpClient.patch(`/work/projects/${input.id}`, input),
+            update: (id: string | number, input: any) =>
+                HttpClient.patch(`/work/projects/${id}`, input),
+            workflow: (projectId: string | number) =>
+                HttpClient.get(`/work/projects/${projectId}/workflow`),
         },
         workItems: {
-            all: (params?: string) =>
-                HttpClient.get(`/work/items${params ? `?${params}` : ''}`),
-            findOne: (idOrKey: string) =>
+            all: (params?: Record<string, unknown>) =>
+                HttpClient.get('/work/items', params),
+            findOne: (idOrKey: string | number) =>
                 HttpClient.get(`/work/items/${idOrKey}`),
             create: (input: any) => HttpClient.post('/work/items', input),
-            update: (input: any) =>
-                HttpClient.patch(`/work/items/${input.id}`, input),
-            assign: (input: {
-                id: string;
-                assigneeId: string | null;
-            }) => HttpClient.post(`/work/items/${input.id}/assign`, input),
-            transition: (input: { id: string; toStatus: string }) =>
-                HttpClient.post(`/work/items/${input.id}/transition`, input),
+            update: (id: string | number, input: any) =>
+                HttpClient.patch(`/work/items/${id}`, input),
+            delete: (id: string | number) =>
+                HttpClient.delete(`/work/items/${id}`),
+            assign: (id: string | number, input: { assignee_id: number | null }) =>
+                HttpClient.post(`/work/items/${id}/assign`, input),
+            transition: (id: string | number, input: { to_status: string }) =>
+                HttpClient.post(`/work/items/${id}/transition`, input),
+            children: (id: string | number) =>
+                HttpClient.get(`/work/items/${id}/children`),
         },
         comments: {
-            all: (workItemId: string) =>
+            all: (workItemId: string | number) =>
                 HttpClient.get(`/work/items/${workItemId}/comments`),
-            create: (input: any) =>
-                HttpClient.post(`/work/items/${input.workItemId}/comments`, input),
+            create: (workItemId: string | number, input: { body: string }) =>
+                HttpClient.post(`/work/items/${workItemId}/comments`, input),
+            update: (commentId: string | number, input: { body: string }) =>
+                HttpClient.patch(`/work/comments/${commentId}`, input),
+            delete: (commentId: string | number) =>
+                HttpClient.delete(`/work/comments/${commentId}`),
         },
-        dashboard: {
-            kpis: () => HttpClient.get('/work/dashboard/kpis'),
+        attachments: {
+            all: (workItemId: string | number) =>
+                HttpClient.get(`/work/items/${workItemId}/attachments`),
+            create: (workItemId: string | number, input: any) =>
+                HttpClient.post(`/work/items/${workItemId}/attachments`, input),
+            delete: (attachmentId: string | number) =>
+                HttpClient.delete(`/work/attachments/${attachmentId}`),
+        },
+        activities: {
+            all: (workItemId: string | number) =>
+                HttpClient.get(`/work/items/${workItemId}/activities`),
+        },
+        workLogs: {
+            all: (workItemId: string | number) =>
+                HttpClient.get(`/work/items/${workItemId}/work-logs`),
+            create: (
+                workItemId: string | number,
+                input: { hours: number; date: string; description?: string }
+            ) => HttpClient.post(`/work/items/${workItemId}/work-logs`, input),
+        },
+        links: {
+            all: (workItemId: string | number) =>
+                HttpClient.get(`/work/items/${workItemId}/links`),
+            create: (
+                workItemId: string | number,
+                input: { target_id: number; type: string }
+            ) => HttpClient.post(`/work/items/${workItemId}/links`, input),
+            delete: (linkId: string | number) =>
+                HttpClient.delete(`/work/links/${linkId}`),
+        },
+        savedViews: {
+            all: () => HttpClient.get('/work/saved-views'),
+            create: (input: { name: string; filters: Record<string, unknown> }) =>
+                HttpClient.post('/work/saved-views', input),
+            delete: (id: string | number) =>
+                HttpClient.delete(`/work/saved-views/${id}`),
+        },
+        notifications: {
+            all: () => HttpClient.get('/work/notifications'),
+            markRead: (id: string | number) =>
+                HttpClient.post(`/work/notifications/${id}/read`),
+            markAllRead: () => HttpClient.post('/work/notifications/read-all'),
         },
         workflows: {
             all: () => HttpClient.get('/work/workflows'),
-            upsert: (input: any) => HttpClient.put(`/work/workflows/${input.id}`, input),
+            findOne: (id: string) => HttpClient.get(`/work/workflows/${id}`),
+            upsert: (id: string, input: any) =>
+                HttpClient.put(`/work/workflows/${id}`, input),
+        },
+        dashboard: {
+            kpis: () => HttpClient.get('/work/dashboard/kpis'),
         },
     };
 }

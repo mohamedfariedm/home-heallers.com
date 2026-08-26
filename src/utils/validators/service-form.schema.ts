@@ -7,10 +7,6 @@ export const ServiceFormSchema = z.object({
     en: z.string().min(1, 'English name is required'),
     ar: z.string().min(1, 'Arabic name is required'),
   }),
-  slug: z.object({
-    en: z.string().min(1, 'English slug is required'),
-    ar: z.string().min(1, 'Arabic slug is required'),
-  }),
   description: z.object({
     en: z.string().min(1, 'English Description is required'),
     ar: z.string().min(1, 'Arabic Description is required'),

@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Text } from '@/components/ui/text';
 import EyeIcon from '@/components/icons/eye';
 import { getSubjectHref } from '@/app/shared/activity-logs/subject-link';
+import { routes } from '@/config/routes';
 import { resolveLocalizedNameOrFallback } from '@/utils/resolve-localized-name';
 import type { DoctorHistoryItem } from '@/types/doctor-activity-report';
 
@@ -86,7 +87,7 @@ export default function DoctorHistoryCard({ item }: { item: DoctorHistoryItem })
             Patient:{' '}
             {item.patient?.id ? (
               <Link
-                href={`/clients/${item.patient.id}`}
+                href={routes.patients.detail(item.patient.id)}
                 className="font-medium text-primary hover:underline"
               >
                 {patientName}

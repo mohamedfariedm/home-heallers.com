@@ -96,7 +96,8 @@ export const routes = {
     index: '/coupons'
   },
   patients: {
-    index: '/clients'
+    index: '/clients',
+    detail: (id: string | number) => `/clients/${id}`,
   },
   cities: {
     index: '/cities'
@@ -215,6 +216,11 @@ export const routes = {
   },
   packages: {
     index: '/packages'
+  },
+  offers: {
+    index: '/offers',
+    create: '/offers/create',
+    edit: (id: string | number) => `/offers/${id}/edit`,
   },
   exercises: {
     index: '/exercises',

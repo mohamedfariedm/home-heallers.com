@@ -69,6 +69,16 @@ export default function DoctorTargetsTable({
   const { visibleColumns, checkedColumns, setCheckedColumns } =
     useColumn(columns);
 
+  // Keep the Actions column visible even if Toggle Columns drops it
+  // (empty/first-column headers get squeezed by rc-table + scroll.x).
+  const displayColumns = React.useMemo(() => {
+    const rest = visibleColumns.filter((col) => col.dataIndex !== 'actions');
+    const actionsCol =
+      columns.find((col) => col.dataIndex === 'actions') ??
+      visibleColumns.find((col) => col.dataIndex === 'actions');
+    return actionsCol ? [...rest, actionsCol] : rest;
+  }, [visibleColumns, columns]);
+
   React.useEffect(() => {
     getSelectedColumns(checkedColumns);
     getSelectedRowKeys(selectedRowKeys);
@@ -117,7 +127,7 @@ export default function DoctorTargetsTable({
       isLoading={isLoading}
       showLoadingText={true}
       // @ts-ignore
-      columns={visibleColumns}
+      columns={displayColumns}
       paginatorOptions={{
         pageSize,
         setPageSize,

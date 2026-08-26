@@ -19,6 +19,8 @@ import CreateButton from '../create-button';
 import CreateRole from './create-categories';
 import { IPermission } from '@/types';
 import TrashIcon from '@/components/icons/trash';
+import { resolveLocalizedName } from '@/utils/resolve-localized-name';
+import { getCategorySlug } from '@/utils/slugs';
 
 
 type Columns = {
@@ -120,12 +122,24 @@ export const getColumns = ({
     width: 300,
     hidden: 'Category',
 
-    render: (_: string, row: Invoice) => (
-      <AvatarCard
-        src={row.avatar}
-        name={row?.name.en||""}
-        description={`ID-${row.id}`}
-      />
+    render: (_: string, row: Invoice) => {
+      const slug = getCategorySlug(row);
+      return (
+        <AvatarCard
+          src={row.avatar}
+          name={resolveLocalizedName(row?.name, 'en') || ''}
+          description={slug ? `/${slug}` : `ID-${row.id}`}
+        />
+      );
+    },
+  },
+  {
+    title: <HeaderCell title="Slug" />,
+    dataIndex: 'slug',
+    key: 'slug',
+    width: 200,
+    render: (_: string, row: any) => (
+      <span className="font-medium text-gray-700">{getCategorySlug(row) || '—'}</span>
     ),
   },
 

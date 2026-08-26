@@ -7,9 +7,8 @@ import { Title, Text } from '@/components/ui/text';
 import { routes } from '@/config/routes';
 import cn from '@/utils/class-names';
 import { useLogout } from '@/framework/auth'
-import { signOut } from 'next-auth/react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 const menuItems = [
@@ -29,7 +28,6 @@ const menuItems = [
 
 function DropdownMenu() {
   const { mutate } = useLogout()
-  const { push } = useRouter()
   return (
     <div className="w-64 text-left rtl:text-right">
       <div className="flex items-center border-b border-gray-300 px-6 pb-5 pt-6">
@@ -61,10 +59,7 @@ function DropdownMenu() {
           className="h-auto w-full justify-start p-0 font-medium text-gray-700 outline-none focus-within:text-gray-600 hover:text-gray-900 focus-visible:ring-0"
           variant="text"
           // onClick={() => signOut()}
-          onClick={() => {
-            mutate()
-            push('/auth/login')
-          }}
+          onClick={() => mutate()}
         >
           Sign Out
         </Button>

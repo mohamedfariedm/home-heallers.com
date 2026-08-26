@@ -1,13 +1,14 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 import { Title, Text } from '@/components/ui/text';
 import CreateButton from '@/app/shared/create-button';
 import EditDoctorTargetForm from './edit-form';
 import AdjustSessionsModal from './adjust-modal';
 import RetargetModal from './retarget-modal';
 import ApprovePreviewModal from './approve-preview-modal';
+import ActivateDoctorTargetModal from './activate-modal';
 import TargetTimeline from './timeline';
 import TargetStatusBadge, {
   doctorDisplayName,
@@ -18,8 +19,7 @@ import {
   getStatusActions,
   type DoctorTargetsPermissions,
 } from './permissions';
-import { useActivateDoctorTarget } from '@/framework/doctor-targets';
-import toast from 'react-hot-toast';
+import { routes } from '@/config/routes';
 
 function Field({ label, value }: { label: string; value: ReactNode }) {
   return (
@@ -42,14 +42,6 @@ export default function DoctorTargetDetailView({
   permissions: DoctorTargetsPermissions;
 }) {
   const actions = getStatusActions(target?.status, permissions);
-  const { mutate: activate, isPending: activating } = useActivateDoctorTarget();
-
-  const handleActivate = () => {
-    if (!window.confirm('Activate this Draft target?')) return;
-    activate(target.id, {
-      onError: (error) => toast.error(error?.message || 'Activate failed'),
-    });
-  };
 
   const adjustments = Array.isArray(target?.adjustments)
     ? target.adjustments
@@ -66,7 +58,16 @@ export default function DoctorTargetDetailView({
             <TargetStatusBadge status={target.status} />
           </div>
           <Text className="mt-1 text-sm text-gray-600">
-            {doctorDisplayName(target.doctor, target.doctor_id)}
+            {target.doctor_id ? (
+              <Link
+                href={routes.doctors.detail(target.doctor_id)}
+                className="hover:underline"
+              >
+                {doctorDisplayName(target.doctor, target.doctor_id)}
+              </Link>
+            ) : (
+              doctorDisplayName(target.doctor, target.doctor_id)
+            )}
           </Text>
         </div>
 
@@ -80,13 +81,12 @@ export default function DoctorTargetDetailView({
             />
           )}
           {actions.activate && (
-            <Button
+            <CreateButton
+              label="Activate"
+              icon={null}
+              view={<ActivateDoctorTargetModal target={target} />}
               className="h-9"
-              isLoading={activating}
-              onClick={handleActivate}
-            >
-              Activate
-            </Button>
+            />
           )}
           {actions.adjust && (
             <CreateButton
@@ -173,12 +173,28 @@ export default function DoctorTargetDetailView({
           <Title as="h3" className="mb-2 text-sm font-semibold">
             Immutable approval snapshot
           </Title>
-          <Text className="mb-2 text-xs text-gray-600">
+          <Text className="mb-3 text-xs text-gray-600">
             Incentive credited to wallet (ledger) — not a bank payment.
           </Text>
-          <pre className="overflow-x-auto rounded bg-white/80 p-3 text-xs dark:bg-gray-900/60">
-            {JSON.stringify(target.snapshot, null, 2)}
-          </pre>
+          {typeof target.snapshot === 'object' ? (
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+              {Object.entries(target.snapshot).map(([key, value]) => (
+                <Field
+                  key={key}
+                  label={key.replace(/_/g, ' ')}
+                  value={
+                    value == null || value === ''
+                      ? '—'
+                      : typeof value === 'object'
+                        ? JSON.stringify(value)
+                        : String(value)
+                  }
+                />
+              ))}
+            </div>
+          ) : (
+            <Text className="text-sm">{String(target.snapshot)}</Text>
+          )}
         </div>
       )}
 
@@ -208,9 +224,7 @@ export default function DoctorTargetDetailView({
         </div>
       )}
 
-      {(permissions.reports || permissions.edit || permissions.approve) && (
-        <TargetTimeline targetId={target.id} />
-      )}
+      <TargetTimeline targetId={target.id} />
     </div>
   );
 }
