@@ -12,6 +12,8 @@ import { Region, City } from '@/types';
 import TrashIcon from '@/components/icons/trash';
 import CreateOrUpdateServices from './services-form';
 import AvatarCard from '@/components/ui/avatar-card';
+import { resolveLocalizedName } from '@/utils/resolve-localized-name';
+import { getServiceSlug } from '@/utils/slugs';
 
 type Columns = {
   data: any[];
@@ -114,17 +116,29 @@ const lang="en"
     width: 100,
     hidden: 'name',
 
+    render: (_: string, row: any) => {
+      const slug = getServiceSlug(row, 'en');
+      return (
+        <div className="flex w-full justify-center  text-center">
+          {
+            <AvatarCard
+              //@ts-ignore
+              src={row?.image?.original || ''}
+              name={resolveLocalizedName(row?.name, 'en') || resolveLocalizedName(row?.name, 'ar')}
+              description={slug ? `/${slug}` : `ID-${row.id}`}
+            />
+          }
+        </div>
+      );
+    },
+  },
+  {
+    title: <HeaderCell title="Slug" />,
+    dataIndex: 'slug',
+    key: 'slug',
+    width: 180,
     render: (_: string, row: any) => (
-      <div className="flex w-full justify-center  text-center">
-        {
-          <AvatarCard
-            //@ts-ignore
-            src={row?.image?.original || ''}
-            name={row?.name?.ar ?? row?.name?.ar ?? ''}
-            description={`ID-${row.id}`}
-          />
-        }
-      </div>
+      <span className="font-medium text-gray-700">{getServiceSlug(row) || '—'}</span>
     ),
   },
   {
@@ -133,7 +147,9 @@ const lang="en"
     key: 'category',
     width: 120,
     render: (_: string,row: any) => (
-      <span className="capitalize font-medium">{row?.category?.name?.[lang] ?? row.category?.name?.ar ?? 'Unnamed'}</span>
+      <span className="capitalize font-medium">
+        {resolveLocalizedName(row?.category?.name, lang) || 'Unnamed'}
+      </span>
     ),
   },
   {

@@ -20,6 +20,8 @@ import Spinner from '@/components/ui/spinner';
 import Upload from '@/components/ui/upload';
 import { BlogFormInput, BlogFormSchema } from '@/utils/validators/blog-form.schema';
 import QuillEditor from '@/components/ui/quill-editor';
+import { getBlogSlug } from '@/utils/slugs';
+import { resolveLocalizedName } from '@/utils/resolve-localized-name';
 
 export default function BlogsForm({ initValues }: { initValues?: any }) {
   const { closeModal } = useModal();
@@ -92,16 +94,16 @@ export default function BlogsForm({ initValues }: { initValues?: any }) {
       validationSchema={BlogFormSchema}
       useFormProps={{
         defaultValues: {
-          nameEN: initValues?.name?.en || '',
+          nameEN: initValues?.name?.en || (typeof initValues?.name === 'string' ? initValues.name : '') || '',
           nameAR: initValues?.name?.ar || '',
-          descriptionEN: initValues?.description?.en || '',
+          descriptionEN: initValues?.description?.en || (typeof initValues?.description === 'string' ? initValues.description : '') || '',
           descriptionAR: initValues?.description?.ar || '',
           date: initValues?.date || '',
           show_in_home_page: !!initValues?.show_in_home_page,
-          metaTitleEN: initValues?.meta_title.en || '',
-          metaTitleAR: initValues?.meta_title.ar || '',
-          metaDescriptionEN: initValues?.meta_description.en || '',
-          metaDescriptionAR: initValues?.meta_description.ar || '',
+          metaTitleEN: initValues?.meta_title?.en || '',
+          metaTitleAR: initValues?.meta_title?.ar || '',
+          metaDescriptionEN: initValues?.meta_description?.en || '',
+          metaDescriptionAR: initValues?.meta_description?.ar || '',
           relatedBlogs: initValues?.related_blogs?.map((blog: any) => blog.id) || [],
           tags: initValues?.tags || [], // Initialize tags
         },
@@ -127,6 +129,18 @@ export default function BlogsForm({ initValues }: { initValues?: any }) {
 
             <Input label="Name (EN)" {...register('nameEN')} error={errors.nameEN?.message} />
             <Input label="Name (AR)" {...register('nameAR')} error={errors.nameAR?.message} />
+            {initValues ? (
+              <Input
+                label="Slug"
+                value={getBlogSlug(initValues) || '—'}
+                disabled
+                helperText="English slug used on both /blog/{slug} and /en/blog/{slug}. Renaming this post will generate a new slug and existing links will 404."
+              />
+            ) : (
+              <p className="text-xs text-gray-500">
+                A URL slug is generated from the English name. Both locale keys store the same English value. Renaming later will change the slug.
+              </p>
+            )}
             <QuillEditor
               name="descriptionEN"
               label="Description (EN)"
@@ -199,11 +213,11 @@ export default function BlogsForm({ initValues }: { initValues?: any }) {
                     isMulti
                     options={data?.data?.map((blog: any) => ({
                       value: blog.id,
-                      label: blog.name.en,
+                      label: resolveLocalizedName(blog.name, 'en') || `Blog #${blog.id}`,
                     }))}
                     value={field.value?.map((id: string) => ({
                       value: id,
-                      label: data?.data?.find((b: any) => b.id === id)?.name?.en || '',
+                      label: resolveLocalizedName(data?.data?.find((b: any) => b.id === id)?.name, 'en') || '',
                     }))}
                     onChange={(selected) => field.onChange(selected ? selected.map((s: any) => s.value) : [])}
                     placeholder="Select related blogs"

@@ -12,6 +12,7 @@ import { Title } from "@/components/ui/text"
 import { useModal } from "@/app/shared/modal-views/use-modal"
 import { useCreateCategory, useUpdateCategory } from "@/framework/categories"
 import { createCategoriesSchema, type CreateCategoriesInput } from "@/utils/validators/create-categories.schema"
+import { getCategorySlug } from "@/utils/slugs"
 import FormGroup from "../form-group"
 import Spinner from "@/components/ui/spinner"
 import Upload from "@/components/ui/upload"
@@ -127,6 +128,18 @@ console.log(initValues);
               {...register("name.ar")}
               error={errors.name?.ar?.message}
             />
+            {initValues ? (
+              <Input
+                label="Slug"
+                value={getCategorySlug(initValues) || "—"}
+                disabled
+                helperText="Generated from the English name on create. Renaming this category will not change the slug."
+              />
+            ) : (
+              <p className="text-xs text-gray-500">
+                A URL slug is generated from the English name on create and cannot be changed later.
+              </p>
+            )}
             
                       <FormGroup
                         title="Image"

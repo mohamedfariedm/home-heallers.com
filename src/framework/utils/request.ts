@@ -3,6 +3,7 @@ import { getToken, getLocale } from './get-token';
 import pickBy from 'lodash/pickBy';
 import { SearchParamOptions } from '@/types/index'
 import toast from 'react-hot-toast';
+import { resolveApiLanguage } from '@/utils/slugs';
 
 
 
@@ -21,14 +22,15 @@ const request = axios.create({
 request.interceptors.request.use(
   (config) => {
     const token = getToken();
-    const locale = getLocale()
+    const language = resolveApiLanguage(getLocale());
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'); // Fetch CSRF token from meta tag
 
     //@ts-ignore
     config.headers = {
       ...config.headers,
       Authorization: `Bearer ${token ? token : ''}`,
-      'Accept-Language': `${locale ? locale : 'en'}`,
+      language,
+      'Accept-Language': language,
       'X-CSRF-TOKEN': csrfToken, // Add CSRF token here
 
     };
