@@ -22,7 +22,7 @@ import axios from 'axios';
 import Cookies from 'js-cookie';
 import toast from 'react-hot-toast';
 import { resolveLocalizedName } from '@/utils/resolve-localized-name';
-import { englishSlugPair, getServiceSlug } from '@/utils/slugs';
+import { resolveServiceSlugPayload } from '@/utils/slugs';
 
 
 export default function CreateOrUpdateServices({ initValues }: { initValues?: any }) {
@@ -103,13 +103,7 @@ export default function CreateOrUpdateServices({ initValues }: { initValues?: an
     
     setImageError(0);
     
-    const existingEn =
-      typeof initValues?.slug === 'string'
-        ? initValues.slug
-        : (initValues?.slug?.en || '');
-    const slug = existingEn
-      ? { en: existingEn, ar: existingEn }
-      : englishSlugPair(data.name.en);
+    const slug = resolveServiceSlugPayload(data.slug, data.name.en);
 
     const requestBody: Record<string, unknown> = {
       name: data.name,
@@ -158,6 +152,11 @@ export default function CreateOrUpdateServices({ initValues }: { initValues?: an
             en: initValues?.meta_title?.en || '',
             ar: initValues?.meta_title?.ar || '',
           },
+          slug: {
+            en:
+              (typeof initValues?.slug === 'string' ? initValues.slug : initValues?.slug?.en) || '',
+            ar: initValues?.slug?.ar || '',
+          },
           description: {
             en: initValues?.description?.en || '',
             ar: initValues?.description?.ar || '',
@@ -168,10 +167,7 @@ export default function CreateOrUpdateServices({ initValues }: { initValues?: an
       
       className="flex flex-grow flex-col gap-6 p-6"
     >
-      {({ register, formState: { errors }, setValue, control, watch }) => {
-        const slugValue = initValues
-          ? getServiceSlug(initValues)
-          : englishSlugPair(watch('name.en') || '').en;
+      {({ register, formState: { errors }, setValue, control }) => {
 
        return <>
           <div className="flex items-center justify-between">
@@ -195,11 +191,12 @@ export default function CreateOrUpdateServices({ initValues }: { initValues?: an
                 error={errors.name?.en?.message}
               />
               <Input
+                key="slug.en"
                 label="Service Slug (English)"
-                value={slugValue || ''}
-                disabled
-                readOnly
-                helperText="Generated from the English name. Cannot be edited."
+                {...register('slug.en')}
+                placeholder="Leave empty to generate from English name"
+                helperText="Optional. If empty, it is generated from the English name on save."
+                error={errors.slug?.en?.message}
               />
               <QuillEditor
                 name="description.en"
@@ -236,11 +233,12 @@ export default function CreateOrUpdateServices({ initValues }: { initValues?: an
                 error={errors.name?.ar?.message}
               />
               <Input
+                key="slug.ar"
                 label="Service Slug (Arabic)"
-                value={slugValue || ''}
-                disabled
-                readOnly
-                helperText="Same as the English slug. Cannot be edited."
+                {...register('slug.ar')}
+                placeholder="Leave empty to generate from English name"
+                helperText="Optional. If empty, it is generated from the English name on save."
+                error={errors.slug?.ar?.message}
               />
               <QuillEditor
                 name="description.ar"

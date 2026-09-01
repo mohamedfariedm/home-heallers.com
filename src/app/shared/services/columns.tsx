@@ -138,7 +138,10 @@ const lang="en"
     key: 'slug',
     width: 180,
     render: (_: string, row: any) => (
-      <span className="font-medium text-gray-700">{getServiceSlug(row) || '—'}</span>
+      <div className="flex flex-col gap-0.5 text-sm">
+        <span className="font-medium text-gray-700">{getServiceSlug(row, 'en') || '—'}</span>
+        <span className="text-gray-500">{getServiceSlug(row, 'ar') || '—'}</span>
+      </div>
     ),
   },
   {

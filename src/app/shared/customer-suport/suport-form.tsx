@@ -8,7 +8,11 @@ import { Title } from '@/components/ui/text';
 import { useModal } from '@/app/shared/modal-views/use-modal';
 import { LeadFormInput, leadFormSchema } from '@/utils/validators/suport-form.schema';
 import { CC_OPTIONS } from '@/app/shared/cc-options';
-import { kanbanSourceCampaignOptions } from '@/app/shared/customer-suport/kanban-column-select-options';
+import {
+  kanbanCommunicationChannelOptions,
+  kanbanOperationCommunicationChannelOptions,
+  kanbanSourceCampaignOptions,
+} from '@/app/shared/customer-suport/kanban-column-select-options';
 import { Textarea } from 'rizzui';
 import { useCreateCustomerSupport, useUpdateCustomerSupport } from '@/framework/customer-suport';
 import { useCities } from '@/framework/cities';
@@ -16,10 +20,6 @@ import { useStates } from '@/framework/states';
 import { resolveLocalizedName } from '@/utils/resolve-localized-name';
 import axios from 'axios';
 import Cookies from 'js-cookie';
-
-const INBOUND_SOURCE_CAMPAIGN_OPTIONS = [
-  { label: 'Call', value: 'call' },
-];
 
 function getLocationLabel(nameField: unknown): string {
   return resolveLocalizedName(nameField);
@@ -184,9 +184,10 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
     
   const { closeModal } = useModal();
   const isInbound = type === 'operation';
-  const sourceCampaignOptions = isInbound
-    ? INBOUND_SOURCE_CAMPAIGN_OPTIONS
-    : kanbanSourceCampaignOptions;
+  const sourceCampaignOptions = kanbanSourceCampaignOptions;
+  const communicationChannelOptions = isInbound
+    ? kanbanOperationCommunicationChannelOptions
+    : kanbanCommunicationChannelOptions;
   const [lang, setLang] = useState<'en' | 'ar'>('en');
     const { mutate: createSupport, isPending: isCreating } = useCreateCustomerSupport();
     const { mutate: updateSupport, isPending: isUpdating } = useUpdateCustomerSupport();
@@ -383,8 +384,7 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
           address_1: initValues?.address_1 || '',
           city: initValues?.city || '',
           state: initValues?.state || '',
-          source_campaign:
-            initValues?.source_campaign || (isInbound ? 'call' : ''),
+          source_campaign: initValues?.source_campaign || '',
           activity_code: initValues?.activity_code || '',
           call_sub_result: initValues?.call_sub_result || '',
           will_call_us_again_reason: initValues?.will_call_us_again_reason || '',
@@ -415,7 +415,8 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
           ads_name: initValues?.ads_name || '',
           created_by: createdByName,
           event_agent_name: initValues?.event_agent_name || '',
-          communication_channel: initValues?.communication_channel || '',
+          communication_channel:
+            initValues?.communication_channel || (isInbound ? 'Call' : ''),
           cc: initValues?.cc || '',
           rework: initValues?.rework ?? 0,
           communication_times: initValues?.communication_times ?? 0,
@@ -514,7 +515,7 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
                 {...register('source_campaign')} 
                 className="w-full border border-gray-300 rounded-md p-2 h-10 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
               >
-                {!isInbound && <option value="">Select Source</option>}
+                <option value="">Select Source</option>
                 {sourceCampaignOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
@@ -527,14 +528,16 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
 
           <div>
             <label className="block text-sm font-medium text-gray-900 mb-1">Communication Channel <span className="text-red-500">*</span></label>
-            <select 
-              {...register('communication_channel')} 
+            <select
+              {...register('communication_channel')}
               className="w-full border border-gray-300 rounded-md p-2 h-10 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
             >
-              <option value="">Select Communication Channel</option>
-              <option value="Call">Call</option>
-              <option value="WhatsApp">WhatsApp</option>
-              <option value="Lead Form">Lead Form</option>
+              {!isInbound && <option value="">Select Communication Channel</option>}
+              {communicationChannelOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
             {errors.communication_channel && <p className="text-sm text-red-500 mt-1">{errors.communication_channel.message}</p>}
           </div>

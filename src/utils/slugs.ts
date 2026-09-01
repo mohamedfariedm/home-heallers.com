@@ -5,7 +5,7 @@ import { generateSlug } from '@/utils/generate-slug';
  * with the same English value in both keys (generated from the English name).
  *
  *   category.slug          → string          "home-care"
- *   service.slug.{en,ar}   → { en, ar }      both keys hold the same English value
+ *   service.slug.{en,ar}   → { en, ar }      editable; empty fields fall back to English name
  *   news.slug.{en,ar}      → { en, ar }      both keys hold the same English value
  */
 
@@ -33,7 +33,7 @@ export function getCategorySlug(category: { slug?: unknown } | null | undefined)
   return nested?.en || nested?.ar || '';
 }
 
-/** Service slug is English in both keys. Prefer `.en`; either works. */
+/** Service slug is a locale object. Pick the key for the active locale. */
 export function getServiceSlug(
   service: { slug?: unknown } | null | undefined,
   locale: AppLocale = 'en'
@@ -42,13 +42,18 @@ export function getServiceSlug(
   if (typeof slug === 'string') return slug;
   const nested = asLocaleSlug(slug);
   if (!nested) return '';
-  return (nested.en || nested[locale] || nested.ar || '') as string;
+  return (nested[locale] || nested.en || nested.ar || '') as string;
 }
 
-/** Build the payload slug from the English name. `ar` is the same English value. */
-export function englishSlugPair(englishName: string): { en: string; ar: string } {
-  const slug = generateSlug(englishName || '');
-  return { en: slug, ar: slug };
+/** Resolve service slug payload: user input wins; empty fields fall back to English name. */
+export function resolveServiceSlugPayload(
+  slug: { en?: string; ar?: string } | undefined,
+  englishName: string
+): { en: string; ar: string } {
+  const fallback = generateSlug(englishName || '');
+  const en = slug?.en?.trim() || fallback;
+  const ar = slug?.ar?.trim() || fallback;
+  return { en, ar };
 }
 
 /** Blog slug is English in both keys. Prefer `.en`; either works. */

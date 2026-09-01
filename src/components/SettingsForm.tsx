@@ -1,10 +1,30 @@
 import React, { useState } from 'react';
-import { Settings, Banner, Social, SEOData, BusinessInfo, MediaFolder, RateColorsByMetric } from '../types/settings';
+import {
+  Settings,
+  Banner,
+  Social,
+  SEOData,
+  BusinessInfo,
+  MediaFolder,
+  RateColorsByMetric,
+} from '../types/settings';
 import BannerSection from './BannerSection';
 import SocialSection from './SocialSection';
 import AppLinksSection from './AppLinksSection';
 import SEOSection from './SEOSection';
-import { Save, Settings as SettingsIcon, Image, Share2, Smartphone, Search, FileText, Shield, Building2, FolderOpen, Palette } from 'lucide-react';
+import {
+  Save,
+  Settings as SettingsIcon,
+  Image,
+  Share2,
+  Smartphone,
+  Search,
+  FileText,
+  Shield,
+  Building2,
+  FolderOpen,
+  Palette,
+} from 'lucide-react';
 import TermsSection from './TermsSection';
 import ConditionsSection from './ConditionsSection';
 import BusinessInfoSection from './BusinessInfoSection';
@@ -16,22 +36,25 @@ interface SettingsFormProps {
   onSave: (settings: Settings) => void;
 }
 
-const SettingsForm: React.FC<SettingsFormProps> = ({ initialSettings, onSave }) => {
+const SettingsForm: React.FC<SettingsFormProps> = ({
+  initialSettings,
+  onSave,
+}) => {
   const [settings, setSettings] = useState<Settings>(initialSettings);
   const [activeTab, setActiveTab] = useState('banners');
   const [isLoading, setIsLoading] = useState(false);
 
-const tabs = [
-  { id: "banners", label: "Banners", icon: Image },
-  { id: "social", label: "Social Media", icon: Share2 },
-  { id: "app-links", label: "App Links", icon: Smartphone },
-  { id: "seo", label: "SEO Settings", icon: Search },
-  { id: 'terms', label: 'Terms & Conditions', icon: FileText },
-  { id: 'conditions', label: 'General Conditions', icon: Shield },
-  { id: 'business-info', label: 'Business Information', icon: Building2 },
-  { id: 'rate-colors', label: 'Rate Colors', icon: Palette },
-  // { id: 'folder-management', label: 'Folder Management', icon: FolderOpen },
-];
+  const tabs = [
+    { id: 'banners', label: 'Banners', icon: Image },
+    { id: 'social', label: 'Social Media', icon: Share2 },
+    { id: 'app-links', label: 'App Links', icon: Smartphone },
+    { id: 'seo', label: 'SEO Settings', icon: Search },
+    { id: 'terms', label: 'Terms & Conditions', icon: FileText },
+    { id: 'conditions', label: 'General Conditions', icon: Shield },
+    { id: 'business-info', label: 'Business Information', icon: Building2 },
+    { id: 'rate-colors', label: 'Rate Colors', icon: Palette },
+    // { id: 'folder-management', label: 'Folder Management', icon: FolderOpen },
+  ];
 
   const handleSave = async () => {
     setIsLoading(true);
@@ -47,56 +70,50 @@ const tabs = [
   };
 
   const updateBanners = (banners: Banner[]) => {
-    setSettings(prev => ({ ...prev, banners }));
+    setSettings((prev) => ({ ...prev, banners }));
   };
 
   const updateSocial = (social: Social) => {
-    setSettings(prev => ({ ...prev, social }));
+    setSettings((prev) => ({ ...prev, social }));
   };
 
   const updateAppLinks = (ios_link: string, android_link: string) => {
-    setSettings(prev => ({ ...prev, ios_link, android_link }));
+    setSettings((prev) => ({ ...prev, ios_link, android_link }));
   };
 
   const updateSEO = (seo: Record<string, SEOData>) => {
-    setSettings(prev => ({ ...prev, seo }));
+    setSettings((prev) => ({ ...prev, seo }));
   };
 
   const updateTerms = (terms: any) => {
-  setSettings(prev => ({ ...prev, terms }));
-};
+    setSettings((prev) => ({ ...prev, terms }));
+  };
 
-const updateConditions = (conditions: any) => {
-  setSettings(prev => ({ ...prev, conditions }));
-};
+  const updateConditions = (conditions: any) => {
+    setSettings((prev) => ({ ...prev, conditions }));
+  };
 
-const updateBusinessInfo = (business_info: BusinessInfo) => {
-  setSettings(prev => ({ ...prev, business_info }));
-};
+  const updateBusinessInfo = (business_info: BusinessInfo) => {
+    setSettings((prev) => ({ ...prev, business_info }));
+  };
 
-const updateMediaFolders = (media_folders: MediaFolder[]) => {
-  setSettings(prev => ({ ...prev, media_folders }));
-};
+  const updateMediaFolders = (media_folders: MediaFolder[]) => {
+    setSettings((prev) => ({ ...prev, media_folders }));
+  };
 
-const updateRateColors = (rate_colors: RateColorsByMetric) => {
-  setSettings(prev => ({ ...prev, rate_colors }));
-};
+  const updateRateColors = (rate_colors: RateColorsByMetric) => {
+    setSettings((prev) => ({ ...prev, rate_colors }));
+  };
 
   const renderTabContent = () => {
     switch (activeTab) {
       case 'banners':
         return (
-          <BannerSection
-            banners={settings.banners}
-            onUpdate={updateBanners}
-          />
+          <BannerSection banners={settings.banners} onUpdate={updateBanners} />
         );
       case 'social':
         return (
-          <SocialSection
-            social={settings.social}
-            onUpdate={updateSocial}
-          />
+          <SocialSection social={settings.social} onUpdate={updateSocial} />
         );
       case 'app-links':
         return (
@@ -107,70 +124,74 @@ const updateRateColors = (rate_colors: RateColorsByMetric) => {
           />
         );
       case 'seo':
+        return <SEOSection seo={settings.seo} onUpdate={updateSEO} />;
+      case 'terms':
+        return <TermsSection terms={settings.terms} onUpdate={updateTerms} />;
+
+      case 'conditions':
         return (
-          <SEOSection
-            seo={settings.seo}
-            onUpdate={updateSEO}
+          <ConditionsSection
+            conditions={settings.conditions}
+            onUpdate={updateConditions}
           />
         );
-      case "terms":
-      return <TermsSection terms={settings.terms} onUpdate={updateTerms} />;
 
-    case "conditions":
-      return <ConditionsSection conditions={settings.conditions} onUpdate={updateConditions} />;
-
-    case "business-info":
-      return (
-        <BusinessInfoSection
-          businessInfo={settings.business_info || {
-            commercial_registration: '',
-            health_license: '',
-            known_number: '',
-            whatsapp: '',
-            contact: '',
-            email: '',
-            address: '',
-            brand: '',
-          }}
-          onUpdate={updateBusinessInfo}
-        />
-      );
-    case "rate-colors":
-      return (
-        <RateColorsSection
-          rateColors={settings.rate_colors || {}}
-          onUpdate={updateRateColors}
-        />
-      );
-    // case 'folder-management':
-    //   return (
-    //     <FolderManagementSection
-    //       folders={settings.media_folders || []}
-    //       onUpdate={updateMediaFolders}
-    //     />
-    //   );
+      case 'business-info':
+        return (
+          <BusinessInfoSection
+            businessInfo={
+              settings.business_info || {
+                commercial_registration: '',
+                health_license: '',
+                known_number: '',
+                whatsapp: '',
+                contact: '',
+                email: '',
+                address: '',
+                brand: '',
+              }
+            }
+            onUpdate={updateBusinessInfo}
+          />
+        );
+      case 'rate-colors':
+        return (
+          <RateColorsSection
+            rateColors={settings.rate_colors || {}}
+            onUpdate={updateRateColors}
+          />
+        );
+      // case 'folder-management':
+      //   return (
+      //     <FolderManagementSection
+      //       folders={settings.media_folders || []}
+      //       onUpdate={updateMediaFolders}
+      //     />
+      //   );
       default:
         return null;
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="w-full mx-auto">
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+    <div className="min-h-screen bg-gray-50 px-4 py-8">
+      <div className="mx-auto w-full">
+        <div className="overflow-hidden rounded-lg bg-white shadow-lg">
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <SettingsIcon className="w-6 h-6 text-white" />
-                <h1 className="text-2xl font-bold text-white">Settings Management</h1>
+                <SettingsIcon className="h-6 w-6 text-white" />
+                <h1 className="text-2xl font-bold text-white">
+                  Settings Management
+                </h1>
               </div>
               <button
                 onClick={handleSave}
                 disabled={isLoading}
-                className="flex items-center space-x-2 bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center space-x-2 rounded-lg bg-white px-4 py-2 text-blue-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <Save className="w-4 h-4" />
+                <Save className="h-4 w-4" />
                 <span>{isLoading ? 'Saving...' : 'Save Changes'}</span>
               </button>
             </div>
@@ -185,13 +206,13 @@ const updateRateColors = (rate_colors: RateColorsByMetric) => {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center space-x-2 py-4 px-2 border-b-2 font-medium text-sm transition-colors ${
+                    className={`flex items-center space-x-2 border-b-2 px-2 py-4 text-sm font-medium transition-colors ${
                       activeTab === tab.id
                         ? 'border-blue-500 text-blue-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
                     }`}
                   >
-                    <Icon className="w-4 h-4" />
+                    <Icon className="h-4 w-4" />
                     <span>{tab.label}</span>
                   </button>
                 );
@@ -200,9 +221,7 @@ const updateRateColors = (rate_colors: RateColorsByMetric) => {
           </div>
 
           {/* Content */}
-          <div className="p-6">
-            {renderTabContent()}
-          </div>
+          <div className="p-6">{renderTabContent()}</div>
         </div>
       </div>
     </div>

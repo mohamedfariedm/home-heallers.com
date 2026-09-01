@@ -20,6 +20,7 @@ export const kanbanSourceCampaignOptions = [
   { label: 'Twitter', value: 'twitter' },
   { label: 'TikTok', value: 'tiktok' },
   { label: 'Mobile Application', value: 'mobile_application' },
+  { label: 'Call', value: 'call' },
   { label: 'YouTube', value: 'youtube' },
   { label: 'Website', value: 'website' },
   { label: 'Referral', value: 'referral' },
@@ -36,6 +37,10 @@ export const kanbanCommunicationChannelOptions = [
   { label: 'Call', value: 'Call' },
   { label: 'WhatsApp', value: 'WhatsApp' },
   { label: 'Lead Form', value: 'Lead Form' },
+];
+
+export const kanbanOperationCommunicationChannelOptions = [
+  { label: 'Call', value: 'Call' },
 ];
 
 export const kanbanSpecialtyOptions = [
