@@ -1,16 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { SubmitHandler, Controller } from 'react-hook-form';
+import { useRef, useState } from 'react';
+import { SubmitHandler, Controller, UseFormReturn } from 'react-hook-form';
 import { Form } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Title } from '@/components/ui/text';
 import { useModal } from '@/app/shared/modal-views/use-modal';
-import { ActionIcon, Switch, Textarea } from 'rizzui';
+import { ActionIcon, Switch } from 'rizzui';
 import Select from 'react-select';
-import CreatableSelect from 'react-select/creatable'; // Import CreatableSelect for tags
-import { useBlogs, useCreateBlog, useUpdateBlog } from '@/framework/blog';
+import CreatableSelect from 'react-select/creatable';
+import { useBlogDetail, useBlogs, useCreateBlog, useUpdateBlog } from '@/framework/blog';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import toast from 'react-hot-toast';
@@ -20,21 +20,44 @@ import Spinner from '@/components/ui/spinner';
 import Upload from '@/components/ui/upload';
 import { BlogFormInput, BlogFormSchema } from '@/utils/validators/blog-form.schema';
 import QuillEditor from '@/components/ui/quill-editor';
-import { getBlogSlug } from '@/utils/slugs';
 import { resolveLocalizedName } from '@/utils/resolve-localized-name';
+import EntitySeoSection from '@/app/shared/seo/entity-seo-section';
+import {
+  applySeoValidationErrors,
+  asLocaleTextMap,
+  buildEntitySeoPayload,
+  seoFormDefaults,
+} from '@/utils/seo-fields';
+import type { SeoLocale } from '@/types/seo-locale';
 
 export default function BlogsForm({ initValues }: { initValues?: any }) {
-  const { closeModal } = useModal();
-  const [reset, setReset] = useState({});
-  const { mutate: update } = useUpdateBlog();
-  const { mutate: create, isPending } = useCreateBlog();
-  const { data, isLoading: isBlogsLoading } = useBlogs('');
+  const id = initValues?.id;
+  const { data: record, isLoading: isDetailLoading } = useBlogDetail(id);
+  const values = record ?? initValues;
 
+  if (id && isDetailLoading) {
+    return (
+      <div className="flex items-center justify-center p-10">
+        <Spinner size="xl" />
+      </div>
+    );
+  }
+
+  return <BlogFormFields initValues={values} />;
+}
+
+function BlogFormFields({ initValues }: { initValues?: any }) {
+  const { closeModal } = useModal();
+  const methodsRef = useRef<UseFormReturn<BlogFormInput> | null>(null);
+  const { mutateAsync: update } = useUpdateBlog();
+  const { mutateAsync: create, isPending } = useCreateBlog();
+  const { data, isLoading: isBlogsLoading } = useBlogs('');
+  const [locale, setLocale] = useState<SeoLocale>('en');
   const [isLoading, setLoading] = useState(false);
   const [isImageData, setImage] = useState(initValues?.image || null);
   const [imageError, setImageError] = useState(0);
+  const loadedSlug = initValues ? asLocaleTextMap(initValues.slug) : null;
 
-  // Sample predefined tags (you can fetch these from an API if needed)
   const predefinedTags = [
     { value: 'test1', label: 'Test 1' },
     { value: 'test2', label: 'Test 2' },
@@ -64,8 +87,7 @@ export default function BlogsForm({ initValues }: { initValues?: any }) {
       .finally(() => setLoading(false));
   };
 
-  const onSubmit: SubmitHandler<BlogFormInput> = (data) => {
-    console.log('data ->', data);
+  const onSubmit: SubmitHandler<BlogFormInput> = async (data) => {
     const payload = {
       name: {
         en: data.nameEN,
@@ -78,18 +100,25 @@ export default function BlogsForm({ initValues }: { initValues?: any }) {
       image: isImageData || initValues?.image,
       show_in_home_page: data.show_in_home_page,
       date: data.date,
-      meta_title: { en: data.metaTitleEN, ar: data.metaTitleAR }, // Use English as per JSON structure
-      meta_description: { en: data.metaDescriptionEN, ar: data.metaDescriptionAR }, // Use English as per JSON structure
-      tags: data.tags || [], // Include tags
-      blogs_ids: data.relatedBlogs
+      tags: data.tags || [],
+      blogs_ids: data.relatedBlogs,
+      ...buildEntitySeoPayload(data, loadedSlug, !initValues),
     };
 
-    initValues ? update({ ...payload, id: initValues.id }) : create(payload);
+    try {
+      if (initValues) {
+        await update({ ...payload, id: initValues.id });
+      } else {
+        await create(payload);
+      }
+    } catch (error) {
+      const nextLocale = applySeoValidationErrors(error, methodsRef.current!.setError);
+      if (nextLocale) setLocale(nextLocale);
+    }
   };
 
   return (
     <Form<BlogFormInput>
-      resetValues={reset}
       onSubmit={onSubmit}
       validationSchema={BlogFormSchema}
       useFormProps={{
@@ -100,18 +129,17 @@ export default function BlogsForm({ initValues }: { initValues?: any }) {
           descriptionAR: initValues?.description?.ar || '',
           date: initValues?.date || '',
           show_in_home_page: !!initValues?.show_in_home_page,
-          metaTitleEN: initValues?.meta_title?.en || '',
-          metaTitleAR: initValues?.meta_title?.ar || '',
-          metaDescriptionEN: initValues?.meta_description?.en || '',
-          metaDescriptionAR: initValues?.meta_description?.ar || '',
           relatedBlogs: initValues?.related_blogs?.map((blog: any) => blog.id) || [],
-          tags: initValues?.tags || [], // Initialize tags
+          tags: initValues?.tags || [],
+          ...seoFormDefaults(initValues),
         },
       }}
       className="flex flex-col gap-6 p-6 overflow-y-auto @container [&_.rizzui-input-label]:font-medium [&_.rizzui-input-label]:text-gray-900"
     >
-      {({ register, setValue, watch, control, formState: { errors } }) => {
-        console.log(errors);
+      {(methods) => {
+        methodsRef.current = methods;
+        const { register, setValue, watch, control, formState: { errors } } = methods;
+
         return isBlogsLoading ? (
           <div className="flex justify-center items-center h-full">
             <Spinner size="xl" />
@@ -129,25 +157,12 @@ export default function BlogsForm({ initValues }: { initValues?: any }) {
 
             <Input label="Name (EN)" {...register('nameEN')} error={errors.nameEN?.message} />
             <Input label="Name (AR)" {...register('nameAR')} error={errors.nameAR?.message} />
-            {initValues ? (
-              <Input
-                label="Slug"
-                value={getBlogSlug(initValues) || '—'}
-                disabled
-                helperText="English slug used on both /blog/{slug} and /en/blog/{slug}. Renaming this post will generate a new slug and existing links will 404."
-              />
-            ) : (
-              <p className="text-xs text-gray-500">
-                A URL slug is generated from the English name. Both locale keys store the same English value. Renaming later will change the slug.
-              </p>
-            )}
             <QuillEditor
               name="descriptionEN"
               label="Description (EN)"
               error={errors.descriptionEN?.message}
               control={control}
             />
-            
             <QuillEditor
               name="descriptionAR"
               label="Description (AR)"
@@ -155,25 +170,16 @@ export default function BlogsForm({ initValues }: { initValues?: any }) {
               control={control}
             />
             <Input label="Date" type="date" {...register('date')} error={errors.date?.message} />
-            <Input
-              label="Meta Title (EN)"
-              {...register('metaTitleEN')}
-              error={errors.metaTitleEN?.message}
-            />
-            <Input
-              label="Meta Title (AR)"
-              {...register('metaTitleAR')}
-              error={errors.metaTitleAR?.message}
-            />
-            <Textarea
-              label="Meta Description (EN)"
-              {...register('metaDescriptionEN')}
-              error={errors.metaDescriptionEN?.message}
-            />
-            <Textarea
-              label="Meta Description (AR)"
-              {...register('metaDescriptionAR')}
-              error={errors.metaDescriptionAR?.message}
+
+            <EntitySeoSection
+              locale={locale}
+              onLocaleChange={setLocale}
+              register={register}
+              watch={watch}
+              setValue={setValue}
+              errors={errors}
+              module="blog"
+              names={{ en: watch('nameEN'), ar: watch('nameAR') }}
             />
 
             <FormGroup title="Tags" className="pt-7 @2xl:pt-9 @3xl:grid-cols-12 @3xl:pt-11">

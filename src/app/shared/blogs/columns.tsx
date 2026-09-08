@@ -13,6 +13,7 @@ import CreateButton from '../create-button';
 import BlogsForm from './address-form';
 import { resolveLocalizedName } from '@/utils/resolve-localized-name';
 import { getBlogSlug, parseApiDate } from '@/utils/slugs';
+import { stripHtml } from '@/utils/seo-fields';
 
 type Columns = {
   data: any[];
@@ -85,6 +86,7 @@ export const getColumns = ({
             view={<BlogsForm initValues={row} />}
             label=""
             className="m-0 bg-transparent p-0 text-gray-700"
+            customSize="800px"
           />
         </Tooltip>
         <DeletePopover
@@ -112,7 +114,7 @@ export const getColumns = ({
     hidden: 'name',
 
     render: (_: string, row: any) => {
-      const slug = getBlogSlug(row);
+      const slug = getBlogSlug(row, 'en');
       return (
         <div className="flex w-full justify-center  text-center">
           {
@@ -120,7 +122,7 @@ export const getColumns = ({
               //@ts-ignore
               src={row?.image?.original || ''}
               name={resolveLocalizedName(row?.name, 'en') || resolveLocalizedName(row?.name, 'ar')}
-              description={slug ? `/${slug}` : `ID-${row.id}`}
+              description={slug || '—'}
             />
           }
         </div>
@@ -133,7 +135,10 @@ export const getColumns = ({
     key: 'slug',
     width: 160,
     render: (_: string, row: any) => (
-      <div className="w-full text-center font-medium text-gray-700">{getBlogSlug(row) || '—'}</div>
+      <div className="flex w-full flex-col gap-0.5 text-center text-sm">
+        <span className="font-medium text-gray-700">{getBlogSlug(row, 'en') || '—'}</span>
+        <span className="text-gray-500">{getBlogSlug(row, 'ar') || '—'}</span>
+      </div>
     ),
   },
   {
@@ -143,11 +148,18 @@ export const getColumns = ({
     width: 30,
     hidden: 'description',
 
-    render: (_: string, row: any) => (
-      <div className="w-full line-clamp-3  text-center">
-        {resolveLocalizedName(row?.description, 'en') || resolveLocalizedName(row?.description, 'ar')}
-      </div>
-    ),
+    render: (_: string, row: any) => {
+      const description =
+        resolveLocalizedName(row?.description, 'en') ||
+        resolveLocalizedName(row?.description, 'ar') ||
+        '';
+      const plain = stripHtml(description).replace(/\s+/g, ' ').trim();
+      return (
+        <div className="w-full line-clamp-3 text-center">
+          {plain || '—'}
+        </div>
+      );
+    },
   },
   {
     title: <HeaderCell align="center" title={'date'} />,

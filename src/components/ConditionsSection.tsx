@@ -124,10 +124,10 @@ export default function ConditionsSection({
         <div>
           <h2 className="text-xl font-semibold text-gray-900 mb-1 flex items-center gap-2">
             <Shield className="w-6 h-6 text-blue-600" />
-            {lang === "ar" ? "الشروط العامة" : "General Conditions"}
+            {lang === "ar" ? "سياسة الخصوصية" : "Privacy Policy"}
           </h2>
           <p className="text-gray-600 text-sm">
-            Configure general usage conditions for your platform.
+            Manage your privacy policy content in both Arabic and English.
           </p>
         </div>
 

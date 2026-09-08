@@ -1,19 +1,18 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { PiXBold } from 'react-icons/pi';
-import { SubmitHandler } from 'react-hook-form';
+import { SubmitHandler, UseFormReturn } from 'react-hook-form';
 import { Form } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Title } from '@/components/ui/text';
 import { useModal } from '@/app/shared/modal-views/use-modal';
-import Select from 'react-select'; // multi-select for categories
-import {  ServiceFormInput, ServiceFormSchema } from '@/utils/validators/service-form.schema'; // schema for validation
-import { Textarea } from 'rizzui';
+import Select from 'react-select';
+import { ServiceFormInput, ServiceFormSchema } from '@/utils/validators/service-form.schema';
 import Spinner from '@/components/ui/spinner';
-import { useCreateServices, useUpdateServices } from '@/framework/services';
+import { useCreateServices, useServiceDetail, useUpdateServices } from '@/framework/services';
 import { useCategories } from '@/framework/categories';
 import QuillEditor from '@/components/ui/quill-editor';
 import FormGroup from '../form-group';
@@ -22,22 +21,53 @@ import axios from 'axios';
 import Cookies from 'js-cookie';
 import toast from 'react-hot-toast';
 import { resolveLocalizedName } from '@/utils/resolve-localized-name';
-import { resolveServiceSlugPayload } from '@/utils/slugs';
+import EntitySeoSection from '@/app/shared/seo/entity-seo-section';
+import {
+  applySeoValidationErrors,
+  asLocaleTextMap,
+  buildEntitySeoPayload,
+  seoFormDefaults,
+} from '@/utils/seo-fields';
+import type { SeoLocale } from '@/types/seo-locale';
 
+type CategoryOption = {
+  value: number | null;
+  label: string;
+  slug?: { en: string | null; ar: string | null };
+};
 
 export default function CreateOrUpdateServices({ initValues }: { initValues?: any }) {
-  const { closeModal } = useModal();
-  const { mutate: createService, isPending: isCreating } = useCreateServices();
-  const { mutate: updateService, isPending: isUpdating } = useUpdateServices();
-  const { data: categoriesData, isLoading: isCategoriesLoading } = useCategories(""); // Get categories for dropdown
+  const id = initValues?.id;
+  const { data: record, isLoading: isDetailLoading } = useServiceDetail(id);
+  const values = record ?? initValues;
 
-  const [selectedCategory, setSelectedCategory] = useState<any>(null); // To store the selected category
+  if (id && isDetailLoading) {
+    return (
+      <div className="m-auto p-10">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
+
+  return <ServiceForm initValues={values} />;
+}
+
+function ServiceForm({ initValues }: { initValues?: any }) {
+  const { closeModal } = useModal();
+  const methodsRef = useRef<UseFormReturn<ServiceFormInput> | null>(null);
+  const { mutateAsync: createService, isPending: isCreating } = useCreateServices();
+  const { mutateAsync: updateService, isPending: isUpdating } = useUpdateServices();
+  const { data: categoriesData, isLoading: isCategoriesLoading } = useCategories('');
+
+  const [selectedCategory, setSelectedCategory] = useState<CategoryOption | null>(null);
   const [loading, setLoading] = useState(false);
   const [isoading, setoading] = useState(false);
-  let [imageError, setImageError] = useState(0);
+  const [imageError, setImageError] = useState(0);
   const [isImageData, setImage] = useState(initValues?.image || null);
   const [isIconData, setIcon] = useState(initValues?.icon || null);
   const [active, setActive] = useState<number>(initValues?.active !== undefined ? initValues.active : 1);
+  const [locale, setLocale] = useState<SeoLocale>('en');
+  const loadedSlug = initValues ? asLocaleTextMap(initValues.slug) : null;
 
   const handleFileUpload = (event: any, type: 'Image' | 'Icon' | 'File') => {
     setoading(true);
@@ -52,7 +82,6 @@ export default function CreateOrUpdateServices({ initValues }: { initValues?: an
         },
       })
       .then((response) => {
-        console.log(response.data.data);
         if (type === 'Image') {
           setImage(response.data.data);
         }
@@ -61,22 +90,31 @@ export default function CreateOrUpdateServices({ initValues }: { initValues?: an
         }
         toast.success(`${type} Uploaded successfully`);
       })
-      .catch((error) => {
-        console.log(error);
+      .catch(() => {
         toast.error('Please Try Again');
       })
       .finally(() => {
         setoading(false);
       });
   };
-  // Category initialization
+
+  const categoryOptions: CategoryOption[] = [
+    { value: null, label: 'None' },
+    ...(categoriesData?.data?.map((category: any) => ({
+      value: category.id,
+      label: resolveLocalizedName(category.name, 'en') || 'Unnamed',
+      slug: asLocaleTextMap(category.slug),
+    })) ?? []),
+  ];
+
   useEffect(() => {
     if (initValues && categoriesData?.data) {
-      const category = categoriesData.data.find((cat: any) => cat.id === initValues?.category?.id);
       if (initValues?.category?.id) {
+        const category = categoriesData.data.find((cat: any) => cat.id === initValues?.category?.id);
         setSelectedCategory({
           value: initValues?.category?.id,
           label: resolveLocalizedName(category?.name, 'en') || '',
+          slug: asLocaleTextMap(category?.slug ?? initValues?.category?.slug),
         });
       } else {
         setSelectedCategory({ value: null, label: 'None' });
@@ -84,46 +122,44 @@ export default function CreateOrUpdateServices({ initValues }: { initValues?: an
     }
   }, [initValues, categoriesData]);
 
-  const onSubmit: SubmitHandler<ServiceFormInput> = (data) => {
-    // Validate image is required
+  const onSubmit: SubmitHandler<ServiceFormInput> = async (data) => {
     const imageValue = isImageData === null ? null : (isImageData || initValues?.image);
     const iconValue = isIconData === null ? null : (isIconData || initValues?.icon);
-    
-    // Check if image exists (handle both array and object formats)
+
     const hasImage = imageValue && (
       (Array.isArray(imageValue) && imageValue.length > 0) ||
       (!Array.isArray(imageValue) && imageValue)
     );
-    
+
     if (!hasImage) {
       setImageError(1);
       toast.error('Image is required');
       return;
     }
-    
+
     setImageError(0);
-    
-    const slug = resolveServiceSlugPayload(data.slug, data.name.en);
 
     const requestBody: Record<string, unknown> = {
       name: data.name,
-      slug,
-      meta_title: data.meta_title,
-      meta_description: data.meta_description,
-      category_id: (selectedCategory?.value ?? null), // allow null
+      category_id: selectedCategory?.value ?? null,
       image: imageValue,
       icon: iconValue,
       description: data.description,
-      active: active,
+      active,
+      ...buildEntitySeoPayload(data, loadedSlug, !initValues),
     };
 
-    if (initValues) {
-      updateService({ service_id: initValues.id, ...requestBody });
-    } else {
-      createService(requestBody);
+    try {
+      if (initValues) {
+        await updateService({ service_id: initValues.id, id: initValues.id, ...requestBody });
+      } else {
+        await createService(requestBody);
+      }
+    } catch (error) {
+      const nextLocale = applySeoValidationErrors(error, methodsRef.current!.setError);
+      if (nextLocale) setLocale(nextLocale);
     }
     setLoading(true);
-
   };
 
   if (isCategoriesLoading) {
@@ -144,255 +180,202 @@ export default function CreateOrUpdateServices({ initValues }: { initValues?: an
             en: initValues?.name?.en || '',
             ar: initValues?.name?.ar || '',
           },
-          meta_description: {
-            en: initValues?.meta_description?.en || '',
-            ar: initValues?.meta_description?.ar || '',
-          },
-          meta_title: {
-            en: initValues?.meta_title?.en || '',
-            ar: initValues?.meta_title?.ar || '',
-          },
-          slug: {
-            en:
-              (typeof initValues?.slug === 'string' ? initValues.slug : initValues?.slug?.en) || '',
-            ar: initValues?.slug?.ar || '',
-          },
           description: {
             en: initValues?.description?.en || '',
             ar: initValues?.description?.ar || '',
           },
           category_id: initValues?.category?.id ?? null,
+          ...seoFormDefaults(initValues),
         },
       }}
-      
       className="flex flex-grow flex-col gap-6 p-6"
     >
-      {({ register, formState: { errors }, setValue, control }) => {
+      {(methods) => {
+        methodsRef.current = methods;
+        const { register, formState: { errors }, setValue, control, watch } = methods;
 
-       return <>
-          <div className="flex items-center justify-between">
-            <Title as="h4" className="font-semibold">
-              {initValues ? 'Update Service' : 'Create Service'}
-            </Title>
-            <Button onClick={closeModal}>
-              <PiXBold className="h-4 w-4" />
-            </Button>
-          </div>
+        return (
+          <>
+            <div className="flex items-center justify-between">
+              <Title as="h4" className="font-semibold">
+                {initValues ? 'Update Service' : 'Create Service'}
+              </Title>
+              <Button onClick={closeModal}>
+                <PiXBold className="h-4 w-4" />
+              </Button>
+            </div>
 
-          {/* Two Column Layout: English (Left) and Arabic (Right) */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* English Fields - Left Column */}
-            <div className="space-y-4">
-              <h5 className="font-semibold text-gray-900 mb-4">English Fields</h5>
-              <Input
-                key={"name.en"}
-                label="Service Name (English)"
-                {...register('name.en')}
-                error={errors.name?.en?.message}
-              />
-              <Input
-                key="slug.en"
-                label="Service Slug (English)"
-                {...register('slug.en')}
-                placeholder="Leave empty to generate from English name"
-                helperText="Optional. If empty, it is generated from the English name on save."
-                error={errors.slug?.en?.message}
-              />
-              <QuillEditor
-                name="description.en"
-                error={errors.description?.en?.message}
-                control={control}
-                label="Description (English)"
-                key="Description EN"
-                className="col-span-full [&_.ql-editor]:min-h-[100px]"
-                labelClassName="font-medium text-gray-700 dark:text-gray-600 mb-1.5"
-              />
-              <Input
-                key={"meta_title.en"}
-                label="Meta Title (English)"
-                {...register('meta_title.en')}
-                placeholder='Enter Meta Title'
-                error={errors.meta_title?.en?.message}
-              />
-              <Textarea
-                key={"meta_description.en"}
-                label="Meta Description (English)"
-                placeholder='Enter Meta Description'
-                {...register('meta_description.en')}
-                error={errors?.meta_description?.en?.message||""}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <h5 className="font-semibold text-gray-900 mb-4">English Fields</h5>
+                <Input
+                  key="name.en"
+                  label="Service Name (English)"
+                  {...register('name.en')}
+                  error={errors.name?.en?.message}
+                />
+                <QuillEditor
+                  name="description.en"
+                  error={errors.description?.en?.message}
+                  control={control}
+                  label="Description (English)"
+                  key="Description EN"
+                  className="col-span-full [&_.ql-editor]:min-h-[100px]"
+                  labelClassName="font-medium text-gray-700 dark:text-gray-600 mb-1.5"
+                />
+              </div>
+
+              <div className="space-y-4">
+                <h5 className="font-semibold text-gray-900 mb-4">Arabic Fields</h5>
+                <Input
+                  key="name.ar"
+                  label="Service Name (Arabic)"
+                  {...register('name.ar')}
+                  error={errors.name?.ar?.message}
+                />
+                <QuillEditor
+                  name="description.ar"
+                  error={errors.description?.ar?.message}
+                  control={control}
+                  label="Description (Arabic)"
+                  key="Description AR"
+                  className="col-span-full [&_.ql-editor]:min-h-[100px]"
+                  labelClassName="font-medium text-gray-700 dark:text-gray-600 mb-1.5"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label>Category</label>
+              <Select
+                options={categoryOptions}
+                value={selectedCategory}
+                onChange={(selected) => {
+                  setValue('category_id', selected?.value ?? null);
+                  setSelectedCategory(selected as CategoryOption | null);
+                }}
+                menuPortalTarget={document.body}
+                styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
+                placeholder="Select category"
               />
             </div>
 
-            {/* Arabic Fields - Right Column */}
-            <div className="space-y-4">
-              <h5 className="font-semibold text-gray-900 mb-4">Arabic Fields</h5>
-              <Input
-                key={"name.ar"}
-                label="Service Name (Arabic)"
-                {...register('name.ar')}
-                error={errors.name?.ar?.message}
+            <EntitySeoSection
+              locale={locale}
+              onLocaleChange={setLocale}
+              register={register}
+              watch={watch}
+              setValue={setValue}
+              errors={errors}
+              module="service"
+              categorySlug={selectedCategory?.slug}
+              names={watch('name')}
+            />
+
+            <FormGroup
+              title="Image *"
+              className="relative pt-7 @2xl:pt-9 @3xl:grid-cols-12 @3xl:pt-11"
+            >
+              {isoading && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/80 rounded-md">
+                  <Spinner size="xl" />
+                </div>
+              )}
+              <div className="flex flex-col gap-2">
+                <Upload
+                  title="Image"
+                  accept="img"
+                  onChange={(e) => {
+                    setImageError(0);
+                    handleFileUpload(e, 'Image');
+                  }}
+                />
+                {imageError > 0 && (
+                  <p className="text-xs text-red-500">Image is required.</p>
+                )}
+                {(isImageData?.[0]?.thumbnail || isImageData?.[0]?.original) && (
+                  <div className="relative flex justify-center items-center w-full mt-2">
+                    <img
+                      src={isImageData[0].thumbnail || isImageData[0].original}
+                      alt="Uploaded Preview"
+                      className="w-48 h-auto rounded border border-gray-200 shadow-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setImage(null)}
+                      className="absolute -top-2 -right-2 bg-white border border-gray-300 rounded-full p-1 shadow hover:bg-red-50"
+                      title="Remove Image"
+                    >
+                      <PiXBold className="w-4 h-4 text-red-500" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </FormGroup>
+
+            <FormGroup
+              title="Icon"
+              className="relative pt-7 @2xl:pt-9 @3xl:grid-cols-12 @3xl:pt-11"
+            >
+              {isoading && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/80 rounded-md">
+                  <Spinner size="xl" />
+                </div>
+              )}
+              <div className="flex flex-col gap-2">
+                <Upload
+                  title="Icon"
+                  accept="img"
+                  onChange={(e) => {
+                    handleFileUpload(e, 'Icon');
+                  }}
+                />
+                {(isIconData?.[0]?.thumbnail || isIconData?.[0]?.original) && (
+                  <div className="relative flex justify-center items-center w-full mt-2">
+                    <img
+                      src={isIconData[0].thumbnail || isIconData[0].original}
+                      alt="Uploaded Icon Preview"
+                      className="w-24 h-auto rounded border border-gray-200 shadow-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setIcon(null)}
+                      className="absolute -top-2 -right-2 bg-white border border-gray-300 rounded-full p-1 shadow hover:bg-red-50"
+                      title="Remove Icon"
+                    >
+                      <PiXBold className="w-4 h-4 text-red-500" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </FormGroup>
+
+            <div className="flex flex-wrap px-1 gap-3">
+              <Checkbox
+                key={1}
+                label={'Active'}
+                checked={active == 1}
+                onChange={() => setActive(active ? 0 : 1)}
               />
-              <Input
-                key="slug.ar"
-                label="Service Slug (Arabic)"
-                {...register('slug.ar')}
-                placeholder="Leave empty to generate from English name"
-                helperText="Optional. If empty, it is generated from the English name on save."
-                error={errors.slug?.ar?.message}
-              />
-              <QuillEditor
-                name="description.ar"
-                error={errors.description?.ar?.message}
-                control={control}
-                label="Description (Arabic)"
-                key="Description AR"
-                className="col-span-full [&_.ql-editor]:min-h-[100px]"
-                labelClassName="font-medium text-gray-700 dark:text-gray-600 mb-1.5"
-              />
-              <Input
-                key={"meta_title.ar"}
-                label="Meta Title (Arabic)"
-                placeholder='أدخل العنوان التعريفي'
-                {...register('meta_title.ar')}
-                error={errors.meta_title?.ar?.message}
-              />
-              <Textarea
-                key={"meta_description.ar"}
-                label="Meta Description (Arabic)"
-                placeholder='أدخل الوصف التعريفي'
-                {...register('meta_description.ar')}
-                error={errors?.meta_description?.ar?.message}
+              <Checkbox
+                key={0}
+                label={'Inactive'}
+                checked={active == 0}
+                onChange={() => setActive(active ? 0 : 1)}
               />
             </div>
-          </div>
 
-                       <FormGroup
-                                               title="Image *"
-                                               className="relative pt-7 @2xl:pt-9 @3xl:grid-cols-12 @3xl:pt-11"
-                                             >
-                                               {isoading && (
-                                                 <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/80 rounded-md">
-                                                   <Spinner size="xl" />
-                                                 </div>
-                                               )}
-                                               <div className="flex flex-col gap-2">
-                                                 <Upload
-                                                   title="Image"
-                                                   accept="img"
-                                                   onChange={(e) => {
-                                                     setImageError(0);
-                                                     handleFileUpload(e, 'Image');
-                                                   }}
-                                                 />
-                                                 {imageError > 0 && (
-                                                   <p className="text-xs text-red-500">Image is required.</p>
-                                                 )}
-                                                 {(isImageData?.[0]?.thumbnail || isImageData?.[0]?.original) && (
-                                                   <div className="relative flex justify-center items-center w-full mt-2">
-                                                     <img
-                                                       src={isImageData[0].thumbnail || isImageData[0].original}
-                                                       alt="Uploaded Preview"
-                                                       className="w-48 h-auto rounded border border-gray-200 shadow-sm"
-                                                     />
-                                                     <button
-                                                       type="button"
-                                                       onClick={() => setImage(null)}
-                                                       className="absolute -top-2 -right-2 bg-white border border-gray-300 rounded-full p-1 shadow hover:bg-red-50"
-                                                       title="Remove Image"
-                                                     >
-                                                       <PiXBold className="w-4 h-4 text-red-500" />
-                                                     </button>
-                                                   </div>
-                                                 )}
-                                               </div>
-                                             </FormGroup>
-
-                      <FormGroup
-                        title="Icon"
-                        className="relative pt-7 @2xl:pt-9 @3xl:grid-cols-12 @3xl:pt-11"
-                      >
-                        {isoading && (
-                          <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/80 rounded-md">
-                            <Spinner size="xl" />
-                          </div>
-                        )}
-                        <div className="flex flex-col gap-2">
-                          <Upload
-                            title="Icon"
-                            accept="img"
-                            onChange={(e) => {
-                              handleFileUpload(e, 'Icon');
-                            }}
-                          />
-                          {(isIconData?.[0]?.thumbnail || isIconData?.[0]?.original) && (
-                            <div className="relative flex justify-center items-center w-full mt-2">
-                              <img
-                                src={isIconData[0].thumbnail || isIconData[0].original}
-                                alt="Uploaded Icon Preview"
-                                className="w-24 h-auto rounded border border-gray-200 shadow-sm"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => setIcon(null)}
-                                className="absolute -top-2 -right-2 bg-white border border-gray-300 rounded-full p-1 shadow hover:bg-red-50"
-                                title="Remove Icon"
-                              >
-                                <PiXBold className="w-4 h-4 text-red-500" />
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </FormGroup>
-
-          {/* Categories Select */}
-          <div>
-            <label>Category</label>
-            <Select
-              options={[
-                { value: null, label: 'None' },
-                ...(categoriesData?.data?.map((category: any) => ({
-                  value: category.id,
-                  label: resolveLocalizedName(category.name, 'en') || 'Unnamed',
-                })) ?? []),
-              ]}
-              value={selectedCategory} // Bind selected category
-              onChange={(selected) => {
-                setValue('category_id', selected?.value ?? null);
-                setSelectedCategory(selected); // Update selected category
-              }}
-              menuPortalTarget={document.body}
-              styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
-              placeholder="Select category"
-            />
-          </div>
-
-          <div className='flex flex-wrap px-1 gap-3'>
-            <Checkbox
-              key={1}
-              label={'Active'}
-              checked={active == 1}
-              onChange={() => setActive(active ? 0 : 1)}
-            />
-            <Checkbox
-              key={0}
-              label={'Inactive'}
-              checked={active == 0}
-              onChange={() => setActive(active ? 0 : 1)}
-            />
-          </div>
-
-          <div className="flex justify-end gap-4 mt-6">
-            <Button variant="outline" onClick={closeModal}>
-              Cancel
-            </Button>
-            <Button type="submit" isLoading={loading || isCreating || isUpdating}>
-              {initValues ? 'Update Service' : 'Create Service'}
-            </Button>
-          </div>
-        </>
-      }
-      
-      }
+            <div className="flex justify-end gap-4 mt-6">
+              <Button variant="outline" onClick={closeModal}>
+                Cancel
+              </Button>
+              <Button type="submit" isLoading={loading || isCreating || isUpdating}>
+                {initValues ? 'Update Service' : 'Create Service'}
+              </Button>
+            </div>
+          </>
+        );
+      }}
     </Form>
   );
 }

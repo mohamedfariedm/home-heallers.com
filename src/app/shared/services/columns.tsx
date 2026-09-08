@@ -125,7 +125,7 @@ const lang="en"
               //@ts-ignore
               src={row?.image?.original || ''}
               name={resolveLocalizedName(row?.name, 'en') || resolveLocalizedName(row?.name, 'ar')}
-              description={slug ? `/${slug}` : `ID-${row.id}`}
+              description={slug || '—'}
             />
           }
         </div>

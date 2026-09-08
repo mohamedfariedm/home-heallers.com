@@ -3,21 +3,28 @@ import client from '@/framework/utils'
 import toast from 'react-hot-toast';
 import { useModal } from '@/app/shared/modal-views/use-modal';
 import { routes } from '@/config/routes';
+import { unwrapAdminRecord } from '@/utils/slugs';
+import { isFieldValidationError } from '@/utils/seo-fields';
 
 export function useCategories(param:string) {
 
   return useQuery<any, Error>({queryKey: [routes.mainCategories.index,param], queryFn: () => client.mainCategories.all(param)});
 };
 
-
-
+export function useCategoryDetail(id?: string | number) {
+  return useQuery<any, Error>({
+    queryKey: [routes.mainCategories.index, 'detail', id],
+    queryFn: async () => unwrapAdminRecord(await client.mainCategories.findOne(id!)),
+    enabled: id !== undefined && id !== null && id !== '',
+  });
+}
 
 export const useCreateCategory = () => {
 
   const queryClient = useQueryClient();
   const { closeModal } = useModal();
   
-  const {mutate, isPending} = useMutation({
+  const {mutate, mutateAsync, isPending} = useMutation({
     mutationFn: client.mainCategories.create,
     onSuccess() {
       queryClient.invalidateQueries({queryKey: [routes.mainCategories.index]})
@@ -25,11 +32,12 @@ export const useCreateCategory = () => {
       closeModal()
     },
     onError: (error) => {
+      if (isFieldValidationError(error)) return;
       toast.error(`Error ${error?.message}`)
     }
   })
 
-  return { mutate, isPending}
+  return { mutate, mutateAsync, isPending}
 }
 
 export const useUpdateCategory = () => {
@@ -44,6 +52,7 @@ export const useUpdateCategory = () => {
       closeModal()
     },
     onError: (error) => {
+      if (isFieldValidationError(error)) return;
       toast.error(`Error ${error?.message}`)
     }
   })

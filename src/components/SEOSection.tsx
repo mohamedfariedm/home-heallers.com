@@ -1,34 +1,93 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Globe, Search, Share2, Twitter } from 'lucide-react';
 import { SEOData } from '../types/settings';
 
+interface PageSEO {
+  ar: SEOData;
+  en: SEOData;
+}
+
 interface SEOSectionProps {
-  seo: Record<
-    string,
-    {
-      ar: SEOData;
-      en: SEOData;
-    }
-  >;
+  seo: Record<string, PageSEO>;
   onUpdate: (seo: any) => void;
 }
 
+const REQUIRED_SEO_PAGES = ['terms', 'conditions', 'booking', 'doctors-apply'] as const;
+
+const HIDDEN_SEO_PAGES = ['services', 'specialty', 'subspecialty'] as const;
+
+const PAGE_LABELS: Record<string, string> = {
+  terms: 'Terms & Conditions',
+  conditions: 'Privacy Policy',
+  booking: 'Booking',
+  'doctors-apply': 'Doctors Apply',
+};
+
+const emptySEOData = (): SEOData => ({
+  title: '',
+  description: '',
+  h1: '',
+  canonical: '',
+  keywords: '',
+  og_title: '',
+  og_description: '',
+  og_image: '',
+  twitter_title: '',
+  twitter_description: '',
+  twitter_image: '',
+});
+
+const emptyPageSEO = (): PageSEO => ({
+  ar: emptySEOData(),
+  en: emptySEOData(),
+});
+
+const ensurePageSEO = (page?: Partial<PageSEO>): PageSEO => ({
+  ar: { ...emptySEOData(), ...page?.ar },
+  en: { ...emptySEOData(), ...page?.en },
+});
+
 const SEOSection: React.FC<SEOSectionProps> = ({ seo, onUpdate }) => {
-  const pageKeys = Object.keys(seo);
-  const [activePage, setActivePage] = useState(pageKeys[0]);
+  const safeSeo = seo || {};
+
+  const pageKeys = useMemo(() => {
+    const existing = Object.keys(safeSeo).filter(
+      (page) => !HIDDEN_SEO_PAGES.includes(page as (typeof HIDDEN_SEO_PAGES)[number])
+    );
+    const missing = REQUIRED_SEO_PAGES.filter((page) => !existing.includes(page));
+    return [...existing, ...missing];
+  }, [safeSeo]);
+
+  const [activePage, setActivePage] = useState(pageKeys[0] || 'terms');
   const [activeLang, setActiveLang] = useState<'ar' | 'en'>('ar');
 
-  const currentSEO = seo?.[activePage]?.[activeLang];
+  useEffect(() => {
+    if (pageKeys.length > 0 && !pageKeys.includes(activePage)) {
+      setActivePage(pageKeys[0]);
+    }
+  }, [pageKeys, activePage]);
 
-  // if (!currentSEO) return null;
+  useEffect(() => {
+    const missingPages = REQUIRED_SEO_PAGES.filter((page) => !safeSeo[page]);
+    if (missingPages.length === 0) return;
+
+    const next = { ...safeSeo };
+    missingPages.forEach((page) => {
+      next[page] = emptyPageSEO();
+    });
+    onUpdate(next);
+  }, [safeSeo, onUpdate]);
+
+  const currentSEO = ensurePageSEO(safeSeo[activePage])[activeLang];
 
   const handleFieldChange = (field: keyof SEOData, value: string) => {
+    const pageSeo = ensurePageSEO(safeSeo[activePage]);
     onUpdate({
-      ...seo,
+      ...safeSeo,
       [activePage]: {
-        ...seo[activePage],
+        ...pageSeo,
         [activeLang]: {
-          ...seo[activePage][activeLang],
+          ...pageSeo[activeLang],
           [field]: value,
         },
       },
@@ -62,7 +121,7 @@ const SEOSection: React.FC<SEOSectionProps> = ({ seo, onUpdate }) => {
         >
           {pageKeys.map((page) => (
             <option key={page} value={page}>
-              {page}
+              {PAGE_LABELS[page] || page}
             </option>
           ))}
         </select>

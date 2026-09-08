@@ -3,18 +3,28 @@ import client from '@/framework/utils'
 import toast from 'react-hot-toast';
 import { useModal } from '@/app/shared/modal-views/use-modal';
 import { routes } from '@/config/routes';
+import { unwrapAdminRecord } from '@/utils/slugs';
+import { isFieldValidationError } from '@/utils/seo-fields';
 
 export function useServices(param:string) {
 
   return useQuery<any, Error>({queryKey: [routes.services.index,param], queryFn: () => client.services.all(param)});
 };
 
+export function useServiceDetail(id?: string | number) {
+  return useQuery<any, Error>({
+    queryKey: [routes.services.index, 'detail', id],
+    queryFn: async () => unwrapAdminRecord(await client.services.findOne(id!)),
+    enabled: id !== undefined && id !== null && id !== '',
+  });
+}
+
 export const useCreateServices = () => {
 
   const queryClient = useQueryClient();
   const { closeModal } = useModal();
 
-  const {mutate, isPending} = useMutation({
+  const {mutate, mutateAsync, isPending} = useMutation({
     mutationFn: client.services.create,
     onSuccess() {
       queryClient.invalidateQueries({queryKey: [routes.services.index]})
@@ -22,11 +32,12 @@ export const useCreateServices = () => {
       closeModal()
     },
     onError: (error) => {
+      if (isFieldValidationError(error)) return;
       toast.error(`Error ${error?.message}`)
     }
   })
 
-  return { mutate, isPending}
+  return { mutate, mutateAsync, isPending}
 }
 
 export const useUpdateServices = () => {
@@ -40,6 +51,7 @@ export const useUpdateServices = () => {
       closeModal()
     },
     onError: (error) => {
+      if (isFieldValidationError(error)) return;
       toast.error(`Error ${error?.message}`)
     }
   })

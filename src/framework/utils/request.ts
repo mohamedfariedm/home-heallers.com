@@ -51,6 +51,7 @@ request.interceptors.response.use(
 
       let message: string =
         (typeof data?.message === 'string' && data.message) ||
+        (typeof data?.msg === 'string' && data.msg) ||
         (typeof error?.message === 'string' && error.message) ||
         `Request failed${resp?.status ? ` (${resp.status})` : ''}`;
 

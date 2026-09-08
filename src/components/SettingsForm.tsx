@@ -40,7 +40,30 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
   initialSettings,
   onSave,
 }) => {
-  const [settings, setSettings] = useState<Settings>(initialSettings);
+  const [settings, setSettings] = useState<Settings>(() => {
+    const seo = { ...(initialSettings?.seo || {}) };
+    const emptySEO = {
+      title: '',
+      description: '',
+      h1: '',
+      canonical: '',
+      keywords: '',
+      og_title: '',
+      og_description: '',
+      og_image: '',
+      twitter_title: '',
+      twitter_description: '',
+      twitter_image: '',
+    };
+    const emptyPage = () => ({ ar: { ...emptySEO }, en: { ...emptySEO } });
+
+    if (!seo.terms) seo.terms = emptyPage();
+    if (!seo.conditions) seo.conditions = emptyPage();
+    if (!seo.booking) seo.booking = emptyPage();
+    if (!seo['doctors-apply']) seo['doctors-apply'] = emptyPage();
+
+    return { ...initialSettings, seo };
+  });
   const [activeTab, setActiveTab] = useState('banners');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -50,7 +73,7 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
     { id: 'app-links', label: 'App Links', icon: Smartphone },
     { id: 'seo', label: 'SEO Settings', icon: Search },
     { id: 'terms', label: 'Terms & Conditions', icon: FileText },
-    { id: 'conditions', label: 'General Conditions', icon: Shield },
+    { id: 'conditions', label: 'Privacy Policy', icon: Shield },
     { id: 'business-info', label: 'Business Information', icon: Building2 },
     { id: 'rate-colors', label: 'Rate Colors', icon: Palette },
     // { id: 'folder-management', label: 'Folder Management', icon: FolderOpen },

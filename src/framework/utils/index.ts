@@ -224,8 +224,12 @@ class Client {
     }
     blog = {
         all: (param: string) => HttpClient.get(`${`/news`}?${param}`),
+        findOne: (id: string | number) => HttpClient.get(`${`/news`}/${id}`),
         create: (input: any) => HttpClient.post(`${`/news`}`, input),
-        update: (input: any) => HttpClient.patch(`${`/news`}/${input.id}`, input),
+        update: (input: any) => {
+            const { id, ...body } = input;
+            return HttpClient.put(`${`/news`}/${id}`, body);
+        },
         delete: (input: { region_id: number[] }) => HttpClient.delete(`${`/news`}/${input.region_id}`)
     }
     invoices = {
@@ -420,8 +424,12 @@ class Client {
     }
     services = {
         all: (param: string) => HttpClient.get(`${routes.services.index}?${param}`),
+        findOne: (id: string | number) => HttpClient.get(`${routes.services.index}/${id}`),
         create: (input: any) => HttpClient.post(`${routes.services.index}`, input),
-        update: (input: any) => HttpClient.patch(`${routes.services.index}/${input.service_id}`, input),
+        update: (input: any) => {
+            const { service_id, id, ...body } = input;
+            return HttpClient.put(`${routes.services.index}/${service_id ?? id}`, body);
+        },
         delete: (input: { city_id: number[] }) => HttpClient.delete(`${routes.services.index}/${input.city_id}`)
     }
 
@@ -461,8 +469,12 @@ class Client {
 
     mainCategories = {
         all: (param: string) => HttpClient.get(`/categories?${param}`),
+        findOne: (id: string | number) => HttpClient.get(`/categories/${id}`),
         create: (input: any) => HttpClient.post(`/categories`, input),
-        update: (input: { role_id: string, name: any, image: any, active?: number }) => HttpClient.patch(`/categories/${input.role_id}`, { name: input.name, image: input.image, active: input.active }),
+        update: (input: any) => {
+            const { role_id, id, ...body } = input;
+            return HttpClient.put(`/categories/${id ?? role_id}`, body);
+        },
         delete: (input: { role_id: number[] }) => HttpClient.delete(`/categories/${input.role_id}`),
     }
     journeys = {

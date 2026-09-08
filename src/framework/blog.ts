@@ -3,9 +3,19 @@ import client from '@/framework/utils';
 import toast from 'react-hot-toast';
 import { useModal } from '@/app/shared/modal-views/use-modal';
 import { routes } from '@/config/routes';
+import { unwrapAdminRecord } from '@/utils/slugs';
+import { isFieldValidationError } from '@/utils/seo-fields';
 
 export function useBlogs(param: string) {
   return useQuery<any, Error>({ queryKey: [routes.blogs.index, param], queryFn: () => client.blog.all(param) });
+}
+
+export function useBlogDetail(id?: string | number) {
+  return useQuery<any, Error>({
+    queryKey: [routes.blogs.index, 'detail', id],
+    queryFn: async () => unwrapAdminRecord(await client.blog.findOne(id!)),
+    enabled: id !== undefined && id !== null && id !== '',
+  });
 }
 
 export const useCreateBlog = () => {
@@ -19,7 +29,10 @@ export const useCreateBlog = () => {
       queryClient.invalidateQueries({ queryKey: [routes.blogs.index] });
       closeModal();
     },
-    onError: (err: any) => toast.error(`Error: ${err.message}`),
+    onError: (err: any) => {
+      if (isFieldValidationError(err)) return;
+      toast.error(`Error: ${err.message}`);
+    },
   });
 };
 
@@ -34,7 +47,10 @@ export const useUpdateBlog = () => {
       queryClient.invalidateQueries({ queryKey: [routes.blogs.index] });
       closeModal();
     },
-    onError: (err: any) => toast.error(`Error: ${err.message}`),
+    onError: (err: any) => {
+      if (isFieldValidationError(err)) return;
+      toast.error(`Error: ${err.message}`);
+    },
   });
 };
 

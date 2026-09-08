@@ -95,6 +95,7 @@ export const getColumns = ({
               view={<CreateRole initValues={row}/>}
               label=''
               className='p-0 m-0 bg-transparent text-gray-700'
+              customSize="800px"
             />
           </Tooltip>
           <DeletePopover
@@ -123,12 +124,12 @@ export const getColumns = ({
     hidden: 'Category',
 
     render: (_: string, row: Invoice) => {
-      const slug = getCategorySlug(row);
+      const slug = getCategorySlug(row, 'en');
       return (
         <AvatarCard
           src={row.avatar}
           name={resolveLocalizedName(row?.name, 'en') || ''}
-          description={slug ? `/${slug}` : `ID-${row.id}`}
+          description={slug || '—'}
         />
       );
     },
@@ -139,7 +140,10 @@ export const getColumns = ({
     key: 'slug',
     width: 200,
     render: (_: string, row: any) => (
-      <span className="font-medium text-gray-700">{getCategorySlug(row) || '—'}</span>
+      <div className="flex flex-col gap-0.5 text-sm">
+        <span className="font-medium text-gray-700">{getCategorySlug(row, 'en') || '—'}</span>
+        <span className="text-gray-500">{getCategorySlug(row, 'ar') || '—'}</span>
+      </div>
     ),
   },
 

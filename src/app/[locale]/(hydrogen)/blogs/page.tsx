@@ -40,6 +40,7 @@ console.log(data);
       header="Street,Created At"
       createName="Create Blog"
       createElementButton={<BlogsForm />}
+      customSize="800px"
     >
       {isLoading ? (
         <div className="m-auto"><Spinner size="lg" /></div>

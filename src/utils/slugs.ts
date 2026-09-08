@@ -1,12 +1,13 @@
 import { generateSlug } from '@/utils/generate-slug';
+import { asLocaleTextMap } from '@/utils/seo-fields';
 
 /**
- * Category slug is a string. Service and news slugs are { en, ar } objects
- * with the same English value in both keys (generated from the English name).
+ * Admin category, service, and news slugs are locale maps `{ en, ar }`.
+ * Public category APIs may still return a single string for the request locale.
  *
- *   category.slug          → string          "home-care"
- *   service.slug.{en,ar}   → { en, ar }      editable; empty fields fall back to English name
- *   news.slug.{en,ar}      → { en, ar }      both keys hold the same English value
+ *   category.slug.{en,ar}  → independent per locale (admin)
+ *   service.slug.{en,ar}   → independent per locale
+ *   news.slug.{en,ar}      → independent per locale
  */
 
 export type AppLocale = 'en' | 'ar';
@@ -25,12 +26,19 @@ function asLocaleSlug(value: unknown): LocaleSlug | null {
   return value as LocaleSlug;
 }
 
-/** Category slug is a plain English string. Never index it with ['en']. */
-export function getCategorySlug(category: { slug?: unknown } | null | undefined): string {
-  const slug = category?.slug;
-  if (typeof slug === 'string') return slug;
-  const nested = asLocaleSlug(slug);
-  return nested?.en || nested?.ar || '';
+function pickLocaleSlug(value: unknown, locale: AppLocale = 'en'): string {
+  if (typeof value === 'string') return value;
+  const nested = asLocaleSlug(value);
+  if (!nested) return '';
+  return (nested[locale] || nested.en || nested.ar || '') as string;
+}
+
+/** Admin category slug is `{ en, ar }`. Public category APIs may still return a string. */
+export function getCategorySlug(
+  category: { slug?: unknown } | null | undefined,
+  locale: AppLocale = 'en'
+): string {
+  return pickLocaleSlug(category?.slug, locale);
 }
 
 /** Service slug is a locale object. Pick the key for the active locale. */
@@ -38,14 +46,10 @@ export function getServiceSlug(
   service: { slug?: unknown } | null | undefined,
   locale: AppLocale = 'en'
 ): string {
-  const slug = service?.slug;
-  if (typeof slug === 'string') return slug;
-  const nested = asLocaleSlug(slug);
-  if (!nested) return '';
-  return (nested[locale] || nested.en || nested.ar || '') as string;
+  return pickLocaleSlug(service?.slug, locale);
 }
 
-/** Resolve service slug payload: user input wins; empty fields fall back to English name. */
+/** @deprecated Client no longer generates slug on submit; backend fills omitted locales from name. */
 export function resolveServiceSlugPayload(
   slug: { en?: string; ar?: string } | undefined,
   englishName: string
@@ -56,12 +60,12 @@ export function resolveServiceSlugPayload(
   return { en, ar };
 }
 
-/** Blog slug is English in both keys. Prefer `.en`; either works. */
-export function getBlogSlug(news: { slug?: unknown } | null | undefined): string {
-  const slug = news?.slug;
-  if (typeof slug === 'string') return slug;
-  const nested = asLocaleSlug(slug);
-  return nested?.en || nested?.ar || '';
+/** Blog/news slug is independent per locale. Prefer the active locale. */
+export function getBlogSlug(
+  news: { slug?: unknown } | null | undefined,
+  locale: AppLocale = 'en'
+): string {
+  return pickLocaleSlug(news?.slug, locale);
 }
 
 export function encodeSlugPath(slug: string): string {
@@ -103,4 +107,17 @@ export function unwrapClientResponse<T = unknown>(res: {
     data: res?.data,
     message: res?.message ?? res?.msg,
   };
+}
+
+/** GET/POST/PUT show+write envelopes return `data: [record]`. Listing is `data: T[]`. */
+export function unwrapAdminRecord<T = any>(res: unknown): T | null {
+  const payload = res as any;
+  const data = payload?.data;
+  if (Array.isArray(data)) return (data[0] ?? null) as T | null;
+  if (data && typeof data === 'object') return data as T;
+  return (payload ?? null) as T | null;
+}
+
+export function getLocaleSlugMap(value: unknown): LocaleSlug {
+  return asLocaleTextMap(value);
 }
