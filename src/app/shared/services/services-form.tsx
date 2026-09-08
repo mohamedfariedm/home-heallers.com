@@ -281,10 +281,12 @@ function ServiceForm({ initValues }: { initValues?: any }) {
                   <Spinner size="xl" />
                 </div>
               )}
-              <div className="flex flex-col gap-2">
+              <div className="col-span-2 flex w-full flex-col gap-2">
                 <Upload
                   title="Image"
                   accept="img"
+                  className="w-full"
+                  wrapperClassName="w-full"
                   onChange={(e) => {
                     setImageError(0);
                     handleFileUpload(e, 'Image');
@@ -322,10 +324,12 @@ function ServiceForm({ initValues }: { initValues?: any }) {
                   <Spinner size="xl" />
                 </div>
               )}
-              <div className="flex flex-col gap-2">
+              <div className="col-span-2 flex w-full flex-col gap-2">
                 <Upload
                   title="Icon"
                   accept="img"
+                  className="w-full"
+                  wrapperClassName="w-full"
                   onChange={(e) => {
                     handleFileUpload(e, 'Icon');
                   }}

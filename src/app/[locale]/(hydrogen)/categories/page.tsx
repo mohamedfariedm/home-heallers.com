@@ -43,7 +43,7 @@ export default function PermitionsTablePage() {
       createName='Create Categories'
       // isLoading={isPermissionsLoading}
       createElementButton={<CreateCategories  />}
-      customSize="800px"
+      customSize="1200px"
     >
 
       
