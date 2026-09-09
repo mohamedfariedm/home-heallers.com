@@ -26,6 +26,8 @@ import {
   applySeoValidationErrors,
   asLocaleTextMap,
   buildEntitySeoPayload,
+  mergeAdminFormRecord,
+  preserveRichLocaleHtml,
   seoFormDefaults,
 } from '@/utils/seo-fields';
 import type { SeoLocale } from '@/types/seo-locale';
@@ -33,7 +35,7 @@ import type { SeoLocale } from '@/types/seo-locale';
 export default function BlogsForm({ initValues }: { initValues?: any }) {
   const id = initValues?.id;
   const { data: record, isLoading: isDetailLoading } = useBlogDetail(id);
-  const values = record ?? initValues;
+  const values = mergeAdminFormRecord(initValues, record);
 
   if (id && isDetailLoading) {
     return (
@@ -93,10 +95,10 @@ function BlogFormFields({ initValues }: { initValues?: any }) {
         en: data.nameEN,
         ar: data.nameAR,
       },
-      description: {
+      description: preserveRichLocaleHtml(initValues?.description, {
         en: data.descriptionEN,
         ar: data.descriptionAR,
-      },
+      }),
       image: isImageData || initValues?.image,
       show_in_home_page: data.show_in_home_page,
       date: data.date,

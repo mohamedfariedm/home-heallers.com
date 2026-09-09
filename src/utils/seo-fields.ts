@@ -42,6 +42,62 @@ export function stripHtml(value: string): string {
   return value.replace(/<[^>]*>/g, '').replace(/&nbsp;/gi, ' ').trim();
 }
 
+function htmlRichness(value: string): number {
+  return (
+    (value.match(/<[^>]+>/g) || []).length +
+    (value.match(/style=/gi) || []).length * 2 +
+    (value.match(/class=/gi) || []).length
+  );
+}
+
+function richerHtml(left: string, right: string): string {
+  if (!left) return right;
+  if (!right) return left;
+  return htmlRichness(left) >= htmlRichness(right) ? left : right;
+}
+
+/** Prefer the HTML that still has tags/inline styles when list and show payloads differ. */
+export function mergeRichLocaleHtml(listValue: unknown, detailValue: unknown) {
+  const list = localeMapToForm(listValue);
+  const detail = localeMapToForm(detailValue);
+  return {
+    en: richerHtml(list.en, detail.en),
+    ar: richerHtml(list.ar, detail.ar),
+  };
+}
+
+export function mergeAdminFormRecord(listRow?: any, detail?: any) {
+  const record = { ...(listRow || {}), ...(detail || {}) };
+  if (listRow?.description || detail?.description) {
+    record.description = mergeRichLocaleHtml(listRow?.description, detail?.description);
+  }
+  return Object.keys(record).length ? record : listRow;
+}
+
+function preserveRichHtml(original: string, next: string): string {
+  if (!original) return next;
+  if (!next) return original;
+  const sameText =
+    stripHtml(original).replace(/\s+/g, ' ') === stripHtml(next).replace(/\s+/g, ' ');
+  if (sameText && htmlRichness(original) > htmlRichness(next)) {
+    return original;
+  }
+  return next;
+}
+
+/** Keep loaded description HTML when Quill rewrites the same text without styles. */
+export function preserveRichLocaleHtml(
+  original: { en?: string | null; ar?: string | null } | undefined,
+  next: { en?: string | null; ar?: string | null } | undefined
+) {
+  const prev = localeMapToForm(original);
+  const curr = localeMapToForm(next);
+  return {
+    en: preserveRichHtml(prev.en, curr.en),
+    ar: preserveRichHtml(prev.ar, curr.ar),
+  };
+}
+
 function emptyToNull(value: string | null | undefined): string | null {
   if (value == null) return null;
   const trimmed = value.trim();

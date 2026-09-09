@@ -3,6 +3,7 @@
 @tailwind utilities;
 
 @import 'react-big-calendar/lib/css/react-big-calendar.css';
+@import 'react-quill/dist/quill.snow.css';
 
 @layer base {
   /* default theme */
@@ -778,20 +779,75 @@ td.rc-table-cell-fix-right {
 }
 
 /* React Quill */
-.react-quill .ql-toolbar.ql-snow {
+.react-quill .ql-toolbar.ql-snow,
+.ql-toolbar.ql-snow {
   @apply flex flex-wrap items-center gap-1.5 rounded-t-md border-gray-300;
 }
 
-.react-quill .ql-container {
-  @apply font-inter;
-}
-
-.react-quill .ql-container.ql-snow {
+.react-quill .ql-container.ql-snow,
+.ql-container.ql-snow {
   @apply rounded-b-md border-gray-300;
 }
 
-.react-quill .ql-editor {
+.ql-snow .ql-editor {
   @apply max-h-96 overflow-y-auto;
+}
+
+.ql-snow .ql-editor h1 {
+  @apply mb-2 text-3xl font-bold;
+}
+
+.ql-snow .ql-editor h2 {
+  @apply mb-2 text-2xl font-semibold;
+}
+
+.ql-snow .ql-editor h3 {
+  @apply mb-2 text-xl font-semibold;
+}
+
+.ql-snow .ql-editor h4,
+.ql-snow .ql-editor h5,
+.ql-snow .ql-editor h6 {
+  @apply mb-2 text-lg font-semibold;
+}
+
+.ql-snow .ql-editor p {
+  @apply mb-2;
+}
+
+.ql-snow .ql-editor strong,
+.ql-snow .ql-editor b {
+  font-weight: 700;
+}
+
+.ql-snow .ql-editor em,
+.ql-snow .ql-editor i {
+  font-style: italic;
+}
+
+.ql-snow .ql-editor u {
+  text-decoration: underline;
+}
+
+.ql-snow .ql-editor s,
+.ql-snow .ql-editor strike {
+  text-decoration: line-through;
+}
+
+.ql-snow .ql-editor ul {
+  @apply mb-2 list-disc pl-6;
+}
+
+.ql-snow .ql-editor ol {
+  @apply mb-2 list-decimal pl-6;
+}
+
+.ql-snow .ql-editor a {
+  @apply text-primary underline;
+}
+
+.ql-snow .ql-editor blockquote {
+  @apply my-2 border-l-4 border-gray-300 pl-3 italic;
 }
 
 .react-quill .ql-toolbar.ql-snow .ql-formats {

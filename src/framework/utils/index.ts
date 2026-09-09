@@ -228,7 +228,7 @@ class Client {
         create: (input: any) => HttpClient.post(`${`/news`}`, input),
         update: (input: any) => {
             const { id, ...body } = input;
-            return HttpClient.put(`${`/news`}/${id}`, body);
+            return HttpClient.patch(`${`/news`}/${id}`, body);
         },
         delete: (input: { region_id: number[] }) => HttpClient.delete(`${`/news`}/${input.region_id}`)
     }
@@ -428,7 +428,7 @@ class Client {
         create: (input: any) => HttpClient.post(`${routes.services.index}`, input),
         update: (input: any) => {
             const { service_id, id, ...body } = input;
-            return HttpClient.put(`${routes.services.index}/${service_id ?? id}`, body);
+            return HttpClient.patch(`${routes.services.index}/${service_id ?? id}`, body);
         },
         delete: (input: { city_id: number[] }) => HttpClient.delete(`${routes.services.index}/${input.city_id}`)
     }
@@ -473,7 +473,7 @@ class Client {
         create: (input: any) => HttpClient.post(`/categories`, input),
         update: (input: any) => {
             const { role_id, id, ...body } = input;
-            return HttpClient.put(`/categories/${id ?? role_id}`, body);
+            return HttpClient.patch(`/categories/${id ?? role_id}`, body);
         },
         delete: (input: { role_id: number[] }) => HttpClient.delete(`/categories/${input.role_id}`),
     }

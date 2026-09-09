@@ -24,6 +24,8 @@ import {
   applySeoValidationErrors,
   asLocaleTextMap,
   buildEntitySeoPayload,
+  mergeAdminFormRecord,
+  preserveRichLocaleHtml,
   seoFormDefaults,
 } from "@/utils/seo-fields"
 import type { SeoLocale } from "@/types/seo-locale"
@@ -31,7 +33,7 @@ import type { SeoLocale } from "@/types/seo-locale"
 export default function CreateCategories({ initValues }: { initValues?: any }) {
   const id = initValues?.id
   const { data: record, isLoading: isDetailLoading } = useCategoryDetail(id)
-  const values = record ?? initValues
+  const values = mergeAdminFormRecord(initValues, record)
 
   if (id && isDetailLoading) {
     return (
@@ -106,7 +108,7 @@ function CategoryForm({ initValues }: { initValues?: any }) {
     const iconValue = isIconData === null ? null : isIconData || initValues?.icon
     const payload = {
       name: data.name,
-      description: data.description,
+      description: preserveRichLocaleHtml(initValues?.description, data.description),
       image: imageValue,
       icon: iconValue,
       active,

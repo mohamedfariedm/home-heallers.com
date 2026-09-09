@@ -26,6 +26,8 @@ import {
   applySeoValidationErrors,
   asLocaleTextMap,
   buildEntitySeoPayload,
+  mergeAdminFormRecord,
+  preserveRichLocaleHtml,
   seoFormDefaults,
 } from '@/utils/seo-fields';
 import type { SeoLocale } from '@/types/seo-locale';
@@ -39,7 +41,7 @@ type CategoryOption = {
 export default function CreateOrUpdateServices({ initValues }: { initValues?: any }) {
   const id = initValues?.id;
   const { data: record, isLoading: isDetailLoading } = useServiceDetail(id);
-  const values = record ?? initValues;
+  const values = mergeAdminFormRecord(initValues, record);
 
   if (id && isDetailLoading) {
     return (
@@ -144,7 +146,7 @@ function ServiceForm({ initValues }: { initValues?: any }) {
       category_id: selectedCategory?.value ?? null,
       image: imageValue,
       icon: iconValue,
-      description: data.description,
+      description: preserveRichLocaleHtml(initValues?.description, data.description),
       active,
       ...buildEntitySeoPayload(data, loadedSlug, !initValues),
     };
