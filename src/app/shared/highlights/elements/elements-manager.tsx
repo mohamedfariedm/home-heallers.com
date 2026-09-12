@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import Image from 'next/image';
 import { Title, Text } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select } from '@/components/ui/select';
+import Select from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { ActionIcon } from '@/components/ui/action-icon';
@@ -17,6 +17,17 @@ import {
   useDeleteHighlightElement,
   useToggleHighlightElementActive,
 } from '@/framework/highlights';
+import { usePackages } from '@/framework/packages';
+import { useDoctors } from '@/framework/doctors';
+import { useCategories } from '@/framework/categories';
+import { useCoupons } from '@/framework/coupons';
+import {
+  NOTIFICATION_TYPE_OPTIONS,
+  deepLinkEntityLabel,
+  deepLinkPathForType,
+  isDeepLinkEntityType,
+  type DeepLinkEntityType,
+} from '@/app/shared/notifications/constants';
 import { HighlightElement } from '@/types/highlights';
 import toast from 'react-hot-toast';
 import {
@@ -25,13 +36,43 @@ import {
   PiPencilBold,
   PiVideoCameraBold,
   PiImageBold,
-  PiUploadCloudBold,
+  PiCloudArrowUpBold,
   PiBellRingingBold,
 } from 'react-icons/pi';
 
 interface ElementsManagerProps {
   highlightId: number;
   elements?: HighlightElement[];
+}
+
+type NamedEntity = {
+  id: number | string;
+  name?: { en?: string; ar?: string } | string | null;
+  code?: string | null;
+};
+
+function entityLabel(item: NamedEntity) {
+  const code = String(item.code || '').trim();
+  let name = '';
+  if (typeof item.name === 'string' && item.name.trim()) {
+    name = item.name.trim();
+  } else if (item.name && typeof item.name === 'object') {
+    const en = String(item.name.en || '').trim();
+    const ar = String(item.name.ar || '').trim();
+    name = en || ar;
+  }
+  if (name && code) return `${name} (${code})`;
+  if (name) return name;
+  if (code) return code;
+  return `#${item.id}`;
+}
+
+function toEntityOptions(list: NamedEntity[] | undefined) {
+  return (list ?? []).map((item) => {
+    const id = String(item.id);
+    const label = entityLabel(item);
+    return { value: id, label, name: label };
+  });
 }
 
 export default function ElementsManager({
@@ -59,6 +100,67 @@ export default function ElementsManager({
 
   const isSubmitting = addElement.isPending || updateElement.isPending;
   const isCapReached = elements.length >= 5;
+
+  // CTA type -> entity picker (same behaviour as the notifications form).
+  const usesEntityPicker = isDeepLinkEntityType(ctaType);
+  const listQuery = 'limit=1000';
+  const { data: packagesData, isLoading: offersLoading } = usePackages(listQuery);
+  const { data: doctorsData, isLoading: doctorsLoading } = useDoctors(listQuery);
+  const { data: categoriesData, isLoading: categoriesLoading } =
+    useCategories(listQuery);
+  const { data: couponsData, isLoading: couponsLoading } = useCoupons(listQuery);
+
+  const entityOptions = useMemo(() => {
+    if (ctaType === 'offers') {
+      return toEntityOptions(packagesData?.data as NamedEntity[] | undefined);
+    }
+    if (ctaType === 'doctors') {
+      return toEntityOptions(doctorsData?.data as NamedEntity[] | undefined);
+    }
+    if (ctaType === 'categories') {
+      return toEntityOptions(categoriesData?.data as NamedEntity[] | undefined);
+    }
+    if (ctaType === 'coupon') {
+      return toEntityOptions(couponsData?.data as NamedEntity[] | undefined);
+    }
+    return [];
+  }, [
+    ctaType,
+    packagesData?.data,
+    doctorsData?.data,
+    categoriesData?.data,
+    couponsData?.data,
+  ]);
+
+  const entityLoading =
+    (ctaType === 'offers' && offersLoading) ||
+    (ctaType === 'doctors' && doctorsLoading) ||
+    (ctaType === 'categories' && categoriesLoading) ||
+    (ctaType === 'coupon' && couponsLoading);
+
+  const handleCtaTypeChange = (nextType: string) => {
+    setCtaType(nextType);
+    // Reset the resolved deep link / url whenever the type changes.
+    setDeepLink('');
+    setUrl('');
+  };
+
+  const handleEntitySelect = (id: string) => {
+    setDeepLink(id);
+    if (id && isDeepLinkEntityType(ctaType)) {
+      setUrl(deepLinkPathForType(ctaType as DeepLinkEntityType, id));
+    } else {
+      setUrl('');
+    }
+  };
+
+  const ctaTypeOptions: Array<{ value: string; label: string }> = [
+    ...NOTIFICATION_TYPE_OPTIONS,
+  ];
+  if (ctaType && !NOTIFICATION_TYPE_OPTIONS.some((o) => o.value === ctaType)) {
+    // Preserve a custom/legacy cta_type coming from an existing element.
+    ctaTypeOptions.push({ value: ctaType, label: ctaType });
+  }
 
   const openAddModal = () => {
     if (isCapReached) {
@@ -338,11 +440,12 @@ export default function ElementsManager({
               </label>
               <Select
                 options={[
-                  { value: 'image', label: 'Image (JPEG, PNG, WEBP, GIF ≤ 5MB)' },
-                  { value: 'video', label: 'Video (MP4, MOV, WEBM ≤ 150MB)' },
+                  { value: 'image', label: 'Image (JPEG, PNG, WEBP, GIF ≤ 5MB)', name: 'Image' },
+                  { value: 'video', label: 'Video (MP4, MOV, WEBM ≤ 150MB)', name: 'Video' },
                 ]}
                 value={mediaType}
-                onChange={(opt: any) => setMediaType(opt.value)}
+                getOptionValue={(opt: any) => opt.value}
+                onChange={(opt: any) => setMediaType(opt?.value ?? opt)}
               />
             </div>
 
@@ -352,7 +455,7 @@ export default function ElementsManager({
                 {editingElement && '(Upload to replace media & reset views)'}
               </label>
               <label className="flex cursor-pointer items-center gap-2 rounded-md border border-dashed border-gray-300 p-3 text-sm font-medium text-gray-600 hover:border-gray-900">
-                <PiUploadCloudBold className="h-5 w-5 text-gray-500" />
+                <PiCloudArrowUpBold className="h-5 w-5 text-gray-500" />
                 <span className="truncate">
                   {mediaFile ? mediaFile.name : 'Choose media file...'}
                 </span>
@@ -379,7 +482,7 @@ export default function ElementsManager({
                   Video Poster Thumbnail (Optional image ≤ 5MB)
                 </label>
                 <label className="flex cursor-pointer items-center gap-2 rounded-md border border-dashed border-gray-300 p-3 text-sm font-medium text-gray-600 hover:border-gray-900">
-                  <PiUploadCloudBold className="h-5 w-5 text-gray-500" />
+                  <PiCloudArrowUpBold className="h-5 w-5 text-gray-500" />
                   <span className="truncate">
                     {thumbnailFile ? thumbnailFile.name : 'Choose poster image...'}
                   </span>
@@ -411,30 +514,88 @@ export default function ElementsManager({
                   <label className="mb-1 block text-xs font-medium text-gray-700">
                     CTA Type
                   </label>
-                  <Input
-                    placeholder="e.g. product_detail, route, chat"
+                  <Select
+                    placeholder="Select type"
+                    options={ctaTypeOptions.map((o) => ({
+                      ...o,
+                      name: o.value || 'none',
+                    }))}
                     value={ctaType}
-                    onChange={(e) => setCtaType(e.target.value)}
+                    getOptionValue={(opt: any) => opt.value}
+                    displayValue={(selected: any) =>
+                      ctaTypeOptions.find((o) => o.value === selected)?.label ??
+                      'None'
+                    }
+                    onChange={(opt: any) =>
+                      handleCtaTypeChange(String(opt?.value ?? opt ?? ''))
+                    }
                   />
                 </div>
                 <div>
                   <label className="mb-1 block text-xs font-medium text-gray-700">
-                    Deep Link
+                    {usesEntityPicker ? deepLinkEntityLabel(ctaType) : 'Deep Link'}
                   </label>
-                  <Input
-                    placeholder="e.g. homehealers://doctors/55"
-                    value={deepLink}
-                    onChange={(e) => setDeepLink(e.target.value)}
-                  />
+                  {usesEntityPicker ? (
+                    (() => {
+                      const options =
+                        deepLink &&
+                        !entityOptions.some((o) => o.value === deepLink)
+                          ? [
+                              ...entityOptions,
+                              {
+                                value: deepLink,
+                                label: `${deepLinkEntityLabel(ctaType)} #${deepLink}`,
+                                name: `${deepLinkEntityLabel(ctaType)} #${deepLink}`,
+                              },
+                            ]
+                          : entityOptions;
+                      return (
+                        <Select
+                          placeholder={
+                            entityLoading
+                              ? 'Loading…'
+                              : `Select ${deepLinkEntityLabel(ctaType).toLowerCase()}`
+                          }
+                          options={options}
+                          value={deepLink}
+                          getOptionValue={(opt: any) => opt.value}
+                          displayValue={(selected: any) =>
+                            options.find((o) => o.value === selected)?.label ??
+                            (selected ? String(selected) : '')
+                          }
+                          onChange={(opt: any) =>
+                            handleEntitySelect(String(opt?.value ?? opt ?? ''))
+                          }
+                          clearable
+                          onClear={() => handleEntitySelect('')}
+                        />
+                      );
+                    })()
+                  ) : (
+                    <Input
+                      placeholder="e.g. homehealers://doctors/55"
+                      value={deepLink}
+                      onChange={(e) => setDeepLink(e.target.value)}
+                    />
+                  )}
                 </div>
               </div>
 
               <div>
                 <label className="mb-1 block text-xs font-medium text-gray-700">
-                  External URL
+                  External URL{' '}
+                  {usesEntityPicker && (
+                    <span className="font-normal text-gray-400">
+                      (auto-filled from selection)
+                    </span>
+                  )}
                 </label>
                 <Input
-                  placeholder="https://..."
+                  placeholder={
+                    usesEntityPicker
+                      ? deepLinkPathForType(ctaType as DeepLinkEntityType, '{id}')
+                      : 'https://...'
+                  }
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
                 />

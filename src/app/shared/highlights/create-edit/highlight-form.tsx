@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Select } from '@/components/ui/select';
+import Select from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Title, Text } from '@/components/ui/text';
 import { useCreateHighlight, useUpdateHighlight } from '@/framework/highlights';
@@ -13,7 +13,6 @@ import { useCountries } from '@/framework/countrues';
 import { Highlight } from '@/types/highlights';
 import { routes } from '@/config/routes';
 import toast from 'react-hot-toast';
-import { PiUploadCloudBold } from 'react-icons/pi';
 
 interface HighlightFormProps {
   initialValues?: Highlight;
@@ -25,13 +24,29 @@ export default function HighlightForm({
   onSuccessCallback,
 }: HighlightFormProps) {
   const router = useRouter();
+  const params = useParams();
+  const locale = (params?.locale as string) === 'ar' ? 'ar' : 'en';
   const isEdit = Boolean(initialValues?.id);
+
+  // Country `name` is returned bilingually as { ar, en }. Resolve it to a plain
+  // string before using it as a label, otherwise React tries to render the
+  // object directly and throws "Objects are not valid as a React child".
+  const resolveName = (name: any): string => {
+    if (name && typeof name === 'object') {
+      return name[locale] || name.en || name.ar || '';
+    }
+    return name || '';
+  };
 
   const { data: countriesData } = useCountries('limit=100');
   const countries = Array.isArray(countriesData?.data) ? countriesData.data : [];
   const countryOptions = countries.map((c: any) => ({
     value: Number(c.id || c.country_id),
-    label: c.name || c.en_name || c.ar_name || `Country #${c.id}`,
+    label:
+      resolveName(c.name) ||
+      c.en_name ||
+      c.ar_name ||
+      `Country #${c.id}`,
   }));
 
   const [titleAr, setTitleAr] = useState(initialValues?.title?.ar || '');
@@ -104,8 +119,14 @@ export default function HighlightForm({
         });
         if (onSuccessCallback) onSuccessCallback(res);
       } else {
-        const res = await createHighlight.mutateAsync(formData);
-        const createdItem = Array.isArray(res?.data) ? res.data[0] : res?.data;
+        const res: any = await createHighlight.mutateAsync(formData);
+        // create() returns the raw axios response, so the API envelope
+        // ({ message, data: [item] }) lives under res.data. Fall back to res
+        // itself in case a caller ever returns the envelope directly.
+        const envelope = res?.data ?? res;
+        const createdItem = Array.isArray(envelope?.data)
+          ? envelope.data[0]
+          : envelope?.data ?? envelope;
         const newId = createdItem?.id;
 
         if (newId) {
@@ -159,11 +180,12 @@ export default function HighlightForm({
             </label>
             <Select
               options={[
-                { value: 'always', label: 'Always (Never Expires)' },
-                { value: 'daily', label: 'Daily (Expires 24h per element)' },
+                { value: 'always', label: 'Always (Never Expires)', name: 'Always' },
+                { value: 'daily', label: 'Daily (Expires 24h per element)', name: 'Daily' },
               ]}
               value={visibilityType}
-              onChange={(opt: any) => setVisibilityType(opt.value)}
+              getOptionValue={(opt: any) => opt.value}
+              onChange={(opt: any) => setVisibilityType(opt?.value ?? opt)}
             />
           </div>
 
@@ -198,7 +220,6 @@ export default function HighlightForm({
               )}
               <div className="flex-1">
                 <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-gray-300 p-4 text-sm font-medium text-gray-600 hover:border-gray-900 hover:text-gray-900">
-                  <PiUploadCloudBold className="h-5 w-5 text-gray-500" />
                   <span>
                     {coverFile ? coverFile.name : 'Choose cover image file...'}
                   </span>
@@ -231,11 +252,10 @@ export default function HighlightForm({
                           : [...prev, c.value]
                       );
                     }}
-                    className={`rounded-full px-3 py-1 text-xs font-medium transition ${
-                      isSelected
-                        ? 'bg-gray-900 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
+                    className={`rounded-full px-3 py-1 text-xs font-medium transition ${isSelected
+                      ? 'bg-gray-900 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
                   >
                     {c.label} {isSelected ? '✓' : '+'}
                   </button>

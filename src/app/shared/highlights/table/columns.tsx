@@ -58,7 +58,7 @@ export const getColumns = ({
             <div className="flex items-center gap-1.5 font-semibold text-gray-900">
               <span>{titleEn}</span>
               {row.is_pinned && (
-                <Tooltip content="Pinned Highlight" placement="top">
+                <Tooltip content={() => 'Pinned Highlight'} placement="top">
                   <span className="inline-flex text-amber-500">
                     <PiPushPinFill className="h-4 w-4" />
                   </span>
@@ -174,7 +174,7 @@ export const getColumns = ({
     render: (_: string, row: Highlight) => (
       <div className="flex items-center justify-center gap-2">
         {canEdit && (
-          <Tooltip size="sm" content="Edit Highlight & Elements" placement="top">
+          <Tooltip size="sm" content={() => 'Edit Highlight & Elements'} placement="top">
             <Link href={routes.highlights.edit(row.id)}>
               <ActionIcon
                 size="sm"

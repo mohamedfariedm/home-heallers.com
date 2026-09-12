@@ -15,7 +15,7 @@ export function useHighlightDetail(id?: string | number) {
   return useQuery<any, Error>({
     queryKey: [routes.highlights.index, 'detail', id],
     queryFn: async () => {
-      const res = await client.highlights.findOne(id!);
+      const res: any = await client.highlights.findOne(id!);
       // Envelope returns array under data, item at data[0] or data
       const data = res?.data;
       if (Array.isArray(data)) return data[0] ?? null;
@@ -193,7 +193,7 @@ export function useHighlightSettings() {
   return useQuery<any, Error>({
     queryKey: [routes.highlights.index, 'settings'],
     queryFn: async () => {
-      const res = await client.highlights.settings.get();
+      const res: any = await client.highlights.settings.get();
       return res?.data ?? res;
     },
   });
