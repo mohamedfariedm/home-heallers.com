@@ -1004,6 +1004,43 @@ class Client {
             kpis: () => HttpClient.get('/work/dashboard/kpis'),
         },
     };
+
+    highlights = {
+        all: (param = '') => HttpClient.get(`/highlights${param ? `?${param}` : ''}`),
+        findOne: (id: string | number) => HttpClient.get(`/highlights/${id}`),
+        create: (input: any) => HttpClient.post('/highlights', input, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        }),
+        update: (input: { id: string | number; data: any }) => {
+            if (input.data instanceof FormData) {
+                return HttpClient.post(`/highlights/${input.id}`, input.data, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                });
+            }
+            return HttpClient.put(`/highlights/${input.id}`, input.data);
+        },
+        delete: (id: string | number) => HttpClient.delete(`/highlights/${id}`),
+        toggleActive: (id: string | number) => HttpClient.post(`/highlights/${id}/toggle-active`, {}),
+        elements: {
+            create: (input: { highlightId: string | number; data: any }) =>
+                HttpClient.post(`/highlights/${input.highlightId}/elements`, input.data, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                }),
+            update: (input: { highlightId: string | number; elementId: string | number; data: any }) =>
+                HttpClient.post(`/highlights/${input.highlightId}/elements/${input.elementId}`, input.data, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                }),
+            delete: (input: { highlightId: string | number; elementId: string | number }) =>
+                HttpClient.delete(`/highlights/${input.highlightId}/elements/${input.elementId}`),
+            toggleActive: (input: { highlightId: string | number; elementId: string | number }) =>
+                HttpClient.post(`/highlights/${input.highlightId}/elements/${input.elementId}/toggle-active`, {}),
+        },
+        settings: {
+            get: () => HttpClient.get('/highlights/settings'),
+            update: (data: { highlight_image_duration_seconds: number }) =>
+                HttpClient.put('/highlights/settings', data),
+        },
+    };
 }
 
 

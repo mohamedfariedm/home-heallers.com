@@ -195,6 +195,13 @@ export const menuItemsHaydrogen = [
     icon: <IoBusiness />,
     permissions: 'blogs',
   },
+  {
+    name: 'Highlights (Stories)',
+    nameAr: 'الستوريز المميزة',
+    href: routes.highlights.index,
+    icon: <PiCirclesThreePlusFill />,
+    permissions: 'highlights',
+  },
 
   { name: 'Partners Management' },
   {

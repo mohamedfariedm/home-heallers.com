@@ -244,6 +244,11 @@ export const routes = {
   blogs: {
     index: '/blogs',
   },
+  highlights: {
+    index: '/highlights',
+    create: '/highlights/create',
+    edit: (id: string | number) => `/highlights/${id}/edit`,
+  },
   invoices: {
     index: '/invoices',
     detail: (id: string | number) => `/invoices/${id}`,
