@@ -10,6 +10,8 @@ import {
   PiNotePencil,
   PiClock,
   PiReceipt,
+  PiSealCheck,
+  PiFilePdf,
 } from 'react-icons/pi';
 import { Title, Text } from '@/components/ui/text';
 import { useModal } from '@/app/shared/modal-views/use-modal';
@@ -81,6 +83,21 @@ function formatSessionLabel(session: {
 
   const timePeriod = session?.time_period ?? '—';
   return { day, timePeriod, start, end, status: session?.status_label };
+}
+
+function formatSignedAt(value?: string | null) {
+  if (!value) return null;
+  try {
+    return new Date(value).toLocaleString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch {
+    return String(value);
+  }
 }
 
 function getStatusColor(status: string | number | undefined) {
@@ -551,6 +568,12 @@ export function ReservationViewContent({
                 {reservation.dates.map((session: any, index: number) => {
                   const { day, timePeriod, start, end, status } =
                     formatSessionLabel(session);
+                  const hasSignature =
+                    session?.has_signature === true ||
+                    Boolean(session?.signed_at);
+                  const signedAtText = formatSignedAt(session?.signed_at);
+                  const reportUrl = session?.report_url;
+                  const attended = session?.doctor_attended === true;
                   return (
                     <li
                       key={session?.id ?? index}
@@ -564,11 +587,43 @@ export function ReservationViewContent({
                         <p className="mt-0.5 text-sm text-gray-600">
                           {timePeriod} · {start} – {end}
                         </p>
-                        {status && (
-                          <span className="mt-2 inline-block rounded-full bg-white px-2 py-0.5 text-xs font-medium text-gray-600 ring-1 ring-gray-200">
-                            {status}
-                          </span>
-                        )}
+                        <div className="mt-2 flex flex-wrap items-center gap-2">
+                          {status && (
+                            <span className="inline-block rounded-full bg-white px-2 py-0.5 text-xs font-medium text-gray-600 ring-1 ring-gray-200">
+                              {status}
+                            </span>
+                          )}
+                          {hasSignature ? (
+                            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-800">
+                              <PiSealCheck className="h-3.5 w-3.5" />
+                              Signed
+                              {signedAtText && (
+                                <span className="font-normal text-emerald-700">
+                                  · {signedAtText}
+                                </span>
+                              )}
+                            </span>
+                          ) : attended ? (
+                            <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-800">
+                              Attended · not signed
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white px-2 py-0.5 text-xs font-medium text-gray-500">
+                              Not signed
+                            </span>
+                          )}
+                          {reportUrl && (
+                            <a
+                              href={reportUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/5 px-2 py-0.5 text-xs font-semibold text-primary hover:bg-primary/10"
+                            >
+                              <PiFilePdf className="h-3.5 w-3.5" />
+                              View report
+                            </a>
+                          )}
+                        </div>
                       </div>
                     </li>
                   );
