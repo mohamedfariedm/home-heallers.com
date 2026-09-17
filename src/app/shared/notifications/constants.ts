@@ -16,7 +16,7 @@ export const NOTIFICATION_TYPE_OPTIONS = [
   { value: 'offers', label: 'Offers' },
   { value: 'doctors', label: 'Doctors' },
   { value: 'categories', label: 'Categories' },
-  { value: 'coupon', label: 'Coupon' },
+  // { value: 'coupon', label: 'Coupon' }, // disabled: hidden from the type dropdown
 ] as const;
 
 /** Types that resolve deep_link from an entity picker (API still receives deep_link as id). */

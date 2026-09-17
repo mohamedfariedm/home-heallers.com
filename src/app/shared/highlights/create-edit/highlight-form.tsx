@@ -189,18 +189,9 @@ export default function HighlightForm({
             />
           </div>
 
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              Order Priority
-            </label>
-            <Input
-              type="number"
-              min={0}
-              placeholder="0"
-              value={order}
-              onChange={(e) => setOrder(Number(e.target.value))}
-            />
-          </div>
+          {/* Order Priority input removed: order is auto-assigned (kept as-is on
+              edit, 0 on create). Mobile relies on the list order, so a manual
+              priority is not needed for now. */}
 
           <div className="md:col-span-2">
             <label className="mb-1.5 block text-sm font-medium text-gray-700">

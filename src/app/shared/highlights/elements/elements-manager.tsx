@@ -642,25 +642,15 @@ export default function ElementsManager({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">
-                  Order Index
-                </label>
-                <Input
-                  type="number"
-                  min={0}
-                  value={order}
-                  onChange={(e) => setOrder(Number(e.target.value))}
-                />
-              </div>
-              <div className="flex items-center gap-2 pt-6">
-                <Switch
-                  checked={isActive}
-                  onChange={() => setIsActive(!isActive)}
-                />
-                <Text className="text-sm font-medium text-gray-700">Active</Text>
-              </div>
+            {/* Order Index input removed: order is auto-assigned from the list
+                position (append on add, keep existing on edit). Mobile relies on
+                the list order, so a manual index is not needed for now. */}
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={isActive}
+                onChange={() => setIsActive(!isActive)}
+              />
+              <Text className="text-sm font-medium text-gray-700">Active</Text>
             </div>
 
             <div className="mt-6 flex justify-end gap-3 border-t border-gray-200 pt-4">
