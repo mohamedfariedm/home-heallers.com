@@ -8,6 +8,13 @@ export interface Banner {
   page: string;
   type?: 'web' | 'mobile app';
   attachment: Attachment;
+  /** Display order — mobile sorts banners ascending by this value. */
+  order?: number;
+  /** CTA (notification-shaped, all optional). `coupon` is intentionally not allowed. */
+  cta_type?: string | null;
+  deep_link?: string | null;
+  url?: string | null;
+  extra_data?: Record<string, any> | null;
 }
 
 export interface SocialLink {

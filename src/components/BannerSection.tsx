@@ -1,15 +1,58 @@
 import React, { useState } from 'react';
 import { Banner } from '../types/settings';
-import { Plus, Trash2, Eye } from 'lucide-react';
+import { Plus, Trash2, Eye, BellRing } from 'lucide-react';
 import { FileUpload } from '@/app/[locale]/(hydrogen)/attachments/components/ui/FileUpload';
+import { usePackages } from '@/framework/packages';
+import { useDoctors } from '@/framework/doctors';
+import { useCategories } from '@/framework/categories';
+import {
+  deepLinkPathForType,
+  type DeepLinkEntityType,
+} from '@/app/shared/notifications/constants';
 
 interface BannerSectionProps {
   banners: Banner[];
   onUpdate: (banners: Banner[]) => void;
 }
 
+// CTA type selector — mirrors the Highlights/Stories CTA. `coupon` is
+// intentionally excluded (banners must not offer it and the API rejects it).
+const CTA_TYPE_OPTIONS = [
+  { value: '', label: 'None' },
+  { value: 'offers', label: 'Offers' },
+  { value: 'doctors', label: 'Doctors' },
+  { value: 'categories', label: 'Categories' },
+];
+
+const ENTITY_CTA_TYPES = ['offers', 'doctors', 'categories'];
+
+function resolveEntityName(item: any): string {
+  const name = item?.name;
+  if (typeof name === 'string' && name.trim()) return name.trim();
+  if (name && typeof name === 'object') {
+    return (name.en || name.ar || '').trim() || `#${item?.id}`;
+  }
+  const title = item?.title;
+  if (typeof title === 'string' && title.trim()) return title.trim();
+  if (title && typeof title === 'object') {
+    return (title.en || title.ar || '').trim() || `#${item?.id}`;
+  }
+  return `#${item?.id}`;
+}
+
 const BannerSection: React.FC<BannerSectionProps> = ({ banners, onUpdate }) => {
   const [selectedBanner, setSelectedBanner] = useState<Banner | null>(null);
+
+  // Entity lists for the CTA pickers (offers / doctors / categories).
+  const listQuery = 'limit=1000';
+  const { data: packagesData, isLoading: offersLoading } = usePackages(listQuery);
+  const { data: doctorsData, isLoading: doctorsLoading } = useDoctors(listQuery);
+  const { data: categoriesData, isLoading: categoriesLoading } =
+    useCategories(listQuery);
+
+  const offers = Array.isArray(packagesData?.data) ? packagesData.data : [];
+  const doctors = Array.isArray(doctorsData?.data) ? doctorsData.data : [];
+  const categories = Array.isArray(categoriesData?.data) ? categoriesData.data : [];
 
   const pageOptions = [
     'home',
@@ -25,6 +68,11 @@ const BannerSection: React.FC<BannerSectionProps> = ({ banners, onUpdate }) => {
     const newBanner: Banner = {
       page: 'home',
       type: 'web',
+      order: banners.length,
+      cta_type: null,
+      deep_link: null,
+      url: null,
+      extra_data: null,
       attachment: {
         id: Date.now(),
         thumbnail: '',
@@ -43,6 +91,17 @@ const BannerSection: React.FC<BannerSectionProps> = ({ banners, onUpdate }) => {
   const deleteBanner = (index: number) => {
     const newBanners = banners.filter((_, i) => i !== index);
     onUpdate(newBanners);
+  };
+
+  // Changing the CTA type resets the resolved companion fields.
+  const handleCtaTypeChange = (index: number, banner: Banner, nextType: string) => {
+    updateBanner(index, {
+      ...banner,
+      cta_type: nextType || null,
+      deep_link: null,
+      url: null,
+      extra_data: null,
+    });
   };
 
   const handleImageUpload = (index: number, uploadedFiles: any[]) => {
@@ -72,6 +131,67 @@ const BannerSection: React.FC<BannerSectionProps> = ({ banners, onUpdate }) => {
     updateBanner(index, updatedBanner);
   };
 
+  // Display ordered by `order` while keeping each banner's real array index for
+  // update/delete. Mobile also sorts ascending by `order`.
+  const orderedBanners = banners
+    .map((banner, index) => ({ banner, index }))
+    .sort((a, b) => (a.banner.order ?? 0) - (b.banner.order ?? 0));
+
+  const renderCtaValueField = (index: number, banner: Banner) => {
+    const ctaType = banner.cta_type || '';
+
+    // offers / doctors / categories all resolve to deep_link = entity id
+    // (same shape as the Highlights/Stories CTA).
+    if (ctaType === 'offers' || ctaType === 'doctors' || ctaType === 'categories') {
+      const entityMap = {
+        offers: { list: offers, loading: offersLoading, label: 'Offer' },
+        doctors: { list: doctors, loading: doctorsLoading, label: 'Doctor' },
+        categories: { list: categories, loading: categoriesLoading, label: 'Category' },
+      } as const;
+      const { list, loading, label } = entityMap[ctaType];
+      return (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            {label}
+          </label>
+          <select
+            value={banner.deep_link ?? ''}
+            onChange={(e) => {
+              const id = e.target.value;
+              updateBanner(index, {
+                ...banner,
+                deep_link: id || null,
+                // Auto-fill the full URL from the selection (like Stories).
+                url: id
+                  ? deepLinkPathForType(ctaType as DeepLinkEntityType, id)
+                  : null,
+              });
+            }}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option value="">
+              {loading ? 'Loading…' : `Select ${label.toLowerCase()}`}
+            </option>
+            {list.map((item: any) => (
+              <option key={item.id} value={String(item.id)}>
+                {resolveEntityName(item)}
+              </option>
+            ))}
+            {/* Keep an unknown/legacy id selectable */}
+            {banner.deep_link &&
+              !list.some((item: any) => String(item.id) === banner.deep_link) && (
+                <option value={banner.deep_link}>
+                  {label} #{banner.deep_link}
+                </option>
+              )}
+          </select>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -86,11 +206,11 @@ const BannerSection: React.FC<BannerSectionProps> = ({ banners, onUpdate }) => {
       </div>
 
       <div className="grid gap-6">
-        {banners.map((banner, index) => (
+        {orderedBanners.map(({ banner, index }, displayPos) => (
           <div key={index} className="bg-gray-50 rounded-lg p-6 border border-gray-200">
             <div className="flex items-start justify-between mb-4">
               <h3 className="text-lg font-medium text-gray-900">
-                Banner {index + 1}
+                Banner {displayPos + 1}
               </h3>
               <button
                 onClick={() => deleteBanner(index)}
@@ -102,18 +222,38 @@ const BannerSection: React.FC<BannerSectionProps> = ({ banners, onUpdate }) => {
 
             <div className="grid md:grid-cols-2 gap-6">
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Type
-                  </label>
-                  <select
-                    value={banner.type || 'web'}
-                    onChange={(e) => updateBanner(index, { ...banner, type: e.target.value as 'web' | 'mobile app' })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="web">Web</option>
-                    <option value="mobile app">Mobile App</option>
-                  </select>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Type
+                    </label>
+                    <select
+                      value={banner.type || 'web'}
+                      onChange={(e) => updateBanner(index, { ...banner, type: e.target.value as 'web' | 'mobile app' })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="web">Web</option>
+                      <option value="mobile app">Mobile App</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Order
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={banner.order ?? 0}
+                      onChange={(e) =>
+                        updateBanner(index, {
+                          ...banner,
+                          order: Number(e.target.value),
+                        })
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
                 </div>
 
                 <div>
@@ -185,6 +325,57 @@ const BannerSection: React.FC<BannerSectionProps> = ({ banners, onUpdate }) => {
                   </div>
                 )}
               </div>
+            </div>
+
+            {/* CTA (notification-shaped) — like the Highlights/Stories CTA */}
+            <div className="mt-5 rounded-lg border border-purple-100 bg-purple-50/50 p-4">
+              <div className="mb-3 flex items-center gap-2">
+                <BellRing className="h-4 w-4 text-purple-700" />
+                <span className="text-sm font-semibold text-purple-900">
+                  CTA Action (optional)
+                </span>
+              </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    CTA Type
+                  </label>
+                  <select
+                    value={banner.cta_type || ''}
+                    onChange={(e) => handleCtaTypeChange(index, banner, e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    {CTA_TYPE_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {ENTITY_CTA_TYPES.includes(banner.cta_type || '')
+                  ? renderCtaValueField(index, banner)
+                  : null}
+              </div>
+
+              {ENTITY_CTA_TYPES.includes(banner.cta_type || '') && (
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    External URL{' '}
+                    <span className="font-normal text-gray-400">
+                      (auto-filled from selection)
+                    </span>
+                  </label>
+                  <input
+                    type="text"
+                    value={banner.url ?? ''}
+                    onChange={(e) =>
+                      updateBanner(index, { ...banner, url: e.target.value || null })
+                    }
+                    placeholder="https://home-healers.com/offers/22"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              )}
             </div>
           </div>
         ))}
