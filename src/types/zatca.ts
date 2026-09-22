@@ -65,8 +65,6 @@ export interface ZatcaInvoice {
   client_id?: number;
   national_id?: string | null;
   doctor_id?: number;
-  category_id?: number;
-  category_code?: string;
   service_name?: string;
   session_price?: number;
   session_count?: number;
@@ -95,7 +93,6 @@ export interface ZatcaInvoice {
   adjustments?: ZatcaAdjustment[];
   client?: { id: number; name: string; national_id?: string };
   doctor?: { id: number; name: string };
-  category?: { id: number; name: string; code?: string };
   last_submission?: ZatcaSubmission | null;
   creator?: { id: number; name: string };
   created_at?: string;

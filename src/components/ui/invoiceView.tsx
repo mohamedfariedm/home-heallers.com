@@ -11,10 +11,6 @@ type ApiDetail = {
   id: number;
   invoice_id: number;
   client_id: number | null;
-  category?: {
-    id: number;
-    name: { en: string; ar: string };
-  };
   customer_name: string;
   national_id: string | null;
   service_name: string;
@@ -30,10 +26,6 @@ type ApiInvoice = {
   id: number;
   invoice_number: string;
   invoice_date: string;
-category?: {
-    id: number;
-    name: { en: string; ar: string };
-  };
   discount: string;            // "20.00"
   total_before_tax: string;    // "2000.00"
   tax_total: string;           // "300.00"
@@ -121,7 +113,6 @@ console.log("Invoice Data:", invoiceData);
 
       return {
         i: idx + 1,
-        serviceLabel: `${d.category?.name?.ar||d.category?.name?.en||""}`,
         customerName: d.customer_name,
         qty,
         price,
@@ -488,12 +479,6 @@ console.log("Invoice Data:", invoiceData);
               <span className="font-medium">تاريخ الفاتورة:</span>
               <span>{invoiceData.invoice_date}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="font-medium">الفئات:</span>
-              <span>
-                {invoiceData?.category?.name?.ar || invoiceData.category?.name?.en || 'N/A'}
-              </span>
-            </div>
             <div className="flex justify-between bg-gray-100 px-3 py-2 rounded">
               <span className="font-medium">الرصيد:</span>
               <span className="font-bold">{fmt(balanceDue)} ر.س</span>
@@ -506,7 +491,6 @@ console.log("Invoice Data:", invoiceData);
           <thead>
             <tr className="bg-gray-100">
               <th className="border border-gray-300 p-3 text-right font-medium">#</th>
-              <th className="border border-gray-300 p-3 text-right font-medium">اسم الفئة</th>
               <th className="border border-gray-300 p-3 text-right font-medium">اسم العميل</th>
               <th className="border border-gray-300 p-3 text-right font-medium">الكمية</th>
               <th className="border border-gray-300 p-3 text-right font-medium">سعر الوحدة</th>
@@ -519,7 +503,7 @@ console.log("Invoice Data:", invoiceData);
           <tbody>
             {rows.length === 0 ? (
               <tr>
-                <td className="border border-gray-300 p-3 text-center" colSpan={9}>
+                <td className="border border-gray-300 p-3 text-center" colSpan={8}>
                   لا توجد عناصر
                 </td>
               </tr>
@@ -527,7 +511,6 @@ console.log("Invoice Data:", invoiceData);
               rows.map((r) => (
                 <tr key={r.i}>
                   <td className="border border-gray-300 p-3 text-center">{r.i}</td>
-                  <td className="border border-gray-300 p-3 text-right">{r.serviceLabel}</td>
                   <td className="border border-gray-300 p-3 text-right">{r.customerName}</td>
                   <td className="border border-gray-300 p-3 text-center">{r.qty}</td>
                   <td className="border border-gray-300 p-3 text-center">{fmt(r.price)} ر.س</td>
