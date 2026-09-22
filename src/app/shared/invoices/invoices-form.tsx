@@ -28,11 +28,16 @@ import { useModal } from '../modal-views/use-modal';
 import { useCreateInvoices, useUpdateInvoices, useDeleteInvoiceDetail } from '@/framework/invoices';
 import { usePatients } from '@/framework/patients';
 import { useDoctors } from '@/framework/doctors';
+import { useCategories } from '@/framework/categories';
+import { resolveCategoryLabel } from '@/utils/invoice-category';
+import { resolveLocalizedName } from '@/utils/resolve-localized-name';
 
 // -------------------- Zod Schemas --------------------
 const InvoiceDetailSchema = z.object({
   id: z.union([z.string(), z.number(), z.null()]).optional(),
   customer_name: z.string().min(1, 'Customer name is required'),
+  category_id: z.coerce.number().min(1, 'Category selection is required'),
+  category_name: z.string().min(1, 'Category name is required'),
   session_price: z.coerce.number().min(0, 'Session price must be non-negative'),
   session_count: z.coerce.number().min(1, 'Session count must be at least 1'),
   doctor_id: z.coerce.number().min(1, 'Doctor selection is required'),
@@ -66,6 +71,8 @@ type InvoiceFormInput = z.infer<typeof InvoiceFormSchema>;
 interface InvoiceDetail {
   id?: string | number | null;
   customer_name: string;
+  category_id: number | string;
+  category_name: string;
   session_price: number | string;
   session_count: number | string;
   doctor_id: number | string;
@@ -188,6 +195,7 @@ export default function InvoiceManager({
   const { mutate: deleteDetail } = useDeleteInvoiceDetail();
   const { data: clientData, isLoading: clientsLoading } = usePatients('');
   const { data: doctorsData, isLoading: doctorsLoading } = useDoctors('');
+  const { data: categoriesData, isLoading: categoriesLoading } = useCategories('');
 
   const statusOptions = [
     { value: 'قيد الانتظار', label: 'قيد الانتظار' },
@@ -238,6 +246,8 @@ export default function InvoiceManager({
             d.customer_name ??
             initValues?.customer_name ??
             '',
+          category_id: Number(d.category_id ?? d.category?.id ?? 0),
+          category_name: resolveCategoryLabel(d),
           session_price:
             d.session_price ??
             initValues?.details?.[0]?.session_price ??
@@ -266,6 +276,21 @@ export default function InvoiceManager({
   useInvoiceCalculations(details, discount, setValue);
 
   // ---------- Handlers ----------
+  const handleCategoryChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    if (!editingDetail) return;
+    const selectedId = Number(event.target.value);
+    const selected = categoriesData?.data?.find(
+      (category: { id: number; name?: unknown }) =>
+        Number(category.id) === selectedId
+    );
+    setEditingDetail({
+      ...editingDetail,
+      category_id: selectedId,
+      category_name: resolveLocalizedName(selected?.name),
+    });
+    setDetailErrors(null);
+  };
+
   const handleDoctorChange = (event: ChangeEvent<HTMLSelectElement>) => {
     if (!editingDetail) return;
     setEditingDetail({
@@ -278,6 +303,8 @@ export default function InvoiceManager({
   const handleAddDetail = () => {
     setEditingDetail({
       customer_name: '',
+      category_id: 0,
+      category_name: '',
       session_price: 0,
       session_count: 1,
       doctor_id: 0,
@@ -308,6 +335,8 @@ export default function InvoiceManager({
         session_price: editingDetail.session_price,
         session_count: editingDetail.session_count,
         doctor_id: editingDetail.doctor_id,
+        category_id: editingDetail.category_id,
+        category_name: editingDetail.category_name,
       });
 
       const newDetail: InvoiceDetail = {
@@ -370,6 +399,8 @@ export default function InvoiceManager({
         customer_name: detail.customer_name,
         national_id: detail.national_id ?? null,
         doctor_id: Number(detail.doctor_id),
+        category_id: Number(detail.category_id),
+        category_name: detail.category_name,
         session_price: Number(detail.session_price),
         session_count: Number(detail.session_count),
         tax_percentage: detail.tax_percentage,
@@ -402,6 +433,8 @@ export default function InvoiceManager({
       details: [
         {
           customer_name: 'Ahmed Mostafa',
+          category_id: 1,
+          category_name: 'Physiotherapy',
           session_price: 200,
           session_count: 2,
           doctor_id: 10,
@@ -410,6 +443,8 @@ export default function InvoiceManager({
         },
         {
           customer_name: 'Sarah Ali',
+          category_id: 2,
+          category_name: 'Consultation',
           session_price: 150,
           session_count: 3,
           doctor_id: 11,
@@ -422,7 +457,7 @@ export default function InvoiceManager({
   };
 
   // ---------- Render ----------
-  const isLoadingAny = clientsLoading || doctorsLoading;
+  const isLoadingAny = clientsLoading || doctorsLoading || categoriesLoading;
   console.log(errors);
 
   // Normalize `errors.details` so we never call `.map` on a non-array.
@@ -632,10 +667,13 @@ console.log('====================================');
                             </div>
                             <div className="space-y-1">
                               <p className="text-sm font-medium text-emerald-600">
-                                Tax
+                                Category
+                              </p>
+                              <p className="font-semibold text-gray-900">
+                                {detail.category_name || '—'}
                               </p>
                               <p className="rounded bg-blue-50 px-2 py-1 text-xs text-blue-600">
-                                {detail.tax_percentage || '15%'}
+                                Tax: {detail.tax_percentage || '15%'}
                               </p>
                             </div>
                             <div className="space-y-1">
@@ -763,7 +801,39 @@ console.log('====================================');
                         </FormGroup>
                       </div>
 
-                      <div className="grid grid-cols-1 gap-6">
+                      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                        <FormGroup title="Category *">
+                          <select
+                            value={
+                              Number(editingDetail.category_id)
+                                ? String(editingDetail.category_id)
+                                : ''
+                            }
+                            onChange={handleCategoryChange}
+                            className="w-full rounded-lg border border-gray-300 bg-white p-3 focus:border-transparent focus:ring-2 focus:ring-blue-500"
+                          >
+                            <option value="">Select Category</option>
+                            {categoriesData?.data?.map(
+                              (category: { id: number; name?: unknown }) => (
+                                <option key={category.id} value={category.id}>
+                                  {resolveLocalizedName(category.name) ||
+                                    category.id}
+                                </option>
+                              )
+                            )}
+                          </select>
+                          {detailErrors?.errors.find((err) =>
+                            err.path.includes('category_id')
+                          ) && (
+                            <p className="mt-1 text-sm text-red-500">
+                              {
+                                detailErrors.errors.find((err) =>
+                                  err.path.includes('category_id')
+                                )?.message
+                              }
+                            </p>
+                          )}
+                        </FormGroup>
                         <FormGroup title="Doctor *">
                           <select
                             value={String(editingDetail.doctor_id ?? '')}

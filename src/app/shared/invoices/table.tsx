@@ -65,6 +65,7 @@ export default function InvoicesTable({
     activation: params.get('activation') || '',
     invoice_number: params.get('invoice_number') || '',
     customer_name: params.get('customer_name') || '',
+    category_name: params.get('category_name') || '',
     status: params.get('status') || '',
     invoice_date: params.get('invoice_date')
       ? params.get('invoice_date')

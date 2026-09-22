@@ -11,6 +11,7 @@ import StatusBadge from '@/app/shared/zatca/status-badge';
 import type { ZatcaPermissions } from '@/app/shared/zatca/permissions';
 import type { ZatcaInvoice } from '@/types/zatca';
 import { formatDate } from '@/utils/format-date';
+import { resolveInvoiceCategories } from '@/utils/invoice-category';
 
 type Columns = {
   data: ZatcaInvoice[];
@@ -91,6 +92,17 @@ export function getZatcaColumns({
       width: 100,
       render: (_: string, row: ZatcaInvoice) => (
         <StatusBadge kind="document" value={row.document_type} />
+      ),
+    },
+    {
+      title: <HeaderCell title="Category" />,
+      dataIndex: 'category_name',
+      key: 'category_name',
+      width: 140,
+      render: (_: string, row: ZatcaInvoice) => (
+        <span className="line-clamp-2">
+          {resolveInvoiceCategories(row) || '—'}
+        </span>
       ),
     },
     {

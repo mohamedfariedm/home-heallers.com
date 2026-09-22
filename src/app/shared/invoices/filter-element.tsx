@@ -65,6 +65,13 @@ export default function FilterElement({
           onChange={(e) => updateFilter('customer_name', e.target.value)}
         />
 
+        <Input
+          placeholder="Category Name"
+          className="h-9 w-full"
+          value={filters['category_name'] ?? ''}
+          onChange={(e) => updateFilter('category_name', e.target.value)}
+        />
+
         {/* 🗓️ Invoice Date */}
         <DateFiled
           className="w-full"

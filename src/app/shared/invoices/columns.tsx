@@ -16,6 +16,7 @@ import EyeIcon from '@/components/icons/eye';
 import StatusBadge from '@/app/shared/zatca/status-badge';
 import type { ZatcaPermissions } from '@/app/shared/zatca/permissions';
 import { PiShieldCheck } from 'react-icons/pi';
+import { resolveInvoiceCategories } from '@/utils/invoice-category';
 
 type Columns = {
   data: any[];
@@ -219,6 +220,17 @@ export const getColumns = ({
   //     <div className="w-full text-center">{row.session_count}</div>
   //   ),
   // },
+  {
+    title: <HeaderCell align="center" title="Category" />,
+    dataIndex: 'category_name',
+    key: 'category_name',
+    width: 140,
+    render: (_: string, row: any) => (
+      <div className="w-full text-center">
+        {resolveInvoiceCategories(row) || '—'}
+      </div>
+    ),
+  },
   {
     title: <HeaderCell align="center" title="Discount" />,
     dataIndex: 'discount',

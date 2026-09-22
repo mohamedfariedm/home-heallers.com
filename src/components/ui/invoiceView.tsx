@@ -6,11 +6,19 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import QRCode from 'react-qr-code';
 import { useMedia } from '@/hooks/use-media';
+import {
+  resolveCategoryLabel,
+  resolveInvoiceCategories,
+  type InvoiceCategoryRef,
+} from '@/utils/invoice-category';
 
 type ApiDetail = {
   id: number;
   invoice_id: number;
   client_id: number | null;
+  category_id?: number;
+  category_name?: string;
+  category?: InvoiceCategoryRef | null;
   customer_name: string;
   national_id: string | null;
   service_name: string;
@@ -26,6 +34,9 @@ type ApiInvoice = {
   id: number;
   invoice_number: string;
   invoice_date: string;
+  category_id?: number;
+  category_name?: string;
+  category?: InvoiceCategoryRef | null;
   discount: string;            // "20.00"
   total_before_tax: string;    // "2000.00"
   tax_total: string;           // "300.00"
@@ -113,6 +124,7 @@ console.log("Invoice Data:", invoiceData);
 
       return {
         i: idx + 1,
+        categoryLabel: resolveCategoryLabel(d, 'ar') || '—',
         customerName: d.customer_name,
         qty,
         price,
@@ -479,6 +491,10 @@ console.log("Invoice Data:", invoiceData);
               <span className="font-medium">تاريخ الفاتورة:</span>
               <span>{invoiceData.invoice_date}</span>
             </div>
+            <div className="flex justify-between">
+              <span className="font-medium">الفئات:</span>
+              <span>{resolveInvoiceCategories(invoiceData, 'ar') || '—'}</span>
+            </div>
             <div className="flex justify-between bg-gray-100 px-3 py-2 rounded">
               <span className="font-medium">الرصيد:</span>
               <span className="font-bold">{fmt(balanceDue)} ر.س</span>
@@ -491,6 +507,7 @@ console.log("Invoice Data:", invoiceData);
           <thead>
             <tr className="bg-gray-100">
               <th className="border border-gray-300 p-3 text-right font-medium">#</th>
+              <th className="border border-gray-300 p-3 text-right font-medium">اسم الفئة</th>
               <th className="border border-gray-300 p-3 text-right font-medium">اسم العميل</th>
               <th className="border border-gray-300 p-3 text-right font-medium">الكمية</th>
               <th className="border border-gray-300 p-3 text-right font-medium">سعر الوحدة</th>
@@ -503,7 +520,7 @@ console.log("Invoice Data:", invoiceData);
           <tbody>
             {rows.length === 0 ? (
               <tr>
-                <td className="border border-gray-300 p-3 text-center" colSpan={8}>
+                <td className="border border-gray-300 p-3 text-center" colSpan={9}>
                   لا توجد عناصر
                 </td>
               </tr>
@@ -511,6 +528,7 @@ console.log("Invoice Data:", invoiceData);
               rows.map((r) => (
                 <tr key={r.i}>
                   <td className="border border-gray-300 p-3 text-center">{r.i}</td>
+                  <td className="border border-gray-300 p-3 text-right">{r.categoryLabel}</td>
                   <td className="border border-gray-300 p-3 text-right">{r.customerName}</td>
                   <td className="border border-gray-300 p-3 text-center">{r.qty}</td>
                   <td className="border border-gray-300 p-3 text-center">{fmt(r.price)} ر.س</td>

@@ -23,6 +23,7 @@ import SubmissionTimeline from '@/app/shared/zatca/submission-timeline';
 import type { ZatcaPermissions } from '@/app/shared/zatca/permissions';
 import type { ZatcaSubmission } from '@/types/zatca';
 import DateCell from '@/components/ui/date-cell';
+import { resolveInvoiceCategories } from '@/utils/invoice-category';
 
 type TabKey = 'pdf' | 'qr' | 'xml';
 
@@ -130,6 +131,10 @@ export default function InvoiceDetailView({
             <div className="flex justify-between">
               <dt className="text-gray-500">Service</dt>
               <dd>{invoice.service_name ?? '—'}</dd>
+            </div>
+            <div className="flex justify-between gap-4">
+              <dt className="text-gray-500">Category</dt>
+              <dd className="text-end">{resolveInvoiceCategories(invoice) || '—'}</dd>
             </div>
             {invoice.adjustment_reason && (
               <div className="flex justify-between">
