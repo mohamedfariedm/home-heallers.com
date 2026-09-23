@@ -8,6 +8,7 @@ import {
   useWatch,
 } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import toast from 'react-hot-toast';
 import { PiXBold } from 'react-icons/pi';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -42,6 +43,44 @@ const timePeriods = [
   { id: 'afternoon', name: 'Afternoon' },
   { id: 'evening', name: 'Evening' },
 ];
+
+// Keep a stored non-standard period selectable so saving doesn't blank or change it.
+const timePeriodOptions = (current?: string) =>
+  current && !timePeriods.some((p) => p.id === current)
+    ? [...timePeriods, { id: current, name: current }]
+    : timePeriods;
+
+const round2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
+
+const toFormDate = (d: any): string =>
+  typeof d?.date === 'string' ? d.date.split('T')[0] : '';
+
+const toFormTime = (d: any): string =>
+  typeof d?.time === 'string'
+    ? d.time.split('T')[1]?.substring(0, 5) || ''
+    : (typeof d?.end_time === 'string'
+        ? d.end_time.split('T')[1]?.substring(0, 5)
+        : '') || '';
+
+const firstErrorMessage = (
+  errs: any,
+  path: string[] = []
+): { path: string; message: string } | null => {
+  if (!errs || typeof errs !== 'object') return null;
+  if (typeof errs.message === 'string' && errs.message) {
+    return { path: path.join('.'), message: errs.message };
+  }
+  for (const key of Object.keys(errs)) {
+    if (key === 'ref') continue;
+    const found = firstErrorMessage(errs[key], [...path, key]);
+    if (found) return found;
+  }
+  return null;
+};
+
+// The API serialises stored (UTC) datetimes as ISO; the backend stores "Y-m-d H:i:s".
+const toStoredDateTime = (iso?: string | null) =>
+  typeof iso === 'string' ? iso.replace('T', ' ').slice(0, 19) : undefined;
 
 const statusOptions = [
   { value: '1', en: 'Reviewing', ar: 'قيد المراجعة' },
@@ -174,6 +213,18 @@ export default function CreateOrUpdateReservation({
     { value: 'معافاة', label: 'معافاة' },
     { value: '15%', label: '15%' },
   ];
+
+  // Snapshot of stored financials: the recalculation effects must not overwrite them
+  // (e.g. drop VAT or discounts) until the user actually changes price or fees type.
+  const initialSessionsCount = initValues?.sessions_count?.toString() || '1';
+  const initialSubTotal = initValues?.sub_total?.toString() || '';
+  const initialSessionPrice =
+    initValues?.sub_total && initValues?.sessions_count
+      ? (Number(initValues.sub_total) / Number(initValues.sessions_count)).toString()
+      : '';
+  // App bookings store VAT in `fees` with an empty `fees_type`.
+  const initialFeesType =
+    initValues?.fees_type || (Number(initValues?.fees) > 0 ? '15%' : 'صفریة');
   const {
     register,
     formState: { errors },
@@ -197,15 +248,13 @@ export default function CreateOrUpdateReservation({
       doctor_id: initValues?.doctor?.id?.toString() || '',
       service_id: initValues?.service?.id?.toString() || '',
       category_id: initValues?.category?.id?.toString() || '',
-      sessions_count: initValues?.sessions_count?.toString() || '1',
+      sessions_count: initialSessionsCount,
 
       // 🧩 numbers and billing
-      session_price: initValues?.sub_total && initValues?.sessions_count
-        ? (Number(initValues.sub_total) / Number(initValues.sessions_count)).toString()
-        : '',
-      sub_total: initValues?.sub_total?.toString() || '',
+      session_price: initialSessionPrice,
+      sub_total: initialSubTotal,
       fees: initValues?.fees || 0, // now fees is string type
-      fees_type: initValues?.fees_type || 'صفریة',
+      fees_type: initialFeesType,
       remaining_payment: initValues?.remaining_payment?.toString() || '',
       total_amount: initValues?.total_amount?.toString() || '',
       transaction_reference:
@@ -267,10 +316,8 @@ export default function CreateOrUpdateReservation({
       // 🧩 nested dates handling - improved to handle both data structures
       dates: (initValues?.dates && Array.isArray(initValues.dates) && initValues.dates.length > 0)
         ? initValues.dates.map((d: any) => ({
-            date: d?.date && typeof d.date === 'string' ? d.date.split('T')[0] : '',
-            time: d?.time && typeof d.time === 'string'
-              ? d.time.split('T')[1]?.substring(0, 5) || ''
-              : (d?.end_time && typeof d.end_time === 'string' ? d.end_time.split('T')[1]?.substring(0, 5) : '') || '',
+            date: toFormDate(d),
+            time: toFormTime(d),
             time_period: d?.time_period || 'morning',
             doctor_id: d?.doctor?.id?.toString() || '',
             status: d?.status || 'pending',
@@ -311,6 +358,12 @@ export default function CreateOrUpdateReservation({
   const onInvalid = (formErrors: any) => {
     // eslint-disable-next-line no-console
     console.log('Reservation Form Submit Errors:', formErrors);
+    const first = firstErrorMessage(formErrors);
+    toast.error(
+      first
+        ? `Reservation not saved — ${first.path}: ${first.message}`
+        : 'Reservation not saved — please check the form fields.'
+    );
   };
   const lang: 'en' | 'ar' = 'en';
 
@@ -411,26 +464,41 @@ export default function CreateOrUpdateReservation({
     const sessionPrice = Number(watchSessionPrice) || 0;
     const sessions = Number(watchSessionsCount) || 1;
 
+    const unchanged =
+      initValues &&
+      sessionPrice === Number(initialSessionPrice) &&
+      sessions === Number(initialSessionsCount);
+    if (unchanged) return;
+
     if (sessionPrice > 0 && sessions > 0) {
-      const calculatedSubTotal = sessionPrice * sessions;
+      const calculatedSubTotal = round2(sessionPrice * sessions);
       setValue('sub_total', calculatedSubTotal.toString(), { shouldValidate: false });
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watchSessionPrice, watchSessionsCount, setValue]);
 
   useEffect(() => {
     const sub = Number(watchSubTotal) || 0;
+
+    const unchanged =
+      initValues &&
+      watchFeesType === initialFeesType &&
+      sub === Number(initialSubTotal);
+    if (unchanged) return;
+
     let calculatedFees = 0;
 
     if (watchFeesType === 'صفریة' || watchFeesType === 'معافاة') {
       calculatedFees = 0;
     } else if (watchFeesType === '15%') {
-      calculatedFees = sub * 0.15;
+      calculatedFees = round2(sub * 0.15);
     }
 
     setValue('fees', calculatedFees.toString(), { shouldValidate: false });
-    setValue('total_amount', (sub + calculatedFees).toString(), {
+    setValue('total_amount', round2(sub + calculatedFees).toString(), {
       shouldValidate: false,
     });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watchFeesType, watchSubTotal, setValue]);
 
   useEffect(() => {
@@ -500,13 +568,28 @@ export default function CreateOrUpdateReservation({
       source_campaign: data.source_campaign,
       center_id: data.center_id ? Number(data.center_id) : undefined,
       dates: (data.dates && Array.isArray(data.dates) && data.dates.length > 0)
-        ? data.dates.map((date: any) => ({
-            date: date?.date || '',
-            time: date?.time || '',
-            time_period: date?.time_period || 'morning',
-            doctor_id: date?.doctor_id ? Number(date.doctor_id) : undefined,
-            status: date?.status || undefined,
-          }))
+        ? data.dates.map((date: any, i: number) => {
+            // Without start/end the backend rebuilds both from date+time, collapsing the slot's end time.
+            const original = initValues?.dates?.[i];
+            const slotUnchanged =
+              original?.start_time &&
+              (date?.date || '') === toFormDate(original) &&
+              (date?.time || '') === toFormTime(original);
+
+            return {
+              date: date?.date || '',
+              time: date?.time || '',
+              time_period: date?.time_period || 'morning',
+              doctor_id: date?.doctor_id ? Number(date.doctor_id) : undefined,
+              status: date?.status || undefined,
+              ...(slotUnchanged
+                ? {
+                    start_time: toStoredDateTime(original.start_time),
+                    end_time: toStoredDateTime(original.end_time ?? original.start_time),
+                  }
+                : {}),
+            };
+          })
         : [],
 
       // Include lead_id and name if available
@@ -1247,7 +1330,7 @@ export default function CreateOrUpdateReservation({
                   {...register(`dates.${index}.time_period` as const)}
                   className="w-full rounded-lg border border-gray-300 p-2"
                 >
-                  {timePeriods.map((period) => (
+                  {timePeriodOptions(watchDates?.[index]?.time_period).map((period) => (
                     <option key={period.id} value={period.id}>
                       {period.name}
                     </option>

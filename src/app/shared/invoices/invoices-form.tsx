@@ -41,7 +41,9 @@ const InvoiceDetailSchema = z.object({
   session_count: z.coerce.number().min(1, 'Session count must be at least 1'),
   doctor_id: z.coerce.number().min(1, 'Doctor selection is required'),
   national_id: z.union([z.string(), z.number(), z.null()]).optional(),
-  tax_percentage: z.enum(['0%', '15%', '20%', 'معافاه']).default('15%'),
+  tax_percentage: z
+    .enum(['0%', '15%', '20%', 'معافاه', 'صفریة'])
+    .default('15%'),
 });
 
 const InvoiceFormSchema = z.object({
@@ -99,7 +101,7 @@ const taxRateFrom = (v: unknown): number => {
   if (v == null) return 0.15;
   const s = String(v).trim();
   // Handle both Arabic variations: "معافاه" and "معافاة"
-  if (s === 'معافاه' || s === 'معافاة') return 0;
+  if (['معافاه', 'معافاة', 'صفریة', 'صفرية'].includes(s)) return 0;
   if (s.endsWith('%')) {
     const n = Number(s.replace('%', '').trim());
     return isNaN(n) ? 0 : n / 100;
@@ -109,16 +111,21 @@ const taxRateFrom = (v: unknown): number => {
   return 0;
 };
 
+type TaxPercentage = '0%' | '15%' | '20%' | 'معافاه' | 'صفریة';
+
 // Normalize any backend tax percentage value into one of the allowed enum values
-const normalizeTaxPercentage = (
-  v: unknown
-): '0%' | '15%' | '20%' | 'معافاه' => {
+const normalizeTaxPercentage = (v: unknown): TaxPercentage => {
   if (v == null) return '15%';
   const s = String(v).trim();
 
   // Handle both Arabic variations: "معافاه" and "معافاة" - normalize to "معافاه"
   if (s === 'معافاة' || s === 'معافاه') {
     return 'معافاه';
+  }
+
+  // Zero-rated, as set by the reservation form (Persian "ی"); also accept the Arabic "ي" spelling.
+  if (s === 'صفریة' || s === 'صفرية') {
+    return 'صفریة';
   }
 
   // Already in correct format
@@ -134,11 +141,13 @@ const normalizeTaxPercentage = (
     if (n === 20) return '20%';
   }
 
-  // Fallback to 15% if we can't understand the value
-  return '15%';
+  // Never invent tax for a value we don't recognise — that silently changes stored totals on save.
+  return '0%';
 };
 
 const toNum = (v: unknown) => Number(v ?? 0) || 0;
+
+const round2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
 
 // -------------------- Per-line Calculation Hook --------------------
 const useInvoiceCalculations = (
@@ -165,13 +174,14 @@ const useInvoiceCalculations = (
       return sum + lineTotal * rate;
     }, 0);
 
-    const grandTotal = totalBeforeTax + taxTotal - toNum(discount);
-    const balanceDue = grandTotal;
+    const roundedBeforeTax = round2(totalBeforeTax);
+    const roundedTax = round2(taxTotal);
+    const grandTotal = round2(roundedBeforeTax + roundedTax - toNum(discount));
 
-    setValue('total_before_tax', totalBeforeTax);
-    setValue('tax_total', taxTotal);
+    setValue('total_before_tax', roundedBeforeTax);
+    setValue('tax_total', roundedTax);
     setValue('grand_total', grandTotal);
-    setValue('balance_due', balanceDue);
+    setValue('balance_due', grandTotal);
   }, [details, discount, setValue]);
 };
 
@@ -207,6 +217,7 @@ export default function InvoiceManager({
     { value: '15%', label: '15%' },
     { value: '20%', label: '20%' },
     { value: 'معافاه', label: 'معافاه' },
+    { value: 'صفریة', label: 'صفریة' },
   ];
 
 
@@ -226,8 +237,10 @@ export default function InvoiceManager({
       invoice_number:
         initValues?.invoice_number ||
         `INV-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`,
+      // API returns an ISO datetime; <input type="date"> only accepts YYYY-MM-DD.
       invoice_date:
-        initValues?.invoice_date || new Date().toISOString().split('T')[0],
+        initValues?.invoice_date?.slice(0, 10) ||
+        new Date().toISOString().split('T')[0],
       discount: Number(initValues?.discount ?? 0),
       total_before_tax: Number(initValues?.total_before_tax ?? 0),
       tax_total: Number(initValues?.tax_total ?? 0),
@@ -417,12 +430,11 @@ export default function InvoiceManager({
       })),
     };
 
+    // Modal is closed by the mutation's onSuccess so failures stay visible.
     if (initValues?.id) {
       update({ ...payload, id: initValues.id });
-      closeModal();
     } else {
       create(payload);
-      closeModal();
     }
     console.log('Submitted Payload:', JSON.stringify(payload, null, 2));
   };
