@@ -210,6 +210,13 @@ export const menuItemsHaydrogen = [
     icon: <PiDeviceMobileDuotone />,
     permissions: 'onboarding_screens',
   },
+  {
+    name: 'App Messages',
+    nameAr: 'رسائل التطبيق',
+    href: routes.appMessages.index,
+    icon: <PiChatCenteredDotsDuotone />,
+    permissions: 'app_messages',
+  },
 
   { name: 'Partners Management' },
   {

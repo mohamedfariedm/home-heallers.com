@@ -254,6 +254,11 @@ export const routes = {
     create: '/onboarding-screens/create',
     edit: (id: string | number) => `/onboarding-screens/${id}/edit`,
   },
+  appMessages: {
+    index: '/app-messages',
+    create: '/app-messages/create',
+    edit: (id: string | number) => `/app-messages/${id}/edit`,
+  },
   invoices: {
     index: '/invoices',
     detail: (id: string | number) => `/invoices/${id}`,

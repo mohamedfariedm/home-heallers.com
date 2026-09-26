@@ -2,6 +2,7 @@ import { HttpClient } from './request';
 import request from './request';
 import { CreateRuleInput, UserInput, Region, City, Retailer, Store, LoginInput, AuthResponse, Category, Journey, Products, stock, Target, Inquerie } from '@/types'
 import { routes } from '@/config/routes';
+import type { AppMessageInput } from '@/types/app-messages';
 import { CreateBrandInput } from '@/utils/validators/create-brand.schema ';
 import { CreateToDoInput } from '@/utils/validators/create-todo.schema';
 import { BrandFormInput } from '@/utils/validators/Brand-form.schema copy';
@@ -1057,6 +1058,17 @@ class Client {
         reorder: (ids: number[]) => HttpClient.post('/onboarding-screens/reorder', { ids }),
         toggleActive: (id: string | number) =>
             HttpClient.post(`/onboarding-screens/${id}/toggle-active`, {}),
+    };
+
+    appMessages = {
+        all: (param = '') => HttpClient.get(`/app-messages${param ? `?${param}` : ''}`),
+        findOne: (id: string | number) => HttpClient.get(`/app-messages/${id}`),
+        create: (input: AppMessageInput) => HttpClient.post('/app-messages', input),
+        update: (input: { id: string | number; data: AppMessageInput }) =>
+            HttpClient.put(`/app-messages/${input.id}`, input.data),
+        delete: (id: string | number) => HttpClient.delete(`/app-messages/${id}`),
+        toggleActive: (id: string | number) =>
+            HttpClient.post(`/app-messages/${id}/toggle-active`, {}),
     };
 }
 
