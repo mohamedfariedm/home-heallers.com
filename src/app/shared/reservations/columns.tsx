@@ -382,8 +382,21 @@ export const getColumns = ({
     dataIndex: 'doctor',
     key: 'doctor',
     render: (_: any, row: any) => {
-      if (!row?.doctor) return '—';
-      return resolveLocalizedNameOrFallback(row.doctor.name);
+      // Sessions can be reassigned individually, so list every doctor on the reservation once.
+      const doctors = new Map<number, any>();
+      [row?.doctor, ...(row?.dates ?? []).map((d: any) => d?.doctor)].forEach(
+        (doctor: any) => {
+          if (doctor?.id && !doctors.has(doctor.id)) doctors.set(doctor.id, doctor);
+        }
+      );
+      if (doctors.size === 0) return '—';
+      return (
+        <div className="flex flex-col gap-1">
+          {Array.from(doctors.values()).map((doctor: any) => (
+            <span key={doctor.id}>{resolveLocalizedNameOrFallback(doctor.name)}</span>
+          ))}
+        </div>
+      );
     },
   },
 
