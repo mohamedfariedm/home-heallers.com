@@ -433,7 +433,8 @@ export default function CreateOrUpdateReservation({
     }
   }, [watchSessionsCount, setValue, getValues]);
 
-  const prevDoctorIdRef = useRef<string | undefined>();
+  // Seeded with the loaded doctor so opening the edit modal doesn't overwrite each date's saved doctor.
+  const prevDoctorIdRef = useRef<string | undefined>(getValues('doctor_id'));
   useEffect(() => {
     if (watchDoctorId && watchDoctorId !== prevDoctorIdRef.current) {
       prevDoctorIdRef.current = watchDoctorId;
