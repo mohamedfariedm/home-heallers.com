@@ -1041,6 +1041,23 @@ class Client {
                 HttpClient.put('/highlights/settings', data),
         },
     };
+
+    onboardingScreens = {
+        all: (param = '') => HttpClient.get(`/onboarding-screens${param ? `?${param}` : ''}`),
+        findOne: (id: string | number) => HttpClient.get(`/onboarding-screens/${id}`),
+        // Create and update are multipart and always POST (PHP can't read multipart on PUT).
+        create: (input: FormData) => HttpClient.post('/onboarding-screens', input, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        }),
+        update: (input: { id: string | number; data: FormData }) =>
+            HttpClient.post(`/onboarding-screens/${input.id}`, input.data, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            }),
+        delete: (id: string | number) => HttpClient.delete(`/onboarding-screens/${id}`),
+        reorder: (ids: number[]) => HttpClient.post('/onboarding-screens/reorder', { ids }),
+        toggleActive: (id: string | number) =>
+            HttpClient.post(`/onboarding-screens/${id}/toggle-active`, {}),
+    };
 }
 
 
