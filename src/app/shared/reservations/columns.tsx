@@ -483,10 +483,16 @@ export const getColumns = ({
     align: 'center',
     render: (status_label: string, row: any) => {
       const paymentStatusBadge = getPaymentStatusBadgeLabel(row?.payment_status);
+      const reason = row?.status_reason;
 
       return (
         <div className="flex flex-wrap items-center justify-center gap-1.5">
           <Badge variant="outline">{status_label ?? '—'}</Badge>
+          {reason && (
+            <Badge variant="outline" className="max-w-[140px] truncate text-xs">
+              {String(reason).replace(/_/g, ' ')}
+            </Badge>
+          )}
           {paymentStatusBadge && (
             <Badge
               variant="outline"

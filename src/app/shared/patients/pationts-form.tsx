@@ -12,6 +12,9 @@ import { PationtsFormInput ,pationtFormSchema} from '@/utils/validators/pationts
 import { useNationality } from '@/framework/nationality';
 import { useCountries } from '@/framework/countrues';
 import { useCities } from '@/framework/cities';
+import { routes } from '@/config/routes';
+import Link from 'next/link';
+import toast from 'react-hot-toast';
 
 const bloodGroups = [
   { id: 'A+', name: 'A+' },
@@ -39,6 +42,8 @@ export default function CreateOrUpdatePationts({ initValues }: { initValues?: an
   const { mutate: createSupport, isPending: isCreating } = useCreatePatients();
   const { mutate: updateSupport, isPending: isUpdating } = useUpdatePatients();
     const [lang, setLang] = useState<"en" | "ar">("ar")
+  const [duplicatePatientId, setDuplicatePatientId] = useState<number | null>(null);
+  const [duplicateMatch, setDuplicateMatch] = useState<string | null>(null);
 
   React.useEffect(() => {
     setLang("ar");
@@ -53,7 +58,24 @@ export default function CreateOrUpdatePationts({ initValues }: { initValues?: an
     const { closeModal } = useModal()
   
 
+  const handlePatientError = (error: any) => {
+    const data = error?.response?.data;
+    const existingId = data?.existing_patient_id;
+    if (existingId) {
+      setDuplicatePatientId(Number(existingId));
+      setDuplicateMatch(data?.match || 'national_id');
+      toast.error(
+        data?.message ||
+          'A patient with this National ID already exists.'
+      );
+      return;
+    }
+    toast.error(error?.message || 'Failed to save patient');
+  };
+
   const onSubmit: SubmitHandler<PationtsFormInput> = (data) => {
+    setDuplicatePatientId(null);
+    setDuplicateMatch(null);
     const requestBody = {
       name: data.name,
       email: data.email || null,
@@ -63,7 +85,7 @@ export default function CreateOrUpdatePationts({ initValues }: { initValues?: an
       date_of_birth: data.date_of_birth,
       blood_group: data.blood_group || undefined,
       languages_spoken: data.languages_spoken,
-      national_id: data.national_id,
+      national_id: data.national_id?.trim() || null,
       nickname: data.nickname || undefined,
       gender: data.gender,
       insurance_id: data.insurance_id || undefined,
@@ -80,6 +102,7 @@ export default function CreateOrUpdatePationts({ initValues }: { initValues?: an
           onSuccess: () => {
             closeModal();
           },
+          onError: handlePatientError,
         }
       );
     } else {
@@ -87,6 +110,7 @@ export default function CreateOrUpdatePationts({ initValues }: { initValues?: an
         onSuccess: () => {
           closeModal();
         },
+        onError: handlePatientError,
       });
     }
 
@@ -135,6 +159,24 @@ export default function CreateOrUpdatePationts({ initValues }: { initValues?: an
             </ActionIcon>
           </div>
 
+          {duplicatePatientId != null && (
+            <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-200">
+              <p className="font-medium">
+                A patient with this National ID already exists
+                {duplicateMatch === 'mobile_and_national_id'
+                  ? ' (same mobile too)'
+                  : ''}
+                .
+              </p>
+              <Link
+                href={routes.patients.detail(duplicatePatientId)}
+                className="mt-2 inline-block font-semibold text-blue-600 underline dark:text-blue-400"
+                onClick={() => closeModal()}
+              >
+                Open / use existing patient #{duplicatePatientId}
+              </Link>
+            </div>
+          )}
 
         
           <Input
@@ -194,7 +236,12 @@ export default function CreateOrUpdatePationts({ initValues }: { initValues?: an
             </div>
           </div>
 
-          <Input label="National ID" {...register('national_id')} error={errors.national_id?.message} />
+          <Input
+            label="National ID (optional)"
+            {...register('national_id')}
+            error={errors.national_id?.message}
+            placeholder="Leave empty if unknown — do not invent values"
+          />
           <Input label="Nickname (Optional)" {...register('nickname')} error={errors.nickname?.message} />
 
           <div className="grid grid-cols-2 gap-4">

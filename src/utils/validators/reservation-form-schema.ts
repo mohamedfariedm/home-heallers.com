@@ -37,6 +37,7 @@ export const reservationFormSchema = z
         errorMap: () => ({ message: "Status is required" }),
       })
       .default("2"),
+    status_reason: z.string().optional(),
     pain_location: z.string().min(1, "Pain location is required"),
     notes: z.string().optional(),
     operation_notes: z.string().optional(),
@@ -114,13 +115,35 @@ export const reservationFormSchema = z
           message: "Mobile is required",
           path: ["patient_mobile"],
         });
+      } else {
+        const digits = String(data.patient_mobile).replace(/\D/g, "");
+        if (/^0+$/.test(digits) || /^05?0+$/.test(digits)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message:
+              "The mobile looks like a placeholder number. Enter the real mobile number.",
+            path: ["patient_mobile"],
+          });
+        }
       }
-      if (!data.patient_national_id || data.patient_national_id.trim() === "") {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "National ID is required",
-          path: ["patient_national_id"],
-        });
+      // National ID is optional; validate format/placeholders only when provided
+      if (data.patient_national_id && String(data.patient_national_id).trim()) {
+        const digits = String(data.patient_national_id).replace(/\D/g, "");
+        if (!/^[12]\d{9}$/.test(digits)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message:
+              "National ID must be a valid 10-digit Saudi ID/Iqama (starts with 1 or 2)",
+            path: ["patient_national_id"],
+          });
+        } else if (/^(\d)\1{9}$/.test(digits) || digits === "1234567890") {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message:
+              "National ID looks like a placeholder. Leave it empty when unknown.",
+            path: ["patient_national_id"],
+          });
+        }
       }
       if (!data.patient_date_of_birth || data.patient_date_of_birth.trim() === "") {
         ctx.addIssue({
@@ -149,6 +172,41 @@ export const reservationFormSchema = z
         message: "Transaction reference is required",
         path: ["transaction_reference"],
       });
+    }
+
+    // Backend: source_campaign required unless lead_id is linked
+    if (!data.lead_id && (!data.source_campaign || !String(data.source_campaign).trim())) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Source campaign is required when no lead is linked",
+        path: ["source_campaign"],
+      });
+    }
+
+    const statusNum = Number(data.status);
+    if (statusNum === 4 || statusNum === 6) {
+      if (!data.status_reason || !String(data.status_reason).trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Status reason is required when canceled or failed",
+          path: ["status_reason"],
+        });
+      } else if (data.status_reason === "payment_timeout") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "payment_timeout is system-only and cannot be selected",
+          path: ["status_reason"],
+        });
+      } else if (
+        data.status_reason === "other" &&
+        !(data.operation_notes && String(data.operation_notes).trim())
+      ) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Operation notes are required when reason is Other",
+          path: ["operation_notes"],
+        });
+      }
     }
   })
   .refine(

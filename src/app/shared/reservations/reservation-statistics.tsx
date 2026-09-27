@@ -21,9 +21,22 @@ import {
   PiArrowRightBold,
   PiCaretDownBold,
   PiCaretUpBold,
+  PiUserMinusBold,
+  PiCalendarBlankBold,
 } from 'react-icons/pi';
 import cn from '@/utils/class-names';
 import { useRouter, usePathname } from 'next/navigation';
+import {
+  formatPercent,
+  sumUnknownSourceCount,
+  toPercent,
+  toneColors,
+  toneForCancellationRate,
+  toneForCollectionRate,
+  toneForConfirmationRate,
+  toneForUnknownSource,
+} from '@/utils/dashboard-metric-helpers';
+import { formatStatusReasonLabel } from '@/config/dashboard-enums';
 
 interface StatusCount {
   count?: number;
@@ -97,6 +110,24 @@ interface ReservationStatistics {
       clients_link?: string;
     };
   };
+  by_cancellation_reason?: Array<{
+    status_reason: string;
+    count: number;
+    canceled_count: number;
+    failed_count: number;
+    link: string;
+  }>;
+  unassigned_count?: number;
+  unassigned_link?: string;
+  same_day_count?: number;
+  same_day_link?: string;
+  upcoming_sessions?: {
+    count: number;
+    reservations_count: number;
+    link: string;
+  };
+  unscheduled_sessions_count?: number;
+  unscheduled_sessions_link?: string;
 }
 
 interface ReservationStatisticsProps {
@@ -338,11 +369,147 @@ export default function ReservationStatistics({
     getStatusSessionsCount(stats.by_status?.canceled) +
     getStatusSessionsCount(stats.by_status?.failed);
 
+  const totalReservations = stats.total_count || 0;
+  const confirmedCount = getStatusCount(stats.by_status?.confirmed);
+  const canceledCount = getStatusCount(stats.by_status?.canceled);
+  const confirmationRate = toPercent(confirmedCount, totalReservations);
+  const cancellationRate = toPercent(canceledCount, totalReservations);
+  const paidAmount = Number(stats.paid_statistics?.total_amount || 0);
+  const unpaidAmount = Number(stats.unpaid_statistics?.total_amount || 0);
+  const collectionRate = toPercent(paidAmount, paidAmount + unpaidAmount);
+  const { unknownCount, totalCount: sourceTotal } = sumUnknownSourceCount(
+    stats.by_source_campaign || []
+  );
+  const unknownSourceRate = toPercent(unknownCount, sourceTotal || totalReservations);
+  const showUnknownSourceAlert = unknownSourceRate > 20;
+
+  const confirmationTone = toneColors(toneForConfirmationRate(confirmationRate));
+  const cancellationTone = toneColors(toneForCancellationRate(cancellationRate));
+  const collectionTone = toneColors(toneForCollectionRate(collectionRate));
+  const unknownTone = toneColors(toneForUnknownSource(unknownSourceRate));
+
+  const topKpiCards = [
+    {
+      title: 'Total Reservations',
+      value: totalReservations,
+      icon: PiCalendarCheckBold,
+      bgColor: 'bg-blue-50',
+      textColor: 'text-blue-600',
+      darkBgColor: 'dark:bg-blue-900/20',
+      darkTextColor: 'dark:text-blue-400',
+      blurColor: 'bg-blue-50/50',
+      darkBlurColor: 'dark:bg-blue-900/10',
+      compact: true,
+    },
+    {
+      title: 'Total Sessions',
+      value: totalSessions,
+      icon: PiCalendarCheckBold,
+      bgColor: 'bg-sky-50',
+      textColor: 'text-sky-600',
+      darkBgColor: 'dark:bg-sky-900/20',
+      darkTextColor: 'dark:text-sky-400',
+      blurColor: 'bg-sky-50/50',
+      darkBlurColor: 'dark:bg-sky-900/10',
+      compact: true,
+    },
+    {
+      title: 'Confirmation Rate',
+      value: formatPercent(confirmationRate),
+      subtitle: `${confirmedCount} confirmed`,
+      icon: PiCheckCircleBold,
+      ...confirmationTone,
+      compact: true,
+    },
+    {
+      title: 'Cancellation Rate',
+      value: formatPercent(cancellationRate),
+      subtitle: `${canceledCount} canceled`,
+      icon: PiXCircleBold,
+      ...cancellationTone,
+      compact: true,
+    },
+    ...(hasPermission('dashboard.total_revenue')
+      ? [
+          {
+            title: 'Collection Rate',
+            value: formatPercent(collectionRate),
+            subtitle: `${paidAmount.toLocaleString()} / ${(paidAmount + unpaidAmount).toLocaleString()} SAR`,
+            icon: PiMoneyBold,
+            ...collectionTone,
+            compact: true,
+          },
+        ]
+      : []),
+    {
+      title: '% Unknown Source',
+      value: formatPercent(unknownSourceRate),
+      subtitle: `${unknownCount} of ${sourceTotal || totalReservations}`,
+      icon: PiTagBold,
+      ...unknownTone,
+      compact: true,
+    },
+    {
+      title: 'Unassigned',
+      value: stats.unassigned_count ?? 0,
+      subtitle: 'Open without doctor',
+      icon: PiUserMinusBold,
+      bgColor: 'bg-red-50',
+      textColor: 'text-red-600',
+      darkBgColor: 'dark:bg-red-900/20',
+      darkTextColor: 'dark:text-red-400',
+      blurColor: 'bg-red-50/50',
+      darkBlurColor: 'dark:bg-red-900/10',
+      link: stats.unassigned_link,
+      compact: true,
+    },
+    {
+      title: 'Same-day',
+      value: stats.same_day_count ?? 0,
+      icon: PiCalendarBlankBold,
+      bgColor: 'bg-violet-50',
+      textColor: 'text-violet-600',
+      darkBgColor: 'dark:bg-violet-900/20',
+      darkTextColor: 'dark:text-violet-400',
+      blurColor: 'bg-violet-50/50',
+      darkBlurColor: 'dark:bg-violet-900/10',
+      link: stats.same_day_link,
+      compact: true,
+    },
+    {
+      title: 'Upcoming Sessions',
+      value: stats.upcoming_sessions?.count ?? 0,
+      subtitle: `${stats.upcoming_sessions?.reservations_count ?? 0} reservations (next 7 days)`,
+      icon: PiCalendarCheckBold,
+      bgColor: 'bg-sky-50',
+      textColor: 'text-sky-600',
+      darkBgColor: 'dark:bg-sky-900/20',
+      darkTextColor: 'dark:text-sky-400',
+      blurColor: 'bg-sky-50/50',
+      darkBlurColor: 'dark:bg-sky-900/10',
+      link: stats.upcoming_sessions?.link,
+      compact: true,
+    },
+    {
+      title: 'Unscheduled Sessions',
+      value: stats.unscheduled_sessions_count ?? 0,
+      icon: PiHourglassBold,
+      bgColor: 'bg-amber-50',
+      textColor: 'text-amber-600',
+      darkBgColor: 'dark:bg-amber-900/20',
+      darkTextColor: 'dark:text-amber-400',
+      blurColor: 'bg-amber-50/50',
+      darkBlurColor: 'dark:bg-amber-900/10',
+      link: stats.unscheduled_sessions_link,
+      compact: true,
+    },
+  ];
+
   // Row 1: Reservation by Status (with Reviewing and Total Sessions)
   const reservationByStatusCards = [
     {
       title: 'Total Reservations',
-      value: stats.total_count || 0,
+      value: totalReservations,
       icon: PiCalendarCheckBold,
       bgColor: 'bg-blue-50',
       textColor: 'text-blue-600',
@@ -696,12 +863,34 @@ export default function ReservationStatistics({
   ];
 
   const rows = [
+    { title: 'Top KPIs', cards: topKpiCards },
     { title: 'Reservation by Status', cards: reservationByStatusCards },
-    ...(hasPermission('dashboard.total_revenue') ? [{ title: 'Revenue', cards: reviewCards }] : []),
+    ...((stats.by_cancellation_reason || []).length > 0
+      ? [
+          {
+            title: 'Cancellation / Failure Reasons',
+            cards: (stats.by_cancellation_reason || []).map((r) => ({
+              title: formatStatusReasonLabel(r.status_reason),
+              value: r.count,
+              subtitle: `${r.canceled_count} canceled · ${r.failed_count} failed`,
+              icon: PiWarningBold,
+              bgColor: 'bg-rose-50',
+              textColor: 'text-rose-600',
+              darkBgColor: 'dark:bg-rose-900/20',
+              darkTextColor: 'dark:text-rose-400',
+              blurColor: 'bg-rose-50/50',
+              darkBlurColor: 'dark:bg-rose-900/10',
+              link: r.link,
+              compact: true,
+            })),
+          },
+        ]
+      : []),
+    ...(hasPermission('dashboard.total_revenue') ? [{ title: 'Revenue & Collection', cards: reviewCards }] : []),
     { title: 'Source Campaigns', cards: sourceCampaignCards },
     { title: 'Services', cards: serviceCards },
     { title: 'Categories', cards: categoryCards },
-    { title: 'Clients', cards: clientCards },
+    { title: 'Clients & Multiple Bookings', cards: clientCards },
   ];
 
   const router = useRouter();
@@ -721,6 +910,23 @@ export default function ReservationStatistics({
 
   return (
     <div className={cn('w-full space-y-6', className)}>
+      {showUnknownSourceAlert || (stats.unassigned_count ?? 0) > 0 ? (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200">
+          <p className="font-semibold">Red Flags</p>
+          <ul className="mt-1 list-disc space-y-0.5 ps-5">
+            {showUnknownSourceAlert && (
+              <li>
+                Unknown Source is {formatPercent(unknownSourceRate)} ({unknownCount} reservations) — above 20% threshold.
+              </li>
+            )}
+            {(stats.unassigned_count ?? 0) > 0 && (
+              <li>
+                {stats.unassigned_count} unassigned open reservation(s) without a doctor.
+              </li>
+            )}
+          </ul>
+        </div>
+      ) : null}
       {rows.map((row, rowIndex) => {
         const isServicesRow = row.title === 'Services';
         const hasMoreServices = isServicesRow && allServiceCards.length > SERVICES_PER_ROW;

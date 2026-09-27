@@ -340,6 +340,19 @@ export default function KanbanCard({
           </div>
         )}
 
+        {item.status_reason && (
+          <div className="rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 dark:bg-red-900/30 dark:text-red-300">
+            Reason: {String(item.status_reason).replace(/_/g, ' ')}
+          </div>
+        )}
+
+        {item.last_follow_up_at && (
+          <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+            <PiClock className="h-3.5 w-3.5" />
+            <span>Last follow-up: {item.last_follow_up_at}</span>
+          </div>
+        )}
+
         {(item.address_1 || item.city || item.state) && (
           <div className="flex items-start gap-2">
             <PiMapPin className="mt-0.5 h-4 w-4 flex-shrink-0 text-gray-400" />

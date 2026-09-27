@@ -35,6 +35,11 @@ import { useCities } from '@/framework/cities';
 import { useStates } from '@/framework/states';
 import { Badge } from '@/components/ui/badge';
 import { CC_OPTIONS } from '@/app/shared/cc-options';
+import {
+  RESERVATION_STATUS_REASONS,
+  SOURCE_CAMPAIGN_OPTIONS,
+  formatStatusReasonLabel,
+} from '@/config/dashboard-enums';
 import { resolveLocalizedName } from '@/utils/resolve-localized-name';
 import { isReservationLockedSource } from './reservation-source';
 
@@ -265,6 +270,7 @@ export default function CreateOrUpdateReservation({
 
       // 🧩 common fields
       status: initValues?.status?.toString() || '2',
+      status_reason: initValues?.status_reason || '',
       pain_location: initValues?.pain_location || '',
       notes: initValues?.notes || leadData?.notes || '',
       operation_notes: initValues?.operation_notes || '',
@@ -346,6 +352,10 @@ export default function CreateOrUpdateReservation({
   const watchSourceCampaign = useWatch({ control, name: 'source_campaign' });
   const watchReservationSource = useWatch({ control, name: 'reservation_source' });
   const watchCustomerTier = useWatch({ control, name: 'customer_tier' as any });
+  const watchStatus = useWatch({ control, name: 'status' });
+  const watchStatusReason = useWatch({ control, name: 'status_reason' });
+  const isCancelOrFail =
+    Number(watchStatus) === 4 || Number(watchStatus) === 6;
 
   // Log validation errors whenever they change
   useEffect(() => {
@@ -557,6 +567,9 @@ export default function CreateOrUpdateReservation({
         : data.transaction_reference,
       customer_tier: (data as any)?.customer_tier || 'عادي',
       status: data.status ? Number(data.status) : undefined,
+      ...(Number(data.status) === 4 || Number(data.status) === 6
+        ? { status_reason: data.status_reason || undefined }
+        : {}),
       pain_location: data.pain_location,
       notes: data.notes,
       operation_notes: data.operation_notes,
@@ -757,12 +770,10 @@ export default function CreateOrUpdateReservation({
 
           <div className="grid grid-cols-2 gap-4">
             <Input
-              label={`National ID${isGuestCreate ? ' *' : ''}`}
+              label="National ID (optional)"
               {...inputProps}
-              placeholder="e.g., 12134567890"
-              {...register('patient_national_id', {
-                required: isGuestCreate ? 'National ID is required' : false,
-              })}
+              placeholder="10 digits starting with 1 or 2 — leave empty if unknown"
+              {...register('patient_national_id')}
               error={errors.patient_national_id?.message}
             />
             <div>
@@ -1173,22 +1184,17 @@ export default function CreateOrUpdateReservation({
               className="w-full rounded-lg border border-gray-300 p-2"
             >
               <option value="">Select Source</option>
-              <option value="google">Google</option>
-              <option value="facebook">Facebook</option>
-              <option value="application">Application</option>
-              <option value="instagram">Instagram</option>
-              <option value="snapchat">Snapchat</option>
-              <option value="telegram">Telegram</option>
-              <option value="twitter">Twitter</option>
-              <option value="tiktok">TikTok</option>
-              <option value="whatsapp">WhatsApp</option>
-              <option value="call">Call</option>
-              <option value="youtube">YouTube</option>
-              <option value="website">Website</option>
-              <option value="referral">Referral</option>
-              <option value="center">Center</option>
-              <option value="other">Other</option>
+              {SOURCE_CAMPAIGN_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
+            {errors.source_campaign && (
+              <p className="mt-1 text-sm text-red-500">
+                {errors.source_campaign.message}
+              </p>
+            )}
           </div>
           
           {watchSourceCampaign === 'center' && (
@@ -1254,6 +1260,13 @@ export default function CreateOrUpdateReservation({
             {...inputProps}
             {...register('status')}
             className="w-full rounded-lg border border-gray-300 p-2"
+            onChange={(e) => {
+              const next = e.target.value;
+              setValue('status', next as any, { shouldValidate: true });
+              if (Number(next) !== 4 && Number(next) !== 6) {
+                setValue('status_reason', '', { shouldValidate: false });
+              }
+            }}
           >
             <option value="">Select Status</option>
             {statusOptions.map((option) => (
@@ -1274,6 +1287,46 @@ export default function CreateOrUpdateReservation({
           error={errors.pain_location?.message}
         />
       </div>
+
+      {isCancelOrFail && (
+        <div className="grid grid-cols-2 gap-4 rounded-lg border border-red-200 bg-red-50/50 p-4 dark:border-red-900/40 dark:bg-red-900/10">
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              Status Reason <span className="text-red-500">*</span>
+            </label>
+            <select
+              {...inputProps}
+              {...register('status_reason')}
+              className="w-full rounded-lg border border-gray-300 p-2"
+            >
+              <option value="">Select reason</option>
+              {RESERVATION_STATUS_REASONS.map((r) => (
+                <option key={r.value} value={r.value}>
+                  {r.label}
+                </option>
+              ))}
+              {/* Show system-only value if already set historically */}
+              {watchStatusReason === 'payment_timeout' && (
+                <option value="payment_timeout" disabled>
+                  {formatStatusReasonLabel('payment_timeout')}
+                </option>
+              )}
+            </select>
+            {errors.status_reason && (
+              <p className="mt-1 text-sm text-red-500">
+                {errors.status_reason.message}
+              </p>
+            )}
+          </div>
+          {watchStatusReason === 'other' && (
+            <div className="col-span-2">
+              <p className="text-xs text-gray-600">
+                Operation notes are required when reason is Other.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
 
       <Input
         {...inputProps}

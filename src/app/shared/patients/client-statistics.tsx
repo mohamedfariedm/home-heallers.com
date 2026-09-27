@@ -5,9 +5,14 @@ import {
   PiCheckBold,
   PiCheckCircleBold,
   PiClockBold,
+  PiCurrencyDollarBold,
   PiHourglassBold,
+  PiIdentificationCardBold,
+  PiPhoneBold,
   PiRepeatBold,
   PiTagBold,
+  PiUserPlusBold,
+  PiUsersBold,
   PiWarningBold,
   PiXCircleBold,
 } from 'react-icons/pi';
@@ -79,14 +84,6 @@ const STATUS_STYLES: Record<number, CardStyle> = {
     blurColor: 'bg-orange-50/50',
     darkBlurColor: 'dark:bg-orange-900/10',
   },
-  [ReservationStatus.PendingPayment]: {
-    bgColor: 'bg-purple-50',
-    textColor: 'text-purple-600',
-    darkBgColor: 'dark:bg-purple-900/20',
-    darkTextColor: 'dark:text-purple-400',
-    blurColor: 'bg-purple-50/50',
-    darkBlurColor: 'dark:bg-purple-900/10',
-  },
 };
 
 const DEFAULT_STYLE: CardStyle = {
@@ -98,34 +95,23 @@ const DEFAULT_STYLE: CardStyle = {
   darkBlurColor: 'dark:bg-slate-900/10',
 };
 
-const STATUS_ICONS: Record<number, typeof PiCalendarCheckBold> = {
+const STATUS_ICONS: Record<number, any> = {
   [ReservationStatus.Reviewing]: PiHourglassBold,
   [ReservationStatus.WaitConfirm]: PiClockBold,
   [ReservationStatus.Confirmed]: PiCheckCircleBold,
   [ReservationStatus.Canceled]: PiXCircleBold,
   [ReservationStatus.Completed]: PiCheckBold,
   [ReservationStatus.Failed]: PiWarningBold,
-  [ReservationStatus.PendingPayment]: PiCalendarCheckBold,
 };
 
-const convertApiLinkToQueryParams = (apiLink: string | undefined): string => {
+function convertApiLinkToQueryParams(apiLink: string | undefined): string {
   if (!apiLink) return '';
-
   try {
-    const url = new URL(apiLink);
-    const params = new URLSearchParams(url.search);
-    const frontendParams = new URLSearchParams();
-
-    params.forEach((value, key) => {
-      frontendParams.set(key, value);
-    });
-
-    return frontendParams.toString();
-  } catch (error) {
-    console.error('Error converting API link:', error);
+    return new URL(apiLink).searchParams.toString();
+  } catch {
     return '';
   }
-};
+}
 
 function StatCard({
   title,
@@ -136,66 +122,45 @@ function StatCard({
   link,
 }: {
   title: string;
-  value: number;
+  value: number | string;
   subtitle?: string;
-  icon: typeof PiCalendarCheckBold;
+  icon: any;
   style: CardStyle;
   link?: string;
 }) {
   const router = useRouter();
   const pathname = usePathname();
 
-  const handleClick = () => {
-    if (!link) return;
-    const queryParams = convertApiLinkToQueryParams(link);
-    const url = queryParams ? `${pathname}?${queryParams}` : pathname;
-    router.push(url);
-  };
-
   return (
     <div
-      role={link ? 'button' : undefined}
-      tabIndex={link ? 0 : undefined}
-      onClick={link ? handleClick : undefined}
-      onKeyDown={
-        link
-          ? (event) => {
-              if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault();
-                handleClick();
-              }
-            }
-          : undefined
-      }
       className={cn(
-        'relative min-w-[180px] flex-1 basis-[calc(20%-16px)] overflow-hidden rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-shadow dark:border-gray-700 dark:bg-gray-800',
-        link && 'cursor-pointer hover:shadow-md'
+        'relative min-w-[160px] flex-1 overflow-hidden rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800',
+        link && 'cursor-pointer transition hover:scale-[1.02] hover:shadow-lg'
       )}
+      onClick={() => {
+        if (!link) return;
+        const q = convertApiLinkToQueryParams(link);
+        router.push(q ? `${pathname}?${q}` : pathname);
+      }}
     >
-      <div className="flex items-center justify-between">
-        <div
-          className={cn(
-            'flex h-12 w-12 items-center justify-center rounded-lg',
-            style.bgColor,
-            style.textColor,
-            style.darkBgColor,
-            style.darkTextColor
-          )}
-        >
-          <Icon className="h-6 w-6" />
-        </div>
-      </div>
-
-      <div className="mt-4">
-        <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{title}</p>
-        <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-white">
-          {value.toLocaleString()}
-        </p>
-        {subtitle && (
-          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{subtitle}</p>
+      <div
+        className={cn(
+          'flex h-10 w-10 items-center justify-center rounded-lg',
+          style.bgColor,
+          style.textColor,
+          style.darkBgColor,
+          style.darkTextColor
         )}
+      >
+        <Icon className="h-5 w-5" />
       </div>
-
+      <p className="mt-3 text-sm font-medium text-gray-500 dark:text-gray-400">{title}</p>
+      <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">
+        {typeof value === 'number' ? value.toLocaleString() : value}
+      </p>
+      {subtitle && (
+        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{subtitle}</p>
+      )}
       <div
         className={cn(
           'absolute -right-4 -top-4 -z-10 h-24 w-24 rounded-full blur-2xl',
@@ -206,6 +171,15 @@ function StatCard({
     </div>
   );
 }
+
+const infoStyle: CardStyle = {
+  bgColor: 'bg-indigo-50',
+  textColor: 'text-indigo-600',
+  darkBgColor: 'dark:bg-indigo-900/20',
+  darkTextColor: 'dark:text-indigo-400',
+  blurColor: 'bg-indigo-50/50',
+  darkBlurColor: 'dark:bg-indigo-900/10',
+};
 
 export default function ClientStatistics({ statistics, className }: ClientStatisticsProps) {
   if (!statistics) return null;
@@ -221,20 +195,158 @@ export default function ClientStatistics({ statistics, className }: ClientStatis
       link: item.link,
     }));
 
+  const summaryCards = [
+    {
+      title: 'Patients with valid booking (period)',
+      value: statistics.active_patients_count ?? 0,
+      subtitle: 'Not canceled/failed/pending payment',
+      icon: PiUsersBold,
+      style: {
+        bgColor: 'bg-emerald-50',
+        textColor: 'text-emerald-600',
+        darkBgColor: 'dark:bg-emerald-900/20',
+        darkTextColor: 'dark:text-emerald-400',
+        blurColor: 'bg-emerald-50/50',
+        darkBlurColor: 'dark:bg-emerald-900/10',
+      },
+      link: statistics.active_patients_link,
+    },
+    {
+      title: 'New Patients',
+      value: statistics.new_patients_count ?? 0,
+      icon: PiUserPlusBold,
+      style: {
+        bgColor: 'bg-sky-50',
+        textColor: 'text-sky-600',
+        darkBgColor: 'dark:bg-sky-900/20',
+        darkTextColor: 'dark:text-sky-400',
+        blurColor: 'bg-sky-50/50',
+        darkBlurColor: 'dark:bg-sky-900/10',
+      },
+      link: statistics.new_patients_link,
+    },
+    {
+      title: 'Returning Patients',
+      value: statistics.returning_patients_count ?? 0,
+      icon: PiRepeatBold,
+      style: {
+        bgColor: 'bg-cyan-50',
+        textColor: 'text-cyan-600',
+        darkBgColor: 'dark:bg-cyan-900/20',
+        darkTextColor: 'dark:text-cyan-400',
+        blurColor: 'bg-cyan-50/50',
+        darkBlurColor: 'dark:bg-cyan-900/10',
+      },
+      link: statistics.returning_patients_link,
+    },
+    {
+      title: 'Profile Completeness',
+      value: `${Number(statistics.profile_completeness?.average_percent ?? 0).toFixed(2)}%`,
+      subtitle: `${statistics.profile_completeness?.patients_count ?? 0} booked profiles`,
+      icon: PiIdentificationCardBold,
+      style: infoStyle,
+    },
+  ];
+
+  const qualityCards = [
+    {
+      title: 'Missing National ID',
+      value: statistics.missing_national_id_count ?? 0,
+      icon: PiIdentificationCardBold,
+      style: DEFAULT_STYLE,
+      link: statistics.missing_national_id_link,
+    },
+    {
+      title: 'Missing Mobile',
+      value: statistics.missing_mobile_count ?? 0,
+      icon: PiPhoneBold,
+      style: DEFAULT_STYLE,
+      link: statistics.missing_mobile_link,
+    },
+    {
+      title: 'Shared Mobiles (info)',
+      value: statistics.shared_mobile_count ?? 0,
+      subtitle: 'Families may share a phone',
+      icon: PiPhoneBold,
+      style: infoStyle,
+      link: statistics.shared_mobile_link,
+    },
+    {
+      title: 'Duplicate Identities',
+      value: statistics.duplicate_identity_count ?? statistics.duplicate_mobile_count ?? 0,
+      subtitle: 'Same National ID on multiple records',
+      icon: PiWarningBold,
+      style: {
+        bgColor: 'bg-red-50',
+        textColor: 'text-red-600',
+        darkBgColor: 'dark:bg-red-900/20',
+        darkTextColor: 'dark:text-red-400',
+        blurColor: 'bg-red-50/50',
+        darkBlurColor: 'dark:bg-red-900/10',
+      },
+      link: statistics.duplicate_identity_link || statistics.duplicate_mobile_link,
+    },
+    {
+      title: 'Placeholder Values',
+      value: statistics.placeholder_value_count ?? 0,
+      icon: PiWarningBold,
+      style: {
+        bgColor: 'bg-amber-50',
+        textColor: 'text-amber-600',
+        darkBgColor: 'dark:bg-amber-900/20',
+        darkTextColor: 'dark:text-amber-400',
+        blurColor: 'bg-amber-50/50',
+        darkBlurColor: 'dark:bg-amber-900/10',
+      },
+      link: statistics.placeholder_value_link,
+    },
+    {
+      title: 'Profiles without bookings',
+      value: statistics.profiles_without_bookings_count ?? 0,
+      icon: PiUsersBold,
+      style: DEFAULT_STYLE,
+    },
+  ];
+
+  const canSeeRevenue = statistics != null && 'total_revenue' in statistics;
+  const revenueCards = canSeeRevenue
+    ? [
+        {
+          title: 'Collected Booking Value',
+          value: Number(statistics.total_revenue ?? 0).toLocaleString(),
+          subtitle: 'SAR · paid reservations (not accounting revenue)',
+          icon: PiCurrencyDollarBold,
+          style: {
+            bgColor: 'bg-green-50',
+            textColor: 'text-green-600',
+            darkBgColor: 'dark:bg-green-900/20',
+            darkTextColor: 'dark:text-green-400',
+            blurColor: 'bg-green-50/50',
+            darkBlurColor: 'dark:bg-green-900/10',
+          },
+        },
+        {
+          title: 'Avg / Paying Patient',
+          value: Number(statistics.avg_revenue_per_paying_patient ?? 0).toLocaleString(),
+          icon: PiCurrencyDollarBold,
+          style: infoStyle,
+        },
+        {
+          title: 'Avg Booking Value',
+          value: Number(statistics.avg_booking_value ?? 0).toLocaleString(),
+          icon: PiCurrencyDollarBold,
+          style: infoStyle,
+        },
+      ]
+    : [];
+
   const insightCards = [
     {
       title: 'Used Coupon',
       value: statistics.with_coupon?.users_count ?? 0,
       subtitle: 'Clients with coupon reservation',
       icon: PiTagBold,
-      style: {
-        bgColor: 'bg-indigo-50',
-        textColor: 'text-indigo-600',
-        darkBgColor: 'dark:bg-indigo-900/20',
-        darkTextColor: 'dark:text-indigo-400',
-        blurColor: 'bg-indigo-50/50',
-        darkBlurColor: 'dark:bg-indigo-900/10',
-      },
+      style: infoStyle,
       link: statistics.with_coupon?.link,
     },
     {
@@ -269,9 +381,30 @@ export default function ClientStatistics({ statistics, className }: ClientStatis
     },
   ];
 
+  const completenessBuckets = statistics.profile_completeness?.buckets || [];
+
   const rows = [
+    { title: 'Patient Summary KPIs', cards: summaryCards },
+    ...(revenueCards.length > 0
+      ? [{ title: 'Collected Booking Value', cards: revenueCards }]
+      : []),
+    { title: 'Data Quality', cards: qualityCards },
+    ...(completenessBuckets.length > 0
+      ? [
+          {
+            title: 'Profile Completeness Buckets',
+            cards: completenessBuckets.map((b) => ({
+              title: `${b.bucket}%`,
+              value: b.count,
+              icon: PiIdentificationCardBold,
+              style: infoStyle,
+              link: b.link,
+            })),
+          },
+        ]
+      : []),
+    { title: 'Existing Insights', cards: insightCards },
     { title: 'Clients by Reservation Status', cards: statusCards },
-    { title: 'Client Insights', cards: insightCards },
   ];
 
   return (

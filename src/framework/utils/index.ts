@@ -382,11 +382,20 @@ class Client {
         createPaymentWhatsapp: (input: { reservation_id: number }) => HttpClient.post('/reservations/create-payment-whatsapp', input),
         sendInvoiceWhatsapp: (reservationId: number) =>
             HttpClient.post(`/reservations/${reservationId}/send-invoice-whatsapp`),
-        updateStatus: (input: { reservation_id: number; status: number; paid?: boolean; notes?: string }) =>
+        updateStatus: (input: {
+          reservation_id: number;
+          status: number;
+          paid?: boolean;
+          notes?: string;
+          status_reason?: string;
+        }) =>
             HttpClient.patch(`${routes.reservations.index}/${input.reservation_id}/status`, {
                 status: input.status,
                 ...(input.paid !== undefined && { paid: input.paid }),
                 ...(input.notes !== undefined && { notes: input.notes }),
+                ...(input.status_reason !== undefined && {
+                  status_reason: input.status_reason,
+                }),
             }),
         inviteDoctors: (input: { reservation_id: number; doctor_ids: number[] }) => HttpClient.post(`${routes.reservations.index}/invite-doctors/${input.reservation_id}`, { doctor_ids: input.doctor_ids }),
     };

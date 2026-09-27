@@ -15,18 +15,61 @@ import {
   PiBuildingsBold,
   PiArrowsClockwiseBold,
   PiChatCircleBold,
+  PiWarningBold,
+  PiClockBold,
+  PiUserBold,
 } from 'react-icons/pi';
 import cn from '@/utils/class-names';
 import { useRouter, usePathname } from 'next/navigation';
 import type { CustomerSupportStatistics } from '@/types/customer-support-statistics';
 import { KANBAN_FILTERABLE_COLUMNS } from './kanban-filter-columns';
+import {
+  formatPercent,
+  getStatusCountFromStats,
+  sumUnknownSourceCount,
+  toPercent,
+  toneColors,
+  toneForFailedRate,
+  toneForLeadQuality,
+  toneForSuccessRate,
+  toneForSupportToReservation,
+  toneForUnknownSource,
+} from '@/utils/dashboard-metric-helpers';
+import { formatStatusReasonLabel } from '@/config/dashboard-enums';
 
-interface KanbanStatistics extends CustomerSupportStatistics {
+interface KanbanStatistics extends Omit<CustomerSupportStatistics, 'by_status'> {
   by_status: CustomerSupportStatistics['by_status'] | {
     new?: number;
     [key: string]: number | undefined;
   };
 }
+
+type StatisticsCard = {
+  title: string;
+  value: number | string;
+  subtitle?: string;
+  icon?: any;
+  bgColor: string;
+  textColor: string;
+  darkBgColor: string;
+  darkTextColor: string;
+  blurColor: string;
+  darkBlurColor: string;
+  link?: string;
+  compact?: boolean;
+  showCheckbox?: boolean;
+  checked?: boolean;
+  campaignKey?: string;
+};
+
+type StatisticsRow = {
+  title: string;
+  cards: StatisticsCard[];
+  allCards?: StatisticsCard[];
+  expanded?: boolean;
+  setExpanded?: (value: boolean) => void;
+  perRow?: number;
+};
 
 interface KanbanStatisticsCardsProps {
   statistics: KanbanStatistics | null | undefined;
@@ -93,6 +136,14 @@ const statusColors: Record<string, { bg: string; text: string; darkBg: string; d
     blur: 'bg-cyan-50/50',
     darkBlur: 'dark:bg-cyan-900/10',
   },
+  unset: {
+    bg: 'bg-slate-50',
+    text: 'text-slate-600',
+    darkBg: 'dark:bg-slate-900/20',
+    darkText: 'dark:text-slate-400',
+    blur: 'bg-slate-50/50',
+    darkBlur: 'dark:bg-slate-900/10',
+  },
 };
 
 // Default color scheme for unknown statuses
@@ -130,9 +181,16 @@ const convertApiLinkToQueryParams = (apiLink: string | undefined): string => {
         return;
       }
 
+      // Legacy by_status null row uses bare `status=` which is not a real filter.
+      // Prefer Backend's status_equal=null (guide §6).
+      if (key === 'status' && (value === '' || value == null || value === 'null')) {
+        frontendParams.set('status_equal', 'null');
+        return;
+      }
+
       // If key exactly matches a filterable key without operator, assume "equal"
       if (filterableKeys.has(key)) {
-        frontendParams.set(`${key}_equal`, value);
+        frontendParams.set(`${key}_equal`, value === '' ? 'null' : value);
         return;
       }
 
@@ -331,7 +389,7 @@ export default function KanbanStatisticsCards({
 
   // Format status label (convert snake_case to Title Case)
   const formatStatusLabel = (status: string | null | undefined): string => {
-    if (!status) return 'Unknown';
+    if (!status) return 'No Status';
     return status
       .split('_')
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
@@ -344,12 +402,10 @@ export default function KanbanStatisticsCards({
   const byStatus = statistics.by_status;
   
   if (Array.isArray(byStatus)) {
-    // New format: array of objects
-    statusCardsData = byStatus
-      .filter((item): item is { status: string; count?: number; link?: string } => 
-        item.status !== null && item.status !== ''
-      )
-      .sort((a, b) => (b.count || 0) - (a.count || 0)); // Sort by count descending
+    // Include null-status row; convertApiLinkToQueryParams remaps legacy status= → status_equal=null
+    statusCardsData = [...byStatus].sort(
+      (a, b) => (b.count || 0) - (a.count || 0)
+    );
   } else {
     // Old format: object with status keys
     const statusObj: { [key: string]: number | undefined } = byStatus as { [key: string]: number | undefined };
@@ -360,12 +416,15 @@ export default function KanbanStatisticsCards({
     }));
   }
 
-  // Row 1: Status Statistics
+  // Row: Status Statistics
   const statusCards = statusCardsData.map((item) => {
-    const statusKey = item.status || 'unknown';
-    const colors = statusColors[statusKey] || defaultColors;
+    const statusKey =
+      item.status === null || item.status === '' || item.status === undefined
+        ? 'unset'
+        : item.status;
+    const colors = statusColors[statusKey] || statusColors['unknown'] || defaultColors;
     return {
-      title: formatStatusLabel(statusKey),
+      title: formatStatusLabel(item.status),
       value: item.count || 0,
       icon: PiCheckCircleBold,
       bgColor: colors.bg,
@@ -379,7 +438,140 @@ export default function KanbanStatisticsCards({
     };
   });
 
-  // Row 2: Lead quality metrics
+  const totalSupports = statistics.total || 0;
+  const successCount = getStatusCountFromStats(statistics.by_status as any, 'success');
+  const failedCount = getStatusCountFromStats(statistics.by_status as any, 'failed');
+  const newCount = getStatusCountFromStats(statistics.by_status as any, 'new');
+  const successRate = toPercent(successCount, totalSupports);
+  const failedRate = toPercent(failedCount, totalSupports);
+  const supportToReservationRate = toPercent(
+    statistics.clients_with_mobile_and_reservation || 0,
+    totalSupports
+  );
+  const leadQualityRate = Number(statistics.leads?.lead_quality_rate || 0);
+  const { unknownCount, totalCount: sourceTotal } = sumUnknownSourceCount(
+    statistics.by_source_campaign || []
+  );
+  const unknownSourceRate = toPercent(unknownCount, sourceTotal || totalSupports);
+  const unknownChannelCount = (statistics.by_communication_channel || [])
+    .filter((c) => {
+      const label = String(c.communication_channel || '').trim().toLowerCase();
+      return !label || label === 'unknown' || label === 'null';
+    })
+    .reduce((sum, c) => sum + (c.count || 0), 0);
+  const unknownChannelRate = toPercent(unknownChannelCount, totalSupports);
+
+  const successTone = toneColors(toneForSuccessRate(successRate));
+  const failedTone = toneColors(toneForFailedRate(failedRate));
+  const leadTone = toneColors(toneForLeadQuality(leadQualityRate));
+  const conversionTone = toneColors(toneForSupportToReservation(supportToReservationRate));
+  const unknownTone = toneColors(toneForUnknownSource(unknownSourceRate));
+
+  // Top KPIs — decision cards first (computed from existing statistics)
+  const topKpiCards =
+    supportType === 'operation'
+      ? [
+          {
+            title: 'Total Inbound',
+            value: totalSupports,
+            icon: PiFileTextBold,
+            bgColor: 'bg-indigo-50',
+            textColor: 'text-indigo-600',
+            darkBgColor: 'dark:bg-indigo-900/20',
+            darkTextColor: 'dark:text-indigo-400',
+            blurColor: 'bg-indigo-50/50',
+            darkBlurColor: 'dark:bg-indigo-900/10',
+            compact: true,
+          },
+          {
+            title: 'New',
+            value: newCount,
+            icon: PiCheckCircleBold,
+            bgColor: 'bg-blue-50',
+            textColor: 'text-blue-600',
+            darkBgColor: 'dark:bg-blue-900/20',
+            darkTextColor: 'dark:text-blue-400',
+            blurColor: 'bg-blue-50/50',
+            darkBlurColor: 'dark:bg-blue-900/10',
+            compact: true,
+          },
+          {
+            title: 'Qualified Leads',
+            value: statistics.leads?.qualified_leads || 0,
+            icon: PiCheckCircleBold,
+            bgColor: 'bg-lime-50',
+            textColor: 'text-lime-600',
+            darkBgColor: 'dark:bg-lime-900/20',
+            darkTextColor: 'dark:text-lime-400',
+            blurColor: 'bg-lime-50/50',
+            darkBlurColor: 'dark:bg-lime-900/10',
+            compact: true,
+          },
+          {
+            title: 'Support → Reservation',
+            value: formatPercent(supportToReservationRate),
+            subtitle: `${statistics.clients_with_mobile_and_reservation || 0} / ${totalSupports}`,
+            icon: PiChartLineUpBold,
+            ...conversionTone,
+            compact: true,
+          },
+          {
+            title: '% Unknown Source',
+            value: formatPercent(unknownSourceRate),
+            subtitle: `${unknownCount} of ${sourceTotal || totalSupports}`,
+            icon: PiTagBold,
+            ...unknownTone,
+            compact: true,
+          },
+        ]
+      : [
+          {
+            title: 'Total Supports',
+            value: totalSupports,
+            icon: PiFileTextBold,
+            bgColor: 'bg-indigo-50',
+            textColor: 'text-indigo-600',
+            darkBgColor: 'dark:bg-indigo-900/20',
+            darkTextColor: 'dark:text-indigo-400',
+            blurColor: 'bg-indigo-50/50',
+            darkBlurColor: 'dark:bg-indigo-900/10',
+            compact: true,
+          },
+          {
+            title: 'Success Rate',
+            value: formatPercent(successRate),
+            subtitle: `${successCount} success`,
+            icon: PiCheckCircleBold,
+            ...successTone,
+            compact: true,
+          },
+          {
+            title: 'Failed Rate',
+            value: formatPercent(failedRate),
+            subtitle: `${failedCount} failed`,
+            icon: PiCheckCircleBold,
+            ...failedTone,
+            compact: true,
+          },
+          {
+            title: 'Lead Quality Rate',
+            value: formatPercent(leadQualityRate, 2),
+            subtitle: `${statistics.leads?.qualified_leads || 0} qualified`,
+            icon: PiChartLineUpBold,
+            ...leadTone,
+            compact: true,
+          },
+          {
+            title: 'Support → Reservation',
+            value: formatPercent(supportToReservationRate),
+            subtitle: `${statistics.clients_with_mobile_and_reservation || 0} / ${totalSupports}`,
+            icon: PiUsersBold,
+            ...conversionTone,
+            compact: true,
+          },
+        ];
+
+  // Lead quality detail (kept below Top KPIs)
   const leadCards = statistics.leads
     ? [
         {
@@ -410,22 +602,17 @@ export default function KanbanStatisticsCards({
           title: 'Lead Quality Rate',
           value: `${Number(statistics.leads.lead_quality_rate || 0).toFixed(2)}%`,
           icon: PiChartLineUpBold,
-          bgColor: 'bg-orange-50',
-          textColor: 'text-orange-600',
-          darkBgColor: 'dark:bg-orange-900/20',
-          darkTextColor: 'dark:text-orange-400',
-          blurColor: 'bg-orange-50/50',
-          darkBlurColor: 'dark:bg-orange-900/10',
+          ...leadTone,
           compact: true,
         },
       ]
     : [];
 
-  // Row 3: Clients
+  // Clients conversion
   const clientCards = [
     {
       title: 'Total Customer Supports',
-      value: statistics.total || 0,
+      value: totalSupports,
       icon: PiFileTextBold,
       bgColor: 'bg-indigo-50',
       textColor: 'text-indigo-600',
@@ -460,6 +647,13 @@ export default function KanbanStatisticsCards({
       compact: true,
     },
   ];
+
+  const showUnknownSourceAlert = unknownSourceRate > 20;
+  const showUnknownChannelAlert =
+    supportType === 'operation' && unknownChannelRate > 10;
+  const aging = statistics.follow_up_aging;
+  const showSlaBreach = (aging?.sla_breach_count ?? 0) > 0;
+  const converted = statistics.converted_via_lead;
 
   // Row 4: Source Campaigns
 
@@ -712,35 +906,260 @@ export default function KanbanStatisticsCards({
     ? allCommunicationTimesCards
     : allCommunicationTimesCards.slice(0, COMMUNICATION_TIMES_PER_ROW);
 
-  const rows = [
-    { title: 'Status Statistics', cards: statusCards },
-    ...(leadCards.length > 0
-      ? [{ title: 'Lead Quality', cards: leadCards }]
-      : []),
-    { title: 'Clients', cards: clientCards },
-    { title: 'Source Campaigns', cards: sourceCampaignCards, allCards: allSourceCampaignCards, expanded: sourceCampaignExpanded, setExpanded: setSourceCampaignExpanded, perRow: SOURCE_CAMPAIGNS_PER_ROW },
-    ...(allLeadQualityCampaignCards.length > 0
-      ? [{
-          title: 'Lead Quality by Campaign',
-          cards: leadQualityCampaignCards,
-          allCards: allLeadQualityCampaignCards,
-          expanded: leadQualityCampaignExpanded,
-          setExpanded: setLeadQualityCampaignExpanded,
-          perRow: LEAD_QUALITY_CAMPAIGNS_PER_ROW,
-        }]
-      : []),
-    ...(allQualificationCards.length > 0
-      ? [{
+  // Journey order: Top KPIs → Status → Clients → Source → Quality → Qualification → Channels → Offers
+  // Inbound: Channels before Source (faster triage of how customers contact us)
+  const sourceRow = {
+    title: 'Source Campaigns',
+    cards: sourceCampaignCards,
+    allCards: allSourceCampaignCards,
+    expanded: sourceCampaignExpanded,
+    setExpanded: setSourceCampaignExpanded,
+    perRow: SOURCE_CAMPAIGNS_PER_ROW,
+  };
+  const channelRow = {
+    title: 'Communication Channels',
+    cards: communicationChannelCards,
+    allCards: allCommunicationChannelCards,
+    expanded: communicationChannelExpanded,
+    setExpanded: setCommunicationChannelExpanded,
+    perRow: COMMUNICATION_CHANNELS_PER_ROW,
+  };
+  const qualificationRow =
+    allQualificationCards.length > 0
+      ? {
           title: 'Leads Qualification',
           cards: qualificationCards,
           allCards: allQualificationCards,
           expanded: qualificationExpanded,
           setExpanded: setQualificationExpanded,
           perRow: QUALIFICATION_CARDS_PER_ROW,
-        }]
+        }
+      : null;
+  const leadQualityCampaignRow =
+    allLeadQualityCampaignCards.length > 0
+      ? {
+          title: 'Lead Quality by Campaign',
+          cards: leadQualityCampaignCards,
+          allCards: allLeadQualityCampaignCards,
+          expanded: leadQualityCampaignExpanded,
+          setExpanded: setLeadQualityCampaignExpanded,
+          perRow: LEAD_QUALITY_CAMPAIGNS_PER_ROW,
+        }
+      : null;
+
+  const midRows =
+    supportType === 'operation'
+      ? [
+          ...(qualificationRow ? [qualificationRow] : []),
+          channelRow,
+          sourceRow,
+          ...(leadQualityCampaignRow ? [leadQualityCampaignRow] : []),
+        ]
+      : [
+          sourceRow,
+          ...(leadQualityCampaignRow ? [leadQualityCampaignRow] : []),
+          ...(qualificationRow ? [qualificationRow] : []),
+          channelRow,
+        ];
+
+  const rows: StatisticsRow[] = [
+    { title: 'Top KPIs', cards: topKpiCards },
+    ...(aging
+      ? [
+          {
+            title: 'Follow-up Aging',
+            cards: [
+              {
+                title: 'Open Leads',
+                value: aging.open_count ?? 0,
+                icon: PiUsersBold,
+                bgColor: 'bg-slate-50',
+                textColor: 'text-slate-600',
+                darkBgColor: 'dark:bg-slate-900/20',
+                darkTextColor: 'dark:text-slate-400',
+                blurColor: 'bg-slate-50/50',
+                darkBlurColor: 'dark:bg-slate-900/10',
+                compact: true,
+              },
+              {
+                title: 'Avg Age (hours)',
+                value: aging.avg_age_hours ?? 0,
+                icon: PiClockBold,
+                bgColor: 'bg-amber-50',
+                textColor: 'text-amber-600',
+                darkBgColor: 'dark:bg-amber-900/20',
+                darkTextColor: 'dark:text-amber-400',
+                blurColor: 'bg-amber-50/50',
+                darkBlurColor: 'dark:bg-amber-900/10',
+                compact: true,
+              },
+              {
+                title: 'Never Followed Up',
+                value: aging.never_followed_up_count ?? 0,
+                icon: PiWarningBold,
+                bgColor: 'bg-orange-50',
+                textColor: 'text-orange-600',
+                darkBgColor: 'dark:bg-orange-900/20',
+                darkTextColor: 'dark:text-orange-400',
+                blurColor: 'bg-orange-50/50',
+                darkBlurColor: 'dark:bg-orange-900/10',
+                compact: true,
+              },
+              {
+                title: 'SLA Breach',
+                value: aging.sla_breach_count ?? 0,
+                icon: PiWarningBold,
+                bgColor: 'bg-red-50',
+                textColor: 'text-red-600',
+                darkBgColor: 'dark:bg-red-900/20',
+                darkTextColor: 'dark:text-red-400',
+                blurColor: 'bg-red-50/50',
+                darkBlurColor: 'dark:bg-red-900/10',
+                link: aging.sla_breach_link,
+                compact: true,
+              },
+              ...(aging.buckets || []).map((b) => ({
+                title: `Age ${b.bucket}`,
+                value: b.count,
+                icon: PiClockBold,
+                bgColor: 'bg-cyan-50',
+                textColor: 'text-cyan-600',
+                darkBgColor: 'dark:bg-cyan-900/20',
+                darkTextColor: 'dark:text-cyan-400',
+                blurColor: 'bg-cyan-50/50',
+                darkBlurColor: 'dark:bg-cyan-900/10',
+                link: b.link,
+                compact: true,
+              })),
+            ],
+          },
+        ]
       : []),
-    { title: 'Communication Channels', cards: communicationChannelCards, allCards: allCommunicationChannelCards, expanded: communicationChannelExpanded, setExpanded: setCommunicationChannelExpanded, perRow: COMMUNICATION_CHANNELS_PER_ROW },
-    { title: 'Offers', cards: offerCards, allCards: allOfferCards, expanded: offersExpanded, setExpanded: setOffersExpanded, perRow: OFFERS_PER_ROW },
+    { title: 'Status Statistics', cards: statusCards },
+    ...((statistics.by_failure_reason || []).length > 0
+      ? [
+          {
+            title: 'Failure / Closure Reasons',
+            cards: (statistics.by_failure_reason || []).map((r) => ({
+              title: formatStatusReasonLabel(r.status_reason),
+              value: r.count,
+              subtitle: `${r.failed_count} failed · ${r.closed_count} closed`,
+              icon: PiWarningBold,
+              bgColor: 'bg-rose-50',
+              textColor: 'text-rose-600',
+              darkBgColor: 'dark:bg-rose-900/20',
+              darkTextColor: 'dark:text-rose-400',
+              blurColor: 'bg-rose-50/50',
+              darkBlurColor: 'dark:bg-rose-900/10',
+              link: r.link,
+              compact: true,
+            })),
+          },
+        ]
+      : []),
+    ...(converted
+      ? [
+          {
+            title: 'Converted via Lead Link',
+            cards: [
+              {
+                title: 'Converted Leads',
+                value: converted.leads_count,
+                icon: PiCheckCircleBold,
+                bgColor: 'bg-emerald-50',
+                textColor: 'text-emerald-600',
+                darkBgColor: 'dark:bg-emerald-900/20',
+                darkTextColor: 'dark:text-emerald-400',
+                blurColor: 'bg-emerald-50/50',
+                darkBlurColor: 'dark:bg-emerald-900/10',
+                link: converted.link,
+                compact: true,
+              },
+              {
+                title: 'Linked Reservations',
+                value: converted.reservations_count,
+                icon: PiFileTextBold,
+                bgColor: 'bg-teal-50',
+                textColor: 'text-teal-600',
+                darkBgColor: 'dark:bg-teal-900/20',
+                darkTextColor: 'dark:text-teal-400',
+                blurColor: 'bg-teal-50/50',
+                darkBlurColor: 'dark:bg-teal-900/10',
+                link: converted.link,
+                compact: true,
+              },
+              {
+                title: 'Sessions',
+                value: converted.sessions_count,
+                icon: PiChartLineUpBold,
+                bgColor: 'bg-sky-50',
+                textColor: 'text-sky-600',
+                darkBgColor: 'dark:bg-sky-900/20',
+                darkTextColor: 'dark:text-sky-400',
+                blurColor: 'bg-sky-50/50',
+                darkBlurColor: 'dark:bg-sky-900/10',
+                link: converted.link,
+                compact: true,
+              },
+            ],
+          },
+        ]
+      : []),
+    ...(leadCards.length > 0 && supportType !== 'operation'
+      ? [{ title: 'Lead Quality', cards: leadCards }]
+      : []),
+    { title: 'Clients Conversion', cards: clientCards },
+    ...midRows,
+    {
+      title: 'Offers',
+      cards: offerCards,
+      allCards: allOfferCards,
+      expanded: offersExpanded,
+      setExpanded: setOffersExpanded,
+      perRow: OFFERS_PER_ROW,
+    },
+    ...((statistics.offer_conversion || []).length > 0
+      ? [
+          {
+            title: 'Offer Conversion',
+            cards: (statistics.offer_conversion || []).map((o) => ({
+              title: o.offer || 'unknown',
+              value: `${Number(o.conversion_rate ?? 0).toFixed(2)}%`,
+              subtitle: `${o.converted_leads}/${o.leads_count} leads · ${o.reservations_count} reservations`,
+              icon: PiTagBold,
+              bgColor: 'bg-fuchsia-50',
+              textColor: 'text-fuchsia-600',
+              darkBgColor: 'dark:bg-fuchsia-900/20',
+              darkTextColor: 'dark:text-fuchsia-400',
+              blurColor: 'bg-fuchsia-50/50',
+              darkBlurColor: 'dark:bg-fuchsia-900/10',
+              link: o.link,
+              compact: true,
+            })),
+          },
+        ]
+      : []),
+    ...((statistics.by_agent || []).length > 0
+      ? [
+          {
+            title: 'Agent Activity (factual — not attribution)',
+            cards: (statistics.by_agent || []).slice(0, 12).map((a) => ({
+              title: a.name,
+              value: a.contact_actions_count,
+              subtitle: `${a.supports_count} leads · ${a.success_marked_count} success marked · ${a.reservations_created_count} bookings created`,
+              icon: PiUserBold,
+              bgColor: 'bg-indigo-50',
+              textColor: 'text-indigo-600',
+              darkBgColor: 'dark:bg-indigo-900/20',
+              darkTextColor: 'dark:text-indigo-400',
+              blurColor: 'bg-indigo-50/50',
+              darkBlurColor: 'dark:bg-indigo-900/10',
+              link: a.link,
+              compact: true,
+            })),
+          },
+        ]
+      : []),
     ...(allCityCards.length > 0
       ? [{
           title: 'Cities',
@@ -785,8 +1204,36 @@ export default function KanbanStatisticsCards({
 
   return (
     <div className={cn('w-full space-y-6', className)}>
+      {(showUnknownSourceAlert || showUnknownChannelAlert || showSlaBreach) && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200">
+          <p className="font-semibold">Red Flags</p>
+          <ul className="mt-1 list-disc space-y-0.5 ps-5">
+            {showUnknownSourceAlert && (
+              <li>
+                Unknown Source is {formatPercent(unknownSourceRate)} ({unknownCount} leads) — above 20% threshold.
+              </li>
+            )}
+            {showUnknownChannelAlert && (
+              <li>
+                Unknown Channel is {formatPercent(unknownChannelRate)} — above 10% threshold.
+              </li>
+            )}
+            {showSlaBreach && (
+              <li>
+                SLA breach: {aging?.sla_breach_count} open lead(s) exceeded follow-up SLA.
+              </li>
+            )}
+            {(statistics.unset_status_count ?? 0) > 0 && (
+              <li>
+                {statistics.unset_status_count} lead(s) have no status (excluded from aging).
+              </li>
+            )}
+          </ul>
+        </div>
+      )}
       {rows.map((row, rowIndex) => {
-        const hasMore = row.allCards && row.allCards.length > row.perRow;
+        const allCards = row.allCards;
+        const hasMore = !!allCards && allCards.length > (row.perRow ?? 0);
         
         return (
           <div key={rowIndex} className="space-y-3">
@@ -794,9 +1241,9 @@ export default function KanbanStatisticsCards({
               <h4 className="text-base font-semibold text-gray-800 dark:text-gray-200">
                 {row.title}
               </h4>
-              {hasMore && (
+              {hasMore && allCards && (
                 <button
-                  onClick={() => row.setExpanded && row.setExpanded(!row.expanded)}
+                  onClick={() => row.setExpanded?.(!row.expanded)}
                   className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
                 >
                   {row.expanded ? (
@@ -806,7 +1253,7 @@ export default function KanbanStatisticsCards({
                     </>
                   ) : (
                     <>
-                      <span>Show All ({row.allCards.length})</span>
+                      <span>Show All ({allCards.length})</span>
                       <PiCaretDownBold className="h-4 w-4" />
                     </>
                   )}
