@@ -14,6 +14,10 @@ import { Highlight } from '@/types/highlights';
 import { routes } from '@/config/routes';
 import toast from 'react-hot-toast';
 
+// Country targeting is hidden for now. Existing `country_ids` are still sent
+// on edit so saved targeting isn't wiped; new highlights target all countries.
+const SHOW_COUNTRY_TARGETING = false;
+
 interface HighlightFormProps {
   initialValues?: Highlight;
   onSuccessCallback?: (data?: any) => void;
@@ -225,40 +229,42 @@ export default function HighlightForm({
             </div>
           </div>
 
-          <div className="md:col-span-2">
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              Target Countries (Leave empty for ALL countries)
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {countryOptions.map((c) => {
-                const isSelected = selectedCountries.includes(c.value);
-                return (
-                  <button
-                    key={c.value}
-                    type="button"
-                    onClick={() => {
-                      setSelectedCountries((prev) =>
-                        isSelected
-                          ? prev.filter((id) => id !== c.value)
-                          : [...prev, c.value]
-                      );
-                    }}
-                    className={`rounded-full px-3 py-1 text-xs font-medium transition ${isSelected
-                      ? 'bg-gray-900 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                  >
-                    {c.label} {isSelected ? '✓' : '+'}
-                  </button>
-                );
-              })}
-              {countryOptions.length === 0 && (
-                <Text className="text-xs text-gray-500">
-                  All countries selected by default.
-                </Text>
-              )}
+          {SHOW_COUNTRY_TARGETING && (
+            <div className="md:col-span-2">
+              <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                Target Countries (Leave empty for ALL countries)
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {countryOptions.map((c) => {
+                  const isSelected = selectedCountries.includes(c.value);
+                  return (
+                    <button
+                      key={c.value}
+                      type="button"
+                      onClick={() => {
+                        setSelectedCountries((prev) =>
+                          isSelected
+                            ? prev.filter((id) => id !== c.value)
+                            : [...prev, c.value]
+                        );
+                      }}
+                      className={`rounded-full px-3 py-1 text-xs font-medium transition ${isSelected
+                        ? 'bg-gray-900 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                    >
+                      {c.label} {isSelected ? '✓' : '+'}
+                    </button>
+                  );
+                })}
+                {countryOptions.length === 0 && (
+                  <Text className="text-xs text-gray-500">
+                    All countries selected by default.
+                  </Text>
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="flex items-center gap-6 md:col-span-2">
             <div className="flex items-center gap-2">
