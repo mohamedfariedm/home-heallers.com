@@ -1,61 +1,104 @@
-# Doctor (Partner) App — Random App Message API
+# App Messages — Doctor Mobile API Contract
 
-> For the **doctor app** developer. The app requests one random active message from the
-> server and shows it, for example as a card on the home screen. Admins write the messages in the
-> dashboard in Arabic and English. The server returns **only the language the app asks for**.
+For the **doctor (partner) app**. Admins write short encouraging messages (title + description) in
+Arabic and English from the dashboard. The app asks for **one random active message** and shows it,
+for example as a card on the home screen.
+
+The backend returns only **active** messages for doctors, **already resolved to the app language**
+(one `title` string and one `description` string).
+
+> This is a **new, separate** endpoint. The existing `GET motivation/today` (one message per day) is
+> unchanged. Don't mix the two.
 
 ---
 
-## 1. Endpoint
+## Endpoint
 
 ```
 GET /api/doctor-mobile/app-messages/random
 ```
 
-> Same base path and Sanctum auth as the other doctor-app endpoints (e.g. `motivation/today`).
+- **Base URL:** `https://development.home-healers.com`
+- **Auth:** required, the doctor's Sanctum token (same as the other `doctor-mobile` endpoints).
+- **Language:** send the `language` header (`ar` | `en`) like every other endpoint.
+  `Accept-Language` also works. If both are sent, `language` is used.
+  A value that doesn't start with `ar`, or no header at all, → English.
 
-### Headers
+### Request
 
-| Header | Value | Notes |
-|--------|-------|-------|
-| `Authorization` | `Bearer <doctor token>` | required |
-| `Accept` | `application/json` | |
-| `language` or `Accept-Language` | `ar` \| `en` | the app's current language (`language` wins if both are sent). Anything not starting with `ar` → `en` |
+```http
+GET /api/doctor-mobile/app-messages/random?exclude_id=12
+Accept: application/json
+Authorization: Bearer <doctor token>
+language: ar
+```
 
 ### Query params
 
 | Param | Type | Required | Notes |
 |-------|------|----------|-------|
-| `exclude_id` | int | no | id of the message currently on screen, so the next call returns a different one. If that is the only active message, it is returned anyway. |
+| `exclude_id` | int | no | id of the message currently on screen. The server returns a **different** message. If that message is the only active one, it is returned anyway. |
 
-## 2. Responses
+---
 
-### 200 — a message exists
+## Response
+
+**200: a message exists**
 ```json
 {
+  "message": "تم جلب الرسالة بنجاح.",
   "data": {
-    "id": 7,
-    "title": "Have a great day",
-    "description": "Your patients are waiting for you. Keep up the great work!"
-  },
-  "message": "Message fetched successfully"
+    "id": 12,
+    "title": "أنت تصنع الفرق",
+    "description": "كل جلسة تقدمها تقرّب مريضك خطوة من حياة أفضل. شكرًا لعطائك."
+  }
 }
 ```
-`title` and `description` are **plain strings** in the requested language, not `{ar, en}` objects.
 
-### 200 — no active messages
+Same request with `language: en`:
 ```json
-{ "data": null, "message": "No messages available" }
+{
+  "message": "Message fetched successfully.",
+  "data": {
+    "id": 12,
+    "title": "You make the difference",
+    "description": "Every session you give brings your patient one step closer to a better life. Thank you."
+  }
+}
 ```
-→ Hide the message card. **This is not an error.**
 
-### Errors
-| Status | When | App behavior |
-|--------|------|--------------|
-| 401 | token missing or expired | the app's normal re-login flow |
-| 5xx / network | — | hide the card silently; do not block the screen |
+**200: no active messages**
+```json
+{ "message": "No messages available.", "data": null }
+```
+`data: null` is **not an error**. Hide the card.
 
-## 3. Model (Dart example)
+**401: token missing / expired** → the app's normal re-login flow.
+
+### Fields
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `data` | object \| null | `null` when there is no active message. |
+| `data.id` | int | Stable id. Keep it and send it as `exclude_id` on the next call. |
+| `data.title` | string | In the requested language. Never empty (falls back to the other language). Max 150 chars. |
+| `data.description` | string | In the requested language. Never empty. Max 1000 chars; may contain line breaks. |
+
+---
+
+## Changes the app needs to make
+
+1. **Model**: add `AppMessage { id, title, description }`.
+2. **API call**: add `getRandomAppMessage({int? excludeId})` in the doctor API service/repository,
+   using the existing Dio client (it already sends the token and the `language` header).
+3. **UI**: add a message card to the home screen (or wherever product decides).
+   - Title bold, description underneath, wrapped (or clamped to ~4 lines with "read more").
+   - Direction follows the app locale (RTL for `ar`).
+   - Optional: a small "refresh" icon that loads another message with `exclude_id`.
+4. **State**: hide the card while loading the first time (or show a skeleton), when `data == null`, and on any error.
+5. **Language change**: when the user switches the app language, call the endpoint again. Don't translate on the device.
+
+### Dart example
 
 ```dart
 class AppMessage {
@@ -63,34 +106,47 @@ class AppMessage {
   final String title;
   final String description;
 
-  AppMessage({required this.id, required this.title, required this.description});
+  const AppMessage({required this.id, required this.title, required this.description});
 
-  factory AppMessage.fromJson(Map<String, dynamic> j) => AppMessage(
-        id: j['id'] as int,
-        title: j['title'] as String? ?? '',
-        description: j['description'] as String? ?? '',
+  factory AppMessage.fromJson(Map<String, dynamic> json) => AppMessage(
+        id: json['id'] as int,
+        title: json['title'] as String? ?? '',
+        description: json['description'] as String? ?? '',
       );
 }
 
-// data may be null
-final msg = res['data'] == null ? null : AppMessage.fromJson(res['data']);
+Future<AppMessage?> getRandomAppMessage({int? excludeId}) async {
+  final res = await dio.get(
+    '/api/doctor-mobile/app-messages/random',
+    queryParameters: {if (excludeId != null) 'exclude_id': excludeId},
+  );
+  final data = res.data['data'];
+  return data == null ? null : AppMessage.fromJson(data as Map<String, dynamic>);
+}
 ```
 
-## 4. Behavior rules
+---
 
-1. Call the endpoint when the screen that shows the message opens (for example the home screen). Use pull-to-refresh
-   if the screen has it. Don't poll.
-2. When calling again while a message is on screen, send `exclude_id=<current id>`.
-3. **When the user changes the app language**, call again with the new `Accept-Language`.
-   Don't translate on the device; the server returns the right text.
-4. The server returns only active messages. If the admin deactivates a message, it stops appearing on the next call.
-5. Text length: title ≤ 150 characters, description ≤ 1000 characters. Allow the description to wrap
-   (or clamp to ~4 lines with "read more").
-6. Use `Directionality` from the app locale (RTL for `ar`).
+## Scenarios the app must handle
 
-## 5. Checklist
-- [ ] API call with `Accept-Language` + optional `exclude_id`
-- [ ] `AppMessage` model, null-safe `data`
-- [ ] message card UI (AR RTL / EN LTR)
-- [ ] hide the card on `data: null` or error
-- [ ] refetch on language change / pull-to-refresh
+| # | Scenario | App behavior |
+|---|----------|--------------|
+| 1 | Home opens, message exists | show the card with the returned title/description |
+| 2 | `data: null` (admin has no active messages) | hide the card; no empty box, no error |
+| 3 | Network error / 5xx / timeout | hide the card silently; never block the home screen |
+| 4 | User taps "refresh" / pull-to-refresh | call again with `exclude_id=<current id>` |
+| 5 | Only one active message | the same message comes back even with `exclude_id`; this is fine |
+| 6 | User switches language | refetch with the new `language` header |
+| 7 | Admin deactivates or deletes the message on screen | it disappears on the next call; no special handling |
+| 8 | Long description / line breaks | wrap text; respect `\n` |
+| 9 | 401 | normal session-expired flow |
+
+---
+
+## Notes
+
+- Don't poll. Call it when the home screen opens and on refresh. Caching is optional.
+  If you cache, cache per language and still refresh on the next home open.
+- Don't rely on specific ids; the admin can add and delete messages at any time.
+- The endpoint is read-only; the app never writes anything back.
+- Test data: the backend has a seeder with 50 messages (`AppMessageSeeder`).

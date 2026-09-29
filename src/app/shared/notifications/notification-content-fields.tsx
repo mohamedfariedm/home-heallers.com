@@ -22,6 +22,7 @@ import {
   deepLinkEntityLabel,
   deepLinkPathForType,
   isDeepLinkEntityType,
+  isTargetlessCtaType,
   type DeepLinkEntityType,
 } from '@/app/shared/notifications/constants';
 
@@ -196,7 +197,7 @@ export default function NotificationContentFields<T extends FieldValues>({
         />
       </div>
 
-      {selectedType ? (
+      {selectedType && !isTargetlessCtaType(selectedType) ? (
         <div className="grid gap-4 @xl:grid-cols-2">
           {usesEntityPicker ? (
             <div className="min-w-0 w-full space-y-1.5">
