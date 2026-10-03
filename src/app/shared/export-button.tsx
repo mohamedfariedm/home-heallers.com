@@ -53,6 +53,9 @@ export default function ExportButton({
     } else if(fileName === 'customer-supports-operation') {
       baseUrl = `${process.env.NEXT_PUBLIC_API_ENDPOINT}/customer-supports`;
       params.set('type', 'operation');
+    } else if(fileName === 'customer-supports-seo') {
+      baseUrl = `${process.env.NEXT_PUBLIC_API_ENDPOINT}/customer-supports`;
+      params.set('type', 'seo');
     } else {
       baseUrl = `${process.env.NEXT_PUBLIC_API_ENDPOINT}/${fileName}`;
     }

@@ -21,18 +21,20 @@ import { useRouter, usePathname } from 'next/navigation';
 import type { CustomerSupportStatistics } from '@/types/customer-support-statistics';
 import { KANBAN_FILTERABLE_COLUMNS } from './kanban-filter-columns';
 
-interface KanbanStatistics extends CustomerSupportStatistics {
-  by_status: CustomerSupportStatistics['by_status'] | {
-    new?: number;
-    [key: string]: number | undefined;
-  };
+type StatusCountMap = {
+  new?: number;
+  [key: string]: number | undefined;
+};
+
+interface KanbanStatistics extends Omit<CustomerSupportStatistics, 'by_status'> {
+  by_status: CustomerSupportStatistics['by_status'] | StatusCountMap;
 }
 
 interface KanbanStatisticsCardsProps {
   statistics: KanbanStatistics | null | undefined;
   className?: string;
-  /** Ensures filter links stay scoped to inbound (operation) or outbound (marketing). */
-  supportType?: 'marketing' | 'operation';
+  /** Keeps filter links scoped to inbound, outbound, or SEO leads. */
+  supportType?: 'marketing' | 'operation' | 'seo';
 }
 
 // Color schemes for different statuses
@@ -181,7 +183,7 @@ const StatCard = ({
   showCheckbox?: boolean;
   checked?: boolean;
   onCheckboxChange?: (checked: boolean) => void;
-  supportType?: 'marketing' | 'operation';
+  supportType?: 'marketing' | 'operation' | 'seo';
 }) => {
   const router = useRouter();
   const pathname = usePathname();
@@ -346,7 +348,7 @@ export default function KanbanStatisticsCards({
   if (Array.isArray(byStatus)) {
     // New format: array of objects
     statusCardsData = byStatus
-      .filter((item): item is { status: string; count?: number; link?: string } => 
+      .filter((item): item is { status: string; count: number; link: string } =>
         item.status !== null && item.status !== ''
       )
       .sort((a, b) => (b.count || 0) - (a.count || 0)); // Sort by count descending

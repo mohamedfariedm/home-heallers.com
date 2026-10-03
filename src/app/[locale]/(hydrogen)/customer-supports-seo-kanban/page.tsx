@@ -1,0 +1,411 @@
+'use client';
+
+import PageHeader from '@/app/shared/page-header';
+import Spinner from '@/components/ui/spinner';
+import { useSearchParams, useRouter } from 'next/navigation';
+import {
+  useCustomerSupport,
+  useUpdateCustomerSupport,
+} from '@/framework/customer-suport';
+import CustomerSupportKanban from '@/app/shared/customer-suport/kanban-board';
+import { useState, useEffect } from 'react';
+import Pagination from '@/components/ui/pagination';
+import { Button } from '@/components/ui/button';
+import { useModal } from '@/app/shared/modal-views/use-modal';
+import CreateOrUpdateCustomerSupport from '@/app/shared/customer-suport/suport-form';
+import { PiPlusBold } from 'react-icons/pi';
+import KanbanFilters from '@/app/shared/customer-suport/kanban-filters';
+import KanbanStatisticsCards from '@/app/shared/customer-suport/kanban-statistics-cards';
+import ExportButton from '@/app/shared/export-button';
+import { usePermissions } from '@/context/PermissionsContext';
+import { resolveCustomerSupportKanbanPermissions } from '@/app/shared/customer-suport/permissions';
+import { useKanbanStatusChange } from '@/app/shared/customer-suport/use-kanban-status-change';
+import { KANBAN_FILTERABLE_COLUMNS } from '@/app/shared/customer-suport/kanban-filter-columns';
+
+const pageHeader = {
+  title: 'SEO Leads',
+  breadcrumb: [
+    {
+      href: '/',
+      name: 'Home',
+    },
+    {
+      name: 'SEO Leads',
+    },
+  ],
+};
+
+const KANBAN_TYPE = 'seo' as const;
+
+const STATUS_COLUMNS = [
+  { id: 'new', label: 'New', status: 'new' },
+  { id: 'negotiation', label: 'Negotiation', status: 'negotiation' },
+  { id: 'success', label: 'Success', status: 'success' },
+  { id: 'possible', label: 'Possible', status: 'possible' },
+  { id: 'failed', label: 'Failed', status: 'failed' },
+];
+
+const parseSafePage = (value: string | null): number => {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
+};
+
+export default function CustomerSupportsSeoKanbanPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const { openModal } = useModal();
+  const { permissions } = usePermissions();
+  const kanbanPermissions = resolveCustomerSupportKanbanPermissions(
+    permissions,
+    'seo'
+  );
+
+  // Single page state for all columns
+  const currentPage = parseSafePage(searchParams.get('page'));
+  const [page, setPage] = useState(currentPage);
+  const [filters, setFilters] = useState<Record<string, any>>({});
+
+  // Sync page state with URL params
+  useEffect(() => {
+    const urlPage = parseSafePage(searchParams.get('page'));
+    setPage((prev) => (prev === urlPage ? prev : urlPage));
+  }, [searchParams]);
+
+  // Keep URL page param valid (avoid page=NaN and other invalid values)
+  useEffect(() => {
+    const rawPage = searchParams.get('page');
+    const safePage = parseSafePage(rawPage);
+    if (rawPage !== String(safePage)) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('page', String(safePage));
+      router.replace(`?${params.toString()}`);
+    }
+  }, [searchParams, router]);
+
+  // Initialize filters from URL params - sync whenever searchParams changes
+  useEffect(() => {
+    const initialFilters: Record<string, any> = {};
+    const filterableColumns = [...KANBAN_FILTERABLE_COLUMNS];
+
+    filterableColumns.forEach((key) => {
+      const params: any = {};
+      Array.from(searchParams.entries()).forEach(([paramKey, paramValue]) => {
+        if (!paramKey.startsWith(`${key}_`)) return;
+        const rest = paramKey.slice(key.length + 1); // after `${key}_`
+        let op = rest;
+        let logic: 'and' | 'or' | undefined;
+        if (/_or$/.test(rest)) {
+          op = rest.replace(/_or$/, '');
+          logic = 'or';
+        } else if (/_and$/.test(rest)) {
+          op = rest.replace(/_and$/, '');
+          logic = 'and';
+        }
+        if (!params.c1) {
+          params.c1 = { op: op || 'equal', value: paramValue };
+        } else if (!params.c2) {
+          params.c2 = { op: op || 'equal', value: paramValue };
+          params.logic = logic || params.logic || 'and';
+        } else {
+          // ignore extra conditions
+        }
+      });
+      if (params.c1 || params.c2) {
+        initialFilters[key] = {
+          c1: params.c1 || { op: 'equal', value: '' },
+          c2: params.c2 || { op: 'equal', value: '' },
+          logic: params.logic || 'and',
+        };
+      }
+    });
+
+    // Always update filters to sync with URL (even if empty, to clear old filters)
+    setFilters(initialFilters);
+  }, [searchParams]);
+
+  // Build filter params - single call without status filter
+  // Read directly from searchParams to ensure filters from URL (e.g., from KanbanStatisticsCards links) are included
+  const buildFilterParams = () => {
+    const params = new URLSearchParams();
+    
+    // Copy all search params first (this includes filters from URL)
+    searchParams.forEach((value, key) => {
+      params.set(key, value);
+    });
+    
+    // Override/ensure required params
+    params.set('page', String(page));
+    params.set('limit', '25'); // Get more items to distribute across columns
+    params.set('type', KANBAN_TYPE);
+
+    return params.toString();
+  };
+
+  // Single API call to fetch all data
+  const allData = useCustomerSupport(buildFilterParams());
+
+  // Clamp current page to backend last_page once meta is available
+  useEffect(() => {
+    const rawLastPage = allData.data?.meta?.last_page;
+    if (!rawLastPage) return;
+    const lastPage = Number(rawLastPage);
+    if (Number.isInteger(lastPage) && lastPage > 0 && page > lastPage) {
+      const safePage = lastPage;
+      setPage(safePage);
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('page', String(safePage));
+      router.replace(`?${params.toString()}`);
+    }
+  }, [allData.data?.meta?.last_page, page, searchParams, router]);
+
+  // Helper function to normalize status (handle case variations)
+  const normalizeStatus = (status: string | null | undefined): string => {
+    if (!status) return '';
+    const normalized = status.toLowerCase().trim();
+    const statusMap: Record<string, string> = {
+      new: 'new',
+      negotiation: 'negotiation',
+      success: 'success',
+      possible: 'possible',
+      failed: 'failed',
+    };
+    return statusMap[normalized] || normalized;
+  };
+
+  // Filter and group data by status on client side
+  const filterDataByStatus = (status: string) => {
+    const allItems = allData.data?.data || [];
+    return allItems.filter((item: any) => {
+      const itemStatus = normalizeStatus(item.status);
+      return itemStatus === status.toLowerCase();
+    });
+  };
+
+  // Combine all column data - filter from single API response
+  const columnData: Record<
+    string,
+    { data: any; meta: any; isLoading: boolean }
+  > = {
+    new: {
+      data: {
+        data: filterDataByStatus('new'),
+        meta: allData.data?.meta,
+        statistics: allData.data?.statistics,
+      },
+      meta: allData.data?.meta,
+      isLoading: allData.isLoading,
+    },
+    failed: {
+      data: {
+        data: filterDataByStatus('failed'),
+        meta: allData.data?.meta,
+        statistics: allData.data?.statistics,
+      },
+      meta: allData.data?.meta,
+      isLoading: allData.isLoading,
+    },
+    success: {
+      data: {
+        data: filterDataByStatus('success'),
+        meta: allData.data?.meta,
+        statistics: allData.data?.statistics,
+      },
+      meta: allData.data?.meta,
+      isLoading: allData.isLoading,
+    },
+    possible: {
+      data: {
+        data: filterDataByStatus('possible'),
+        meta: allData.data?.meta,
+        statistics: allData.data?.statistics,
+      },
+      meta: allData.data?.meta,
+      isLoading: allData.isLoading,
+    },
+    negotiation: {
+      data: {
+        data: filterDataByStatus('negotiation'),
+        meta: allData.data?.meta,
+        statistics: allData.data?.statistics,
+      },
+      meta: allData.data?.meta,
+      isLoading: allData.isLoading,
+    },
+  };
+
+  const { mutate: updateCustomerSupport } = useUpdateCustomerSupport();
+  const allItems = allData.data?.data || [];
+
+  const { handleStatusChange } = useKanbanStatusChange({
+    allItems,
+    canMoveStatus: kanbanPermissions.moveStatus,
+    updateCustomerSupport,
+  });
+
+  const handlePageChange = (newPage: number) => {
+    const safePage = Number.isInteger(newPage) && newPage > 0 ? newPage : 1;
+    setPage(safePage);
+
+    // Update URL params
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('page', String(safePage));
+    router.push(`?${params.toString()}`, { scroll: false });
+  };
+
+  const handleCreateClick = () => {
+    if (!kanbanPermissions.create) return;
+    openModal({
+      view: <CreateOrUpdateCustomerSupport type="seo" />,
+      customSize: '900px',
+    });
+  };
+
+  const handleFilterChange = (newFilters: Record<string, any>, dates?: { date_from?: string; date_to?: string }) => {
+    setFilters(newFilters);
+    setPage(1); // Reset to first page when filters change
+
+    // Update URL params
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('page', '1');
+
+    // Clear old filter params
+    Object.keys(filters).forEach((key) => {
+      Array.from(params.keys()).forEach((paramKey) => {
+        if (paramKey.startsWith(`${key}_`)) params.delete(paramKey);
+      });
+    });
+
+    // Clear old date params
+    params.delete('date_from');
+    params.delete('date_to');
+
+    // Add new date params
+    if (dates) {
+      if (dates.date_from) {
+        params.set('date_from', dates.date_from);
+      }
+      if (dates.date_to) {
+        params.set('date_to', dates.date_to);
+      }
+    }
+
+    // Add new filter params
+    Object.entries(newFilters).forEach(([key, val]) => {
+      const { c1, c2, logic } = val;
+      if (c1?.value) params.set(`${key}_${c1.op}`, c1.value);
+      if (c2?.value)
+        params.set(`${key}_${c2.op}_${logic === 'or' ? 'or' : 'and'}`, c2.value);
+    });
+
+    params.set('type', KANBAN_TYPE);
+    router.push(`?${params.toString()}`, { scroll: false });
+  };
+
+  const handleClearFilters = () => {
+    // Reset local filter state
+    setFilters({});
+    setPage(1);
+
+    // Reset filter params but keep kanban type
+    const params = new URLSearchParams();
+    params.set('page', '1');
+    params.set('type', KANBAN_TYPE);
+    
+    // Use replace to avoid adding to history and force a clean URL
+    router.replace(`?${params.toString()}`);
+  };
+
+  // Calculate total items from single API response
+  const totalItems = allData.data?.meta?.total || 0;
+  const pageSize = Number(allData.data?.meta?.per_page || 25);
+
+  // Show pagination if we have any items (even if less than 5, to show page 1 of 1)
+  const needsPagination = totalItems > 0;
+
+  // Check if any column is loading
+  const isLoading = Object.values(columnData).some((col) => col.isLoading);
+
+  return (
+    <>
+      {!kanbanPermissions.view ? (
+        <div className="rounded-md border border-gray-200 bg-white p-6 text-sm text-gray-600 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300">
+          You do not have permission to view this page.
+        </div>
+      ) : (
+        <>
+      <PageHeader title={pageHeader.title} breadcrumb={pageHeader.breadcrumb}>
+        <div className="mt-4 flex w-full flex-col gap-3 @lg:mt-0 @lg:flex-row @lg:items-center @lg:justify-end">
+          {kanbanPermissions.filter && (
+            <KanbanFilters
+              onFilterChange={handleFilterChange}
+              onClearFilters={handleClearFilters}
+              currentFilters={filters}
+              currentDates={{
+                date_from: searchParams.get('date_from') || undefined,
+                date_to: searchParams.get('date_to') || undefined,
+              }}
+            />
+          )}
+          {kanbanPermissions.export && (
+            <ExportButton
+              data={{ columns: [], rows: [] }}
+              fileName="customer-supports-seo"
+              header="excel"
+              type="seo"
+            />
+          )}
+          {kanbanPermissions.create && (
+            <Button onClick={handleCreateClick} className="w-full @lg:w-auto">
+              <PiPlusBold className="me-1.5 h-[17px] w-[17px]" />
+              Create New Customer Support
+            </Button>
+          )}
+        </div>
+      </PageHeader>
+
+      {isLoading ? (
+        <div className="flex h-96 items-center justify-center">
+          <Spinner size="lg" />
+        </div>
+      ) : (
+        <div className="flex w-full flex-col gap-4">
+          {/* Statistics Cards */}
+          <KanbanStatisticsCards statistics={allData.data?.statistics} supportType={KANBAN_TYPE} />
+          
+          <div className="flex w-full gap-4 overflow-x-auto pb-4">
+            <CustomerSupportKanban
+              columns={STATUS_COLUMNS}
+              columnData={columnData}
+              onStatusChange={handleStatusChange}
+              canMoveStatus={kanbanPermissions.moveStatus}
+              canSendWhatsapp={kanbanPermissions.sendWhatsapp}
+              canEdit={kanbanPermissions.update}
+              canViewDetails={kanbanPermissions.viewDetails}
+              canViewActivityLogs={kanbanPermissions.viewActivityLogs}
+              canViewQualifications={
+                kanbanPermissions.update || kanbanPermissions.moveStatus
+              }
+            />
+          </div>
+
+          {/* Single pagination for all columns - appears below all columns */}
+          {needsPagination && (
+            <div className="mt-8 flex w-full justify-center border-t border-gray-200 pt-6 dark:border-gray-700">
+              <Pagination
+                total={totalItems}
+                current={page}
+                pageSize={pageSize}
+                onChange={handlePageChange}
+                showLessItems={true}
+                prevIconClassName="py-0 text-gray-500 !leading-[26px]"
+                nextIconClassName="py-0 text-gray-500 !leading-[26px]"
+              />
+            </div>
+          )}
+        </div>
+      )}
+      </>
+      )}
+    </>
+  );
+}

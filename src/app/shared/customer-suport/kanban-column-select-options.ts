@@ -43,6 +43,10 @@ export const kanbanOperationCommunicationChannelOptions = [
   { label: 'Call', value: 'Call' },
 ];
 
+export const kanbanSeoCommunicationChannelOptions = [
+  { label: 'Lead Form', value: 'Lead Form' },
+];
+
 export const kanbanSpecialtyOptions = [
   { label: 'Physiotherapy', value: 'Physiotherapy' },
   { label: 'Nursing visits', value: 'Nursing visits' },

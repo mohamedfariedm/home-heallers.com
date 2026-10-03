@@ -11,6 +11,7 @@ import { CC_OPTIONS } from '@/app/shared/cc-options';
 import {
   kanbanCommunicationChannelOptions,
   kanbanOperationCommunicationChannelOptions,
+  kanbanSeoCommunicationChannelOptions,
   kanbanSourceCampaignOptions,
 } from '@/app/shared/customer-suport/kanban-column-select-options';
 import { Textarea } from 'rizzui';
@@ -184,10 +185,13 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
     
   const { closeModal } = useModal();
   const isInbound = type === 'operation';
+  const isSeo = type === 'seo';
   const sourceCampaignOptions = kanbanSourceCampaignOptions;
-  const communicationChannelOptions = isInbound
-    ? kanbanOperationCommunicationChannelOptions
-    : kanbanCommunicationChannelOptions;
+  const communicationChannelOptions = isSeo
+    ? kanbanSeoCommunicationChannelOptions
+    : isInbound
+      ? kanbanOperationCommunicationChannelOptions
+      : kanbanCommunicationChannelOptions;
   const [lang, setLang] = useState<'en' | 'ar'>('en');
     const { mutate: createSupport, isPending: isCreating } = useCreateCustomerSupport();
     const { mutate: updateSupport, isPending: isUpdating } = useUpdateCustomerSupport();
@@ -327,7 +331,7 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
         ads_name: data.ads_name || '',
         created_by: data.created_by || '',
         event_agent_name: data.event_agent_name || '',
-        communication_channel: data.communication_channel || '',
+        communication_channel: isSeo ? 'Lead Form' : data.communication_channel || '',
         rework: Number(data.rework ?? 0),
         communication_times: Number(data.communication_times ?? 0),
         ...(data.cc ? { cc: data.cc } : {}),
@@ -415,8 +419,9 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
           ads_name: initValues?.ads_name || '',
           created_by: createdByName,
           event_agent_name: initValues?.event_agent_name || '',
-          communication_channel:
-            initValues?.communication_channel || (isInbound ? 'Call' : ''),
+          communication_channel: isSeo
+            ? 'Lead Form'
+            : initValues?.communication_channel || (isInbound ? 'Call' : ''),
           cc: initValues?.cc || '',
           rework: initValues?.rework ?? 0,
           communication_times: initValues?.communication_times ?? 0,
@@ -532,7 +537,7 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
               {...register('communication_channel')}
               className="w-full border border-gray-300 rounded-md p-2 h-10 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
             >
-              {!isInbound && <option value="">Select Communication Channel</option>}
+              {!isInbound && !isSeo && <option value="">Select Communication Channel</option>}
               {communicationChannelOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}

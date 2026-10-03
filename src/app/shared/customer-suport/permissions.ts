@@ -1,4 +1,4 @@
-export type CustomerSupportKanbanScope = 'marketing' | 'operation';
+export type CustomerSupportKanbanScope = 'marketing' | 'operation' | 'seo';
 
 export interface CustomerSupportKanbanPermissions {
   view: boolean;
@@ -34,6 +34,17 @@ const actionKeysByScope = {
     sendWhatsapp: 'customer_supports_inbound_whatsapp',
     viewDetails: 'customer_supports_inbound_view_details',
     viewActivityLogs: 'customer_supports_inbound_view_activity_logs',
+  },
+  seo: {
+    base: 'customer_supports_seo',
+    create: 'customer_supports_seo_create',
+    update: 'customer_supports_seo_update',
+    moveStatus: 'customer_supports_seo_move_status',
+    export: 'customer_supports_seo_export',
+    filter: 'customer_supports_seo_filter',
+    sendWhatsapp: 'customer_supports_seo_whatsapp',
+    viewDetails: 'customer_supports_seo_view_details',
+    viewActivityLogs: 'customer_supports_seo_view_activity_logs',
   },
 } as const;
 

@@ -271,6 +271,12 @@ export const menuItemsHaydrogen = [
     permissions: 'customer_supports_inbound',
   },
   {
+    name: 'SEO Leads',
+    href: '/customer-supports-seo-kanban',
+    icon: <PiGlobe />,
+    permissions: 'customer_supports_seo',
+  },
+  {
     name: 'WhatsApp Inbox',
     href: routes.whatsappInbox.index,
     icon: <PiChatCenteredDotsDuotone />,
