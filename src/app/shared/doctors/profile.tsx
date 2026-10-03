@@ -331,6 +331,21 @@ export default function DoctorProfileView({
                 />
                 <InfoIconRow
                   icon={<PiBriefcaseBold className="h-4 w-4" />}
+                  label="Employment type"
+                  value={
+                    doctor?.employment_type === 'full_time'
+                      ? 'Full time'
+                      : doctor?.employment_type === 'part_time'
+                        ? `Part time${
+                            doctor?.part_time_session_price != null
+                              ? ` — ${doctor.part_time_session_price} SAR / session`
+                              : ''
+                          }`
+                        : 'Not set'
+                  }
+                />
+                <InfoIconRow
+                  icon={<PiBriefcaseBold className="h-4 w-4" />}
                   label="Medical school"
                   value={doctor?.medical_school ?? '—'}
                 />

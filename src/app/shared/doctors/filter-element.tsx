@@ -58,6 +58,11 @@ const doctorRoleOptions = [
   { value: 'Intern', name: 'Intern', label: <Text className="ms-2 font-medium">INTERN</Text> },
 ];
 
+const employmentTypeFilterOptions = [
+  { value: 'full_time', name: 'full_time', label: <Text className="ms-2 font-medium">FULL TIME</Text> },
+  { value: 'part_time', name: 'part_time', label: <Text className="ms-2 font-medium">PART TIME</Text> },
+];
+
 type FilterElementProps = {
   isFiltered: boolean;
   filters: { [key: string]: any };
@@ -180,6 +185,21 @@ export default function FilterElement({
         })}
       />
 
+      <StatusField
+        options={employmentTypeFilterOptions}
+        value={filters['employment_type']}
+        onChange={(value: string) => updateFilter('employment_type', value)}
+        getOptionValue={(option) => option.value}
+        displayValue={(selected: string) =>
+          employmentTypeFilterOptions.find((option) => option.value === selected)?.label ?? selected
+        }
+        {...(isMediumScreen && {
+          placeholder: 'Employment Type',
+          label: 'Employment Type',
+          ...fieldProps,
+        })}
+      />
+
       <div className="flex items-center gap-2">
         <Input
           type="date"
@@ -199,7 +219,7 @@ export default function FilterElement({
         />
       </div>
 
-      {(dateFrom || dateTo || filters['status'] || filters['gender'] || filters['doctor_role']) && (
+      {(dateFrom || dateTo || filters['status'] || filters['gender'] || filters['doctor_role'] || filters['employment_type']) && (
         <Button
           size="sm"
           onClick={handleResetAll}

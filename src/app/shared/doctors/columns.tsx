@@ -233,6 +233,40 @@ export const getColumns = ({
       row?.nationality ? resolveLocalizedNameOrFallback(row.nationality.name) : '—',
   },
   {
+    title: (
+      <div className="flex items-center gap-1">
+        <HeaderCell title="Employment Type" />
+        {onFilterChange && (
+          <ColumnFilterPopover columnKey="employment_type" onFilterChange={onFilterChange} />
+        )}
+      </div>
+    ),
+    dataIndex: 'employment_type',
+    key: 'employment_type',
+    render: (employment_type: string | null, row: any) => {
+      if (employment_type === 'full_time') {
+        return <Badge variant="outline">Full time</Badge>;
+      }
+      if (employment_type === 'part_time') {
+        return (
+          <div className="flex flex-col gap-1">
+            <Badge variant="outline">Part time</Badge>
+            {row?.part_time_session_price != null && (
+              <span className="text-xs text-gray-500">
+                {row.part_time_session_price} SAR / session
+              </span>
+            )}
+          </div>
+        );
+      }
+      return (
+        <Badge color="warning" variant="outline">
+          Not set
+        </Badge>
+      );
+    },
+  },
+  {
     title: <HeaderCell title="Experience" />,
     dataIndex: 'experience',
     key: 'experience',

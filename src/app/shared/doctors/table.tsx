@@ -76,6 +76,7 @@ export default function DoctorsTable({
     status: searchParams.get('status') || '',
     gender: searchParams.get('gender') || '',
     doctor_role: searchParams.get('doctor_role') || '',
+    employment_type: searchParams.get('employment_type') || '',
   };
 
   const onHeaderCellClick = (value: string) => ({
@@ -105,11 +106,24 @@ export default function DoctorsTable({
     (row: any) => {
       if (!row?.id || isUpdatingDoctor) return;
 
+      // Backend requires employment_type on every update; legacy doctors have none yet
+      if (!row.employment_type) {
+        toast.error(
+          'Set the doctor\'s employment type first (Edit doctor) before changing status'
+        );
+        return;
+      }
+
       const nextStatus = !Boolean(row.status);
       setTogglingDoctorId(row.id);
 
       updateDoctor(
-        { doctor_id: row.id, status: nextStatus },
+        {
+          doctor_id: row.id,
+          status: nextStatus,
+          employment_type: row.employment_type,
+          part_time_session_price: row.part_time_session_price ?? null,
+        },
         {
           onSettled: () => setTogglingDoctorId(null),
         }
@@ -137,7 +151,7 @@ export default function DoctorsTable({
     handleReset,
   } = useTable(data, pageSize, filterState);
 
-  const drawerFilterKeys = ['status', 'gender', 'doctor_role'] as const;
+  const drawerFilterKeys = ['status', 'gender', 'doctor_role', 'employment_type'] as const;
 
   const applyAllFilters = () => {
     const params = new URLSearchParams(searchParams.toString());

@@ -1,6 +1,11 @@
 // utils/validators/doctors-form-schema.ts
 import { z } from 'zod';
 
+export const employmentTypeOptions = [
+  { id: 'full_time', name: 'Full time' },
+  { id: 'part_time', name: 'Part time' },
+] as const;
+
 export const doctorFormSchema = z.object({
   doctor_role: z.string().min(1, 'Doctor role is required'),
   name: z.object({
@@ -42,6 +47,23 @@ export const doctorFormSchema = z.object({
   clinic_name: z.string().min(1, 'Clinic name is required'),
   from: z.string().min(1, 'Start time is required'),
   to: z.string().min(1, 'End time is required'),
+
+  /** '' = legacy doctor with no type yet; must be chosen before saving */
+  employment_type: z
+    .string()
+    .refine((v) => v === 'full_time' || v === 'part_time', 'Employment type is required'),
+  /** Only used when employment_type = part_time (separate from patient session_price) */
+  part_time_session_price: z.string().optional(),
+}).superRefine((data, ctx) => {
+  if (data.employment_type !== 'part_time') return;
+  const price = Number(data.part_time_session_price);
+  if (!data.part_time_session_price?.trim() || !Number.isFinite(price) || price <= 0) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['part_time_session_price'],
+      message: 'Part time session price is required and must be greater than 0',
+    });
+  }
 });
 
 export type DoctorFormInput = z.infer<typeof doctorFormSchema>;
