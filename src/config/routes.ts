@@ -372,6 +372,9 @@ export const routes = {
   reservations: {
     index: '/reservations',
   },
+  abandonedReservations: {
+    index: '/abandoned-reservations',
+  },
   reservationReviews: {
     index: '/reservations/reviews',
   },
