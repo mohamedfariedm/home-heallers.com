@@ -8,7 +8,7 @@ import { Title } from '@/components/ui/text';
 import { ActionIcon, Checkbox, Switch } from 'rizzui';
 import { useModal } from '../modal-views/use-modal';
 import { useCreateDoctors, useUpdateDoctors } from '@/framework/doctors';
-import { DoctorFormInput, doctorFormSchema } from '@/utils/validators/doctors-form-schema';
+import { DoctorFormInput, doctorFormSchema, employmentTypeOptions } from '@/utils/validators/doctors-form-schema';
 import { useNationality } from '@/framework/nationality';
 import { useCities } from '@/framework/cities';
 import axios from 'axios';
@@ -144,6 +144,9 @@ export default function CreateOrUpdateDoctors({ initValues }: { initValues?: any
       clinic_name: data.clinic_name,
       from: formatTimeToDateTime(data.from),
       to: formatTimeToDateTime(data.to),
+      employment_type: data.employment_type,
+      part_time_session_price:
+        data.employment_type === 'part_time' ? Number(data.part_time_session_price) : null,
     };
 
     if (initValues) {
@@ -234,6 +237,11 @@ export default function CreateOrUpdateDoctors({ initValues }: { initValues?: any
           clinic_name: initValues?.clinic_name || '',
           from: extractTimeFromDateTime(initValues?.from || ''),
           to: extractTimeFromDateTime(initValues?.to || ''),
+          employment_type: initValues?.employment_type || '',
+          part_time_session_price:
+            initValues?.part_time_session_price != null
+              ? String(initValues.part_time_session_price)
+              : '',
         },
       }}
       className="flex flex-grow flex-col gap-6 p-6 overflow-y-auto"
@@ -489,6 +497,40 @@ export default function CreateOrUpdateDoctors({ initValues }: { initValues?: any
               error={errors.to?.message}
               helperText="Working hours end time"
             />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm text-gray-700">Employment Type</label>
+              <select
+                {...register('employment_type', {
+                  onChange: (e) => {
+                    if (e.target.value !== 'part_time') {
+                      setValue('part_time_session_price', '', { shouldValidate: false });
+                    }
+                  },
+                })}
+                className="w-full border border-gray-300 rounded-lg p-2"
+              >
+                <option value="">Select Employment Type</option>
+                {employmentTypeOptions.map((opt) => (
+                  <option key={opt.id} value={opt.id}>{opt.name}</option>
+                ))}
+              </select>
+              {errors.employment_type && (
+                <p className="text-sm text-red-500">{errors.employment_type.message}</p>
+              )}
+            </div>
+            {watch('employment_type') === 'part_time' && (
+              <Input
+                label="Part Time Session Price"
+                type="number"
+                step="0.01"
+                min="0"
+                {...register('part_time_session_price')}
+                error={errors.part_time_session_price?.message}
+              />
+            )}
           </div>
 
           <FormGroup
