@@ -263,6 +263,12 @@ export const menuItemsHaydrogen = [
 
   { name: 'Reservations Operations' },
   {
+    name: 'Abounded Reservations',
+    href: routes.abandonedReservations.index,
+    icon: <IoWarningOutline />,
+    permissions: 'reservations',
+  },
+  {
     name: 'reservations',
     href: routes.reservations.index,
     icon: <PiGlobe />,
