@@ -50,6 +50,7 @@ const statusOptions = [
   { value: '4', en: 'Canceled', ar: 'تم الإلغاء' },
   { value: '5', en: 'Completed', ar: 'مكتمل' },
   { value: '6', en: 'Failed', ar: 'فشل' },
+  { value: '7', en: 'Draft', ar: 'مسودة' },
   { value: '8', en: 'Pending Payment', ar: 'في انتظار الدفع' },
 ];
 

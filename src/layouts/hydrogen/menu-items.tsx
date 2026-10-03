@@ -400,6 +400,12 @@ export const menuItemsHaydrogen = [
     permissions: 'invoices',
   },
   {
+    name: 'Abandoned Reservations',
+    href: routes.abandonedReservations.index,
+    icon: <IoWarningOutline />,
+    permissions: 'reservations',
+  },
+  {
     name: 'reservations',
     href: routes.reservations.index,
     icon: <PiGlobe />,

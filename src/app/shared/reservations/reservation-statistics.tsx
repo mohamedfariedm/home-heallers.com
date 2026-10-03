@@ -11,6 +11,7 @@ import {
   PiHourglassBold,
   PiCheckBold,
   PiWarningBold,
+  PiPencilSimpleBold,
   PiCurrencyDollarBold,
   PiMoneyBold,
   PiCreditCardBold,
@@ -39,6 +40,7 @@ interface ReservationStatistics {
     canceled?: StatusCount | number;
     completed?: StatusCount | number;
     failed?: StatusCount | number;
+    draft?: StatusCount | number;
   };
   seen_count?: number;
   unseen_count?: number;
@@ -105,6 +107,11 @@ interface ReservationStatisticsProps {
 }
 
 // Helper function to get count from status (handles both old and new format)
+const hasPositiveCount = (value: number | string | undefined): boolean => {
+  const count = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(count) && count !== 0;
+};
+
 const getStatusCount = (status: StatusCount | number | undefined): number => {
   if (!status) return 0;
   if (typeof status === 'number') return status;
@@ -336,7 +343,8 @@ export default function ReservationStatistics({
     getStatusSessionsCount(stats.by_status?.confirmed) +
     getStatusSessionsCount(stats.by_status?.completed) +
     getStatusSessionsCount(stats.by_status?.canceled) +
-    getStatusSessionsCount(stats.by_status?.failed);
+    getStatusSessionsCount(stats.by_status?.failed) +
+    getStatusSessionsCount(stats.by_status?.draft);
 
   // Row 1: Reservation by Status (with Reviewing and Total Sessions)
   const reservationByStatusCards = [
@@ -449,7 +457,20 @@ export default function ReservationStatistics({
       link: getStatusLink(stats.by_status?.failed),
       compact: true,
     },
-    
+    {
+      title: 'Draft',
+      value: getStatusCount(stats.by_status?.draft),
+      subtitle: `${getStatusSessionsCount(stats.by_status?.draft)} sessions`,
+      icon: PiPencilSimpleBold,
+      bgColor: 'bg-slate-50',
+      textColor: 'text-slate-600',
+      darkBgColor: 'dark:bg-slate-900/20',
+      darkTextColor: 'dark:text-slate-400',
+      blurColor: 'bg-slate-50/50',
+      darkBlurColor: 'dark:bg-slate-900/10',
+      link: getStatusLink(stats.by_status?.draft),
+      compact: true,
+    },
   ];
 
   // Row 2: Review (Paid, Unpaid, Seen, Unseen, Remaining Payment)
@@ -549,7 +570,9 @@ export default function ReservationStatistics({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allSourceCampaigns.length]);
 
-  const sourceCampaignCards = allSourceCampaigns.map((campaign) => {
+  const sourceCampaignCards = allSourceCampaigns
+    .filter((campaign) => (campaign.reservations_count || 0) !== 0)
+    .map((campaign) => {
     const campaignKey = campaign.source_campaign || 'Unknown';
     const isChecked = checkedSourceCampaigns.has(campaignKey);
     
@@ -611,7 +634,9 @@ export default function ReservationStatistics({
     return bSessions - aSessions; // Descending order
   });
   
-  const allServiceCards = sortedServices.map((service) => ({
+  const allServiceCards = sortedServices
+    .filter((service) => (service.reservations_count || 0) !== 0)
+    .map((service) => ({
     title: service.service_name_ar || `Service ${service.service_id}`,
     value: `${service.reservations_count || 0}`,
     subtitle: `${service.sessions_count || 0} sessions`,
@@ -639,7 +664,9 @@ export default function ReservationStatistics({
     return bSessions - aSessions;
   });
 
-  const allCategoryCards = sortedCategories.map((category) => ({
+  const allCategoryCards = sortedCategories
+    .filter((category) => (category.reservations_count || 0) !== 0)
+    .map((category) => ({
     title:
       category.category_name_ar ||
       category.category_name_en ||
@@ -696,13 +723,15 @@ export default function ReservationStatistics({
   ];
 
   const rows = [
-    { title: 'Reservation by Status', cards: reservationByStatusCards },
-    ...(hasPermission('dashboard.total_revenue') ? [{ title: 'Revenue', cards: reviewCards }] : []),
+    { title: 'Reservation by Status', cards: reservationByStatusCards.filter((card) => hasPositiveCount(card.value)) },
+    ...(hasPermission('dashboard.total_revenue')
+      ? [{ title: 'Revenue', cards: reviewCards.filter((card) => hasPositiveCount(card.value)) }]
+      : []),
     { title: 'Source Campaigns', cards: sourceCampaignCards },
     { title: 'Services', cards: serviceCards },
     { title: 'Categories', cards: categoryCards },
-    { title: 'Clients', cards: clientCards },
-  ];
+    { title: 'Clients', cards: clientCards.filter((card) => hasPositiveCount(card.value)) },
+  ].filter((row) => row.cards.length > 0);
 
   const router = useRouter();
   const pathname = usePathname();
@@ -772,7 +801,7 @@ export default function ReservationStatistics({
               )}
             </div>
             <div className="flex flex-wrap w-full gap-3">
-              {row.title === 'Source Campaigns' && (
+              {row.title === 'Source Campaigns' && hasPositiveCount(totalSourceCampaigns) && (
                 <StatCard key="total-source-campaigns" {...totalSourceCampaignCard} />
               )}
               {row.cards.map((card: any, cardIndex: number) => (

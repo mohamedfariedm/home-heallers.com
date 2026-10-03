@@ -37,6 +37,7 @@ const reservationStatusOptions = [
   { value: '4', label: 'Canceled' },
   { value: '5', label: 'Completed' },
   { value: '6', label: 'Failed' },
+  { value: '7', label: 'Draft' },
 ];
 
 const customerSupportTypeOptions = [

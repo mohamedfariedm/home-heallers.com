@@ -33,7 +33,7 @@ export const reservationFormSchema = z
     total_amount: z.string().min(1, "Total amount is required"),
     transaction_reference: z.string().optional(),
     status: z
-      .enum(["1", "2", "3", "4", "5", "6", "8"], {
+      .enum(["1", "2", "3", "4", "5", "6", "7", "8"], {
         errorMap: () => ({ message: "Status is required" }),
       })
       .default("2"),

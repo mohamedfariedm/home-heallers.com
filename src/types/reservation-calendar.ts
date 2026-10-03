@@ -5,7 +5,7 @@ export type SessionStatus =
   | 'cancelled'
   | 'failed';
 
-export type ReservationStatusCode = 1 | 2 | 3 | 4 | 5 | 6 | 8;
+export type ReservationStatusCode = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
 export type LocalizedName =
   | string

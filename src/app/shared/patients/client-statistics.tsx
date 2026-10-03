@@ -6,6 +6,7 @@ import {
   PiCheckCircleBold,
   PiClockBold,
   PiHourglassBold,
+  PiPencilSimpleBold,
   PiRepeatBold,
   PiTagBold,
   PiWarningBold,
@@ -79,6 +80,14 @@ const STATUS_STYLES: Record<number, CardStyle> = {
     blurColor: 'bg-orange-50/50',
     darkBlurColor: 'dark:bg-orange-900/10',
   },
+  [ReservationStatus.Draft]: {
+    bgColor: 'bg-slate-50',
+    textColor: 'text-slate-600',
+    darkBgColor: 'dark:bg-slate-900/20',
+    darkTextColor: 'dark:text-slate-400',
+    blurColor: 'bg-slate-50/50',
+    darkBlurColor: 'dark:bg-slate-900/10',
+  },
   [ReservationStatus.PendingPayment]: {
     bgColor: 'bg-purple-50',
     textColor: 'text-purple-600',
@@ -105,6 +114,7 @@ const STATUS_ICONS: Record<number, typeof PiCalendarCheckBold> = {
   [ReservationStatus.Canceled]: PiXCircleBold,
   [ReservationStatus.Completed]: PiCheckBold,
   [ReservationStatus.Failed]: PiWarningBold,
+  [ReservationStatus.Draft]: PiPencilSimpleBold,
   [ReservationStatus.PendingPayment]: PiCalendarCheckBold,
 };
 

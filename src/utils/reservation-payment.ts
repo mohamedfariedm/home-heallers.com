@@ -5,6 +5,7 @@ export const ReservationStatus = {
   Canceled: 4,
   Completed: 5,
   Failed: 6,
+  Draft: 7,
   PendingPayment: 8,
 } as const;
 
@@ -15,6 +16,7 @@ export const RESERVATION_STATUS_OPTIONS = [
   { value: ReservationStatus.Canceled, label: 'Canceled' },
   { value: ReservationStatus.Completed, label: 'Completed' },
   { value: ReservationStatus.Failed, label: 'Failed' },
+  { value: ReservationStatus.Draft, label: 'Draft' },
   { value: ReservationStatus.PendingPayment, label: 'Pending Payment' },
 ] as const;
 
