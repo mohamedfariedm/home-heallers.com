@@ -2,6 +2,7 @@ import { routes } from '@/config/routes';
 import { DUMMY_ID } from '@/config/constants';
 import {
   PiCirclesThreePlusFill,
+  PiDeviceMobileDuotone,
   PiCircleFill,
   PiCirclesFourFill,
   PiShoppingCartDuotone,
@@ -194,6 +195,13 @@ export const menuItemsHaydrogen = [
     href: '/blogs',
     icon: <IoBusiness />,
     permissions: 'blogs',
+  },
+  {
+    name: 'Onboarding Screens',
+    nameAr: 'شاشات البداية',
+    href: routes.onboardingScreens.index,
+    icon: <PiDeviceMobileDuotone />,
+    permissions: 'onboarding_screens',
   },
 
   { name: 'Partners Management' },
