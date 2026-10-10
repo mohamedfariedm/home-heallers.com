@@ -73,7 +73,8 @@ export const reservationFormSchema = z
         z.object({
           date: z.string().optional(),
           time: z.string().optional(),
-          time_period: z.enum(["morning", "afternoon", "evening"]).default("morning"),
+          // Stored data also has app/import values ("AM", "PM", "1h", "night") — keep them as-is.
+          time_period: z.string().min(1).default("morning"),
           doctor_id: z.string().optional(),
           status: z
             .enum(["pending", "confirmed", "completed", "cancelled"])

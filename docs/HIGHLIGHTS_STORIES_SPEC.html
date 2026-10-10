@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Highlights (Stories) — Portable Feature Spec</title>
+<style>
+  :root{
+    --bg:#fbfbf9; --panel:#ffffff; --ink:#1c1c1e; --muted:#6b6b70;
+    --line:#e6e6e1; --accent:#7c4dff; --accent2:#00897b;
+    --code-bg:#f4f4f0; --badge:#efeafe; --th:#f6f5f2;
+    --ok:#1f7a4d; --warn:#a15c00;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#16161a; --panel:#1e1e24; --ink:#ececef; --muted:#a0a0aa;
+      --line:#2e2e36; --accent:#b39dff; --accent2:#4db6ac;
+      --code-bg:#24242b; --badge:#2b2547; --th:#26262d;
+      --ok:#5fd39a; --warn:#e0a44a;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#16161a; --panel:#1e1e24; --ink:#ececef; --muted:#a0a0aa;
+    --line:#2e2e36; --accent:#b39dff; --accent2:#4db6ac;
+    --code-bg:#24242b; --badge:#2b2547; --th:#26262d; --ok:#5fd39a; --warn:#e0a44a;
+  }
+  *{box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);
+    font:15px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    margin:0;padding:0}
+  .wrap{max-width:920px;margin:0 auto;padding:40px 22px 80px}
+  header.hero{border-bottom:2px solid var(--line);padding-bottom:22px;margin-bottom:8px}
+  h1{font-size:30px;margin:0 0 6px;letter-spacing:-.02em}
+  .sub{color:var(--muted);font-size:15px;max-width:70ch}
+  h2{font-size:22px;margin:44px 0 10px;padding-top:14px;border-top:1px solid var(--line);letter-spacing:-.01em}
+  h3{font-size:17px;margin:26px 0 8px}
+  p{margin:10px 0}
+  a{color:var(--accent)}
+  code{background:var(--code-bg);padding:2px 6px;border-radius:5px;font-size:13px;
+    font-family:"SF Mono",ui-monospace,"Cascadia Code",Consolas,monospace}
+  pre{background:var(--code-bg);border:1px solid var(--line);border-radius:10px;
+    padding:16px;overflow-x:auto;font-size:12.5px;line-height:1.55;
+    font-family:"SF Mono",ui-monospace,"Cascadia Code",Consolas,monospace}
+  pre code{background:none;padding:0}
+  table{border-collapse:collapse;width:100%;margin:14px 0;font-size:13.5px;
+    display:block;overflow-x:auto}
+  th,td{border:1px solid var(--line);padding:8px 11px;text-align:left;vertical-align:top}
+  th{background:var(--th);font-weight:600}
+  tbody tr:nth-child(even){background:rgba(0,0,0,.015)}
+  .pill{display:inline-block;background:var(--badge);color:var(--accent);
+    border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600;margin:0 4px 4px 0}
+  .callout{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--accent);
+    border-radius:8px;padding:14px 16px;margin:18px 0}
+  .callout.tip{border-left-color:var(--accent2)}
+  .callout.warn{border-left-color:var(--warn)}
+  .callout strong{color:var(--accent)}
+  ol,ul{padding-left:22px}
+  li{margin:5px 0}
+  .toc{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 20px;margin:22px 0}
+  .toc h4{margin:0 0 8px;font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+  .toc ol{margin:0;columns:2;column-gap:30px}
+  .toc a{text-decoration:none}
+  .toc a:hover{text-decoration:underline}
+  .method{font-weight:700;color:var(--accent2)}
+  .checklist li{list-style:none;margin-left:-18px}
+  .checklist li::before{content:"☐ ";color:var(--muted)}
+  hr{border:none;border-top:1px solid var(--line);margin:30px 0}
+  .rule-num{display:inline-block;min-width:24px;font-weight:700;color:var(--accent)}
+  footer{margin-top:50px;color:var(--muted);font-size:12.5px;border-top:1px solid var(--line);padding-top:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <h1>Highlights (Stories) — Portable Feature Spec</h1>
+  <p class="sub">A self-contained, framework-neutral specification of an Instagram-style
+  <em>Stories / Highlights</em> feature, extracted from a working Laravel + Orchid
+  implementation. Hand this to an AI or developer in <strong>another project</strong> as context.
+  It describes <em>what the feature does and why</em>, the exact data model, every endpoint with
+  real request/response shapes, and both the <strong>dashboard (admin)</strong> and
+  <strong>mobile</strong> flows. Adapt names/stack to the target — the <em>rules</em> matter, not the PHP.</p>
+</header>
+
+<div class="toc">
+  <h4>Contents</h4>
+  <ol>
+    <li><a href="#tldr">TL;DR</a></li>
+    <li><a href="#concepts">Concepts &amp; vocabulary</a></li>
+    <li><a href="#model">Data model</a></li>
+    <li><a href="#rules">Business rules</a></li>
+    <li><a href="#readstate">Read-state &amp; viewer model</a></li>
+    <li><a href="#expiry">Expiry model</a></li>
+    <li><a href="#api">API (mobile-facing)</a></li>
+    <li><a href="#mobile">Mobile app flow</a></li>
+    <li><a href="#dashboard">Dashboard (admin) flow</a></li>
+    <li><a href="#validation">Validation summary</a></li>
+    <li><a href="#qa">QA checklist</a></li>
+    <li><a href="#porting">Porting notes</a></li>
+  </ol>
+</div>
+
+<h2 id="tldr">0. TL;DR — what we are building</h2>
+<ul>
+  <li>A horizontal strip of <strong>circular avatars</strong> on the app home screen (like Instagram Stories).</li>
+  <li>Tapping an avatar opens a full-screen <strong>story viewer</strong> that plays that highlight's <strong>elements</strong> (image/video slides) one after another.</li>
+  <li>Each element may carry <strong>one CTA</strong> (Add to Cart / Open product / Open category).</li>
+  <li>Admins create &amp; manage highlights from a <strong>dashboard page</strong> (not part of the mobile app).</li>
+  <li>The app tracks <strong>read/unread</strong> per element, per user (logged in) or per device (guest), and re-orders the strip so unread stories come first.</li>
+</ul>
+<div class="callout"><strong>Naming:</strong> the feature is called <strong>Highlights</strong> everywhere in code/API. "Stories" is only colloquial. Keep one name across DB tables, API keys, and UI.</div>
+
+<h2 id="concepts">1. Core concepts &amp; vocabulary</h2>
+<table>
+<thead><tr><th>Term</th><th>Meaning</th></tr></thead>
+<tbody>
+<tr><td><strong>Highlight</strong></td><td>One circle in the strip. Cover image, title, and 1–5 elements.</td></tr>
+<tr><td><strong>Element</strong></td><td>One slide inside a highlight (image or video). Max <strong>5</strong> per highlight.</td></tr>
+<tr><td><strong>CTA</strong></td><td>Optional button on an element: <code>add_to_cart</code>, <code>product_detail</code>, <code>category</code>.</td></tr>
+<tr><td><strong>View</strong></td><td>A record that a viewer watched a specific element.</td></tr>
+<tr><td><strong>Viewer</strong></td><td>Logged-in user (<code>user_id</code>) OR guest device (<code>device_id</code>).</td></tr>
+<tr><td><strong>Read</strong></td><td>Highlight is <em>read</em> when the viewer viewed <strong>every</strong> visible element in it.</td></tr>
+<tr><td><strong>Pinned</strong></td><td>Admin flag; pinned sort first. Max <strong>3</strong>.</td></tr>
+<tr><td><strong>visibility_type</strong></td><td><code>always</code> (never expires) or <code>daily</code> (each element expires 24h after it was added).</td></tr>
+<tr><td><strong>type</strong></td><td><code>products</code> / <code>services</code> / <code>both</code> — which CTAs can be linked / which app tab shows it.</td></tr>
+</tbody>
+</table>
+
+<h2 id="model">2. Data model</h2>
+<p>Three tables. Adapt column types; the shape and constraints matter.</p>
+
+<h3>2.1 <code>highlights</code></h3>
+<table>
+<thead><tr><th>Column</th><th>Type</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td><code>id</code></td><td>PK</td><td></td></tr>
+<tr><td><code>title</code></td><td>JSON</td><td>Translatable map, e.g. <code>{"ar":"عروض","en":"Offers"}</code></td></tr>
+<tr><td><code>branch_id</code></td><td>FK, nullable</td><td><code>null</code> = global (all branches); else only that branch.</td></tr>
+<tr><td><code>country_ids</code></td><td>JSON array, nullable</td><td><code>null</code>/<code>[]</code> = all countries; else only these IDs.</td></tr>
+<tr><td><code>type</code></td><td>enum</td><td><code>products</code> / <code>services</code> / <code>both</code></td></tr>
+<tr><td><code>visibility_type</code></td><td>enum</td><td><code>daily</code> / <code>always</code></td></tr>
+<tr><td><code>is_pinned</code></td><td>bool</td><td>Max 3 across all highlights.</td></tr>
+<tr><td><code>order</code></td><td>int</td><td>Manual sort within a group.</td></tr>
+<tr><td><code>is_active</code></td><td>bool</td><td>Manual show/hide. <strong>Independent</strong> of expiry.</td></tr>
+<tr><td>timestamps + soft delete</td><td></td><td></td></tr>
+</tbody>
+</table>
+<p>Index <code>(is_active, type, branch_id)</code>. Cover image = media collection <code>highlight-cover</code> (the circle avatar).</p>
+
+<h3>2.2 <code>highlight_elements</code></h3>
+<table>
+<thead><tr><th>Column</th><th>Type</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td><code>id</code></td><td>PK</td><td></td></tr>
+<tr><td><code>highlight_id</code></td><td>FK, cascade</td><td></td></tr>
+<tr><td><code>media_type</code></td><td>enum</td><td><code>image</code> / <code>video</code></td></tr>
+<tr><td><code>cta_type</code></td><td>enum, nullable</td><td><code>add_to_cart</code> / <code>product_detail</code> / <code>category</code> — <code>null</code> = no CTA</td></tr>
+<tr><td><code>product_id</code></td><td>FK, nullable</td><td>Required for <code>add_to_cart</code>/<code>product_detail</code>.</td></tr>
+<tr><td><code>category_id</code></td><td>FK, nullable</td><td>Required for <code>category</code> (a <strong>sub</strong>-category).</td></tr>
+<tr><td><code>order</code></td><td>int</td><td></td></tr>
+<tr><td><code>is_active</code></td><td>bool</td><td></td></tr>
+<tr><td>timestamps + soft delete</td><td></td><td><code>created_at</code> drives the 24h daily expiry.</td></tr>
+</tbody>
+</table>
+<p>Index <code>(highlight_id, is_active, created_at)</code>. Media collections: <code>highlight-element-media</code> and <code>highlight-element-thumbnail</code> (poster, video only).</p>
+
+<h3>2.3 <code>highlight_element_views</code></h3>
+<table>
+<thead><tr><th>Column</th><th>Type</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td><code>id</code></td><td>PK</td><td></td></tr>
+<tr><td><code>highlight_id</code></td><td>FK, cascade</td><td>Denormalized for fast counting.</td></tr>
+<tr><td><code>highlight_element_id</code></td><td>FK, cascade</td><td></td></tr>
+<tr><td><code>user_id</code></td><td>FK, nullable</td><td>Set for logged-in viewers.</td></tr>
+<tr><td><code>device_id</code></td><td>string, nullable, indexed</td><td>Set <strong>only on guest rows</strong>; nulled once merged into a user.</td></tr>
+<tr><td><code>viewed_at</code></td><td>timestamp</td><td></td></tr>
+</tbody>
+</table>
+<p>Unique keys: <code>(highlight_element_id, user_id)</code> <strong>and</strong> <code>(highlight_element_id, device_id)</code>. Keeping <code>device_id = null</code> on owned rows stops the unique index colliding when several accounts share a device.</p>
+
+<h2 id="rules">3. Business rules <span style="font-size:14px;color:var(--muted)">(the part that actually matters)</span></h2>
+<ol>
+<li><strong>Strip ordering</strong> (server-side): pinned first (by <code>order</code>), then unread (by <code>order</code>), then read last (by <code>order</code>). Ties by <code>id</code>. Instagram behavior.</li>
+<li><strong><code>is_read</code></strong> only when <em>every</em> currently visible element (active + non-expired) has a view row for this viewer. Empty ⇒ not read.</li>
+<li><strong>Adding a new element to a fully-read highlight</strong> flips it back to unread; old elements keep their views; the viewed endpoint stays idempotent for old elements. Read again only once the new element is viewed.</li>
+<li><strong>Replacing an element's media</strong> ⇒ delete that element's view rows (new content = unviewed for everyone).</li>
+<li><strong><code>is_active</code> vs expiry are independent.</strong> Active is a manual toggle; expiry is time-based.</li>
+<li><strong>Expiry is per element.</strong> <code>daily</code>: each element expires 24h after its own <code>created_at</code>; highlight expired when all elements expired. <code>always</code> never expires. Adding an element extends life (no reset timer).</li>
+<li><strong>Max 5 elements</strong> per highlight — counts active + inactive (soft-deleted excluded).</li>
+<li><strong>Max 3 pinned</strong> total (count excludes current on update).</li>
+<li><strong>Branch scoping:</strong> <code>branch_id = null</code> ⇒ everywhere; else only that branch. Country-agnostic online branches must not let their stored country decide visibility.</li>
+<li><strong>Country scoping:</strong> <code>country_ids</code> null/empty ⇒ all; else only listed. Effective country: <code>country-id</code> header → user home country → branch country.</li>
+<li><strong>Image duration</strong> is a global setting <code>highlight_image_duration_seconds</code> (default 15, <code>required|integer|min:1</code>), not per element. Videos play fully.</li>
+<li><strong>CTA payloads are embedded</strong> in the response — no second request when a CTA is tapped.</li>
+<li><strong>Guest → user merge:</strong> an authed request carrying <code>device_id</code> lazily merges the device's view rows into the account (dedup on conflict). No login-endpoint change.</li>
+</ol>
+
+<h2 id="readstate">4. Read-state &amp; viewer model</h2>
+<ul>
+<li>A <strong>viewer</strong> is <code>user_id</code> (logged in) OR <code>device_id</code> (guest). A written row belongs to a user (<code>device_id=null</code>) or a guest (<code>user_id=null</code>).</li>
+<li><strong>On read</strong> (home page): collect the viewer's viewed element IDs in one query, mark each element <code>is_viewed</code>, set highlight <code>is_read = (all visible viewed)</code>.</li>
+<li><strong>On write</strong> (viewed endpoint): <code>firstOrCreate</code> the row (idempotent), return <code>{is_read, remaining_elements}</code> for the whole highlight so the app updates the ring without re-fetching.</li>
+<li><strong>Merge</strong> (guest→user): move rows <code>user_id IS NULL AND device_id = X</code> to <code>user_id=&lt;user&gt;, device_id=null</code>; if already viewed, delete the duplicate guest row.</li>
+</ul>
+
+<h2 id="expiry">5. Expiry model</h2>
+<pre><code>visibility_type = always   ──►  never expires. Element shows until admin hides it.
+
+visibility_type = daily    ──►  each element lives 24h from its OWN created_at.
+
+   element A (created 09:00 Mon) ── visible until 09:00 Tue
+   element B (created 20:00 Mon) ── visible until 20:00 Tue
+   → highlight disappears from the strip only when A AND B are both expired.
+   → adding element C at 08:00 Tue keeps the highlight alive until 08:00 Wed.</code></pre>
+
+<h2 id="api">6. API (mobile-facing)</h2>
+<p>JSON API; auth optional on these routes. Responses wrapped as <code>{"success":true,"data":{...}}</code> (adapt to your envelope).</p>
+
+<h3>6.1 <span class="method">GET</span> <code>/api/home_page</code> — highlights strip (additive key)</h3>
+<p>The strip is one additive key on the existing home-page response, returned in <strong>both</strong> guest and logged-in paths; no other key changes.</p>
+<table>
+<thead><tr><th>Param</th><th>Required</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td><code>lat</code>, <code>lng</code></td><td>yes</td><td>Resolve the branch.</td></tr>
+<tr><td><code>device_id</code></td><td>optional</td><td>Guest read state + triggers guest→user merge after login.</td></tr>
+<tr><td><code>country-id</code> (header)</td><td>optional</td><td>Overrides resolved country.</td></tr>
+<tr><td><code>Authorization: Bearer</code> (header)</td><td>optional</td><td>Logged-in viewer; else guest.</td></tr>
+</tbody>
+</table>
+<p><strong>Response</strong> (only the <code>highlights</code> key shown):</p>
+<pre><code>{
+  "success": true,
+  "data": {
+    "highlights": [
+      {
+        "id": 12,
+        "title": "عروض الأسبوع",
+        "cover": "https://cdn.example.com/highlight-cover/12.jpg",
+        "type": "products",
+        "branch_id": null,
+        "visibility_type": "always",
+        "is_pinned": true,
+        "order": 1,
+        "is_read": false,
+        "is_viewed": false,
+        "elements": [
+          {
+            "id": 101,
+            "media_type": "image",
+            "media_url": "https://cdn.example.com/hl/101.jpg",
+            "thumbnail_url": null,
+            "duration_seconds": 15,
+            "cta_type": "product_detail",
+            "product": { "id": 55, "name": "...", "price": 30, "images": ["..."], "...": "full product-detail shape" },
+            "order": 0,
+            "is_viewed": true
+          },
+          {
+            "id": 102,
+            "media_type": "video",
+            "media_url": "https://cdn.example.com/hl/102.mp4",
+            "thumbnail_url": "https://cdn.example.com/hl/102-thumb.jpg",
+            "duration_seconds": 0,
+            "cta_type": "category",
+            "category": { "id": 8, "name": "مشروبات", "image": "...", "parent_id": 2, "sort_order": 3 },
+            "order": 1,
+            "is_viewed": false
+          }
+        ]
+      }
+    ]
+  }
+}</code></pre>
+<ul>
+<li><code>title</code> is the <strong>localized string</strong> for the request locale (not the raw JSON map).</li>
+<li><code>is_read</code> and <code>is_viewed</code> on the highlight are the <strong>same value</strong> (both names provided for the app).</li>
+<li><code>duration_seconds</code>: images → configured setting; videos → <code>0</code> (play fully). Never null.</li>
+<li><code>product</code> only for <code>add_to_cart</code>/<code>product_detail</code>; <code>category</code> only for <code>category</code>.</li>
+<li>Empty <code>highlights</code> ⇒ app shows its normal banner slider instead of the strip.</li>
+</ul>
+
+<h3>6.2 <span class="method">POST</span> <code>/api/highlights/{highlight}/elements/{element}/viewed</code> — mark viewed</h3>
+<p>Called after each element is fully watched (image: after its duration; video: after playback ends).</p>
+<ul>
+<li><strong>Public route</strong> (no auth middleware). Logged-in viewer resolved from token; guest must send <code>device_id</code>.</li>
+<li>Validates the element belongs to the highlight → <code>404</code> otherwise.</li>
+<li><strong>Idempotent</strong> — repeated calls always succeed.</li>
+</ul>
+<p><strong>Request body:</strong></p>
+<pre><code>{ "device_id": "abc-123-device-uuid" }</code></pre>
+<p><code>device_id</code> required when unauthenticated; optional (recommended once, for merge) when authed.</p>
+<p><strong>Response:</strong></p>
+<pre><code>{
+  "success": true,
+  "data": { "is_read": false, "remaining_elements": 2 }
+}</code></pre>
+<p><code>remaining_elements</code> = still-unviewed visible elements; when <code>0</code>, <code>is_read</code> is <code>true</code> and the app flips the ring to "seen". Errors: <code>404</code> not found; <code>422</code> missing <code>device_id</code> when guest.</p>
+
+<h2 id="mobile">7. Mobile app flow</h2>
+<ol>
+<li>On home load, call <code>GET /home_page</code> with <code>lat</code>, <code>lng</code>, and (if available) <code>device_id</code>.</li>
+<li>If <code>highlights</code> non-empty → render the circular strip; else render the banner slider.</li>
+<li><strong>Ring state</strong> from <code>is_read</code>/<code>is_viewed</code>: gradient ring = unread, grey = read. Server already ordered them; render as-is.</li>
+<li>Tapping opens the full-screen viewer, resuming from the <strong>first unviewed element</strong>.</li>
+<li>Image auto-advances after <code>duration_seconds</code>; video plays to completion.</li>
+<li>When an element finishes, call the <strong>viewed</strong> endpoint (send <code>device_id</code> if guest). Use returned <code>is_read</code>/<code>remaining_elements</code> to update the ring live.</li>
+<li><strong>CTA tap</strong> uses the embedded payload — no fetch: <code>add_to_cart</code> → add embedded <code>product</code>; <code>product_detail</code> → open it; <code>category</code> → open embedded <code>category</code>. Any CTA <strong>closes</strong> the viewer; back must not return into it.</li>
+<li><strong>Guest→login:</strong> keep sending <code>device_id</code> on at least the first authed <code>home_page</code> call so the server merges history (read state survives login).</li>
+</ol>
+
+<h2 id="dashboard">8. Dashboard (admin) flow</h2>
+<p>Server-rendered pages + Ajax, gated by one permission (e.g. <code>platform.highlights.manage</code>), checked in every action.</p>
+
+<h3>8.1 Index page</h3>
+<p>Table: cover thumbnail, title, branch (or "Global"), type badge, visibility type, pinned badge, order, <strong>elements count (x/5)</strong>, active toggle, <strong>expiry status badge</strong>, created_at, actions.</p>
+
+<h3>8.2 Create page (highlight fields only)</h3>
+<p>Elements added on the edit page after first save.</p>
+<ol>
+<li><code>visibility_type</code> — Daily (24h) / Always</li>
+<li><code>branch_id</code> — Global or a specific branch</li>
+<li><code>country_ids[]</code> — none (all) or a set</li>
+<li><code>type</code> — Products / Services / Both</li>
+<li><code>title_ar</code>, <code>title_en</code></li>
+<li>Cover image (<strong>required</strong>)</li>
+<li><code>is_pinned</code> (max 3, server-validated)</li>
+<li><code>order</code> (int)</li>
+<li><code>is_active</code></li>
+</ol>
+
+<h3>8.3 Edit page (fields + Elements manager)</h3>
+<p>Same fields, plus an <strong>Elements manager</strong> (Ajax CRUD, max 5). Per element:</p>
+<ul>
+<li><code>media_type</code> (image/video).</li>
+<li>Media upload. <strong>Front-end validation:</strong> video duration ≤ 2 min (read via JS <code>video.duration</code>) and size ≤ ~150MB; image ≤ 5MB + mime. Server re-validates.</li>
+<li>If video → a <strong>thumbnail</strong> image input appears.</li>
+<li><code>cta_type</code> (translated): None / Add to Cart / Product Detail / Category.
+  <ul>
+    <li>Add to Cart / Product Detail → searchable <strong>product</strong> dropdown (Ajax), filtered by highlight <code>type</code>, active, per-branch.</li>
+    <li>Category → <strong>sub-category</strong> dropdown (Ajax): subs only, active, per-branch, and (for products) only those with available products.</li>
+  </ul>
+</li>
+<li><code>order</code>, <code>is_active</code>, expired badge (daily).</li>
+</ul>
+<div class="callout warn"><strong>Rule reminder:</strong> replacing an element's media on update ⇒ delete that element's view rows.</div>
+
+<h3>8.4 Admin routes (dashboard only)</h3>
+<table>
+<thead><tr><th>Method + Path</th><th>Purpose</th></tr></thead>
+<tbody>
+<tr><td><span class="method">GET</span> admin/highlights</td><td>Index list</td></tr>
+<tr><td><span class="method">GET</span> admin/highlights/create</td><td>Create form</td></tr>
+<tr><td><span class="method">POST</span> admin/highlights</td><td>Store highlight</td></tr>
+<tr><td><span class="method">GET</span> admin/highlights/{id}/edit</td><td>Edit form</td></tr>
+<tr><td><span class="method">PUT</span> admin/highlights/{id}</td><td>Update highlight</td></tr>
+<tr><td><span class="method">DELETE</span> admin/highlights/{id}</td><td>Soft-delete highlight</td></tr>
+<tr><td><span class="method">POST</span> admin/highlights/{id}/toggle-active</td><td>Toggle highlight active</td></tr>
+<tr><td><span class="method">POST</span> admin/highlights/{id}/elements</td><td>Create element (multipart)</td></tr>
+<tr><td><span class="method">POST</span> admin/highlights/{id}/elements/{elementId}</td><td>Update element</td></tr>
+<tr><td><span class="method">DELETE</span> admin/highlights/{id}/elements/{elementId}</td><td>Delete element</td></tr>
+<tr><td><span class="method">POST</span> admin/highlights/{id}/elements/{elementId}/toggle-active</td><td>Toggle element active</td></tr>
+<tr><td><span class="method">GET</span> admin/highlights/search-products?q=&amp;branch_id=&amp;type=</td><td>Product picker</td></tr>
+<tr><td><span class="method">GET</span> admin/highlights/subcategories?branch_id=&amp;type=</td><td>Sub-category picker</td></tr>
+</tbody>
+</table>
+<p><strong>Element create/update response (JSON):</strong></p>
+<pre><code>{
+  "success": true,
+  "message": "Element saved",
+  "element": {
+    "id": 101, "media_type": "image", "media_url": "...", "thumbnail_url": null,
+    "cta_type": "product_detail", "product_id": 55, "product_name": "...",
+    "category_id": null, "category_name": null,
+    "order": 0, "is_active": true, "is_expired": false, "created_at": "2026-09-12 10:00:00"
+  }
+}</code></pre>
+<p>Validation errors return <code>422</code> with a message (max-5-elements, missing product for CTA, etc.).</p>
+
+<h2 id="validation">9. Server-side validation summary</h2>
+<h3>Highlight (store/update)</h3>
+<ul>
+<li><code>title_ar</code>, <code>title_en</code>: required strings (max 255).</li>
+<li><code>visibility_type</code> ∈ {daily, always}; <code>type</code> ∈ {products, services, both}.</li>
+<li><code>branch_id</code>: nullable + exists. <code>country_ids.*</code>: int + exists; chosen branch must belong to a selected country.</li>
+<li><code>is_pinned</code>: reject if already 3 pinned (excluding current).</li>
+<li><code>cover</code>: required on create, nullable on update; image, max 5MB.</li>
+</ul>
+<h3>Element (store/update)</h3>
+<ul>
+<li><code>media_type</code> ∈ {image, video}.</li>
+<li><code>media</code>: required on create; file; video mime mp4/quicktime/webm/mkv ≤ ~150MB, image ≤ 5MB.</li>
+<li><code>thumbnail</code>: nullable image ≤ 5MB (video poster).</li>
+<li><code>cta_type</code>: nullable ∈ {add_to_cart, product_detail, category}.</li>
+<li><code>product_id</code>: required + exists + active when cta ∈ {add_to_cart, product_detail}.</li>
+<li><code>category_id</code>: required + exists (active sub-category) when cta = category.</li>
+<li>Max 5 elements per highlight (counts inactive).</li>
+</ul>
+
+<h2 id="qa">10. QA / acceptance checklist</h2>
+<ul class="checklist">
+<li>New highlight appears first as unread; existing keep their read state.</li>
+<li>Pinned + read ranks before unpinned + unread.</li>
+<li>Ordering inside each group follows <code>order</code>.</li>
+<li><code>is_read</code> flips true only after all visible elements viewed.</li>
+<li>Adding a 6th element rejected (including when some are inactive).</li>
+<li>Adding an element to a read highlight → unread, old views intact, viewed endpoint idempotent.</li>
+<li>Replacing element media wipes only that element's views.</li>
+<li>Daily: element &gt;24h disappears; highlight with all elements expired disappears; always never expires.</li>
+<li>Branch scoping: global everywhere; branch highlight only in its branch.</li>
+<li>Country scoping: null = all; specific list filters per resolved country.</li>
+<li>Max 3 pinned enforced (excluding current on update).</li>
+<li>Guest flow: views by device_id; after login with device_id, state preserved (merge), no duplicates.</li>
+<li>home_page: highlights key present in guest AND logged-in paths; no other key changed.</li>
+<li>Image duration setting rejects 0, negatives, empty, non-integers.</li>
+<li>Permission: admin page returns 403 without the manage permission.</li>
+</ul>
+
+<h2 id="porting">11. Porting notes (for the AI implementing this elsewhere)</h2>
+<ul>
+<li>Keep the <strong>three-table</strong> model and the <strong>viewer = user_id OR device_id</strong> idea; they're the backbone. Blade/Orchid/media-library are stack-specific dressing.</li>
+<li>The <strong>ordering + read-state</strong> logic (§3.1–3.3, §4) is the most error-prone part — implement and test it first.</li>
+<li>Return <strong>embedded CTA payloads</strong> (§3.12) so the app never makes a second call from the viewer.</li>
+<li>Make the <strong>viewed</strong> endpoint idempotent from day one; the app will retry.</li>
+<li>Put image duration in a <strong>global config</strong>, not per element.</li>
+<li>No branch/country in your project? Drop <code>branch_id</code>/<code>country_ids</code> and treat every highlight as global — the rest is unaffected.</li>
+<li>Adapt the response envelope (<code>{success,data}</code>) and auth scheme to the target's norms.</li>
+</ul>
+
+<footer>
+  Extracted from a Laravel + Orchid implementation (iNatural / trio_dashboard). Framework-neutral
+  by design — reuse the rules, not the PHP. This document is the single source of truth for
+  behavior; adapt storage, auth, and UI to the target project.
+</footer>
+
+</div>
+</body>
+</html>

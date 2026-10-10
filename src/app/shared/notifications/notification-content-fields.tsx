@@ -18,7 +18,6 @@ import { useDoctors } from '@/framework/doctors';
 import { useCategories } from '@/framework/categories';
 import { useCoupons } from '@/framework/coupons';
 import {
-  LANG_OPTIONS,
   NOTIFICATION_TYPE_OPTIONS,
   deepLinkEntityLabel,
   deepLinkPathForType,
@@ -158,71 +157,43 @@ export default function NotificationContentFields<T extends FieldValues>({
         error={errors.body?.message as string}
       />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="min-w-0 w-full space-y-1.5">
-          <label className="text-sm font-medium text-gray-900">Language</label>
-          <Controller
-            control={control}
-            name={'lang' as never}
-            render={({ field: { value, onChange } }) => (
+      <div className="min-w-0 w-full space-y-1.5">
+        <label className="text-sm font-medium text-gray-900">Type (optional)</label>
+        <Controller
+          control={control}
+          name={'type' as never}
+          render={({ field: { value, onChange } }) => {
+            const current = String(value ?? '');
+            const typeOptions: Array<{ value: string; label: string }> = [
+              ...NOTIFICATION_TYPE_OPTIONS,
+            ];
+            if (
+              current &&
+              !NOTIFICATION_TYPE_OPTIONS.some((option) => option.value === current)
+            ) {
+              typeOptions.push({ value: current, label: current });
+            }
+
+            return (
               <SelectBox
                 className="w-full"
-                placeholder="Language"
-                options={LANG_OPTIONS.map((option) => ({
+                placeholder="Select type"
+                options={typeOptions.map((option) => ({
                   ...option,
-                  name: option.value,
+                  name: option.value || 'none',
                 }))}
-                value={value}
-                onChange={onChange}
+                value={current}
+                onChange={(next) => handleTypeChange(String(next ?? ''), onChange)}
                 getOptionValue={(option) => option.value}
                 displayValue={(selected) =>
-                  LANG_OPTIONS.find((option) => option.value === selected)?.label ??
-                  String(selected)
+                  typeOptions.find((option) => option.value === selected)?.label ??
+                  'None'
                 }
-                error={errors.lang?.message as string}
+                error={errors.type?.message as string}
               />
-            )}
-          />
-        </div>
-
-        <div className="min-w-0 w-full space-y-1.5">
-          <label className="text-sm font-medium text-gray-900">Type (optional)</label>
-          <Controller
-            control={control}
-            name={'type' as never}
-            render={({ field: { value, onChange } }) => {
-              const current = String(value ?? '');
-              const typeOptions: Array<{ value: string; label: string }> = [
-                ...NOTIFICATION_TYPE_OPTIONS,
-              ];
-              if (
-                current &&
-                !NOTIFICATION_TYPE_OPTIONS.some((option) => option.value === current)
-              ) {
-                typeOptions.push({ value: current, label: current });
-              }
-
-              return (
-                <SelectBox
-                  className="w-full"
-                  placeholder="Select type"
-                  options={typeOptions.map((option) => ({
-                    ...option,
-                    name: option.value || 'none',
-                  }))}
-                  value={current}
-                  onChange={(next) => handleTypeChange(String(next ?? ''), onChange)}
-                  getOptionValue={(option) => option.value}
-                  displayValue={(selected) =>
-                    typeOptions.find((option) => option.value === selected)?.label ??
-                    'None'
-                  }
-                  error={errors.type?.message as string}
-                />
-              );
-            }}
-          />
-        </div>
+            );
+          }}
+        />
       </div>
 
       {selectedType ? (
