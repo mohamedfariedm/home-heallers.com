@@ -254,6 +254,12 @@ export const routes = {
     create: '/onboarding-screens/create',
     edit: (id: string | number) => `/onboarding-screens/${id}/edit`,
   },
+  geoRegions: {
+    index: '/geo-regions',
+    create: '/geo-regions/create',
+    edit: (id: string | number) => `/geo-regions/${id}/edit`,
+    visits: (id: string | number) => `/geo-regions/${id}/visits`,
+  },
   invoices: {
     index: '/invoices',
     detail: (id: string | number) => `/invoices/${id}`,

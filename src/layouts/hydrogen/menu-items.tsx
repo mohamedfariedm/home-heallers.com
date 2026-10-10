@@ -44,6 +44,7 @@ import {
   PiMagicWandDuotone,
   PiCalendarPlusDuotone,
   PiListChecks,
+  PiMapTrifoldDuotone,
   PiBuildingsFill,
   PiShoppingCartSimple,
   PiStorefront,
@@ -326,6 +327,13 @@ export const menuItemsHaydrogen = [
     href: routes.coupons.index,
     icon: <PiListChecks />,
     permissions: 'coupons',
+  },
+  {
+    name: 'Geo Regions',
+    nameAr: 'المناطق الجغرافية',
+    href: routes.geoRegions.index,
+    icon: <PiMapTrifoldDuotone />,
+    permissions: 'geo_regions',
   },
   // {
   //   name: 'packages',
