@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import { RateColorRange, RateMetricKey } from '../types/settings';
+import { useTranslation } from 'react-i18next';
 
 export const RATE_METRIC_OPTIONS: { key: RateMetricKey; label: string }[] = [
   { key: 'reservation_rate', label: 'Reservation Rate' },
@@ -70,7 +71,10 @@ const RateMetricRangesEditor: React.FC<RateMetricRangesEditorProps> = ({
   onChange,
   showMetricHeader = false,
 }) => {
-  const metricLabel = RATE_METRIC_OPTIONS.find((item) => item.key === metric)?.label ?? metric;
+  const { t } = useTranslation();
+  const metricLabel = t('settings_rate_metric_' + metric, {
+    defaultValue: RATE_METRIC_OPTIONS.find((item) => item.key === metric)?.label ?? metric,
+  });
   const displayRanges = ranges.length > 0 ? ranges : [createEmptyRange()];
 
   const updateRange = (index: number, patch: Partial<RateColorRange>) => {
@@ -103,7 +107,7 @@ const RateMetricRangesEditor: React.FC<RateMetricRangesEditorProps> = ({
           className="rounded-lg border border-gray-200 bg-gray-50 p-4"
         >
           <div className="mb-4 flex items-center justify-between">
-            <h4 className="text-sm font-semibold text-gray-900">Range #{index + 1}</h4>
+            <h4 className="text-sm font-semibold text-gray-900">{t('settings_rate_range')} #{index + 1}</h4>
             {displayRanges.length > 1 && (
               <button
                 type="button"
@@ -117,7 +121,7 @@ const RateMetricRangesEditor: React.FC<RateMetricRangesEditorProps> = ({
 
           <div className="grid gap-4 md:grid-cols-4">
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">From %</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700">{t('settings_rate_from')}</label>
               <RatePercentInput
                 value={range.from}
                 onCommit={(from) => updateRange(index, { from })}
@@ -125,7 +129,7 @@ const RateMetricRangesEditor: React.FC<RateMetricRangesEditorProps> = ({
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">To %</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700">{t('settings_rate_to')}</label>
               <RatePercentInput
                 value={range.to}
                 onCommit={(to) => updateRange(index, { to })}
@@ -133,7 +137,7 @@ const RateMetricRangesEditor: React.FC<RateMetricRangesEditorProps> = ({
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Color</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700">{t('settings_rate_color')}</label>
               <input
                 type="color"
                 value={range.color || '#22c55e'}
@@ -144,13 +148,13 @@ const RateMetricRangesEditor: React.FC<RateMetricRangesEditorProps> = ({
 
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700">
-                Label (optional)
+                {t('settings_rate_label_optional')}
               </label>
               <input
                 type="text"
                 value={range.label || ''}
                 onChange={(event) => updateRange(index, { label: event.target.value })}
-                placeholder="Excellent"
+                placeholder={t('settings_rate_label_ph')}
                 className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -164,7 +168,7 @@ const RateMetricRangesEditor: React.FC<RateMetricRangesEditorProps> = ({
         className="inline-flex items-center space-x-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
       >
         <Plus className="h-4 w-4" />
-        <span>Add Range</span>
+        <span>{t('settings_rate_add_range')}</span>
       </button>
     </div>
   );

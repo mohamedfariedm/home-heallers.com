@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Globe, Search, Share2, Twitter } from 'lucide-react';
 import { SEOData } from '../types/settings';
+import { useTranslation } from 'react-i18next';
 
 interface PageSEO {
   ar: SEOData;
@@ -48,6 +49,7 @@ const ensurePageSEO = (page?: Partial<PageSEO>): PageSEO => ({
 });
 
 const SEOSection: React.FC<SEOSectionProps> = ({ seo, onUpdate }) => {
+  const { t } = useTranslation();
   const safeSeo = seo || {};
 
   const pageKeys = useMemo(() => {
@@ -100,17 +102,17 @@ const SEOSection: React.FC<SEOSectionProps> = ({ seo, onUpdate }) => {
       <div>
         <h2 className="mb-2 flex items-center gap-2 text-xl font-semibold text-gray-900">
           <Globe className="h-6 w-6 text-blue-600" />
-          SEO Settings
+          {t('settings_seo_title')}
         </h2>
         <p className="text-gray-600">
-          Manage SEO for each page in Arabic and English.
+          {t('settings_seo_desc')}
         </p>
       </div>
 
       {/* Page Selection */}
       <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
         <label className="mb-2 block text-sm font-medium text-gray-700">
-          Select Page
+          {t('settings_seo_select_page')}
         </label>
 
         <select
@@ -121,7 +123,7 @@ const SEOSection: React.FC<SEOSectionProps> = ({ seo, onUpdate }) => {
         >
           {pageKeys.map((page) => (
             <option key={page} value={page}>
-              {PAGE_LABELS[page] || page}
+              {t('settings_seo_page_' + page.replace(/-/g, '_'), { defaultValue: PAGE_LABELS[page] || page })}
             </option>
           ))}
         </select>
@@ -139,7 +141,7 @@ const SEOSection: React.FC<SEOSectionProps> = ({ seo, onUpdate }) => {
                 : 'border-gray-300 bg-white text-gray-600 hover:bg-gray-50'
             }`}
           >
-            {lang === 'ar' ? 'Arabic' : 'English'}
+            {lang === 'ar' ? t('settings_lang_arabic') : t('settings_lang_english')}
           </button>
         ))}
       </div>
@@ -150,14 +152,14 @@ const SEOSection: React.FC<SEOSectionProps> = ({ seo, onUpdate }) => {
         <div className="rounded-lg border bg-gray-50 p-6">
           <div className="mb-4 flex items-center gap-3">
             <Search className="h-6 w-6 text-blue-600" />
-            <h3 className="text-lg font-medium text-gray-900">Basic SEO</h3>
+            <h3 className="text-lg font-medium text-gray-900">{t('settings_seo_basic')}</h3>
           </div>
 
           <div className="grid gap-4">
             {/* Title */}
             <div>
               <label className="text-sm font-medium text-gray-700">
-                Page Title
+                {t('settings_seo_page_title')}
               </label>
               <input
                 type="text"
@@ -170,7 +172,7 @@ const SEOSection: React.FC<SEOSectionProps> = ({ seo, onUpdate }) => {
             {/* Description */}
             <div>
               <label className="text-sm font-medium text-gray-700">
-                Meta Description
+                {t('settings_seo_meta_desc')}
               </label>
               <textarea
                 value={currentSEO?.description || ''}
@@ -185,7 +187,7 @@ const SEOSection: React.FC<SEOSectionProps> = ({ seo, onUpdate }) => {
             {/* H1 */}
             <div>
               <label className="text-sm font-medium text-gray-700">
-                H1 Heading
+                {t('settings_seo_h1')}
               </label>
               <input
                 type="text"
@@ -198,7 +200,7 @@ const SEOSection: React.FC<SEOSectionProps> = ({ seo, onUpdate }) => {
             {/* Keywords */}
             <div>
               <label className="text-sm font-medium text-gray-700">
-                Keywords
+                {t('settings_seo_keywords')}
               </label>
               <input
                 type="text"
@@ -211,7 +213,7 @@ const SEOSection: React.FC<SEOSectionProps> = ({ seo, onUpdate }) => {
             {/* Canonical */}
             <div>
               <label className="text-sm font-medium text-gray-700">
-                Canonical URL
+                {t('settings_seo_canonical')}
               </label>
               <input
                 type="text"
@@ -228,14 +230,14 @@ const SEOSection: React.FC<SEOSectionProps> = ({ seo, onUpdate }) => {
           <div className="mb-4 flex items-center gap-3">
             <Share2 className="h-6 w-6 text-blue-600" />
             <h3 className="text-lg font-medium text-gray-900">
-              Open Graph (Facebook)
+              {t('settings_seo_og')}
             </h3>
           </div>
 
           <div className="grid gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                OG Title
+                {t('settings_seo_og_title')}
               </label>
               <input
                 type="text"
@@ -247,7 +249,7 @@ const SEOSection: React.FC<SEOSectionProps> = ({ seo, onUpdate }) => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                OG Description
+                {t('settings_seo_og_desc')}
               </label>
               <textarea
                 value={currentSEO?.og_description || ''}
@@ -261,7 +263,7 @@ const SEOSection: React.FC<SEOSectionProps> = ({ seo, onUpdate }) => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                OG Image URL
+                {t('settings_seo_og_image')}
               </label>
               <input
                 type="text"
@@ -277,13 +279,13 @@ const SEOSection: React.FC<SEOSectionProps> = ({ seo, onUpdate }) => {
         <div className="rounded-lg border bg-gray-50 p-6">
           <div className="mb-4 flex items-center gap-3">
             <Twitter className="h-6 w-6 text-blue-400" />
-            <h3 className="text-lg font-medium text-gray-900">Twitter Card</h3>
+            <h3 className="text-lg font-medium text-gray-900">{t('settings_seo_twitter')}</h3>
           </div>
 
           <div className="grid gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Twitter Title
+                {t('settings_seo_twitter_title')}
               </label>
               <input
                 type="text"
@@ -297,7 +299,7 @@ const SEOSection: React.FC<SEOSectionProps> = ({ seo, onUpdate }) => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Twitter Description
+                {t('settings_seo_twitter_desc')}
               </label>
               <textarea
                 value={currentSEO?.twitter_description || ''}
@@ -311,7 +313,7 @@ const SEOSection: React.FC<SEOSectionProps> = ({ seo, onUpdate }) => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Twitter Image URL
+                {t('settings_seo_twitter_image')}
               </label>
               <input
                 type="text"
@@ -327,13 +329,13 @@ const SEOSection: React.FC<SEOSectionProps> = ({ seo, onUpdate }) => {
       </div>
 
       <div className="rounded-lg border border-green-200 bg-green-50 p-4">
-        <h4 className="mb-2 font-medium text-green-900">SEO Best Practices</h4>
+        <h4 className="mb-2 font-medium text-green-900">{t('settings_seo_best_title')}</h4>
         <ul className="space-y-1 text-sm text-green-800">
-          <li>• Keep titles under 60 characters</li>
-          <li>• Write meta descriptions between 150-160 characters</li>
-          <li>• Use unique titles and descriptions for each page</li>
-          <li>• Include your target keywords naturally</li>
-          <li>• Use descriptive, engaging language</li>
+          <li>• {t('settings_seo_best1')}</li>
+          <li>• {t('settings_seo_best2')}</li>
+          <li>• {t('settings_seo_best3')}</li>
+          <li>• {t('settings_seo_best4')}</li>
+          <li>• {t('settings_seo_best5')}</li>
         </ul>
       </div>
     </div>

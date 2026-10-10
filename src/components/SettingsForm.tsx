@@ -30,6 +30,7 @@ import ConditionsSection from './ConditionsSection';
 import BusinessInfoSection from './BusinessInfoSection';
 import FolderManagementSection from './FolderManagementSection';
 import RateColorsSection from './RateColorsSection';
+import { useTranslation } from 'react-i18next';
 
 interface SettingsFormProps {
   initialSettings: Settings;
@@ -40,6 +41,7 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
   initialSettings,
   onSave,
 }) => {
+  const { t } = useTranslation();
   const [settings, setSettings] = useState<Settings>(() => {
     const seo = { ...(initialSettings?.seo || {}) };
     const emptySEO = {
@@ -68,14 +70,14 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
   const [isLoading, setIsLoading] = useState(false);
 
   const tabs = [
-    { id: 'banners', label: 'Banners', icon: Image },
-    { id: 'social', label: 'Social Media', icon: Share2 },
-    { id: 'app-links', label: 'App Links', icon: Smartphone },
-    { id: 'seo', label: 'SEO Settings', icon: Search },
-    { id: 'terms', label: 'Terms & Conditions', icon: FileText },
-    { id: 'conditions', label: 'Privacy Policy', icon: Shield },
-    { id: 'business-info', label: 'Business Information', icon: Building2 },
-    { id: 'rate-colors', label: 'Rate Colors', icon: Palette },
+    { id: 'banners', label: t('settings_tab_banners'), icon: Image },
+    { id: 'social', label: t('settings_tab_social'), icon: Share2 },
+    { id: 'app-links', label: t('settings_tab_app_links'), icon: Smartphone },
+    { id: 'seo', label: t('settings_tab_seo'), icon: Search },
+    { id: 'terms', label: t('settings_tab_terms'), icon: FileText },
+    { id: 'conditions', label: t('settings_tab_conditions'), icon: Shield },
+    { id: 'business-info', label: t('settings_tab_business'), icon: Building2 },
+    { id: 'rate-colors', label: t('settings_tab_rate_colors'), icon: Palette },
     // { id: 'folder-management', label: 'Folder Management', icon: FolderOpen },
   ];
 
@@ -206,7 +208,7 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
               <div className="flex items-center space-x-3">
                 <SettingsIcon className="h-6 w-6 text-white" />
                 <h1 className="text-2xl font-bold text-white">
-                  Settings Management
+                  {t('settings_title')}
                 </h1>
               </div>
               <button
@@ -215,7 +217,7 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
                 className="flex items-center space-x-2 rounded-lg bg-white px-4 py-2 text-blue-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Save className="h-4 w-4" />
-                <span>{isLoading ? 'Saving...' : 'Save Changes'}</span>
+                <span>{isLoading ? t('settings_saving') : t('settings_save')}</span>
               </button>
             </div>
           </div>

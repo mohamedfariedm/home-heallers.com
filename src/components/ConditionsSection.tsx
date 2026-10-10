@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import "react-quill/dist/quill.snow.css";
+import { useTranslation } from "react-i18next";
 
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 
@@ -26,6 +27,7 @@ export default function ConditionsSection({
 }: ConditionsSectionProps) {
   const [lang, setLang] = useState<"ar" | "en">("ar");
   const [isPreview, setIsPreview] = useState(false);
+  const { t: tt } = useTranslation();
 
   const c = conditions?.[lang] || {
     title: "",
@@ -127,7 +129,7 @@ export default function ConditionsSection({
             {lang === "ar" ? "سياسة الخصوصية" : "Privacy Policy"}
           </h2>
           <p className="text-gray-600 text-sm">
-            Manage your privacy policy content in both Arabic and English.
+            {tt('settings_conditions_desc')}
           </p>
         </div>
 
@@ -139,12 +141,12 @@ export default function ConditionsSection({
           {isPreview ? (
             <>
               <EyeOff className="w-4 h-4" />
-              Edit Mode
+              {tt('settings_edit_mode')}
             </>
           ) : (
             <>
               <Eye className="w-4 h-4" />
-              Preview
+              {tt('settings_preview_btn')}
             </>
           )}
         </button>
@@ -154,7 +156,7 @@ export default function ConditionsSection({
       <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 flex flex-wrap items-center justify-between gap-3">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Language
+            {tt('settings_language')}
           </label>
         <select
           value={lang}
@@ -162,8 +164,8 @@ export default function ConditionsSection({
           className="w-40 px-3 py-2 border border-gray-300 rounded-md
                      focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
         >
-          <option value="ar">Arabic</option>
-          <option value="en">English</option>
+          <option value="ar">{tt('settings_lang_arabic')}</option>
+          <option value="en">{tt('settings_lang_english')}</option>
         </select>
         </div>
 
