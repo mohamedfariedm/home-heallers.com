@@ -7,6 +7,7 @@ import {
   PiClockBold,
   PiCurrencyDollarBold,
   PiHourglassBold,
+  PiIdentificationCardBold,
   PiPencilSimpleBold,
   PiRepeatBold,
   PiTagBold,
