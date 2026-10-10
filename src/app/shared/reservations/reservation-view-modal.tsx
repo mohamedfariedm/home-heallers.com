@@ -13,6 +13,7 @@ import {
   PiSealCheck,
   PiFilePdf,
 } from 'react-icons/pi';
+import { useTranslation } from 'react-i18next';
 import { Title, Text } from '@/components/ui/text';
 import { useModal } from '@/app/shared/modal-views/use-modal';
 import { Button } from '@/components/ui/button';
@@ -45,32 +46,35 @@ import {
   getSendInvoiceWhatsappDisabledReason,
 } from '@/utils/reservation-invoice-whatsapp';
 
-function formatSessionLabel(session: {
-  start_time?: string;
-  end_time?: string;
-  date?: string;
-  time_period?: string;
-  status_label?: string;
-}) {
+function formatSessionLabel(
+  session: {
+    start_time?: string;
+    end_time?: string;
+    date?: string;
+    time_period?: string;
+    status_label?: string;
+  },
+  locale: string = 'en'
+) {
   let start = '—';
   let end = '—';
   let day = '—';
 
   try {
     if (session?.start_time) {
-      start = new Date(session.start_time).toLocaleTimeString([], {
+      start = new Date(session.start_time).toLocaleTimeString(locale, {
         hour: '2-digit',
         minute: '2-digit',
       });
     }
     if (session?.end_time) {
-      end = new Date(session.end_time).toLocaleTimeString([], {
+      end = new Date(session.end_time).toLocaleTimeString(locale, {
         hour: '2-digit',
         minute: '2-digit',
       });
     }
     if (session?.date) {
-      day = new Date(session.date).toLocaleDateString(undefined, {
+      day = new Date(session.date).toLocaleDateString(locale, {
         weekday: 'short',
         year: 'numeric',
         month: 'short',
@@ -85,10 +89,10 @@ function formatSessionLabel(session: {
   return { day, timePeriod, start, end, status: session?.status_label };
 }
 
-function formatSignedAt(value?: string | null) {
+function formatSignedAt(value?: string | null, locale: string = 'en') {
   if (!value) return null;
   try {
-    return new Date(value).toLocaleString(undefined, {
+    return new Date(value).toLocaleString(locale, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -264,6 +268,9 @@ export function ReservationViewContent({
   canSendInvoiceWhatsapp?: boolean;
   onReservationUpdate?: (updated: any) => void;
 }) {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language?.startsWith('ar') ? 'ar' : 'en';
+  const currency = t('reservation_view_currency');
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const {
     patientName,
@@ -295,11 +302,11 @@ export function ReservationViewContent({
       await client.reservations.createPaymentWhatsapp({
         reservation_id: reservation.id,
       });
-      toast.success('Payment WhatsApp message sent successfully');
+      toast.success(t('reservation_view_toast_payment_sent'));
     } catch (error: any) {
       toast.error(
         error?.response?.data?.message ||
-          'Failed to send payment WhatsApp message'
+          t('reservation_view_toast_payment_failed')
       );
     }
   };
@@ -307,17 +314,22 @@ export function ReservationViewContent({
   const handleSendInvoiceWhatsapp = async () => {
     if (!invoiceWhatsappEnabled) return;
 
-    if (clientMobile && !window.confirm(`Send invoice PDF to ${clientMobile}?`)) {
+    if (
+      clientMobile &&
+      !window.confirm(
+        t('reservation_view_confirm_send_invoice', { mobile: clientMobile })
+      )
+    ) {
       return;
     }
 
     try {
       await client.reservations.sendInvoiceWhatsapp(reservation.id);
-      toast.success('Invoice is being sent to the client on WhatsApp.');
+      toast.success(t('reservation_view_toast_invoice_sending'));
     } catch (error: any) {
       toast.error(
         error?.response?.data?.message ||
-          'Failed to send invoice via WhatsApp'
+          t('reservation_view_toast_invoice_failed')
       );
     }
   };
@@ -329,7 +341,7 @@ export function ReservationViewContent({
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-xs font-medium uppercase tracking-wider text-gray-500">
-              Reservation
+              {t('reservation_view_reservation')}
             </p>
             <p className="mt-1 text-2xl font-bold text-gray-900">
               #{reservation?.id ?? '—'}
@@ -367,13 +379,13 @@ export function ReservationViewContent({
             )}
             {isCashPayment(reservation?.payment_method) && (
               <span className="rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-800">
-                Cash
+                {t('reservation_view_cash')}
               </span>
             )}
             <CustomerTierBadge tier={reservation?.customer_tier} />
             {Number(reservation?.rework) > 0 && (
               <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800">
-                Rework: {reservation.rework}
+                {t('reservation_view_rework')}: {reservation.rework}
               </span>
             )}
           </div>
@@ -381,29 +393,35 @@ export function ReservationViewContent({
 
         <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div className="rounded-lg bg-white/80 px-3 py-2.5 ring-1 ring-gray-100">
-            <p className="text-xs text-gray-500">Total</p>
+            <p className="text-xs text-gray-500">{t('reservation_view_total')}</p>
             <p className="text-base font-bold text-gray-900">
               {reservation?.total_amount
-                ? `${reservation.total_amount} SAR`
+                ? `${reservation.total_amount} ${currency}`
                 : '—'}
             </p>
           </div>
           <div className="rounded-lg bg-white/80 px-3 py-2.5 ring-1 ring-gray-100">
-            <p className="text-xs text-gray-500">Remaining</p>
+            <p className="text-xs text-gray-500">
+              {t('reservation_view_remaining')}
+            </p>
             <p className="text-base font-bold text-gray-900">
               {reservation?.remaining_payment != null
-                ? `${reservation.remaining_payment} SAR`
+                ? `${reservation.remaining_payment} ${currency}`
                 : '—'}
             </p>
           </div>
           <div className="rounded-lg bg-white/80 px-3 py-2.5 ring-1 ring-gray-100">
-            <p className="text-xs text-gray-500">Sessions</p>
+            <p className="text-xs text-gray-500">
+              {t('reservation_view_sessions')}
+            </p>
             <p className="text-base font-bold text-gray-900">
               {reservation?.sessions_count ?? '—'}
             </p>
           </div>
           <div className="rounded-lg bg-white/80 px-3 py-2.5 ring-1 ring-gray-100">
-            <p className="text-xs text-gray-500">Payment</p>
+            <p className="text-xs text-gray-500">
+              {t('reservation_view_payment')}
+            </p>
             <p
               className={cn(
                 'text-base font-bold',
@@ -417,35 +435,46 @@ export function ReservationViewContent({
       </div>
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-        <Section title="Patient Information" icon={PiUser}>
+        <Section title={t('reservation_view_patient_information')} icon={PiUser}>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <DetailItem label="Full Name" value={patientName} className="sm:col-span-2" />
             <DetailItem
-              label="Mobile"
-              value={clientMobile}
+              label={t('reservation_view_full_name')}
+              value={patientName}
+              className="sm:col-span-2"
             />
+            <DetailItem label={t('reservation_view_mobile')} value={clientMobile} />
             <DetailItem
-              label="Email"
+              label={t('reservation_view_email')}
               value={
                 reservation?.patient?.email ?? reservation?.guest_info?.email
               }
             />
             <DetailItem
-              label="National ID"
+              label={t('reservation_view_national_id')}
               value={reservation?.patient?.national_id}
             />
-            <DetailItem label="Gender" value={reservation?.patient?.gender} />
+            <DetailItem
+              label={t('reservation_view_gender')}
+              value={reservation?.patient?.gender}
+            />
           </div>
         </Section>
 
-        <Section title="Appointment" icon={PiCalendarCheck}>
+        <Section title={t('reservation_view_appointment')} icon={PiCalendarCheck}>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <DetailItem label="Doctor" value={doctorName} />
-            <DetailItem label="Service" value={serviceName} />
-            <DetailItem label="Seen" value={reservation?.seen ? 'Yes' : 'No'} />
-            <DetailItem label="CC" value={reservation?.cc} />
+            <DetailItem label={t('reservation_view_doctor')} value={doctorName} />
+            <DetailItem label={t('reservation_view_service')} value={serviceName} />
             <DetailItem
-              label="Rework"
+              label={t('reservation_view_seen')}
+              value={
+                reservation?.seen
+                  ? t('reservation_view_yes')
+                  : t('reservation_view_no')
+              }
+            />
+            <DetailItem label={t('reservation_view_cc')} value={reservation?.cc} />
+            <DetailItem
+              label={t('reservation_view_rework')}
               value={
                 Number(reservation?.rework) > 0 ? (
                   <Badge variant="flat" color="warning">
@@ -457,22 +486,26 @@ export function ReservationViewContent({
               }
             />
             <DetailItem
-              label="Source Campaign"
+              label={t('reservation_view_source_campaign')}
               value={reservation?.source_campaign}
             />
             <DetailItem
-              label="Pain Location"
+              label={t('reservation_view_pain_location')}
               value={reservation?.pain_location}
             />
           </div>
         </Section>
 
-        <Section title="Location" icon={PiMapPin}>
+        <Section title={t('reservation_view_location')} icon={PiMapPin}>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <DetailItem label="City" value={cityName} />
-            <DetailItem label="State" value={stateName} />
-            <DetailItem label="Country" value={countryName} />
-            <DetailItem label="Address" value={addressText} className="sm:col-span-2" />
+            <DetailItem label={t('reservation_view_city')} value={cityName} />
+            <DetailItem label={t('reservation_view_state')} value={stateName} />
+            <DetailItem label={t('reservation_view_country')} value={countryName} />
+            <DetailItem
+              label={t('reservation_view_address')}
+              value={addressText}
+              className="sm:col-span-2"
+            />
             {reservation?.address?.link && (
               <div className="sm:col-span-2">
                 <a
@@ -481,66 +514,68 @@ export function ReservationViewContent({
                   rel="noopener noreferrer"
                   className="inline-flex text-sm font-medium text-primary hover:underline"
                 >
-                  Open in Maps
+                  {t('reservation_view_open_in_maps')}
                 </a>
               </div>
             )}
           </div>
         </Section>
 
-        <Section title="Payment" icon={PiCurrencyDollar}>
+        <Section title={t('reservation_view_payment')} icon={PiCurrencyDollar}>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <DetailItem
-              label="Payment Method"
+              label={t('reservation_view_payment_method')}
               value={
                 isCashPayment(reservation?.payment_method)
-                  ? 'Cash'
+                  ? t('reservation_view_cash')
                   : reservation?.payment_method
               }
             />
             <DetailItem
-              label="Payment Status"
+              label={t('reservation_view_payment_status')}
               value={paymentStatusBadge ?? paidLabel}
             />
             {reservation?.payment_discount != null &&
               Number(reservation.payment_discount) > 0 && (
                 <DetailItem
-                  label="Payment Discount"
+                  label={t('reservation_view_payment_discount')}
                   value={`${reservation.payment_discount}%`}
                 />
               )}
             {reservation?.provider_fee != null &&
               Number(reservation.provider_fee) > 0 && (
                 <DetailItem
-                  label="Provider Fee"
-                  value={`${reservation.provider_fee} SAR`}
+                  label={t('reservation_view_provider_fee')}
+                  value={`${reservation.provider_fee} ${currency}`}
                 />
               )}
             <DetailItem
-              label="Sub Total"
+              label={t('reservation_view_sub_total')}
               value={
-                reservation?.sub_total ? `${reservation.sub_total} SAR` : undefined
+                reservation?.sub_total
+                  ? `${reservation.sub_total} ${currency}`
+                  : undefined
               }
             />
             {Number(reservation?.fees) > 0 && (
               <DetailItem
-                label="Fees (VAT)"
-                value={`${reservation.fees} SAR`}
+                label={t('reservation_view_fees_vat')}
+                value={`${reservation.fees} ${currency}`}
               />
             )}
             <DetailItem
-              label="Total Amount"
+              label={t('reservation_view_total_amount')}
               value={
                 reservation?.total_amount
-                  ? `${reservation.total_amount} SAR`
+                  ? `${reservation.total_amount} ${currency}`
                   : undefined
               }
             />
             <DetailItem
-              label="Remaining"
+              label={t('reservation_view_remaining')}
               value={
                 reservation?.remaining_payment != null
-                  ? `${reservation.remaining_payment} SAR`
+                  ? `${reservation.remaining_payment} ${currency}`
                   : undefined
               }
             />
@@ -551,7 +586,11 @@ export function ReservationViewContent({
       {(reservation?.notes || reservation?.dates?.length > 0) && (
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
           {reservation?.notes && (
-            <Section title="Notes" icon={PiNotePencil} className="lg:col-span-1">
+            <Section
+              title={t('reservation_view_notes')}
+              icon={PiNotePencil}
+              className="lg:col-span-1"
+            >
               <Text as="p" className="whitespace-pre-wrap text-sm leading-relaxed text-gray-700">
                 {reservation.notes}
               </Text>
@@ -560,18 +599,20 @@ export function ReservationViewContent({
 
           {reservation?.dates?.length > 0 && (
             <Section
-              title={`Sessions (${reservation.dates.length})`}
+              title={t('reservation_view_sessions_count', {
+                count: reservation.dates.length,
+              })}
               icon={PiClock}
               className={reservation?.notes ? '' : 'lg:col-span-2'}
             >
               <ul className="space-y-3">
                 {reservation.dates.map((session: any, index: number) => {
                   const { day, timePeriod, start, end, status } =
-                    formatSessionLabel(session);
+                    formatSessionLabel(session, locale);
                   const hasSignature =
                     session?.has_signature === true ||
                     Boolean(session?.signed_at);
-                  const signedAtText = formatSignedAt(session?.signed_at);
+                  const signedAtText = formatSignedAt(session?.signed_at, locale);
                   const reportUrl = session?.report_url;
                   const attended = session?.doctor_attended === true;
                   return (
@@ -596,7 +637,7 @@ export function ReservationViewContent({
                           {hasSignature ? (
                             <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-800">
                               <PiSealCheck className="h-3.5 w-3.5" />
-                              Signed
+                              {t('reservation_view_signed')}
                               {signedAtText && (
                                 <span className="font-normal text-emerald-700">
                                   · {signedAtText}
@@ -605,11 +646,11 @@ export function ReservationViewContent({
                             </span>
                           ) : attended ? (
                             <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-800">
-                              Attended · not signed
+                              {t('reservation_view_attended_not_signed')}
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white px-2 py-0.5 text-xs font-medium text-gray-500">
-                              Not signed
+                              {t('reservation_view_not_signed')}
                             </span>
                           )}
                           {reportUrl && (
@@ -620,7 +661,7 @@ export function ReservationViewContent({
                               className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/5 px-2 py-0.5 text-xs font-semibold text-primary hover:bg-primary/10"
                             >
                               <PiFilePdf className="h-3.5 w-3.5" />
-                              View report
+                              {t('reservation_view_view_report')}
                             </a>
                           )}
                         </div>
@@ -641,8 +682,9 @@ export function ReservationViewContent({
               size="sm"
               content={() =>
                 paymentWhatsappEnabled
-                  ? 'Send payment link via WhatsApp'
-                  : paymentWhatsappDisabledReason ?? 'Send Payment WhatsApp'
+                  ? t('reservation_view_send_payment_whatsapp_tip')
+                  : paymentWhatsappDisabledReason ??
+                    t('reservation_view_send_payment_whatsapp')
               }
               placement="top"
               color="invert"
@@ -657,7 +699,7 @@ export function ReservationViewContent({
                   onClick={handleWhatsAppPayment}
                 >
                   <ChatSolidIcon className="me-1.5 h-4 w-4" />
-                  Send Payment WhatsApp
+                  {t('reservation_view_send_payment_whatsapp')}
                 </Button>
               </span>
             </Tooltip>
@@ -668,8 +710,9 @@ export function ReservationViewContent({
               size="sm"
               content={() =>
                 invoiceWhatsappEnabled
-                  ? 'Send invoice PDF via WhatsApp'
-                  : invoiceWhatsappDisabledReason ?? 'Send invoice on WhatsApp'
+                  ? t('reservation_view_send_invoice_whatsapp_tip')
+                  : invoiceWhatsappDisabledReason ??
+                    t('reservation_view_send_invoice_whatsapp')
               }
               placement="top"
               color="invert"
@@ -688,7 +731,7 @@ export function ReservationViewContent({
                   onClick={handleSendInvoiceWhatsapp}
                 >
                   <PiReceipt className="me-1.5 h-4 w-4" />
-                  Send Invoice on WhatsApp
+                  {t('reservation_view_send_invoice_whatsapp')}
                 </Button>
               </span>
             </Tooltip>
@@ -699,8 +742,9 @@ export function ReservationViewContent({
               size="sm"
               content={() =>
                 confirmCashEnabled
-                  ? 'Confirm cash collection and mark as paid'
-                  : confirmCashDisabledReason ?? 'Confirm & mark paid'
+                  ? t('reservation_view_confirm_mark_paid_tip')
+                  : confirmCashDisabledReason ??
+                    t('reservation_view_confirm_mark_paid')
               }
               placement="top"
               color="invert"
@@ -713,7 +757,7 @@ export function ReservationViewContent({
                   className={cn(!confirmCashEnabled && 'cursor-not-allowed')}
                   onClick={() => confirmCashEnabled && setConfirmModalOpen(true)}
                 >
-                  Confirm & mark paid
+                  {t('reservation_view_confirm_mark_paid')}
                 </Button>
               </span>
             </Tooltip>
@@ -732,11 +776,15 @@ export function ReservationViewContent({
 
       <div className="flex flex-wrap gap-4 rounded-lg border border-dashed border-gray-200 bg-gray-50/50 px-4 py-3 text-xs text-gray-500">
         <span>
-          <span className="font-medium text-gray-600">Created:</span>{' '}
+          <span className="font-medium text-gray-600">
+            {t('reservation_view_created')}:
+          </span>{' '}
           {reservation?.created_at ?? '—'}
         </span>
         <span>
-          <span className="font-medium text-gray-600">Updated:</span>{' '}
+          <span className="font-medium text-gray-600">
+            {t('reservation_view_updated')}:
+          </span>{' '}
           {reservation?.updated_at ?? '—'}
         </span>
       </div>
@@ -755,6 +803,7 @@ export default function ReservationViewModal({
   canSendPaymentWhatsapp?: boolean;
   canSendInvoiceWhatsapp?: boolean;
 }) {
+  const { t } = useTranslation();
   const { closeModal } = useModal();
   const [localReservation, setLocalReservation] = useState(reservation);
 
@@ -767,12 +816,12 @@ export default function ReservationViewModal({
       <div className="flex shrink-0 items-center justify-between border-b border-gray-200 bg-white px-6 py-4">
         <div>
           <Title as="h4" className="text-lg font-semibold text-gray-900">
-            Reservation Details
+            {t('reservation_view_title')}
           </Title>
           <Text as="p" className="mt-0.5 text-sm text-gray-500">
             {canEdit
-              ? 'Review details, send WhatsApp messages, or confirm cash collection'
-              : 'Read-only view'}
+              ? t('reservation_view_subtitle_edit')
+              : t('reservation_view_subtitle_readonly')}
           </Text>
         </div>
         <Button onClick={closeModal} variant="outline" size="sm" className="shrink-0">
