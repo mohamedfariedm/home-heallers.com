@@ -7,6 +7,7 @@ import ControlledTable from '@/components/controlled-table';
 import { getColumns } from './columns';
 import { useDeleteHighlight, useToggleHighlightActive } from '@/framework/highlights';
 import { Highlight } from '@/types/highlights';
+import { useTranslation } from 'react-i18next';
 
 export default function HighlightsTable({
   data = [],
@@ -25,6 +26,7 @@ export default function HighlightsTable({
   getSelectedColumns?: (columns: any[]) => void;
   getSelectedRowKeys?: (keys: any[]) => void;
 }) {
+  const { t } = useTranslation();
   const { mutate: deleteHighlight } = useDeleteHighlight();
   const { mutate: toggleActive } = useToggleHighlightActive();
 
@@ -63,8 +65,9 @@ export default function HighlightsTable({
         onDeleteItem: handleDeleteItem,
         canEdit,
         canDelete,
+        t,
       }),
-    [tableData, handleToggleActive, handleDeleteItem, canEdit, canDelete]
+    [tableData, handleToggleActive, handleDeleteItem, canEdit, canDelete, t]
   );
 
   const { visibleColumns, checkedColumns, setCheckedColumns } =

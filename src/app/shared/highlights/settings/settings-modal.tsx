@@ -10,6 +10,7 @@ import {
   useUpdateHighlightSettings,
 } from '@/framework/highlights';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 interface HighlightsSettingsModalProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ export default function HighlightsSettingsModal({
   isOpen,
   onClose,
 }: HighlightsSettingsModalProps) {
+  const { t } = useTranslation();
   const { data, isLoading } = useHighlightSettings();
   const updateSettings = useUpdateHighlightSettings();
   const [duration, setDuration] = useState<number>(15);
@@ -33,7 +35,7 @@ export default function HighlightsSettingsModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (duration <= 0) {
-      toast.error('Duration must be a positive number of seconds');
+      toast.error(t('highlights_settings_duration_error'));
       return;
     }
 
@@ -51,16 +53,16 @@ export default function HighlightsSettingsModal({
     <Modal isOpen={isOpen} onClose={onClose}>
       <div className="p-6">
         <Title as="h3" className="mb-2 text-lg font-semibold text-gray-900">
-          Global Highlights Settings
+          {t('highlights_settings_title')}
         </Title>
         <Text className="mb-4 text-xs text-gray-500">
-          Configure default display duration for image slides. Videos automatically play to completion.
+          {t('highlights_settings_desc')}
         </Text>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">
-              Image Slide Duration (Seconds) <span className="text-red-500">*</span>
+              {t('highlights_settings_duration_label')} <span className="text-red-500">*</span>
             </label>
             <Input
               type="number"
@@ -75,14 +77,14 @@ export default function HighlightsSettingsModal({
 
           <div className="mt-6 flex justify-end gap-3 border-t border-gray-200 pt-4">
             <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
+              {t('highlights_cancel')}
             </Button>
             <Button
               type="submit"
               isLoading={updateSettings.isPending}
               disabled={isLoading}
             >
-              Save Settings
+              {t('highlights_settings_save')}
             </Button>
           </div>
         </form>

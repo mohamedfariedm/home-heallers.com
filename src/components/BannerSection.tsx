@@ -9,6 +9,7 @@ import {
   deepLinkPathForType,
   type DeepLinkEntityType,
 } from '@/app/shared/notifications/constants';
+import { useTranslation } from 'react-i18next';
 
 interface BannerSectionProps {
   banners: Banner[];
@@ -17,11 +18,12 @@ interface BannerSectionProps {
 
 // CTA type selector — mirrors the Highlights/Stories CTA. `coupon` is
 // intentionally excluded (banners must not offer it and the API rejects it).
+// Labels are translated at render time via i18n.
 const CTA_TYPE_OPTIONS = [
-  { value: '', label: 'None' },
-  { value: 'offers', label: 'Offers' },
-  { value: 'doctors', label: 'Doctors' },
-  { value: 'categories', label: 'Categories' },
+  { value: '', labelKey: 'banners_cta_none' },
+  { value: 'offers', labelKey: 'banners_cta_offers' },
+  { value: 'doctors', labelKey: 'banners_cta_doctors' },
+  { value: 'categories', labelKey: 'banners_cta_categories' },
 ];
 
 const ENTITY_CTA_TYPES = ['offers', 'doctors', 'categories'];
@@ -41,6 +43,7 @@ function resolveEntityName(item: any): string {
 }
 
 const BannerSection: React.FC<BannerSectionProps> = ({ banners, onUpdate }) => {
+  const { t } = useTranslation();
   const [selectedBanner, setSelectedBanner] = useState<Banner | null>(null);
 
   // Entity lists for the CTA pickers (offers / doctors / categories).
@@ -144,9 +147,9 @@ const BannerSection: React.FC<BannerSectionProps> = ({ banners, onUpdate }) => {
     // (same shape as the Highlights/Stories CTA).
     if (ctaType === 'offers' || ctaType === 'doctors' || ctaType === 'categories') {
       const entityMap = {
-        offers: { list: offers, loading: offersLoading, label: 'Offer' },
-        doctors: { list: doctors, loading: doctorsLoading, label: 'Doctor' },
-        categories: { list: categories, loading: categoriesLoading, label: 'Category' },
+        offers: { list: offers, loading: offersLoading, label: t('banners_entity_offer') },
+        doctors: { list: doctors, loading: doctorsLoading, label: t('banners_entity_doctor') },
+        categories: { list: categories, loading: categoriesLoading, label: t('banners_entity_category') },
       } as const;
       const { list, loading, label } = entityMap[ctaType];
       return (
@@ -170,7 +173,7 @@ const BannerSection: React.FC<BannerSectionProps> = ({ banners, onUpdate }) => {
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             <option value="">
-              {loading ? 'Loading…' : `Select ${label.toLowerCase()}`}
+              {loading ? t('banners_loading') : t('banners_select_entity', { entity: label.toLowerCase() })}
             </option>
             {list.map((item: any) => (
               <option key={item.id} value={String(item.id)}>
@@ -195,13 +198,13 @@ const BannerSection: React.FC<BannerSectionProps> = ({ banners, onUpdate }) => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-gray-900">Banner Management</h2>
+        <h2 className="text-xl font-semibold text-gray-900">{t('banners_management')}</h2>
         <button
           onClick={addBanner}
           className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
         >
           <Plus className="w-4 h-4" />
-          <span>Add Banner</span>
+          <span>{t('banners_add')}</span>
         </button>
       </div>
 
@@ -210,7 +213,7 @@ const BannerSection: React.FC<BannerSectionProps> = ({ banners, onUpdate }) => {
           <div key={index} className="bg-gray-50 rounded-lg p-6 border border-gray-200">
             <div className="flex items-start justify-between mb-4">
               <h3 className="text-lg font-medium text-gray-900">
-                Banner {displayPos + 1}
+                {t('banners_banner_n', { n: displayPos + 1 })}
               </h3>
               <button
                 onClick={() => deleteBanner(index)}
@@ -225,21 +228,21 @@ const BannerSection: React.FC<BannerSectionProps> = ({ banners, onUpdate }) => {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Type
+                      {t('banners_type')}
                     </label>
                     <select
                       value={banner.type || 'web'}
                       onChange={(e) => updateBanner(index, { ...banner, type: e.target.value as 'web' | 'mobile app' })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
-                      <option value="web">Web</option>
-                      <option value="mobile app">Mobile App</option>
+                      <option value="web">{t('banners_type_web')}</option>
+                      <option value="mobile app">{t('banners_type_mobile')}</option>
                     </select>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Order
+                      {t('banners_order')}
                     </label>
                     <input
                       type="number"
@@ -258,7 +261,7 @@ const BannerSection: React.FC<BannerSectionProps> = ({ banners, onUpdate }) => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Page
+                    {t('banners_page')}
                   </label>
                   <select
                     value={banner.page}
@@ -267,7 +270,7 @@ const BannerSection: React.FC<BannerSectionProps> = ({ banners, onUpdate }) => {
                   >
                     {pageOptions.map((page) => (
                       <option key={page} value={page}>
-                        {page.replace('-', ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
+                        {t(`banners_page_${page.replace('-', '_')}`)}
                       </option>
                     ))}
                   </select>
@@ -275,7 +278,7 @@ const BannerSection: React.FC<BannerSectionProps> = ({ banners, onUpdate }) => {
 
                 <div>
                   <FileUpload
-                    label="Banner Image"
+                    label={t('banners_image')}
                     onUpload={(files) => handleImageUpload(index, files)}
                     onRemove={() => handleRemoveImage(index)}
                     currentFiles={banner.attachment.thumbnail ? [banner.attachment] : [{
@@ -292,7 +295,7 @@ const BannerSection: React.FC<BannerSectionProps> = ({ banners, onUpdate }) => {
                       className="flex items-center space-x-2 text-blue-600 hover:text-blue-800 transition-colors mt-2"
                     >
                       <Eye className="w-4 h-4" />
-                      <span>Preview</span>
+                      <span>{t('banners_preview')}</span>
                     </button>
                   )}
                 </div>
@@ -321,7 +324,7 @@ const BannerSection: React.FC<BannerSectionProps> = ({ banners, onUpdate }) => {
                         d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                       />
                     </svg>
-                    <p>No image uploaded</p>
+                    <p>{t('banners_no_image')}</p>
                   </div>
                 )}
               </div>
@@ -332,13 +335,13 @@ const BannerSection: React.FC<BannerSectionProps> = ({ banners, onUpdate }) => {
               <div className="mb-3 flex items-center gap-2">
                 <BellRing className="h-4 w-4 text-purple-700" />
                 <span className="text-sm font-semibold text-purple-900">
-                  CTA Action (optional)
+                  {t('banners_cta_action')}
                 </span>
               </div>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    CTA Type
+                    {t('banners_cta_type')}
                   </label>
                   <select
                     value={banner.cta_type || ''}
@@ -347,7 +350,7 @@ const BannerSection: React.FC<BannerSectionProps> = ({ banners, onUpdate }) => {
                   >
                     {CTA_TYPE_OPTIONS.map((opt) => (
                       <option key={opt.value} value={opt.value}>
-                        {opt.label}
+                        {t(opt.labelKey)}
                       </option>
                     ))}
                   </select>
@@ -360,9 +363,9 @@ const BannerSection: React.FC<BannerSectionProps> = ({ banners, onUpdate }) => {
               {ENTITY_CTA_TYPES.includes(banner.cta_type || '') && (
                 <div className="mt-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    External URL{' '}
+                    {t('banners_external_url')}{' '}
                     <span className="font-normal text-gray-400">
-                      (auto-filled from selection)
+                      {t('banners_autofilled')}
                     </span>
                   </label>
                   <input
@@ -396,12 +399,12 @@ const BannerSection: React.FC<BannerSectionProps> = ({ banners, onUpdate }) => {
                 d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
               />
             </svg>
-            <p className="text-gray-600 mb-4">No banners configured</p>
+            <p className="text-gray-600 mb-4">{t('banners_empty')}</p>
             <button
               onClick={addBanner}
               className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
             >
-              Add Your First Banner
+              {t('banners_add_first')}
             </button>
           </div>
         )}
@@ -414,7 +417,9 @@ const BannerSection: React.FC<BannerSectionProps> = ({ banners, onUpdate }) => {
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-medium">
-                  Banner Preview - {selectedBanner.page.replace('-', ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
+                  {t('banners_preview_title', {
+                    page: selectedBanner.page.replace('-', ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
+                  })}
                 </h3>
                 <button
                   onClick={() => setSelectedBanner(null)}

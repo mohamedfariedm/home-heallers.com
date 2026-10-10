@@ -21,6 +21,7 @@ type ColumnsParams = {
   onDeleteItem: (id: number) => void;
   canEdit?: boolean;
   canDelete?: boolean;
+  t: (key: string, options?: any) => string;
 };
 
 export const getColumns = ({
@@ -28,9 +29,10 @@ export const getColumns = ({
   onDeleteItem,
   canEdit = true,
   canDelete = true,
+  t,
 }: ColumnsParams) => [
   {
-    title: <HeaderCell title="Highlight" />,
+    title: <HeaderCell title={t('highlights_col_highlight')} />,
     dataIndex: 'title',
     key: 'title',
     width: 250,
@@ -50,7 +52,7 @@ export const getColumns = ({
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-xs text-gray-400">
-                No cover
+                {t('highlights_no_cover')}
               </div>
             )}
           </div>
@@ -58,7 +60,7 @@ export const getColumns = ({
             <div className="flex items-center gap-1.5 font-semibold text-gray-900">
               <span>{titleEn}</span>
               {row.is_pinned && (
-                <Tooltip content={() => 'Pinned Highlight'} placement="top">
+                <Tooltip content={() => t('highlights_pinned')} placement="top">
                   <span className="inline-flex text-amber-500">
                     <PiPushPinFill className="h-4 w-4" />
                   </span>
@@ -74,7 +76,7 @@ export const getColumns = ({
     },
   },
   {
-    title: <HeaderCell align="center" title="Visibility" />,
+    title: <HeaderCell align="center" title={t('highlights_col_visibility')} />,
     dataIndex: 'visibility_type',
     key: 'visibility_type',
     width: 130,
@@ -82,18 +84,18 @@ export const getColumns = ({
       <div className="flex justify-center">
         {value === 'daily' ? (
           <Badge variant="flat" color="warning" className="capitalize">
-            Daily (24h)
+            {t('highlights_visibility_daily')}
           </Badge>
         ) : (
           <Badge variant="flat" color="primary" className="capitalize">
-            Always
+            {t('highlights_visibility_always')}
           </Badge>
         )}
       </div>
     ),
   },
   {
-    title: <HeaderCell align="center" title="Elements" />,
+    title: <HeaderCell align="center" title={t('highlights_col_elements')} />,
     dataIndex: 'elements_count',
     key: 'elements_count',
     width: 120,
@@ -113,7 +115,7 @@ export const getColumns = ({
     ),
   },
   {
-    title: <HeaderCell align="center" title="Order" />,
+    title: <HeaderCell align="center" title={t('highlights_col_order')} />,
     dataIndex: 'order',
     key: 'order',
     width: 90,
@@ -122,7 +124,7 @@ export const getColumns = ({
     ),
   },
   {
-    title: <HeaderCell align="center" title="Expiry Status" />,
+    title: <HeaderCell align="center" title={t('highlights_col_expiry')} />,
     dataIndex: 'is_expired',
     key: 'is_expired',
     width: 130,
@@ -130,18 +132,18 @@ export const getColumns = ({
       <div className="flex justify-center">
         {isExpired ? (
           <Badge variant="flat" color="danger">
-            Expired
+            {t('highlights_expired')}
           </Badge>
         ) : (
           <Badge variant="flat" color="success">
-            Active
+            {t('highlights_active')}
           </Badge>
         )}
       </div>
     ),
   },
   {
-    title: <HeaderCell align="center" title="Status" />,
+    title: <HeaderCell align="center" title={t('highlights_col_status')} />,
     dataIndex: 'is_active',
     key: 'is_active',
     width: 120,
@@ -156,7 +158,7 @@ export const getColumns = ({
     ),
   },
   {
-    title: <HeaderCell align="center" title="Created At" />,
+    title: <HeaderCell align="center" title={t('highlights_col_created')} />,
     dataIndex: 'created_at',
     key: 'created_at',
     width: 150,
@@ -167,14 +169,14 @@ export const getColumns = ({
     ),
   },
   {
-    title: <HeaderCell align="center" title="Actions" />,
+    title: <HeaderCell align="center" title={t('highlights_col_actions')} />,
     dataIndex: 'action',
     key: 'action',
     width: 120,
     render: (_: string, row: Highlight) => (
       <div className="flex items-center justify-center gap-2">
         {canEdit && (
-          <Tooltip size="sm" content={() => 'Edit Highlight & Elements'} placement="top">
+          <Tooltip size="sm" content={() => t('highlights_edit_tooltip')} placement="top">
             <Link href={routes.highlights.edit(row.id)}>
               <ActionIcon
                 size="sm"
@@ -188,8 +190,8 @@ export const getColumns = ({
         )}
         {canDelete && (
           <DeletePopover
-            title="Delete Highlight"
-            description={`Are you sure you want to delete highlight #${row.id}?`}
+            title={t('highlights_delete_title')}
+            description={t('highlights_delete_confirm', { id: row.id })}
             onDelete={() => onDeleteItem(row.id)}
           >
             <ActionIcon

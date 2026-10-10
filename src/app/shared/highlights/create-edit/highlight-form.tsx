@@ -13,6 +13,7 @@ import { useCountries } from '@/framework/countrues';
 import { Highlight } from '@/types/highlights';
 import { routes } from '@/config/routes';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 interface HighlightFormProps {
   initialValues?: Highlight;
@@ -23,6 +24,7 @@ export default function HighlightForm({
   initialValues,
   onSuccessCallback,
 }: HighlightFormProps) {
+  const { t } = useTranslation();
   const router = useRouter();
   const params = useParams();
   const locale = (params?.locale as string) === 'ar' ? 'ar' : 'en';
@@ -73,7 +75,7 @@ export default function HighlightForm({
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       if (file.size > 5 * 1024 * 1024) {
-        toast.error('Cover image must be 5MB or less');
+        toast.error(t('highlights_form_cover_size_error'));
         return;
       }
       setCoverFile(file);
@@ -85,12 +87,12 @@ export default function HighlightForm({
     e.preventDefault();
 
     if (!titleAr.trim() || !titleEn.trim()) {
-      toast.error('Both Arabic and English titles are required');
+      toast.error(t('highlights_form_titles_required'));
       return;
     }
 
     if (!isEdit && !coverFile) {
-      toast.error('Cover image is required when creating a highlight');
+      toast.error(t('highlights_form_cover_required'));
       return;
     }
 
@@ -130,7 +132,7 @@ export default function HighlightForm({
         const newId = createdItem?.id;
 
         if (newId) {
-          toast.success('Highlight created! Now add slide elements.');
+          toast.success(t('highlights_form_created_add_elements'));
           router.push(routes.highlights.edit(newId));
         } else {
           router.push(routes.highlights.index);
@@ -145,16 +147,16 @@ export default function HighlightForm({
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
         <Title as="h3" className="mb-4 text-base font-semibold text-gray-900">
-          {isEdit ? 'Edit Highlight Info' : 'Create Highlight'}
+          {isEdit ? t('highlights_form_edit_info') : t('highlights_form_create')}
         </Title>
 
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
           <div>
             <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              Title (Arabic) <span className="text-red-500">*</span>
+              {t('highlights_form_title_ar')} <span className="text-red-500">*</span>
             </label>
             <Input
-              placeholder="مثال: عروض الأسبوع"
+              placeholder={t('highlights_form_title_ar_ph')}
               dir="rtl"
               value={titleAr}
               onChange={(e) => setTitleAr(e.target.value)}
@@ -164,10 +166,10 @@ export default function HighlightForm({
 
           <div>
             <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              Title (English) <span className="text-red-500">*</span>
+              {t('highlights_form_title_en')} <span className="text-red-500">*</span>
             </label>
             <Input
-              placeholder="e.g. Weekly Offers"
+              placeholder={t('highlights_form_title_en_ph')}
               value={titleEn}
               onChange={(e) => setTitleEn(e.target.value)}
               required
@@ -176,12 +178,12 @@ export default function HighlightForm({
 
           <div>
             <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              Visibility Type <span className="text-red-500">*</span>
+              {t('highlights_form_visibility')} <span className="text-red-500">*</span>
             </label>
             <Select
               options={[
-                { value: 'always', label: 'Always (Never Expires)', name: 'Always' },
-                { value: 'daily', label: 'Daily (Expires 24h per element)', name: 'Daily' },
+                { value: 'always', label: t('highlights_form_visibility_always'), name: 'Always' },
+                { value: 'daily', label: t('highlights_form_visibility_daily'), name: 'Daily' },
               ]}
               value={visibilityType}
               getOptionValue={(opt: any) => opt.value}
@@ -195,7 +197,7 @@ export default function HighlightForm({
 
           <div className="md:col-span-2">
             <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              Cover Image {!isEdit && <span className="text-red-500">*</span>} (JPEG, PNG, WEBP ≤ 5MB)
+              {t('highlights_form_cover')} {!isEdit && <span className="text-red-500">*</span>} {t('highlights_form_cover_hint')}
             </label>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
               {coverPreview && (
@@ -212,7 +214,7 @@ export default function HighlightForm({
               <div className="flex-1">
                 <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-gray-300 p-4 text-sm font-medium text-gray-600 hover:border-gray-900 hover:text-gray-900">
                   <span>
-                    {coverFile ? coverFile.name : 'Choose cover image file...'}
+                    {coverFile ? coverFile.name : t('highlights_form_choose_cover')}
                   </span>
                   <input
                     type="file"
@@ -227,10 +229,10 @@ export default function HighlightForm({
 
           <div className="md:col-span-2">
             <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              Target Countries (Leave empty for ALL countries)
+              {t('highlights_form_countries')}
             </label>
             <div className="flex flex-wrap gap-2">
-              {countryOptions.map((c) => {
+              {countryOptions.map((c: any) => {
                 const isSelected = selectedCountries.includes(c.value);
                 return (
                   <button
@@ -254,7 +256,7 @@ export default function HighlightForm({
               })}
               {countryOptions.length === 0 && (
                 <Text className="text-xs text-gray-500">
-                  All countries selected by default.
+                  {t('highlights_form_all_countries')}
                 </Text>
               )}
             </div>
@@ -268,10 +270,10 @@ export default function HighlightForm({
               />
               <div>
                 <Text className="text-sm font-semibold text-gray-900">
-                  Pin Highlight
+                  {t('highlights_form_pin')}
                 </Text>
                 <Text className="text-xs text-gray-500">
-                  Max 3 pinned highlights total system-wide.
+                  {t('highlights_form_pin_hint')}
                 </Text>
               </div>
             </div>
@@ -283,10 +285,10 @@ export default function HighlightForm({
               />
               <div>
                 <Text className="text-sm font-semibold text-gray-900">
-                  Active
+                  {t('highlights_form_active')}
                 </Text>
                 <Text className="text-xs text-gray-500">
-                  Show or hide in client app strip.
+                  {t('highlights_form_active_hint')}
                 </Text>
               </div>
             </div>
@@ -299,10 +301,10 @@ export default function HighlightForm({
             variant="outline"
             onClick={() => router.push(routes.highlights.index)}
           >
-            Cancel
+            {t('highlights_cancel')}
           </Button>
           <Button type="submit" isLoading={isLoading}>
-            {isEdit ? 'Save Changes' : 'Create & Continue'}
+            {isEdit ? t('highlights_form_save') : t('highlights_form_create_continue')}
           </Button>
         </div>
       </div>

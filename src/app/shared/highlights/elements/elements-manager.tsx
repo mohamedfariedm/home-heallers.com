@@ -23,13 +23,13 @@ import { useCategories } from '@/framework/categories';
 import { useCoupons } from '@/framework/coupons';
 import {
   NOTIFICATION_TYPE_OPTIONS,
-  deepLinkEntityLabel,
   deepLinkPathForType,
   isDeepLinkEntityType,
   type DeepLinkEntityType,
 } from '@/app/shared/notifications/constants';
 import { HighlightElement } from '@/types/highlights';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import {
   PiPlusBold,
   PiTrashBold,
@@ -79,6 +79,21 @@ export default function ElementsManager({
   highlightId,
   elements = [],
 }: ElementsManagerProps) {
+  const { t } = useTranslation();
+  const entityTypeLabel = (type?: string | null) => {
+    switch (type) {
+      case 'offers':
+        return t('highlights_entity_offer');
+      case 'doctors':
+        return t('highlights_entity_doctor');
+      case 'categories':
+        return t('highlights_entity_category');
+      case 'coupon':
+        return t('highlights_entity_coupon');
+      default:
+        return t('highlights_entity_default');
+    }
+  };
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingElement, setEditingElement] = useState<HighlightElement | null>(null);
 
@@ -154,9 +169,11 @@ export default function ElementsManager({
     }
   };
 
-  const ctaTypeOptions: Array<{ value: string; label: string }> = [
-    ...NOTIFICATION_TYPE_OPTIONS,
-  ];
+  const ctaTypeOptions: Array<{ value: string; label: string }> =
+    NOTIFICATION_TYPE_OPTIONS.map((o) => ({
+      value: o.value,
+      label: o.value ? entityTypeLabel(o.value) : t('highlights_el_cta_none'),
+    }));
   if (ctaType && !NOTIFICATION_TYPE_OPTIONS.some((o) => o.value === ctaType)) {
     // Preserve a custom/legacy cta_type coming from an existing element.
     ctaTypeOptions.push({ value: ctaType, label: ctaType });
@@ -164,7 +181,7 @@ export default function ElementsManager({
 
   const openAddModal = () => {
     if (isCapReached) {
-      toast.error('Maximum cap of 5 elements per highlight reached');
+      toast.error(t('highlights_el_cap_reached'));
       return;
     }
     setEditingElement(null);
@@ -226,7 +243,7 @@ export default function ElementsManager({
     e.preventDefault();
 
     if (!editingElement && !mediaFile) {
-      toast.error('Media file is required when adding a new slide element');
+      toast.error(t('highlights_el_media_required'));
       return;
     }
 
@@ -278,7 +295,7 @@ export default function ElementsManager({
         <div>
           <div className="flex items-center gap-2">
             <Title as="h3" className="text-base font-semibold text-gray-900">
-              Slide Elements Manager
+              {t('highlights_el_manager_title')}
             </Title>
             <Badge
               variant="flat"
@@ -288,7 +305,7 @@ export default function ElementsManager({
             </Badge>
           </div>
           <Text className="mt-1 text-xs text-gray-500">
-            Add 1 to 5 image or video slides. Updating media wipes client view history.
+            {t('highlights_el_manager_hint')}
           </Text>
         </div>
 
@@ -299,7 +316,7 @@ export default function ElementsManager({
           className="flex items-center gap-2"
         >
           <PiPlusBold className="h-4 w-4" />
-          <span>Add Slide Element</span>
+          <span>{t('highlights_el_add')}</span>
         </Button>
       </div>
 
@@ -322,7 +339,7 @@ export default function ElementsManager({
                 ) : (
                   <Image
                     src={el.media_url}
-                    alt="Slide media"
+                    alt={t('highlights_el_media_alt')}
                     fill
                     sizes="300px"
                     className="object-cover"
@@ -335,11 +352,15 @@ export default function ElementsManager({
                     ) : (
                       <PiImageBold className="h-3 w-3" />
                     )}
-                    <span className="capitalize">{el.media_type}</span>
+                    <span className="capitalize">
+                      {el.media_type === 'video'
+                        ? t('highlights_media_video')
+                        : t('highlights_media_image')}
+                    </span>
                   </Badge>
                   {el.is_expired && (
                     <Badge variant="flat" color="danger">
-                      Expired
+                      {t('highlights_expired')}
                     </Badge>
                   )}
                 </div>
@@ -347,9 +368,9 @@ export default function ElementsManager({
 
               <div className="space-y-1.5 text-xs text-gray-600">
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold text-gray-700">Order: #{el.order}</span>
+                  <span className="font-semibold text-gray-700">{t('highlights_el_order_label', { order: el.order })}</span>
                   <div className="flex items-center gap-1">
-                    <span className="text-gray-500">Active:</span>
+                    <span className="text-gray-500">{t('highlights_el_active_label')}</span>
                     <Switch
                       size="sm"
                       checked={el.is_active}
@@ -385,8 +406,8 @@ export default function ElementsManager({
                 <PiPencilBold className="h-3.5 w-3.5" />
               </ActionIcon>
               <DeletePopover
-                title="Delete Slide Element"
-                description={`Delete element #${el.id}?`}
+                title={t('highlights_el_delete_title')}
+                description={t('highlights_el_delete_confirm', { id: el.id })}
                 onDelete={() =>
                   deleteElement.mutate({
                     highlightId,
@@ -409,9 +430,9 @@ export default function ElementsManager({
         {elements.length === 0 && (
           <div className="col-span-full flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 py-12 text-center">
             <PiImageBold className="mb-2 h-10 w-10 text-gray-400" />
-            <Text className="font-medium text-gray-700">No slide elements added yet</Text>
+            <Text className="font-medium text-gray-700">{t('highlights_el_empty')}</Text>
             <Text className="mt-1 text-xs text-gray-500">
-              Each highlight requires 1 to 5 elements (images or videos).
+              {t('highlights_el_empty_hint')}
             </Text>
             <Button
               type="button"
@@ -420,7 +441,7 @@ export default function ElementsManager({
               onClick={openAddModal}
               className="mt-4"
             >
-              Add First Slide Element
+              {t('highlights_el_add_first')}
             </Button>
           </div>
         )}
@@ -430,18 +451,18 @@ export default function ElementsManager({
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
         <div className="p-6">
           <Title as="h3" className="mb-4 text-lg font-semibold text-gray-900">
-            {editingElement ? 'Edit Slide Element' : 'Add Slide Element'}
+            {editingElement ? t('highlights_el_edit_title') : t('highlights_el_add')}
           </Title>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700">
-                Media Type <span className="text-red-500">*</span>
+                {t('highlights_el_media_type')} <span className="text-red-500">*</span>
               </label>
               <Select
                 options={[
-                  { value: 'image', label: 'Image (JPEG, PNG, WEBP, GIF ≤ 5MB)', name: 'Image' },
-                  { value: 'video', label: 'Video (MP4, MOV, WEBM ≤ 150MB)', name: 'Video' },
+                  { value: 'image', label: t('highlights_el_media_image_opt'), name: 'Image' },
+                  { value: 'video', label: t('highlights_el_media_video_opt'), name: 'Video' },
                 ]}
                 value={mediaType}
                 getOptionValue={(opt: any) => opt.value}
@@ -451,13 +472,13 @@ export default function ElementsManager({
 
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700">
-                Media File {!editingElement && <span className="text-red-500">*</span>}{' '}
-                {editingElement && '(Upload to replace media & reset views)'}
+                {t('highlights_el_media_file')} {!editingElement && <span className="text-red-500">*</span>}{' '}
+                {editingElement && t('highlights_el_media_replace_hint')}
               </label>
               <label className="flex cursor-pointer items-center gap-2 rounded-md border border-dashed border-gray-300 p-3 text-sm font-medium text-gray-600 hover:border-gray-900">
                 <PiCloudArrowUpBold className="h-5 w-5 text-gray-500" />
                 <span className="truncate">
-                  {mediaFile ? mediaFile.name : 'Choose media file...'}
+                  {mediaFile ? mediaFile.name : t('highlights_el_choose_media')}
                 </span>
                 <input
                   type="file"
@@ -479,12 +500,12 @@ export default function ElementsManager({
             {mediaType === 'video' && (
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">
-                  Video Poster Thumbnail (Optional image ≤ 5MB)
+                  {t('highlights_el_poster')}
                 </label>
                 <label className="flex cursor-pointer items-center gap-2 rounded-md border border-dashed border-gray-300 p-3 text-sm font-medium text-gray-600 hover:border-gray-900">
                   <PiCloudArrowUpBold className="h-5 w-5 text-gray-500" />
                   <span className="truncate">
-                    {thumbnailFile ? thumbnailFile.name : 'Choose poster image...'}
+                    {thumbnailFile ? thumbnailFile.name : t('highlights_el_choose_poster')}
                   </span>
                   <input
                     type="file"
@@ -505,17 +526,17 @@ export default function ElementsManager({
               <div className="flex items-center gap-2">
                 <PiBellRingingBold className="h-4 w-4 text-purple-700" />
                 <Text className="font-semibold text-sm text-purple-900">
-                  CTA Action (Push Notification Shaped)
+                  {t('highlights_el_cta_title')}
                 </Text>
               </div>
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label className="mb-1 block text-xs font-medium text-gray-700">
-                    CTA Type
+                    {t('highlights_el_cta_type')}
                   </label>
                   <Select
-                    placeholder="Select type"
+                    placeholder={t('highlights_el_cta_select_type')}
                     options={ctaTypeOptions.map((o) => ({
                       ...o,
                       name: o.value || 'none',
@@ -524,7 +545,7 @@ export default function ElementsManager({
                     getOptionValue={(opt: any) => opt.value}
                     displayValue={(selected: any) =>
                       ctaTypeOptions.find((o) => o.value === selected)?.label ??
-                      'None'
+                      t('highlights_el_cta_none')
                     }
                     onChange={(opt: any) =>
                       handleCtaTypeChange(String(opt?.value ?? opt ?? ''))
@@ -533,7 +554,7 @@ export default function ElementsManager({
                 </div>
                 <div>
                   <label className="mb-1 block text-xs font-medium text-gray-700">
-                    {usesEntityPicker ? deepLinkEntityLabel(ctaType) : 'Deep Link'}
+                    {usesEntityPicker ? entityTypeLabel(ctaType) : t('highlights_el_deep_link')}
                   </label>
                   {usesEntityPicker ? (
                     (() => {
@@ -544,8 +565,8 @@ export default function ElementsManager({
                               ...entityOptions,
                               {
                                 value: deepLink,
-                                label: `${deepLinkEntityLabel(ctaType)} #${deepLink}`,
-                                name: `${deepLinkEntityLabel(ctaType)} #${deepLink}`,
+                                label: `${entityTypeLabel(ctaType)} #${deepLink}`,
+                                name: `${entityTypeLabel(ctaType)} #${deepLink}`,
                               },
                             ]
                           : entityOptions;
@@ -553,8 +574,8 @@ export default function ElementsManager({
                         <Select
                           placeholder={
                             entityLoading
-                              ? 'Loading…'
-                              : `Select ${deepLinkEntityLabel(ctaType).toLowerCase()}`
+                              ? t('highlights_loading')
+                              : t('highlights_el_select_entity', { entity: entityTypeLabel(ctaType).toLowerCase() })
                           }
                           options={options}
                           value={deepLink}
@@ -573,7 +594,7 @@ export default function ElementsManager({
                     })()
                   ) : (
                     <Input
-                      placeholder="e.g. homehealers://doctors/55"
+                      placeholder={t('highlights_el_deep_link_ph')}
                       value={deepLink}
                       onChange={(e) => setDeepLink(e.target.value)}
                     />
@@ -583,10 +604,10 @@ export default function ElementsManager({
 
               <div>
                 <label className="mb-1 block text-xs font-medium text-gray-700">
-                  External URL{' '}
+                  {t('highlights_el_external_url')}{' '}
                   {usesEntityPicker && (
                     <span className="font-normal text-gray-400">
-                      (auto-filled from selection)
+                      {t('highlights_el_autofilled')}
                     </span>
                   )}
                 </label>
@@ -604,27 +625,27 @@ export default function ElementsManager({
               <div>
                 <div className="mb-1 flex items-center justify-between">
                   <label className="text-xs font-medium text-gray-700">
-                    Extra Data (Key/Value pairs)
+                    {t('highlights_el_extra_data')}
                   </label>
                   <button
                     type="button"
                     onClick={addExtraDataRow}
                     className="text-xs font-semibold text-purple-700 hover:underline"
                   >
-                    + Add Field
+                    {t('highlights_el_add_field')}
                   </button>
                 </div>
                 <div className="space-y-2">
                   {extraDataRows.map((row, idx) => (
                     <div key={idx} className="flex items-center gap-2">
                       <Input
-                        placeholder="Key (e.g. reservation_id)"
+                        placeholder={t('highlights_el_extra_key_ph')}
                         size="sm"
                         value={row.key}
                         onChange={(e) => updateExtraDataRow(idx, 'key', e.target.value)}
                       />
                       <Input
-                        placeholder="Value (e.g. 9)"
+                        placeholder={t('highlights_el_extra_value_ph')}
                         size="sm"
                         value={row.value}
                         onChange={(e) => updateExtraDataRow(idx, 'value', e.target.value)}
@@ -650,7 +671,7 @@ export default function ElementsManager({
                 checked={isActive}
                 onChange={() => setIsActive(!isActive)}
               />
-              <Text className="text-sm font-medium text-gray-700">Active</Text>
+              <Text className="text-sm font-medium text-gray-700">{t('highlights_form_active')}</Text>
             </div>
 
             <div className="mt-6 flex justify-end gap-3 border-t border-gray-200 pt-4">
@@ -659,10 +680,10 @@ export default function ElementsManager({
                 variant="outline"
                 onClick={() => setIsModalOpen(false)}
               >
-                Cancel
+                {t('highlights_cancel')}
               </Button>
               <Button type="submit" isLoading={isSubmitting}>
-                {editingElement ? 'Save Changes' : 'Add Element'}
+                {editingElement ? t('highlights_form_save') : t('highlights_el_add_btn')}
               </Button>
             </div>
           </form>

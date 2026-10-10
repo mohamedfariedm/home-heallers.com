@@ -197,6 +197,13 @@ export const menuItemsHaydrogen = [
     permissions: 'blogs',
   },
   {
+    name: 'Highlights (Stories)',
+    nameAr: 'الستوريز المميزة',
+    href: routes.highlights.index,
+    icon: <PiCirclesThreePlusFill />,
+    permissions: 'highlights',
+  },
+  {
     name: 'Tutorial',
     nameAr: 'شروحات توضيحية',
     href: routes.onboardingScreens.index,

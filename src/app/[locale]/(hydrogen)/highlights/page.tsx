@@ -14,22 +14,24 @@ import { useHighlights } from '@/framework/highlights';
 import HighlightsTable from '@/app/shared/highlights/table';
 import HighlightsSettingsModal from '@/app/shared/highlights/settings/settings-modal';
 import { routes } from '@/config/routes';
+import { useTranslation } from 'react-i18next';
 import { PiPlusBold, PiGearBold } from 'react-icons/pi';
 
-const pageHeader = {
-  title: 'Highlights (Stories)',
-  breadcrumb: [
-    { href: '/', name: 'Home' },
-    { name: 'Highlights' },
-  ],
-};
-
 export default function HighlightsPage() {
+  const { t } = useTranslation();
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
   const { permissions } = usePermissions();
   const access = resolveHighlightsPermissions(permissions);
+
+  const pageHeader = {
+    title: t('highlights_page_title'),
+    breadcrumb: [
+      { href: '/', name: t('highlights_breadcrumb_home') },
+      { name: t('highlights_breadcrumb') },
+    ],
+  };
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [selectedColumns, setSelectedColumns] = useState<any[]>([]);
@@ -48,7 +50,7 @@ export default function HighlightsPage() {
   if (!access.view || status === 403) {
     return (
       <div className="rounded-md border border-gray-200 bg-white p-6 text-sm text-gray-600">
-        You don&apos;t have permission to view Highlights.
+        {t('highlights_no_permission_view')}
       </div>
     );
   }
@@ -56,9 +58,9 @@ export default function HighlightsPage() {
   if (error && status !== 403) {
     return (
       <div className="rounded-md border border-gray-200 bg-white p-6">
-        <Text className="text-gray-700">Could not load highlights.</Text>
+        <Text className="text-gray-700">{t('highlights_load_error')}</Text>
         <Button className="mt-4" onClick={() => refetch()}>
-          Retry
+          {t('highlights_retry')}
         </Button>
       </div>
     );
@@ -78,14 +80,14 @@ export default function HighlightsPage() {
               className="flex items-center gap-2"
             >
               <PiGearBold className="h-4 w-4" />
-              <span>Image Duration</span>
+              <span>{t('highlights_image_duration')}</span>
             </Button>
           )}
           {access.create && (
             <Link href={routes.highlights.create}>
               <Button className="flex items-center gap-2">
                 <PiPlusBold className="h-4 w-4" />
-                <span>New Highlight</span>
+                <span>{t('highlights_new')}</span>
               </Button>
             </Link>
           )}

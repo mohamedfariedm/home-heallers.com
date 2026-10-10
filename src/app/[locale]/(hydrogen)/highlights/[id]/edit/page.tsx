@@ -11,8 +11,10 @@ import { useHighlightDetail } from '@/framework/highlights';
 import HighlightForm from '@/app/shared/highlights/create-edit/highlight-form';
 import ElementsManager from '@/app/shared/highlights/elements/elements-manager';
 import { routes } from '@/config/routes';
+import { useTranslation } from 'react-i18next';
 
 export default function EditHighlightPage() {
+  const { t } = useTranslation();
   const params = useParams();
   const id = params?.id as string;
 
@@ -22,18 +24,20 @@ export default function EditHighlightPage() {
   const { data: highlight, isLoading, error } = useHighlightDetail(id);
 
   const pageHeader = {
-    title: highlight?.title?.en ? `Edit: ${highlight.title.en}` : 'Edit Highlight',
+    title: highlight?.title?.en
+      ? t('highlights_edit_title_named', { name: highlight.title.en })
+      : t('highlights_edit_title'),
     breadcrumb: [
-      { href: '/', name: 'Home' },
-      { href: routes.highlights.index, name: 'Highlights' },
-      { name: 'Edit' },
+      { href: '/', name: t('highlights_breadcrumb_home') },
+      { href: routes.highlights.index, name: t('highlights_breadcrumb') },
+      { name: t('highlights_breadcrumb_edit') },
     ],
   };
 
   if (!access.update) {
     return (
       <div className="rounded-md border border-gray-200 bg-white p-6 text-sm text-gray-600">
-        You don&apos;t have permission to edit highlights.
+        {t('highlights_no_permission_edit')}
       </div>
     );
   }
@@ -49,7 +53,7 @@ export default function EditHighlightPage() {
   if (error || !highlight) {
     return (
       <div className="rounded-md border border-gray-200 bg-white p-6">
-        <Text className="text-gray-700">Highlight not found or failed to load.</Text>
+        <Text className="text-gray-700">{t('highlights_not_found')}</Text>
       </div>
     );
   }
