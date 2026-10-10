@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { PiCloudArrowUpBold } from 'react-icons/pi';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -34,9 +35,6 @@ const LANGS: { key: OnboardingLang; label: string }[] = [
   { key: 'en', label: 'English' },
 ];
 
-const RECOMMENDED_SIZE_HINT =
-  'Any image type. Recommended: portrait, 1080 × 1920 px.';
-
 function initialLangState(
   screen: OnboardingScreen | undefined,
   lang: OnboardingLang
@@ -51,6 +49,7 @@ function initialLangState(
 
 export default function ScreenForm({ initialValues }: ScreenFormProps) {
   const router = useRouter();
+  const { t } = useTranslation();
   const isEdit = Boolean(initialValues?.id);
 
   const [langs, setLangs] = useState<Record<OnboardingLang, LangState>>({
@@ -84,7 +83,7 @@ export default function ScreenForm({ initialValues }: ScreenFormProps) {
 
   const setImage = (lang: OnboardingLang, file: File) => {
     if (!file.type.startsWith('image/')) {
-      toast.error('Please choose an image file');
+      toast.error(t('tutorial_choose_image_error', 'Please choose an image file'));
       return;
     }
     const preview = URL.createObjectURL(file);
@@ -111,15 +110,30 @@ export default function ScreenForm({ initialValues }: ScreenFormProps) {
     for (const { key, label } of LANGS) {
       const l = langs[key];
       if (!l.title.trim()) {
-        toast.error(`Title (${label}) is required`);
+        toast.error(
+          t('tutorial_title_required', {
+            defaultValue: 'Title ({{lang}}) is required',
+            lang: label,
+          })
+        );
         return false;
       }
       if (!l.description.trim()) {
-        toast.error(`Description (${label}) is required`);
+        toast.error(
+          t('tutorial_description_required', {
+            defaultValue: 'Description ({{lang}}) is required',
+            lang: label,
+          })
+        );
         return false;
       }
       if (!isEdit && !l.file) {
-        toast.error(`Image (${label}) is required`);
+        toast.error(
+          t('tutorial_image_required', {
+            defaultValue: 'Image ({{lang}}) is required',
+            lang: label,
+          })
+        );
         return false;
       }
     }
@@ -159,7 +173,7 @@ export default function ScreenForm({ initialValues }: ScreenFormProps) {
     try {
       if (isEdit && initialValues?.id) {
         if (Array.from(formData.keys()).length === 0) {
-          toast('Nothing to update');
+          toast(t('tutorial_nothing_to_update', 'Nothing to update'));
           return;
         }
         await updateScreen.mutateAsync({ id: initialValues.id, data: formData });
@@ -192,7 +206,8 @@ export default function ScreenForm({ initialValues }: ScreenFormProps) {
 
                 <div>
                   <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                    Image {!isEdit && <span className="text-red-500">*</span>}
+                    {t('tutorial_image', 'Image')}{' '}
+                    {!isEdit && <span className="text-red-500">*</span>}
                   </label>
                   <label
                     className={`flex h-44 cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-md border border-dashed border-gray-300 text-sm text-gray-600 hover:border-gray-900 ${
@@ -209,7 +224,7 @@ export default function ScreenForm({ initialValues }: ScreenFormProps) {
                     ) : (
                       <>
                         <PiCloudArrowUpBold className="h-6 w-6 text-gray-500" />
-                        <span>Choose image…</span>
+                        <span>{t('tutorial_choose_image', 'Choose image…')}</span>
                       </>
                     )}
                     <input
@@ -228,14 +243,20 @@ export default function ScreenForm({ initialValues }: ScreenFormProps) {
                     {l.file
                       ? l.file.name
                       : isEdit
-                        ? 'Upload a new image to replace the current one.'
-                        : RECOMMENDED_SIZE_HINT}
+                        ? t(
+                            'tutorial_image_replace_hint',
+                            'Upload a new image to replace the current one.'
+                          )
+                        : t(
+                            'tutorial_image_hint',
+                            'Any image type. Recommended: portrait, 1080 × 1920 px.'
+                          )}
                   </Text>
                   {isAr && (
                     <Checkbox
                       className="mt-2"
                       size="sm"
-                      label="Use the same image for English"
+                      label={t('tutorial_same_image', 'Use the same image for English')}
                       checked={sameImage}
                       onChange={(e) => handleSameImageChange(e.target.checked)}
                     />
@@ -244,7 +265,8 @@ export default function ScreenForm({ initialValues }: ScreenFormProps) {
 
                 <div>
                   <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                    Title <span className="text-red-500">*</span>
+                    {t('tutorial_field_title', 'Title')}{' '}
+                    <span className="text-red-500">*</span>
                   </label>
                   <Input
                     dir={isAr ? 'rtl' : 'ltr'}
@@ -256,7 +278,8 @@ export default function ScreenForm({ initialValues }: ScreenFormProps) {
 
                 <div>
                   <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                    Description <span className="text-red-500">*</span>
+                    {t('tutorial_field_description', 'Description')}{' '}
+                    <span className="text-red-500">*</span>
                   </label>
                   <Textarea
                     dir={isAr ? 'rtl' : 'ltr'}
@@ -277,9 +300,14 @@ export default function ScreenForm({ initialValues }: ScreenFormProps) {
           <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-5 shadow-sm md:col-span-2">
             <Switch checked={isActive} onChange={() => setIsActive(!isActive)} />
             <div>
-              <Text className="text-sm font-semibold text-gray-900">Active</Text>
+              <Text className="text-sm font-semibold text-gray-900">
+                {t('tutorial_active', 'Active')}
+              </Text>
               <Text className="text-xs text-gray-500">
-                Only active screens are shown in the mobile app.
+                {t(
+                  'tutorial_active_hint',
+                  'Only active tutorials are shown in the mobile app.'
+                )}
               </Text>
             </div>
           </div>
@@ -287,7 +315,7 @@ export default function ScreenForm({ initialValues }: ScreenFormProps) {
 
         <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm xl:col-span-4">
           <Title as="h3" className="mb-4 text-base font-semibold text-gray-900">
-            Preview
+            {t('tutorial_preview', 'Preview')}
           </Title>
           <div className="flex flex-wrap justify-center gap-4">
             {LANGS.map(({ key }) => (
@@ -309,10 +337,12 @@ export default function ScreenForm({ initialValues }: ScreenFormProps) {
           variant="outline"
           onClick={() => router.push(routes.onboardingScreens.index)}
         >
-          Cancel
+          {t('tutorial_cancel', 'Cancel')}
         </Button>
         <Button type="submit" isLoading={isLoading}>
-          {isEdit ? 'Save Changes' : 'Create Screen'}
+          {isEdit
+            ? t('tutorial_save', 'Save Changes')
+            : t('tutorial_create_btn', 'Create Tutorial')}
         </Button>
       </div>
     </form>

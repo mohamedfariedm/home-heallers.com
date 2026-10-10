@@ -24,10 +24,10 @@ import { routes } from '@/config/routes';
 
 type StatusFilter = 'all' | 'active' | 'inactive';
 
-const FILTERS: { value: StatusFilter; label: string }[] = [
-  { value: 'all', label: 'All' },
-  { value: 'active', label: 'Active' },
-  { value: 'inactive', label: 'Inactive' },
+const FILTERS: { value: StatusFilter; labelKey: string; label: string }[] = [
+  { value: 'all', labelKey: 'tutorial_filter_all', label: 'All' },
+  { value: 'active', labelKey: 'tutorial_active', label: 'Active' },
+  { value: 'inactive', labelKey: 'tutorial_inactive', label: 'Inactive' },
 ];
 
 export default function OnboardingScreensPage() {
@@ -36,7 +36,10 @@ export default function OnboardingScreensPage() {
   const lang = params?.locale === 'ar' ? 'ar' : 'en';
   const pageHeader = {
     title: t('Tutorial'),
-    breadcrumb: [{ href: '/', name: 'Home' }, { name: t('Tutorial') }],
+    breadcrumb: [
+      { href: '/', name: t('tutorial_home', 'Home') },
+      { name: t('Tutorial') },
+    ],
   };
   const { permissions } = usePermissions();
   const access = resolveOnboardingScreensPermissions(permissions);
@@ -62,7 +65,7 @@ export default function OnboardingScreensPage() {
   if (!access.view || status === 403) {
     return (
       <div className="rounded-md border border-gray-200 bg-white p-6 text-sm text-gray-600">
-        You don&apos;t have permission to view onboarding screens.
+        {t('tutorial_no_permission_view', "You don't have permission to view tutorials.")}
       </div>
     );
   }
@@ -70,9 +73,11 @@ export default function OnboardingScreensPage() {
   if (error) {
     return (
       <div className="rounded-md border border-gray-200 bg-white p-6">
-        <Text className="text-gray-700">Could not load onboarding screens.</Text>
+        <Text className="text-gray-700">
+          {t('tutorial_load_error', 'Could not load tutorials.')}
+        </Text>
         <Button className="mt-4" onClick={() => refetch()}>
-          Retry
+          {t('tutorial_retry', 'Retry')}
         </Button>
       </div>
     );
@@ -97,7 +102,7 @@ export default function OnboardingScreensPage() {
             <Link href={routes.onboardingScreens.create}>
               <Button className="flex items-center gap-2">
                 <PiPlusBold className="h-4 w-4" />
-                <span>New Screen</span>
+                <span>{t('tutorial_new', 'New Tutorial')}</span>
               </Button>
             </Link>
           </div>
@@ -118,15 +123,15 @@ export default function OnboardingScreensPage() {
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
-                {f.label}
+                {t(f.labelKey, f.label)}
               </button>
             ))}
           </div>
           <Text className="text-xs text-gray-500">
             {canSort
-              ? 'Drag the handle to change the order shown in the app.'
+              ? t('tutorial_drag_hint', 'Drag the handle to change the order shown in the app.')
               : filter !== 'all' && screens.length > 1
-                ? 'Switch to "All" to reorder screens.'
+                ? t('tutorial_switch_all_hint', 'Switch to "All" to reorder tutorials.')
                 : null}
           </Text>
         </div>
@@ -140,12 +145,15 @@ export default function OnboardingScreensPage() {
             <PiDeviceMobileDuotone className="mb-2 h-10 w-10 text-gray-400" />
             <Text className="font-medium text-gray-700">
               {screens.length === 0
-                ? 'No onboarding screens yet'
-                : 'No screens match this filter'}
+                ? t('tutorial_empty', 'No tutorials yet')
+                : t('tutorial_no_match', 'No tutorials match this filter')}
             </Text>
             {screens.length === 0 && (
               <Text className="mt-1 text-xs text-gray-500">
-                The app shows its built-in default screens until you add one.
+                {t(
+                  'tutorial_empty_hint',
+                  'The app shows its built-in default tutorials until you add one.'
+                )}
               </Text>
             )}
           </div>
@@ -166,15 +174,17 @@ export default function OnboardingScreensPage() {
       <Modal isOpen={Boolean(confirmDeactivate)} onClose={() => setConfirmDeactivate(null)}>
         <div className="p-6">
           <Title as="h3" className="text-lg font-semibold text-gray-900">
-            Deactivate last screen?
+            {t('tutorial_deactivate_title', 'Deactivate last tutorial?')}
           </Title>
           <Text className="mt-2 text-sm text-gray-600">
-            This is the last active screen. The app will fall back to its default
-            screens. Continue?
+            {t(
+              'tutorial_deactivate_body',
+              'This is the last active tutorial. The app will fall back to its default tutorials. Continue?'
+            )}
           </Text>
           <div className="mt-6 flex justify-end gap-3">
             <Button variant="outline" onClick={() => setConfirmDeactivate(null)}>
-              Cancel
+              {t('tutorial_cancel', 'Cancel')}
             </Button>
             <Button
               isLoading={toggleActive.isPending}
@@ -185,7 +195,7 @@ export default function OnboardingScreensPage() {
                 });
               }}
             >
-              Deactivate
+              {t('tutorial_deactivate', 'Deactivate')}
             </Button>
           </div>
         </div>

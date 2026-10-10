@@ -16,11 +16,11 @@ export default function EditOnboardingScreenPage() {
   const params = useParams();
   const { t } = useTranslation();
   const pageHeader = {
-    title: 'Edit Onboarding Screen',
+    title: t('tutorial_edit_title', 'Edit Tutorial'),
     breadcrumb: [
-      { href: '/', name: 'Home' },
+      { href: '/', name: t('tutorial_home', 'Home') },
       { href: routes.onboardingScreens.index, name: t('Tutorial') },
-      { name: 'Edit' },
+      { name: t('tutorial_edit', 'Edit') },
     ],
   };
   const id = params?.id as string;
@@ -33,7 +33,7 @@ export default function EditOnboardingScreenPage() {
   if (!access.update) {
     return (
       <div className="rounded-md border border-gray-200 bg-white p-6 text-sm text-gray-600">
-        You don&apos;t have permission to edit onboarding screens.
+        {t('tutorial_no_permission_edit', "You don't have permission to edit tutorials.")}
       </div>
     );
   }
@@ -49,7 +49,9 @@ export default function EditOnboardingScreenPage() {
   if (error || !screen) {
     return (
       <div className="rounded-md border border-gray-200 bg-white p-6">
-        <Text className="text-gray-700">Onboarding screen not found.</Text>
+        <Text className="text-gray-700">
+          {t('tutorial_not_found', 'Tutorial not found.')}
+        </Text>
       </div>
     );
   }

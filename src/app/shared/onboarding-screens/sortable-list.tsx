@@ -19,6 +19,7 @@ import {
   sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useTranslation } from 'react-i18next';
 import { PiDotsSixVerticalBold, PiPencilBold, PiTrashBold } from 'react-icons/pi';
 import { ActionIcon } from '@/components/ui/action-icon';
 import { Badge } from '@/components/ui/badge';
@@ -51,6 +52,7 @@ function ScreenRow({
   onToggleActive,
   onDelete,
 }: RowProps) {
+  const { t } = useTranslation();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: screen.id, disabled: !sortable });
 
@@ -71,7 +73,7 @@ function ScreenRow({
         <button
           type="button"
           className="cursor-grab touch-none text-gray-400 hover:text-gray-700 active:cursor-grabbing"
-          aria-label="Drag to reorder"
+          aria-label={t('tutorial_drag_reorder', 'Drag to reorder')}
           {...attributes}
           {...listeners}
         >
@@ -109,7 +111,9 @@ function ScreenRow({
           color={screen.is_active ? 'success' : 'secondary'}
           className="hidden sm:inline-flex"
         >
-          {screen.is_active ? 'Active' : 'Inactive'}
+          {screen.is_active
+            ? t('tutorial_active', 'Active')
+            : t('tutorial_inactive', 'Inactive')}
         </Badge>
         {canEdit && (
           <Switch
@@ -120,21 +124,24 @@ function ScreenRow({
         )}
         {canEdit && (
           <Link href={routes.onboardingScreens.edit(screen.id)}>
-            <ActionIcon size="sm" variant="outline" aria-label="Edit">
+            <ActionIcon size="sm" variant="outline" aria-label={t('tutorial_edit', 'Edit')}>
               <PiPencilBold className="h-4 w-4" />
             </ActionIcon>
           </Link>
         )}
         {canDelete && (
           <DeletePopover
-            title="Delete screen"
-            description="Are you sure you want to delete this onboarding screen?"
+            title={t('tutorial_delete_title', 'Delete tutorial')}
+            description={t(
+              'tutorial_delete_confirm',
+              'Are you sure you want to delete this tutorial?'
+            )}
             onDelete={() => onDelete(screen)}
           >
             <ActionIcon
               size="sm"
               variant="outline"
-              aria-label="Delete"
+              aria-label={t('tutorial_delete', 'Delete')}
               className="hover:text-red-600"
             >
               <PiTrashBold className="h-4 w-4" />

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import client from '@/framework/utils';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { routes } from '@/config/routes';
 import { OnboardingScreen } from '@/types/onboarding-screens';
 
@@ -40,61 +41,73 @@ export function useOnboardingScreen(id?: string | number) {
 
 export const useCreateOnboardingScreen = () => {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: (data: FormData) => client.onboardingScreens.create(data),
     onSuccess: () => {
-      toast.success('Onboarding screen created successfully');
+      toast.success(t('tutorial_created', 'Tutorial created successfully'));
       queryClient.invalidateQueries({ queryKey: [routes.onboardingScreens.index] });
     },
     onError: (err: any) => {
-      toast.error(err?.message || 'Failed to create onboarding screen');
+      toast.error(
+        err?.message || t('tutorial_create_failed', 'Failed to create tutorial')
+      );
     },
   });
 };
 
 export const useUpdateOnboardingScreen = () => {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: ({ id, data }: { id: string | number; data: FormData }) =>
       client.onboardingScreens.update({ id, data }),
     onSuccess: () => {
-      toast.success('Onboarding screen updated successfully');
+      toast.success(t('tutorial_updated', 'Tutorial updated successfully'));
       queryClient.invalidateQueries({ queryKey: [routes.onboardingScreens.index] });
     },
     onError: (err: any) => {
-      toast.error(err?.message || 'Failed to update onboarding screen');
+      toast.error(
+        err?.message || t('tutorial_update_failed', 'Failed to update tutorial')
+      );
     },
   });
 };
 
 export const useDeleteOnboardingScreen = () => {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: (id: string | number) => client.onboardingScreens.delete(id),
     onSuccess: () => {
-      toast.success('Onboarding screen deleted successfully');
+      toast.success(t('tutorial_deleted', 'Tutorial deleted successfully'));
       queryClient.invalidateQueries({ queryKey: [routes.onboardingScreens.index] });
     },
     onError: (err: any) => {
-      toast.error(err?.message || 'Failed to delete onboarding screen');
+      toast.error(
+        err?.message || t('tutorial_delete_failed', 'Failed to delete tutorial')
+      );
     },
   });
 };
 
 export const useToggleOnboardingScreenActive = () => {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: (id: string | number) => client.onboardingScreens.toggleActive(id),
     onSuccess: () => {
-      toast.success('Onboarding screen status updated');
+      toast.success(t('tutorial_status_updated', 'Tutorial status updated'));
       queryClient.invalidateQueries({ queryKey: [routes.onboardingScreens.index] });
     },
     onError: (err: any) => {
-      toast.error(err?.message || 'Failed to update status');
+      toast.error(
+        err?.message || t('tutorial_status_failed', 'Failed to update status')
+      );
     },
   });
 };
@@ -103,6 +116,7 @@ export const useToggleOnboardingScreenActive = () => {
 // if the API rejects it.
 export const useReorderOnboardingScreens = () => {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: (ids: number[]) => client.onboardingScreens.reorder(ids),
@@ -126,13 +140,15 @@ export const useReorderOnboardingScreens = () => {
       if (Array.isArray(data)) {
         queryClient.setQueryData(LIST_KEY, sortByOrder(data as OnboardingScreen[]));
       }
-      toast.success('Order saved');
+      toast.success(t('tutorial_order_saved', 'Order saved'));
     },
     onError: (err: any, _ids, context) => {
       if (context?.previous) {
         queryClient.setQueryData(LIST_KEY, context.previous);
       }
-      toast.error(err?.message || 'Failed to save the new order');
+      toast.error(
+        err?.message || t('tutorial_order_failed', 'Failed to save the new order')
+      );
     },
   });
 };

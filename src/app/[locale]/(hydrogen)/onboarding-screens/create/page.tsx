@@ -11,11 +11,11 @@ import { routes } from '@/config/routes';
 export default function CreateOnboardingScreenPage() {
   const { t } = useTranslation();
   const pageHeader = {
-    title: 'New Onboarding Screen',
+    title: t('tutorial_new_title', 'New Tutorial'),
     breadcrumb: [
-      { href: '/', name: 'Home' },
+      { href: '/', name: t('tutorial_home', 'Home') },
       { href: routes.onboardingScreens.index, name: t('Tutorial') },
-      { name: 'Create' },
+      { name: t('tutorial_create', 'Create') },
     ],
   };
   const { permissions } = usePermissions();
@@ -24,7 +24,7 @@ export default function CreateOnboardingScreenPage() {
   if (!access.create) {
     return (
       <div className="rounded-md border border-gray-200 bg-white p-6 text-sm text-gray-600">
-        You don&apos;t have permission to create onboarding screens.
+        {t('tutorial_no_permission_create', "You don't have permission to create tutorials.")}
       </div>
     );
   }
