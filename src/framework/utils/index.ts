@@ -354,6 +354,24 @@ class Client {
             });
         },
     }
+    wallet = {
+        summary: (owner: 'doctors' | 'clients', id: number | string) =>
+            HttpClient.get(`/${owner}/${id}/wallet`),
+        transactions: (owner: 'doctors' | 'clients', id: number | string, params: Record<string, any>) =>
+            HttpClient.get(`/${owner}/${id}/wallet/transactions`, params),
+        adjust: async (input: {
+            owner: 'doctors' | 'clients';
+            id: number | string;
+            kind: 'deposit' | 'withdraw';
+            amount: number;
+            reason: string;
+            idempotency_key: string;
+        }) => {
+            const { owner, id, kind, ...body } = input;
+            const res = await HttpClient.post(`/${owner}/${id}/wallet/${kind}`, body);
+            return res.data;
+        },
+    }
     groups = {
         all: (param: string) => HttpClient.get(`${routes.groups.index}?${param}`),
         findOne: (id: number) => HttpClient.get(`${routes.groups.index}/${id}`),
