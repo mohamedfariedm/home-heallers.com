@@ -9,6 +9,7 @@ import {
   PiHourglassBold,
   PiIdentificationCardBold,
   PiPencilSimpleBold,
+  PiPhoneBold,
   PiRepeatBold,
   PiTagBold,
   PiUserPlusBold,
