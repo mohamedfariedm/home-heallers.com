@@ -215,6 +215,12 @@ export interface MediaFolder {
   name: string;
   subFolders: MediaFolder[];
   files: MediaFile[];
+  /**
+   * Role names allowed to see this folder.
+   * Empty or missing: visible to every user.
+   * Admin always sees the folder even when roles are set.
+   */
+  roles?: string[];
 }
 
 export type RateMetricKey =

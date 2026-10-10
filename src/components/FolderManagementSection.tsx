@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Folder,
   FolderOpen,
@@ -11,9 +11,18 @@ import {
   Play,
   FileText,
   Image as ImageIcon,
+  Shield,
 } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 import { MediaFolder, MediaFile } from '../types/settings';
 import { FileUpload } from '@/app/[locale]/(hydrogen)/attachments/components/ui/FileUpload';
+import { useRoles } from '@/framework/roles';
+import { resolveEffectiveRoles } from '@/utils/kpi-export';
+import {
+  canViewMediaFolder,
+  folderRoleNames,
+  normalizeRoleName,
+} from '@/utils/media-folder-access';
 
 interface FolderManagementSectionProps {
   folders: MediaFolder[];
@@ -91,36 +100,77 @@ function deleteFolderFromTree(
 
 interface FolderCardProps {
   folder: MediaFolder;
+  visibleSubFolderCount: number;
   onOpen: () => void;
   onDelete: () => void;
+  onEditRoles: () => void;
 }
 
-const FolderCard: React.FC<FolderCardProps> = ({ folder, onOpen, onDelete }) => (
-  <div className="group relative bg-white border border-gray-200 rounded-xl p-4 flex flex-col items-center gap-3 hover:shadow-md hover:border-blue-300 transition-all cursor-pointer">
-    <button
-      onClick={onOpen}
-      className="flex flex-col items-center gap-2 w-full"
-    >
-      <div className="w-16 h-16 flex items-center justify-center bg-yellow-50 rounded-xl">
-        <Folder className="w-10 h-10 text-yellow-400" />
+const FolderCard: React.FC<FolderCardProps> = ({
+  folder,
+  visibleSubFolderCount,
+  onOpen,
+  onDelete,
+  onEditRoles,
+}) => {
+  const roles = folderRoleNames(folder);
+  return (
+    <div className="group relative bg-white border border-gray-200 rounded-xl p-4 flex flex-col items-center gap-3 hover:shadow-md hover:border-blue-300 transition-all cursor-pointer">
+      <button
+        onClick={onOpen}
+        className="flex flex-col items-center gap-2 w-full"
+      >
+        <div className="w-16 h-16 flex items-center justify-center bg-yellow-50 rounded-xl">
+          <Folder className="w-10 h-10 text-yellow-400" />
+        </div>
+        <span className="text-sm font-medium text-gray-700 text-center break-all line-clamp-2">
+          {folder.name}
+        </span>
+        <span className="text-xs text-gray-400">
+          {visibleSubFolderCount} folder{visibleSubFolderCount !== 1 ? 's' : ''} ·{' '}
+          {folder.files.length} file{folder.files.length !== 1 ? 's' : ''}
+        </span>
+        <span className="flex flex-wrap justify-center gap-1 min-h-[20px]">
+          {roles.length === 0 ? (
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500">
+              Everyone
+            </span>
+          ) : (
+            roles.slice(0, 2).map((role) => (
+              <span
+                key={role}
+                className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700"
+              >
+                {role}
+              </span>
+            ))
+          )}
+          {roles.length > 2 && (
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700">
+              +{roles.length - 2}
+            </span>
+          )}
+        </span>
+      </button>
+      <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+        <button
+          onClick={(e) => { e.stopPropagation(); onEditRoles(); }}
+          className="text-blue-400 hover:text-blue-600"
+          title="Folder roles"
+        >
+          <Shield className="w-4 h-4" />
+        </button>
+        <button
+          onClick={(e) => { e.stopPropagation(); onDelete(); }}
+          className="text-red-400 hover:text-red-600"
+          title="Delete folder"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
       </div>
-      <span className="text-sm font-medium text-gray-700 text-center break-all line-clamp-2">
-        {folder.name}
-      </span>
-      <span className="text-xs text-gray-400">
-        {folder.subFolders.length} folder{folder.subFolders.length !== 1 ? 's' : ''} ·{' '}
-        {folder.files.length} file{folder.files.length !== 1 ? 's' : ''}
-      </span>
-    </button>
-    <button
-      onClick={(e) => { e.stopPropagation(); onDelete(); }}
-      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 transition-all"
-      title="Delete folder"
-    >
-      <Trash2 className="w-4 h-4" />
-    </button>
-  </div>
-);
+    </div>
+  );
+};
 
 // ─── Video Preview Modal ──────────────────────────────────────────────────────
 
@@ -332,26 +382,98 @@ const UploadPanel: React.FC<UploadPanelProps> = ({ onUpload, onClose }) => {
 
 // ─── New Folder Dialog ────────────────────────────────────────────────────────
 
-interface NewFolderDialogProps {
-  onConfirm: (name: string) => void;
+interface FolderFormDialogProps {
+  title: string;
+  confirmLabel: string;
+  initialName?: string;
+  initialRoles?: string[];
+  availableRoles: string[];
+  rolesLoading: boolean;
+  onConfirm: (name: string, roles: string[]) => void;
   onClose: () => void;
 }
 
-const NewFolderDialog: React.FC<NewFolderDialogProps> = ({ onConfirm, onClose }) => {
-  const [name, setName] = useState('');
+const FolderFormDialog: React.FC<FolderFormDialogProps> = ({
+  title,
+  confirmLabel,
+  initialName = '',
+  initialRoles = [],
+  availableRoles,
+  rolesLoading,
+  onConfirm,
+  onClose,
+}) => {
+  const [name, setName] = useState(initialName);
+  const [selectedRoles, setSelectedRoles] = useState<string[]>(initialRoles);
+
+  const toggleRole = (role: string) => {
+    setSelectedRoles((current) =>
+      current.some((item) => item.toLowerCase() === role.toLowerCase())
+        ? current.filter((item) => item.toLowerCase() !== role.toLowerCase())
+        : [...current, role]
+    );
+  };
+
+  const submit = () => {
+    if (!name.trim()) return;
+    onConfirm(name.trim(), selectedRoles);
+  };
+
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm space-y-4">
-        <h3 className="text-lg font-semibold text-gray-800">New Folder</h3>
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && name.trim() && onConfirm(name.trim())}
-          placeholder="Folder name…"
-          autoFocus
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
+      <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md space-y-4">
+        <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Folder name
+          </label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && submit()}
+            placeholder="Folder name…"
+            autoFocus
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Who can see this folder
+          </label>
+          <p className="text-xs text-gray-500 mb-2">
+            {selectedRoles.length === 0
+              ? 'No roles selected. Everyone can see this folder. Admin always sees every folder.'
+              : 'Only users with a selected role can see this folder. Admin always sees it.'}
+          </p>
+          <div className="max-h-48 overflow-y-auto rounded-lg border border-gray-200 divide-y divide-gray-100">
+            {rolesLoading ? (
+              <p className="px-3 py-3 text-sm text-gray-400">Loading roles…</p>
+            ) : availableRoles.length === 0 ? (
+              <p className="px-3 py-3 text-sm text-gray-400">No roles found.</p>
+            ) : (
+              availableRoles.map((role) => {
+                const checked = selectedRoles.some(
+                  (item) => item.toLowerCase() === role.toLowerCase()
+                );
+                return (
+                  <label
+                    key={role}
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 cursor-pointer hover:bg-gray-50"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => toggleRole(role)}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span>{role}</span>
+                  </label>
+                );
+              })
+            )}
+          </div>
+        </div>
         <div className="flex gap-3 justify-end">
           <button
             onClick={onClose}
@@ -360,11 +482,11 @@ const NewFolderDialog: React.FC<NewFolderDialogProps> = ({ onConfirm, onClose })
             Cancel
           </button>
           <button
-            onClick={() => name.trim() && onConfirm(name.trim())}
+            onClick={submit}
             disabled={!name.trim()}
             className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
-            Create
+            {confirmLabel}
           </button>
         </div>
       </div>
@@ -378,9 +500,31 @@ const FolderManagementSection: React.FC<FolderManagementSectionProps> = ({
   folders,
   onUpdate,
 }) => {
+  const { data: session } = useSession();
+  const sessionRoles = (session?.user as { roles?: string[] } | undefined)?.roles;
+  const userRoles = resolveEffectiveRoles(Array.isArray(sessionRoles) ? sessionRoles : []);
+  const roleKey = userRoles.map((role) => role.toLowerCase()).join('|');
+  const { data: rolesData, isLoading: rolesLoading } = useRoles('page=1&limit=200');
+  const availableRoles = useMemo((): string[] => {
+    const payload = rolesData?.data;
+    const list: unknown[] = Array.isArray(payload)
+      ? payload
+      : Array.isArray(payload?.data)
+        ? payload.data
+        : [];
+    return Array.from(
+      new Set(
+        list
+          .map((role) => normalizeRoleName(role))
+          .filter((role): role is string => role.length > 0)
+      )
+    );
+  }, [rolesData]);
+
   // currentPath is an array of folder IDs representing the navigation stack
   const [currentPath, setCurrentPath] = useState<string[]>([]);
   const [showNewFolder, setShowNewFolder] = useState(false);
+  const [editingFolder, setEditingFolder] = useState<MediaFolder | null>(null);
   const [showUpload, setShowUpload] = useState(false);
   const [previewFile, setPreviewFile] = useState<MediaFile | null>(null);
 
@@ -389,8 +533,20 @@ const FolderManagementSection: React.FC<FolderManagementSectionProps> = ({
   const currentFolder =
     currentPath.length > 0 ? getFolderAtPath(folders, currentPath) : null;
 
-  const displayedFolders = currentFolder ? currentFolder.subFolders : folders;
+  const displayedFolders = (currentFolder ? currentFolder.subFolders : folders).filter(
+    (folder) => canViewMediaFolder(folder, userRoles)
+  );
   const displayedFiles = currentFolder ? currentFolder.files : [];
+
+  useEffect(() => {
+    if (currentPath.length === 0) return;
+    const folder = getFolderAtPath(folders, currentPath);
+    if (!folder || !canViewMediaFolder(folder, userRoles)) {
+      setCurrentPath([]);
+    }
+    // roleKey tracks the signed-in roles without changing identity every render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [folders, currentPath, roleKey]);
 
   // ── Breadcrumb labels ──────────────────────────────────────────────────────
 
@@ -408,10 +564,11 @@ const FolderManagementSection: React.FC<FolderManagementSectionProps> = ({
 
   // ── Handlers ───────────────────────────────────────────────────────────────
 
-  const handleCreateFolder = (name: string) => {
+  const handleCreateFolder = (name: string, roles: string[]) => {
     const newFolder: MediaFolder = {
       id: generateId(),
       name,
+      roles,
       subFolders: [],
       files: [],
     };
@@ -427,6 +584,18 @@ const FolderManagementSection: React.FC<FolderManagementSectionProps> = ({
       );
     }
     setShowNewFolder(false);
+  };
+
+  const handleUpdateFolderAccess = (name: string, roles: string[]) => {
+    if (!editingFolder) return;
+    onUpdate(
+      updateFolderInTree(folders, [...currentPath, editingFolder.id], (f) => ({
+        ...f,
+        name,
+        roles,
+      }))
+    );
+    setEditingFolder(null);
   };
 
   const handleDeleteFolder = (folderId: string) => {
@@ -483,7 +652,12 @@ const FolderManagementSection: React.FC<FolderManagementSectionProps> = ({
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h2 className="text-xl font-semibold text-gray-900">Folder Management</h2>
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900">Folder Management</h2>
+          <p className="text-xs text-gray-500 mt-1">
+            Use the shield on a folder to choose which roles can see it. No roles means everyone can see it. Admin always sees every folder.
+          </p>
+        </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowNewFolder(true)}
@@ -553,8 +727,14 @@ const FolderManagementSection: React.FC<FolderManagementSectionProps> = ({
             <FolderCard
               key={folder.id}
               folder={folder}
+              visibleSubFolderCount={
+                (folder.subFolders ?? []).filter((child) =>
+                  canViewMediaFolder(child, userRoles)
+                ).length
+              }
               onOpen={() => navigateInto(folder.id)}
               onDelete={() => handleDeleteFolder(folder.id)}
+              onEditRoles={() => setEditingFolder(folder)}
             />
           ))}
 
@@ -572,9 +752,26 @@ const FolderManagementSection: React.FC<FolderManagementSectionProps> = ({
 
       {/* New Folder Dialog */}
       {showNewFolder && (
-        <NewFolderDialog
+        <FolderFormDialog
+          title="New Folder"
+          confirmLabel="Create"
+          availableRoles={availableRoles}
+          rolesLoading={rolesLoading}
           onConfirm={handleCreateFolder}
           onClose={() => setShowNewFolder(false)}
+        />
+      )}
+
+      {editingFolder && (
+        <FolderFormDialog
+          title="Folder access"
+          confirmLabel="Save"
+          initialName={editingFolder.name}
+          initialRoles={folderRoleNames(editingFolder)}
+          availableRoles={availableRoles}
+          rolesLoading={rolesLoading}
+          onConfirm={handleUpdateFolderAccess}
+          onClose={() => setEditingFolder(null)}
         />
       )}
 

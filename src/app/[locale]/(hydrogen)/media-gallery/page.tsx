@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Folder,
   FolderOpen,
@@ -11,9 +11,12 @@ import {
   X,
   Film,
 } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 import Spinner from '@/components/ui/spinner';
 import { useSettings } from '@/framework/site-settings';
 import { MediaFolder, MediaFile } from '@/types/settings';
+import { resolveEffectiveRoles } from '@/utils/kpi-export';
+import { filterVisibleMediaFolders } from '@/utils/media-folder-access';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -141,13 +144,27 @@ const FileCard: React.FC<{ file: MediaFile; onPlay: () => void }> = ({ file, onP
 
 export default function MediaGalleryPage() {
   const { data, isLoading } = useSettings();
-  const folders: MediaFolder[] = data?.data[0]?.setting?.media_folders ?? [];
+  const { data: session } = useSession();
+  const sessionRoles = (session?.user as { roles?: string[] } | undefined)?.roles;
+  const userRoles = resolveEffectiveRoles(Array.isArray(sessionRoles) ? sessionRoles : []);
+  const roleKey = userRoles.map((role) => role.toLowerCase()).join('|');
+  const folders: MediaFolder[] = useMemo(
+    () => filterVisibleMediaFolders(data?.data[0]?.setting?.media_folders ?? [], userRoles),
+    // roleKey tracks the signed-in roles without changing identity every render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [data, roleKey]
+  );
 
   const [currentPath, setCurrentPath] = useState<string[]>([]);
   const [previewFile, setPreviewFile] = useState<MediaFile | null>(null);
 
   const currentFolder = currentPath.length > 0 ? getFolderAtPath(folders, currentPath) : null;
   const displayedFolders = currentFolder ? currentFolder.subFolders : folders;
+
+  useEffect(() => {
+    if (currentPath.length === 0) return;
+    if (!getFolderAtPath(folders, currentPath)) setCurrentPath([]);
+  }, [folders, currentPath]);
   const displayedFiles = currentFolder ? currentFolder.files : [];
 
   // Breadcrumbs
