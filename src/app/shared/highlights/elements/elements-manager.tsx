@@ -25,6 +25,7 @@ import {
   NOTIFICATION_TYPE_OPTIONS,
   deepLinkPathForType,
   isDeepLinkEntityType,
+  isTargetlessCtaType,
   type DeepLinkEntityType,
 } from '@/app/shared/notifications/constants';
 import { HighlightElement } from '@/types/highlights';
@@ -90,6 +91,8 @@ export default function ElementsManager({
         return t('highlights_entity_category');
       case 'coupon':
         return t('highlights_entity_coupon');
+      case 'quick_booking':
+        return t('highlights_cta_quick_booking');
       default:
         return t('highlights_entity_default');
     }
@@ -118,6 +121,8 @@ export default function ElementsManager({
 
   // CTA type -> entity picker (same behaviour as the notifications form).
   const usesEntityPicker = isDeepLinkEntityType(ctaType);
+  // Targetless types (e.g. quick_booking) open a fixed screen — no deep_link / url.
+  const needsTarget = !isTargetlessCtaType(ctaType);
   const listQuery = 'limit=1000';
   const { data: packagesData, isLoading: offersLoading } = usePackages(listQuery);
   const { data: doctorsData, isLoading: doctorsLoading } = useDoctors(listQuery);
@@ -552,75 +557,79 @@ export default function ElementsManager({
                     }
                   />
                 </div>
-                <div>
-                  <label className="mb-1 block text-xs font-medium text-gray-700">
-                    {usesEntityPicker ? entityTypeLabel(ctaType) : t('highlights_el_deep_link')}
-                  </label>
-                  {usesEntityPicker ? (
-                    (() => {
-                      const options =
-                        deepLink &&
-                        !entityOptions.some((o) => o.value === deepLink)
-                          ? [
-                              ...entityOptions,
-                              {
-                                value: deepLink,
-                                label: `${entityTypeLabel(ctaType)} #${deepLink}`,
-                                name: `${entityTypeLabel(ctaType)} #${deepLink}`,
-                              },
-                            ]
-                          : entityOptions;
-                      return (
-                        <Select
-                          placeholder={
-                            entityLoading
-                              ? t('highlights_loading')
-                              : t('highlights_el_select_entity', { entity: entityTypeLabel(ctaType).toLowerCase() })
-                          }
-                          options={options}
-                          value={deepLink}
-                          getOptionValue={(opt: any) => opt.value}
-                          displayValue={(selected: any) =>
-                            options.find((o) => o.value === selected)?.label ??
-                            (selected ? String(selected) : '')
-                          }
-                          onChange={(opt: any) =>
-                            handleEntitySelect(String(opt?.value ?? opt ?? ''))
-                          }
-                          clearable
-                          onClear={() => handleEntitySelect('')}
-                        />
-                      );
-                    })()
-                  ) : (
-                    <Input
-                      placeholder={t('highlights_el_deep_link_ph')}
-                      value={deepLink}
-                      onChange={(e) => setDeepLink(e.target.value)}
-                    />
-                  )}
-                </div>
+                {needsTarget && (
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-gray-700">
+                      {usesEntityPicker ? entityTypeLabel(ctaType) : t('highlights_el_deep_link')}
+                    </label>
+                    {usesEntityPicker ? (
+                      (() => {
+                        const options =
+                          deepLink &&
+                          !entityOptions.some((o) => o.value === deepLink)
+                            ? [
+                                ...entityOptions,
+                                {
+                                  value: deepLink,
+                                  label: `${entityTypeLabel(ctaType)} #${deepLink}`,
+                                  name: `${entityTypeLabel(ctaType)} #${deepLink}`,
+                                },
+                              ]
+                            : entityOptions;
+                        return (
+                          <Select
+                            placeholder={
+                              entityLoading
+                                ? t('highlights_loading')
+                                : t('highlights_el_select_entity', { entity: entityTypeLabel(ctaType).toLowerCase() })
+                            }
+                            options={options}
+                            value={deepLink}
+                            getOptionValue={(opt: any) => opt.value}
+                            displayValue={(selected: any) =>
+                              options.find((o) => o.value === selected)?.label ??
+                              (selected ? String(selected) : '')
+                            }
+                            onChange={(opt: any) =>
+                              handleEntitySelect(String(opt?.value ?? opt ?? ''))
+                            }
+                            clearable
+                            onClear={() => handleEntitySelect('')}
+                          />
+                        );
+                      })()
+                    ) : (
+                      <Input
+                        placeholder={t('highlights_el_deep_link_ph')}
+                        value={deepLink}
+                        onChange={(e) => setDeepLink(e.target.value)}
+                      />
+                    )}
+                  </div>
+                )}
               </div>
 
-              <div>
-                <label className="mb-1 block text-xs font-medium text-gray-700">
-                  {t('highlights_el_external_url')}{' '}
-                  {usesEntityPicker && (
-                    <span className="font-normal text-gray-400">
-                      {t('highlights_el_autofilled')}
-                    </span>
-                  )}
-                </label>
-                <Input
-                  placeholder={
-                    usesEntityPicker
-                      ? deepLinkPathForType(ctaType as DeepLinkEntityType, '{id}')
-                      : 'https://...'
-                  }
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                />
-              </div>
+              {needsTarget && (
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-gray-700">
+                    {t('highlights_el_external_url')}{' '}
+                    {usesEntityPicker && (
+                      <span className="font-normal text-gray-400">
+                        {t('highlights_el_autofilled')}
+                      </span>
+                    )}
+                  </label>
+                  <Input
+                    placeholder={
+                      usesEntityPicker
+                        ? deepLinkPathForType(ctaType as DeepLinkEntityType, '{id}')
+                        : 'https://...'
+                    }
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                  />
+                </div>
+              )}
 
               <div>
                 <div className="mb-1 flex items-center justify-between">

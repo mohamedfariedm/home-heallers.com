@@ -24,6 +24,8 @@ const CTA_TYPE_OPTIONS = [
   { value: 'offers', labelKey: 'banners_cta_offers' },
   { value: 'doctors', labelKey: 'banners_cta_doctors' },
   { value: 'categories', labelKey: 'banners_cta_categories' },
+  // Opens the app's quick-booking screen — no deep_link / url needed.
+  { value: 'quick_booking', labelKey: 'banners_cta_quick_booking' },
 ];
 
 const ENTITY_CTA_TYPES = ['offers', 'doctors', 'categories'];
