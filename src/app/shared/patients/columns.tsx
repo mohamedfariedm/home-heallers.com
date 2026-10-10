@@ -15,6 +15,7 @@ import ColumnFilterPopover from '@/app/shared/customer-suport/column-filter-popo
 import LookupColumnFilterPopover from '@/app/shared/lookup-column-filter-popover';
 import { resolveLocalizedNameOrFallback } from '@/utils/resolve-localized-name';
 import { routes } from '@/config/routes';
+import { PiTicket } from 'react-icons/pi';
 
 interface Columns {
   data: any[];
@@ -25,6 +26,8 @@ interface Columns {
   onHeaderCellClick: (value: string) => void;
   onChecked?: (id: string) => void;
   onFilterChange?: (key: string, value: any) => void;
+  canPersonalCoupons?: boolean;
+  onPersonalCoupon?: (row: any) => void;
 }
 
 export const getColumns = ({
@@ -34,6 +37,8 @@ export const getColumns = ({
   handleSelectAll,
   onChecked,
   onFilterChange,
+  canPersonalCoupons = false,
+  onPersonalCoupon,
 }: Columns) => [
   {
     title: (
@@ -61,7 +66,7 @@ export const getColumns = ({
     title: <></>,
     dataIndex: 'actions',
     key: 'actions',
-    width: 20,
+    width: 160,
     render: (_: any, row: any) => (
       <div className="flex items-center gap-3">
         <Tooltip size="sm" content={() => 'View'} placement="top" color="invert">
@@ -86,6 +91,28 @@ export const getColumns = ({
             className="p-0 m-0 bg-transparent text-gray-700"
           />
         </Tooltip>
+
+        {canPersonalCoupons && onPersonalCoupon && (
+          <Tooltip
+            size="sm"
+            content={() =>
+              checkedItems.length > 1
+                ? `Personal coupons for ${checkedItems.length} selected`
+                : 'Personal coupon'
+            }
+            placement="top"
+            color="invert"
+          >
+            <ActionIcon
+              size="sm"
+              variant="outline"
+              className="cursor-pointer text-primary hover:text-primary"
+              onClick={() => onPersonalCoupon(row)}
+            >
+              <PiTicket className="h-4 w-4" />
+            </ActionIcon>
+          </Tooltip>
+        )}
 
         <DeletePopover
           title={`Delete User`}
