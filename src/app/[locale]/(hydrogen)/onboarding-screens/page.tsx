@@ -3,6 +3,7 @@
 import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { useTranslation } from 'react-i18next';
 import { PiDeviceMobileDuotone, PiPlusBold } from 'react-icons/pi';
 import PageHeader from '@/app/shared/page-header';
 import Spinner from '@/components/ui/spinner';
@@ -21,11 +22,6 @@ import {
 import { OnboardingScreen } from '@/types/onboarding-screens';
 import { routes } from '@/config/routes';
 
-const pageHeader = {
-  title: 'Onboarding Screens',
-  breadcrumb: [{ href: '/', name: 'Home' }, { name: 'Onboarding Screens' }],
-};
-
 type StatusFilter = 'all' | 'active' | 'inactive';
 
 const FILTERS: { value: StatusFilter; label: string }[] = [
@@ -36,7 +32,12 @@ const FILTERS: { value: StatusFilter; label: string }[] = [
 
 export default function OnboardingScreensPage() {
   const params = useParams();
+  const { t } = useTranslation();
   const lang = params?.locale === 'ar' ? 'ar' : 'en';
+  const pageHeader = {
+    title: t('Tutorial'),
+    breadcrumb: [{ href: '/', name: 'Home' }, { name: t('Tutorial') }],
+  };
   const { permissions } = usePermissions();
   const access = resolveOnboardingScreensPermissions(permissions);
 

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useParams } from 'next/navigation';
+import { useTranslation } from 'react-i18next';
 import PageHeader from '@/app/shared/page-header';
 import Spinner from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
@@ -11,17 +12,17 @@ import ScreenForm from '@/app/shared/onboarding-screens/screen-form';
 import { useOnboardingScreen } from '@/framework/onboarding-screens';
 import { routes } from '@/config/routes';
 
-const pageHeader = {
-  title: 'Edit Onboarding Screen',
-  breadcrumb: [
-    { href: '/', name: 'Home' },
-    { href: routes.onboardingScreens.index, name: 'Onboarding Screens' },
-    { name: 'Edit' },
-  ],
-};
-
 export default function EditOnboardingScreenPage() {
   const params = useParams();
+  const { t } = useTranslation();
+  const pageHeader = {
+    title: 'Edit Onboarding Screen',
+    breadcrumb: [
+      { href: '/', name: 'Home' },
+      { href: routes.onboardingScreens.index, name: t('Tutorial') },
+      { name: 'Edit' },
+    ],
+  };
   const id = params?.id as string;
 
   const { permissions } = usePermissions();

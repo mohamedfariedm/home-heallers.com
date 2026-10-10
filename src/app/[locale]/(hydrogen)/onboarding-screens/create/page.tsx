@@ -1,22 +1,23 @@
 'use client';
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import PageHeader from '@/app/shared/page-header';
 import { usePermissions } from '@/context/PermissionsContext';
 import { resolveOnboardingScreensPermissions } from '@/app/shared/onboarding-screens/permissions';
 import ScreenForm from '@/app/shared/onboarding-screens/screen-form';
 import { routes } from '@/config/routes';
 
-const pageHeader = {
-  title: 'New Onboarding Screen',
-  breadcrumb: [
-    { href: '/', name: 'Home' },
-    { href: routes.onboardingScreens.index, name: 'Onboarding Screens' },
-    { name: 'Create' },
-  ],
-};
-
 export default function CreateOnboardingScreenPage() {
+  const { t } = useTranslation();
+  const pageHeader = {
+    title: 'New Onboarding Screen',
+    breadcrumb: [
+      { href: '/', name: 'Home' },
+      { href: routes.onboardingScreens.index, name: t('Tutorial') },
+      { name: 'Create' },
+    ],
+  };
   const { permissions } = usePermissions();
   const access = resolveOnboardingScreensPermissions(permissions);
 

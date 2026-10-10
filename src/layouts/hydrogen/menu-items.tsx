@@ -197,8 +197,8 @@ export const menuItemsHaydrogen = [
     permissions: 'blogs',
   },
   {
-    name: 'Onboarding Screens',
-    nameAr: 'شاشات البداية',
+    name: 'Tutorial',
+    nameAr: 'شروحات توضيحية',
     href: routes.onboardingScreens.index,
     icon: <PiDeviceMobileDuotone />,
     permissions: 'onboarding_screens',
