@@ -134,6 +134,22 @@ export default function KanbanCardViewModal({
         </div>
 
         <div>
+          <Title as="h6" className="mt-6 font-inter text-sm font-semibold">Status Reason</Title>
+          <Text as="p" className="pb-2 leading-relaxed">
+            {item?.status_reason
+              ? String(item.status_reason).replace(/_/g, ' ')
+              : '-'}
+          </Text>
+        </div>
+
+        <div>
+          <Title as="h6" className="mt-6 font-inter text-sm font-semibold">Last Follow-up</Title>
+          <Text as="p" className="pb-2 leading-relaxed">
+            {item?.last_follow_up_at || '-'}
+          </Text>
+        </div>
+
+        <div>
           <Title as="h6" className="mt-6 font-inter text-sm font-semibold">Chief Comment</Title>
           <Text as="p" className="pb-2 leading-relaxed">
             {item?.reason || '-'}

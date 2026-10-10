@@ -15,11 +15,27 @@ import {
   PiBuildingsBold,
   PiArrowsClockwiseBold,
   PiChatCircleBold,
+  PiWarningBold,
+  PiClockBold,
+  PiUserBold,
 } from 'react-icons/pi';
 import cn from '@/utils/class-names';
 import { useRouter, usePathname } from 'next/navigation';
 import type { CustomerSupportStatistics } from '@/types/customer-support-statistics';
 import { KANBAN_FILTERABLE_COLUMNS } from './kanban-filter-columns';
+import {
+  formatPercent,
+  getStatusCountFromStats,
+  sumUnknownSourceCount,
+  toPercent,
+  toneColors,
+  toneForFailedRate,
+  toneForLeadQuality,
+  toneForSuccessRate,
+  toneForSupportToReservation,
+  toneForUnknownSource,
+} from '@/utils/dashboard-metric-helpers';
+import { formatStatusReasonLabel } from '@/config/dashboard-enums';
 
 type StatusCountMap = {
   new?: number;
@@ -29,6 +45,33 @@ type StatusCountMap = {
 interface KanbanStatistics extends Omit<CustomerSupportStatistics, 'by_status'> {
   by_status: CustomerSupportStatistics['by_status'] | StatusCountMap;
 }
+
+type StatisticsCard = {
+  title: string;
+  value: number | string;
+  subtitle?: string;
+  icon?: any;
+  bgColor: string;
+  textColor: string;
+  darkBgColor: string;
+  darkTextColor: string;
+  blurColor: string;
+  darkBlurColor: string;
+  link?: string;
+  compact?: boolean;
+  showCheckbox?: boolean;
+  checked?: boolean;
+  campaignKey?: string;
+};
+
+type StatisticsRow = {
+  title: string;
+  cards: StatisticsCard[];
+  allCards?: StatisticsCard[];
+  expanded?: boolean;
+  setExpanded?: (value: boolean) => void;
+  perRow?: number;
+};
 
 interface KanbanStatisticsCardsProps {
   statistics: KanbanStatistics | null | undefined;
@@ -95,6 +138,14 @@ const statusColors: Record<string, { bg: string; text: string; darkBg: string; d
     blur: 'bg-cyan-50/50',
     darkBlur: 'dark:bg-cyan-900/10',
   },
+  unset: {
+    bg: 'bg-slate-50',
+    text: 'text-slate-600',
+    darkBg: 'dark:bg-slate-900/20',
+    darkText: 'dark:text-slate-400',
+    blur: 'bg-slate-50/50',
+    darkBlur: 'dark:bg-slate-900/10',
+  },
 };
 
 // Default color scheme for unknown statuses
@@ -110,17 +161,17 @@ const defaultColors = {
 // Helper function to convert API link to frontend query params
 const convertApiLinkToQueryParams = (apiLink: string | undefined): string => {
   if (!apiLink) return '';
-  
+
   try {
     const url = new URL(apiLink);
     const params = new URLSearchParams(url.search);
-    
+
     // Convert API query params to frontend format
     const frontendParams = new URLSearchParams();
 
     // Keys our filters system recognizes
     const filterableKeys = new Set<string>(KANBAN_FILTERABLE_COLUMNS);
-    
+
     params.forEach((value, key) => {
       const hasOperatorSuffix = /_(equal|not_equal|has|not_has|contain|not_contain|begin_with|not_begin_with|end_with|not_end_with)(_(and|or))?$/.test(
         key
@@ -132,16 +183,23 @@ const convertApiLinkToQueryParams = (apiLink: string | undefined): string => {
         return;
       }
 
+      // Legacy by_status null row uses bare `status=` which is not a real filter.
+      // Prefer Backend's status_equal=null (guide §6).
+      if (key === 'status' && (value === '' || value == null || value === 'null')) {
+        frontendParams.set('status_equal', 'null');
+        return;
+      }
+
       // If key exactly matches a filterable key without operator, assume "equal"
       if (filterableKeys.has(key)) {
-        frontendParams.set(`${key}_equal`, value);
+        frontendParams.set(`${key}_equal`, value === '' ? 'null' : value);
         return;
       }
 
       // Fallback: pass through unmodified
       frontendParams.set(key, value);
     });
-    
+
     return frontendParams.toString();
   } catch (error) {
     console.error('Error converting API link:', error);
@@ -150,16 +208,16 @@ const convertApiLinkToQueryParams = (apiLink: string | undefined): string => {
 };
 
 // Card component
-const StatCard = ({ 
-  title, 
-  value, 
+const StatCard = ({
+  title,
+  value,
   subtitle,
-  icon: Icon, 
-  bgColor, 
-  textColor, 
-  darkBgColor, 
-  darkTextColor, 
-  blurColor, 
+  icon: Icon,
+  bgColor,
+  textColor,
+  darkBgColor,
+  darkTextColor,
+  blurColor,
   darkBlurColor,
   link,
   compact = false,
@@ -187,7 +245,7 @@ const StatCard = ({
 }) => {
   const router = useRouter();
   const pathname = usePathname();
-  
+
   const [isHoveringCheckbox, setIsHoveringCheckbox] = useState(false);
 
   const handleClick = (e: React.MouseEvent) => {
@@ -228,9 +286,9 @@ const StatCard = ({
   const handleCardMouseLeave = () => {
     setIsHoveringCheckbox(false);
   };
-  
+
   return (
-    <div 
+    <div
       className={cn(
         "relative overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all dark:border-gray-700 dark:bg-gray-800",
         compact ? "min-w-[120px] flex-1 p-4" : "min-w-[200px] flex-1 p-6",
@@ -240,7 +298,7 @@ const StatCard = ({
       onMouseLeave={handleCardMouseLeave}
     >
       {showCheckbox && (
-        <div 
+        <div
           className="checkbox-area absolute top-2 right-2 z-10 p-1 -m-1 cursor-default"
           onMouseEnter={handleCheckboxAreaMouseEnter}
           onMouseLeave={handleCheckboxAreaMouseLeave}
@@ -298,8 +356,8 @@ const StatCard = ({
   );
 };
 
-export default function KanbanStatisticsCards({ 
-  statistics, 
+export default function KanbanStatisticsCards({
+  statistics,
   className,
   supportType,
 }: KanbanStatisticsCardsProps) {
@@ -313,13 +371,13 @@ export default function KanbanStatisticsCards({
   const [reworkExpanded, setReworkExpanded] = useState(false);
   const [communicationTimesExpanded, setCommunicationTimesExpanded] =
     useState(false);
-  
+
   // State to track checked source campaigns
   const [checkedSourceCampaigns, setCheckedSourceCampaigns] = useState<Set<string>>(new Set());
-  
+
   // Get source campaigns data (before early return)
   const allSourceCampaigns = statistics?.by_source_campaign || [];
-  
+
   // Initialize checked state for all campaigns on first render
   useEffect(() => {
     if (checkedSourceCampaigns.size === 0 && allSourceCampaigns.length > 0) {
@@ -328,12 +386,12 @@ export default function KanbanStatisticsCards({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allSourceCampaigns.length]);
-  
+
   if (!statistics) return null;
 
   // Format status label (convert snake_case to Title Case)
   const formatStatusLabel = (status: string | null | undefined): string => {
-    if (!status) return 'Unknown';
+    if (!status) return 'No Status';
     return status
       .split('_')
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
@@ -342,9 +400,9 @@ export default function KanbanStatisticsCards({
 
   // Handle by_status - can be array or object
   let statusCardsData: Array<{ status?: string | null; count?: number; link?: string }> = [];
-  
+
   const byStatus = statistics.by_status;
-  
+
   if (Array.isArray(byStatus)) {
     // New format: array of objects
     statusCardsData = byStatus
@@ -362,12 +420,15 @@ export default function KanbanStatisticsCards({
     }));
   }
 
-  // Row 1: Status Statistics
+  // Row: Status Statistics
   const statusCards = statusCardsData.map((item) => {
-    const statusKey = item.status || 'unknown';
-    const colors = statusColors[statusKey] || defaultColors;
+    const statusKey =
+      item.status === null || item.status === '' || item.status === undefined
+        ? 'unset'
+        : item.status;
+    const colors = statusColors[statusKey] || statusColors['unknown'] || defaultColors;
     return {
-      title: formatStatusLabel(statusKey),
+      title: formatStatusLabel(item.status),
       value: item.count || 0,
       icon: PiCheckCircleBold,
       bgColor: colors.bg,
@@ -384,50 +445,50 @@ export default function KanbanStatisticsCards({
   // Row 2: Lead quality metrics
   const leadCards = statistics.leads
     ? [
-        {
-          title: 'Total Leads',
-          value: statistics.leads.total_leads || 0,
-          icon: PiUsersBold,
-          bgColor: 'bg-sky-50',
-          textColor: 'text-sky-600',
-          darkBgColor: 'dark:bg-sky-900/20',
-          darkTextColor: 'dark:text-sky-400',
-          blurColor: 'bg-sky-50/50',
-          darkBlurColor: 'dark:bg-sky-900/10',
-          compact: true,
-        },
-        {
-          title: 'Qualified Leads',
-          value: statistics.leads.qualified_leads || 0,
-          icon: PiCheckCircleBold,
-          bgColor: 'bg-lime-50',
-          textColor: 'text-lime-600',
-          darkBgColor: 'dark:bg-lime-900/20',
-          darkTextColor: 'dark:text-lime-400',
-          blurColor: 'bg-lime-50/50',
-          darkBlurColor: 'dark:bg-lime-900/10',
-          compact: true,
-        },
-        {
-          title: 'Lead Quality Rate',
-          value: `${Number(statistics.leads.lead_quality_rate || 0).toFixed(2)}%`,
-          icon: PiChartLineUpBold,
-          bgColor: 'bg-orange-50',
-          textColor: 'text-orange-600',
-          darkBgColor: 'dark:bg-orange-900/20',
-          darkTextColor: 'dark:text-orange-400',
-          blurColor: 'bg-orange-50/50',
-          darkBlurColor: 'dark:bg-orange-900/10',
-          compact: true,
-        },
-      ]
+      {
+        title: 'Total Leads',
+        value: statistics.leads.total_leads || 0,
+        icon: PiUsersBold,
+        bgColor: 'bg-sky-50',
+        textColor: 'text-sky-600',
+        darkBgColor: 'dark:bg-sky-900/20',
+        darkTextColor: 'dark:text-sky-400',
+        blurColor: 'bg-sky-50/50',
+        darkBlurColor: 'dark:bg-sky-900/10',
+        compact: true,
+      },
+      {
+        title: 'Qualified Leads',
+        value: statistics.leads.qualified_leads || 0,
+        icon: PiCheckCircleBold,
+        bgColor: 'bg-lime-50',
+        textColor: 'text-lime-600',
+        darkBgColor: 'dark:bg-lime-900/20',
+        darkTextColor: 'dark:text-lime-400',
+        blurColor: 'bg-lime-50/50',
+        darkBlurColor: 'dark:bg-lime-900/10',
+        compact: true,
+      },
+      {
+        title: 'Lead Quality Rate',
+        value: `${Number(statistics.leads.lead_quality_rate || 0).toFixed(2)}%`,
+        icon: PiChartLineUpBold,
+        bgColor: 'bg-orange-50',
+        textColor: 'text-orange-600',
+        darkBgColor: 'dark:bg-orange-900/20',
+        darkTextColor: 'dark:text-orange-400',
+        blurColor: 'bg-orange-50/50',
+        darkBlurColor: 'dark:bg-orange-900/10',
+        compact: true,
+      },
+    ]
     : [];
 
-  // Row 3: Clients
+  // Clients conversion
   const clientCards = [
     {
       title: 'Total Customer Supports',
-      value: statistics.total || 0,
+      value: totalSupports,
       icon: PiFileTextBold,
       bgColor: 'bg-indigo-50',
       textColor: 'text-indigo-600',
@@ -463,6 +524,13 @@ export default function KanbanStatisticsCards({
     },
   ];
 
+  const showUnknownSourceAlert = unknownSourceRate > 20;
+  const showUnknownChannelAlert =
+    supportType === 'operation' && unknownChannelRate > 10;
+  const aging = statistics.follow_up_aging;
+  const showSlaBreach = (aging?.sla_breach_count ?? 0) > 0;
+  const converted = statistics.converted_via_lead;
+
   // Row 4: Source Campaigns
 
   const allSourceCampaignCards = allSourceCampaigns
@@ -470,7 +538,7 @@ export default function KanbanStatisticsCards({
     .map((campaign) => {
       const campaignKey = campaign.source_campaign || 'Unknown';
       const isChecked = checkedSourceCampaigns.has(campaignKey);
-      
+
       return {
         title: campaignKey,
         value: campaign.count || 0,
@@ -521,8 +589,8 @@ export default function KanbanStatisticsCards({
   };
 
   const SOURCE_CAMPAIGNS_PER_ROW = 6;
-  const sourceCampaignCards = sourceCampaignExpanded 
-    ? allSourceCampaignCards 
+  const sourceCampaignCards = sourceCampaignExpanded
+    ? allSourceCampaignCards
     : allSourceCampaignCards.slice(0, SOURCE_CAMPAIGNS_PER_ROW);
 
   // Row 4b: Lead quality by source campaign
@@ -589,8 +657,8 @@ export default function KanbanStatisticsCards({
     }));
 
   const COMMUNICATION_CHANNELS_PER_ROW = 6;
-  const communicationChannelCards = communicationChannelExpanded 
-    ? allCommunicationChannelCards 
+  const communicationChannelCards = communicationChannelExpanded
+    ? allCommunicationChannelCards
     : allCommunicationChannelCards.slice(0, COMMUNICATION_CHANNELS_PER_ROW);
 
   // Row 6: Offers
@@ -611,8 +679,8 @@ export default function KanbanStatisticsCards({
     }));
 
   const OFFERS_PER_ROW = 6;
-  const offerCards = offersExpanded 
-    ? allOfferCards 
+  const offerCards = offersExpanded
+    ? allOfferCards
     : allOfferCards.slice(0, OFFERS_PER_ROW);
 
   // Row 7: Cities
@@ -723,82 +791,109 @@ export default function KanbanStatisticsCards({
     { title: 'Source Campaigns', cards: sourceCampaignCards, allCards: allSourceCampaignCards, expanded: sourceCampaignExpanded, setExpanded: setSourceCampaignExpanded, perRow: SOURCE_CAMPAIGNS_PER_ROW },
     ...(allLeadQualityCampaignCards.length > 0
       ? [{
-          title: 'Lead Quality by Campaign',
-          cards: leadQualityCampaignCards,
-          allCards: allLeadQualityCampaignCards,
-          expanded: leadQualityCampaignExpanded,
-          setExpanded: setLeadQualityCampaignExpanded,
-          perRow: LEAD_QUALITY_CAMPAIGNS_PER_ROW,
-        }]
+        title: 'Lead Quality by Campaign',
+        cards: leadQualityCampaignCards,
+        allCards: allLeadQualityCampaignCards,
+        expanded: leadQualityCampaignExpanded,
+        setExpanded: setLeadQualityCampaignExpanded,
+        perRow: LEAD_QUALITY_CAMPAIGNS_PER_ROW,
+      }]
       : []),
     ...(allQualificationCards.length > 0
       ? [{
-          title: 'Leads Qualification',
-          cards: qualificationCards,
-          allCards: allQualificationCards,
-          expanded: qualificationExpanded,
-          setExpanded: setQualificationExpanded,
-          perRow: QUALIFICATION_CARDS_PER_ROW,
-        }]
+        title: 'Leads Qualification',
+        cards: qualificationCards,
+        allCards: allQualificationCards,
+        expanded: qualificationExpanded,
+        setExpanded: setQualificationExpanded,
+        perRow: QUALIFICATION_CARDS_PER_ROW,
+      }]
       : []),
     { title: 'Communication Channels', cards: communicationChannelCards, allCards: allCommunicationChannelCards, expanded: communicationChannelExpanded, setExpanded: setCommunicationChannelExpanded, perRow: COMMUNICATION_CHANNELS_PER_ROW },
     { title: 'Offers', cards: offerCards, allCards: allOfferCards, expanded: offersExpanded, setExpanded: setOffersExpanded, perRow: OFFERS_PER_ROW },
     ...(allCityCards.length > 0
       ? [{
-          title: 'Cities',
-          cards: cityCards,
-          allCards: allCityCards,
-          expanded: cityExpanded,
-          setExpanded: setCityExpanded,
-          perRow: CITIES_PER_ROW,
-        }]
+        title: 'Cities',
+        cards: cityCards,
+        allCards: allCityCards,
+        expanded: cityExpanded,
+        setExpanded: setCityExpanded,
+        perRow: CITIES_PER_ROW,
+      }]
       : []),
     ...(allStateCards.length > 0
       ? [{
-          title: 'States',
-          cards: stateCards,
-          allCards: allStateCards,
-          expanded: stateExpanded,
-          setExpanded: setStateExpanded,
-          perRow: STATES_PER_ROW,
-        }]
+        title: 'States',
+        cards: stateCards,
+        allCards: allStateCards,
+        expanded: stateExpanded,
+        setExpanded: setStateExpanded,
+        perRow: STATES_PER_ROW,
+      }]
       : []),
     ...(allReworkCards.length > 0
       ? [{
-          title: 'Rework',
-          cards: reworkCards,
-          allCards: allReworkCards,
-          expanded: reworkExpanded,
-          setExpanded: setReworkExpanded,
-          perRow: REWORK_PER_ROW,
-        }]
+        title: 'Rework',
+        cards: reworkCards,
+        allCards: allReworkCards,
+        expanded: reworkExpanded,
+        setExpanded: setReworkExpanded,
+        perRow: REWORK_PER_ROW,
+      }]
       : []),
     ...(allCommunicationTimesCards.length > 0
       ? [{
-          title: 'Communication Times (Booked Leads)',
-          cards: communicationTimesCards,
-          allCards: allCommunicationTimesCards,
-          expanded: communicationTimesExpanded,
-          setExpanded: setCommunicationTimesExpanded,
-          perRow: COMMUNICATION_TIMES_PER_ROW,
-        }]
+        title: 'Communication Times (Booked Leads)',
+        cards: communicationTimesCards,
+        allCards: allCommunicationTimesCards,
+        expanded: communicationTimesExpanded,
+        setExpanded: setCommunicationTimesExpanded,
+        perRow: COMMUNICATION_TIMES_PER_ROW,
+      }]
       : []),
   ];
 
   return (
     <div className={cn('w-full space-y-6', className)}>
+      {(showUnknownSourceAlert || showUnknownChannelAlert || showSlaBreach) && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200">
+          <p className="font-semibold">Red Flags</p>
+          <ul className="mt-1 list-disc space-y-0.5 ps-5">
+            {showUnknownSourceAlert && (
+              <li>
+                Unknown Source is {formatPercent(unknownSourceRate)} ({unknownCount} leads) — above 20% threshold.
+              </li>
+            )}
+            {showUnknownChannelAlert && (
+              <li>
+                Unknown Channel is {formatPercent(unknownChannelRate)} — above 10% threshold.
+              </li>
+            )}
+            {showSlaBreach && (
+              <li>
+                SLA breach: {aging?.sla_breach_count} open lead(s) exceeded follow-up SLA.
+              </li>
+            )}
+            {(statistics.unset_status_count ?? 0) > 0 && (
+              <li>
+                {statistics.unset_status_count} lead(s) have no status (excluded from aging).
+              </li>
+            )}
+          </ul>
+        </div>
+      )}
       {rows.map((row, rowIndex) => {
         const hasMore = row.allCards && row.allCards.length > row.perRow;
-        
+
         return (
           <div key={rowIndex} className="space-y-3">
             <div className="flex items-center justify-between">
               <h4 className="text-base font-semibold text-gray-800 dark:text-gray-200">
                 {row.title}
               </h4>
-              {hasMore && (
+              {hasMore && allCards && (
                 <button
-                  onClick={() => row.setExpanded && row.setExpanded(!row.expanded)}
+                  onClick={() => row.setExpanded?.(!row.expanded)}
                   className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
                 >
                   {row.expanded ? (
@@ -808,7 +903,7 @@ export default function KanbanStatisticsCards({
                     </>
                   ) : (
                     <>
-                      <span>Show All ({row.allCards.length})</span>
+                      <span>Show All ({allCards.length})</span>
                       <PiCaretDownBold className="h-4 w-4" />
                     </>
                   )}
@@ -820,8 +915,8 @@ export default function KanbanStatisticsCards({
                 <StatCard key="total-source-campaigns" {...totalSourceCampaignCard} supportType={supportType} />
               )}
               {row.cards.map((card: any, cardIndex: number) => (
-                <StatCard 
-                  key={cardIndex} 
+                <StatCard
+                  key={cardIndex}
                   {...card}
                   supportType={supportType}
                   onCheckboxChange={card.campaignKey ? (checked: boolean) => handleSourceCampaignCheckboxChange(card.campaignKey, checked) : undefined}

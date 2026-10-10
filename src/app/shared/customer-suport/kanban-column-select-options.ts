@@ -5,24 +5,26 @@ import { isLeadsQualificationFilterKey } from './kanban-filter-columns';
 export const kanbanStatusOptions = [
 
   { label: 'New', value: 'new' },
+  { label: 'Possible', value: 'possible' },
+  { label: 'Follow Up', value: 'follow_up' },
   { label: 'Negotiation', value: 'negotiation' },
   { label: 'Success', value: 'success' },
-  { label: 'Possible', value: 'possible' },
   { label: 'Failed', value: 'failed' },
+  { label: 'Closed', value: 'closed' },
 ];
 
 export const kanbanSourceCampaignOptions = [
   { label: 'Google', value: 'google' },
-  { label: 'Facebook', value: 'facebook' },
   { label: 'Instagram', value: 'instagram' },
-  { label: 'Snapchat', value: 'snapchat' },
-  { label: 'Telegram', value: 'telegram' },
-  { label: 'Twitter', value: 'twitter' },
+  { label: 'Facebook', value: 'facebook' },
   { label: 'TikTok', value: 'tiktok' },
-  { label: 'Mobile Application', value: 'mobile_application' },
-  { label: 'Call', value: 'call' },
+  { label: 'Snapchat', value: 'snapchat' },
+  { label: 'Twitter', value: 'twitter' },
   { label: 'YouTube', value: 'youtube' },
+  { label: 'WhatsApp', value: 'whatsapp' },
+  { label: 'Call', value: 'call' },
   { label: 'Website', value: 'website' },
+  { label: 'Mobile Application', value: 'mobile_application' },
   { label: 'Referral', value: 'referral' },
   { label: 'Center', value: 'center' },
   { label: 'Other', value: 'other' },

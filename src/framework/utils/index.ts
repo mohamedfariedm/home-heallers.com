@@ -2,6 +2,7 @@ import { HttpClient } from './request';
 import request from './request';
 import { CreateRuleInput, UserInput, Region, City, Retailer, Store, LoginInput, AuthResponse, Category, Journey, Products, stock, Target, Inquerie } from '@/types'
 import { routes } from '@/config/routes';
+import type { AppMessageInput } from '@/types/app-messages';
 import { CreateBrandInput } from '@/utils/validators/create-brand.schema ';
 import { CreateToDoInput } from '@/utils/validators/create-todo.schema';
 import { BrandFormInput } from '@/utils/validators/Brand-form.schema copy';
@@ -399,11 +400,20 @@ class Client {
         createPaymentWhatsapp: (input: { reservation_id: number }) => HttpClient.post('/reservations/create-payment-whatsapp', input),
         sendInvoiceWhatsapp: (reservationId: number) =>
             HttpClient.post(`/reservations/${reservationId}/send-invoice-whatsapp`),
-        updateStatus: (input: { reservation_id: number; status: number; paid?: boolean; notes?: string }) =>
+        updateStatus: (input: {
+            reservation_id: number;
+            status: number;
+            paid?: boolean;
+            notes?: string;
+            status_reason?: string;
+        }) =>
             HttpClient.patch(`${routes.reservations.index}/${input.reservation_id}/status`, {
                 status: input.status,
                 ...(input.paid !== undefined && { paid: input.paid }),
                 ...(input.notes !== undefined && { notes: input.notes }),
+                ...(input.status_reason !== undefined && {
+                    status_reason: input.status_reason,
+                }),
             }),
         inviteDoctors: (input: { reservation_id: number; doctor_ids: number[] }) => HttpClient.post(`${routes.reservations.index}/invite-doctors/${input.reservation_id}`, { doctor_ids: input.doctor_ids }),
     };
@@ -1038,6 +1048,71 @@ class Client {
         reorder: (ids: number[]) => HttpClient.post('/onboarding-screens/reorder', { ids }),
         toggleActive: (id: string | number) =>
             HttpClient.post(`/onboarding-screens/${id}/toggle-active`, {}),
+    };
+
+    highlights = {
+        all: (param = '') => HttpClient.get(`/highlights${param ? `?${param}` : ''}`),
+        findOne: (id: string | number) => HttpClient.get(`/highlights/${id}`),
+        create: (input: any) => HttpClient.post('/highlights', input, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        }),
+        update: (input: { id: string | number; data: any }) => {
+            if (input.data instanceof FormData) {
+                return HttpClient.post(`/highlights/${input.id}`, input.data, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                });
+            }
+            return HttpClient.put(`/highlights/${input.id}`, input.data);
+        },
+        delete: (id: string | number) => HttpClient.delete(`/highlights/${id}`),
+        toggleActive: (id: string | number) => HttpClient.post(`/highlights/${id}/toggle-active`, {}),
+        elements: {
+            create: (input: { highlightId: string | number; data: any }) =>
+                HttpClient.post(`/highlights/${input.highlightId}/elements`, input.data, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                }),
+            update: (input: { highlightId: string | number; elementId: string | number; data: any }) =>
+                HttpClient.post(`/highlights/${input.highlightId}/elements/${input.elementId}`, input.data, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                }),
+            delete: (input: { highlightId: string | number; elementId: string | number }) =>
+                HttpClient.delete(`/highlights/${input.highlightId}/elements/${input.elementId}`),
+            toggleActive: (input: { highlightId: string | number; elementId: string | number }) =>
+                HttpClient.post(`/highlights/${input.highlightId}/elements/${input.elementId}/toggle-active`, {}),
+        },
+        settings: {
+            get: () => HttpClient.get('/highlights/settings'),
+            update: (data: { highlight_image_duration_seconds: number }) =>
+                HttpClient.put('/highlights/settings', data),
+        },
+    };
+
+    onboardingScreens = {
+        all: (param = '') => HttpClient.get(`/onboarding-screens${param ? `?${param}` : ''}`),
+        findOne: (id: string | number) => HttpClient.get(`/onboarding-screens/${id}`),
+        // Create and update are multipart and always POST (PHP can't read multipart on PUT).
+        create: (input: FormData) => HttpClient.post('/onboarding-screens', input, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        }),
+        update: (input: { id: string | number; data: FormData }) =>
+            HttpClient.post(`/onboarding-screens/${input.id}`, input.data, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            }),
+        delete: (id: string | number) => HttpClient.delete(`/onboarding-screens/${id}`),
+        reorder: (ids: number[]) => HttpClient.post('/onboarding-screens/reorder', { ids }),
+        toggleActive: (id: string | number) =>
+            HttpClient.post(`/onboarding-screens/${id}/toggle-active`, {}),
+    };
+
+    appMessages = {
+        all: (param = '') => HttpClient.get(`/app-messages${param ? `?${param}` : ''}`),
+        findOne: (id: string | number) => HttpClient.get(`/app-messages/${id}`),
+        create: (input: AppMessageInput) => HttpClient.post('/app-messages', input),
+        update: (input: { id: string | number; data: AppMessageInput }) =>
+            HttpClient.put(`/app-messages/${input.id}`, input.data),
+        delete: (id: string | number) => HttpClient.delete(`/app-messages/${id}`),
+        toggleActive: (id: string | number) =>
+            HttpClient.post(`/app-messages/${id}/toggle-active`, {}),
     };
 }
 

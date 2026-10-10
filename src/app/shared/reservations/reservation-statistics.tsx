@@ -22,9 +22,22 @@ import {
   PiArrowRightBold,
   PiCaretDownBold,
   PiCaretUpBold,
+  PiUserMinusBold,
+  PiCalendarBlankBold,
 } from 'react-icons/pi';
 import cn from '@/utils/class-names';
 import { useRouter, usePathname } from 'next/navigation';
+import {
+  formatPercent,
+  sumUnknownSourceCount,
+  toPercent,
+  toneColors,
+  toneForCancellationRate,
+  toneForCollectionRate,
+  toneForConfirmationRate,
+  toneForUnknownSource,
+} from '@/utils/dashboard-metric-helpers';
+import { formatStatusReasonLabel } from '@/config/dashboard-enums';
 
 interface StatusCount {
   count?: number;
@@ -99,6 +112,24 @@ interface ReservationStatistics {
       clients_link?: string;
     };
   };
+  by_cancellation_reason?: Array<{
+    status_reason: string;
+    count: number;
+    canceled_count: number;
+    failed_count: number;
+    link: string;
+  }>;
+  unassigned_count?: number;
+  unassigned_link?: string;
+  same_day_count?: number;
+  same_day_link?: string;
+  upcoming_sessions?: {
+    count: number;
+    reservations_count: number;
+    link: string;
+  };
+  unscheduled_sessions_count?: number;
+  unscheduled_sessions_link?: string;
 }
 
 interface ReservationStatisticsProps {
@@ -135,25 +166,25 @@ const getStatusLink = (status: StatusCount | number | undefined): string | undef
 // Helper function to convert API link to frontend query params
 const convertApiLinkToQueryParams = (apiLink: string | undefined): string => {
   if (!apiLink) return '';
-  
+
   try {
     const url = new URL(apiLink);
     const params = new URLSearchParams(url.search);
-    
+
     // Convert API query params to frontend format
     const frontendParams = new URLSearchParams();
-    
+
     params.forEach((value, key) => {
       // Convert API format to frontend format
       // e.g., status_equal=1 -> status=1
       // e.g., paid_equal=1 -> paid=1
       // e.g., source_campaign_equal=google -> source_campaign=google
-      
-      
-        frontendParams.set(key, value);
-      
+
+
+      frontendParams.set(key, value);
+
     });
-    
+
     return frontendParams.toString();
   } catch (error) {
     console.error('Error converting API link:', error);
@@ -162,16 +193,16 @@ const convertApiLinkToQueryParams = (apiLink: string | undefined): string => {
 };
 
 // Card component
-const StatCard = ({ 
-  title, 
-  value, 
+const StatCard = ({
+  title,
+  value,
   subtitle,
-  icon: Icon, 
-  bgColor, 
-  textColor, 
-  darkBgColor, 
-  darkTextColor, 
-  blurColor, 
+  icon: Icon,
+  bgColor,
+  textColor,
+  darkBgColor,
+  darkTextColor,
+  blurColor,
   darkBlurColor,
   link,
   onClick,
@@ -199,7 +230,7 @@ const StatCard = ({
 }) => {
   const router = useRouter();
   const pathname = usePathname();
-  
+
   const [isHoveringCheckbox, setIsHoveringCheckbox] = useState(false);
 
   const handleClick = (e: React.MouseEvent) => {
@@ -237,9 +268,9 @@ const StatCard = ({
   const handleCardMouseLeave = () => {
     setIsHoveringCheckbox(false);
   };
-  
+
   return (
-    <div 
+    <div
       className={cn(
         "relative overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all dark:border-gray-700 dark:bg-gray-800",
         compact ? "min-w-[120px] flex-1 p-4" : "min-w-[200px] flex-1 p-6",
@@ -249,7 +280,7 @@ const StatCard = ({
       onMouseLeave={handleCardMouseLeave}
     >
       {showCheckbox && (
-        <div 
+        <div
           className="checkbox-area absolute top-2 right-2 z-10 p-1 -m-1 cursor-default"
           onMouseEnter={handleCheckboxAreaMouseEnter}
           onMouseLeave={handleCheckboxAreaMouseLeave}
@@ -307,9 +338,9 @@ const StatCard = ({
   );
 };
 
-export default function ReservationStatistics({ 
-  statistics, 
-  className 
+export default function ReservationStatistics({
+  statistics,
+  className
 }: ReservationStatisticsProps) {
   const [servicesExpanded, setServicesExpanded] = useState(false);
   const [categoriesExpanded, setCategoriesExpanded] = useState(false);
@@ -337,7 +368,7 @@ export default function ReservationStatistics({
   const hasPermission = (permission: string) => permissions.includes(permission);
 
   // Calculate total sessions from all statuses
-  const totalSessions = 
+  const totalSessions =
     getStatusSessionsCount(stats.by_status?.reviewing) +
     getStatusSessionsCount(stats.by_status?.waitconfirm) +
     getStatusSessionsCount(stats.by_status?.confirmed) +
@@ -350,7 +381,7 @@ export default function ReservationStatistics({
   const reservationByStatusCards = [
     {
       title: 'Total Reservations',
-      value: stats.total_count || 0,
+      value: totalReservations,
       icon: PiCalendarCheckBold,
       bgColor: 'bg-blue-50',
       textColor: 'text-blue-600',
@@ -555,12 +586,12 @@ export default function ReservationStatistics({
       darkBlurColor: 'dark:bg-gray-900/10',
       compact: true,
     },
-    
+
   ];
 
   // Row 3: Source Campaigns
   const allSourceCampaigns = stats.by_source_campaign || [];
-  
+
   // Initialize checked state for all campaigns on first render
   useEffect(() => {
     if (checkedSourceCampaigns.size === 0 && allSourceCampaigns.length > 0) {
@@ -573,27 +604,27 @@ export default function ReservationStatistics({
   const sourceCampaignCards = allSourceCampaigns
     .filter((campaign) => (campaign.reservations_count || 0) !== 0)
     .map((campaign) => {
-    const campaignKey = campaign.source_campaign || 'Unknown';
-    const isChecked = checkedSourceCampaigns.has(campaignKey);
-    
-    return {
-      title: campaignKey,
-      value: campaign.reservations_count || 0,
-      subtitle: `${campaign.sessions_count || 0} sessions`,
-      icon: PiTagBold,
-      bgColor: 'bg-purple-50',
-      textColor: 'text-purple-600',
-      darkBgColor: 'dark:bg-purple-900/20',
-      darkTextColor: 'dark:text-purple-400',
-      blurColor: 'bg-purple-50/50',
-      darkBlurColor: 'dark:bg-purple-900/10',
-      link: campaign.link,
-      compact: true,
-      showCheckbox: true,
-      checked: isChecked,
-      campaignKey: campaignKey,
-    };
-  });
+      const campaignKey = campaign.source_campaign || 'Unknown';
+      const isChecked = checkedSourceCampaigns.has(campaignKey);
+
+      return {
+        title: campaignKey,
+        value: campaign.reservations_count || 0,
+        subtitle: `${campaign.sessions_count || 0} sessions`,
+        icon: PiTagBold,
+        bgColor: 'bg-purple-50',
+        textColor: 'text-purple-600',
+        darkBgColor: 'dark:bg-purple-900/20',
+        darkTextColor: 'dark:text-purple-400',
+        blurColor: 'bg-purple-50/50',
+        darkBlurColor: 'dark:bg-purple-900/10',
+        link: campaign.link,
+        compact: true,
+        showCheckbox: true,
+        checked: isChecked,
+        campaignKey: campaignKey,
+      };
+    });
 
   // Calculate total of checked source campaigns (reservations count)
   const totalSourceCampaigns = sourceCampaignCards
@@ -633,28 +664,28 @@ export default function ReservationStatistics({
     const bSessions = b.sessions_count || 0;
     return bSessions - aSessions; // Descending order
   });
-  
+
   const allServiceCards = sortedServices
     .filter((service) => (service.reservations_count || 0) !== 0)
     .map((service) => ({
-    title: service.service_name_ar || `Service ${service.service_id}`,
-    value: `${service.reservations_count || 0}`,
-    subtitle: `${service.sessions_count || 0} sessions`,
-    icon: PiChartBarBold,
-    bgColor: 'bg-cyan-50',
-    textColor: 'text-cyan-600',
-    darkBgColor: 'dark:bg-cyan-900/20',
-    darkTextColor: 'dark:text-cyan-400',
-    blurColor: 'bg-cyan-50/50',
-    darkBlurColor: 'dark:bg-cyan-900/10',
-    link: service.link,
-    compact: true,
-  }));
-  
+      title: service.service_name_ar || `Service ${service.service_id}`,
+      value: `${service.reservations_count || 0}`,
+      subtitle: `${service.sessions_count || 0} sessions`,
+      icon: PiChartBarBold,
+      bgColor: 'bg-cyan-50',
+      textColor: 'text-cyan-600',
+      darkBgColor: 'dark:bg-cyan-900/20',
+      darkTextColor: 'dark:text-cyan-400',
+      blurColor: 'bg-cyan-50/50',
+      darkBlurColor: 'dark:bg-cyan-900/10',
+      link: service.link,
+      compact: true,
+    }));
+
   // Show only first 6 services when collapsed
   const SERVICES_PER_ROW = 6;
-  const serviceCards = servicesExpanded 
-    ? allServiceCards 
+  const serviceCards = servicesExpanded
+    ? allServiceCards
     : allServiceCards.slice(0, SERVICES_PER_ROW);
 
   // Categories (same pattern as Services)
@@ -667,22 +698,22 @@ export default function ReservationStatistics({
   const allCategoryCards = sortedCategories
     .filter((category) => (category.reservations_count || 0) !== 0)
     .map((category) => ({
-    title:
-      category.category_name_ar ||
-      category.category_name_en ||
-      `Category ${category.category_id}`,
-    value: `${category.reservations_count || 0}`,
-    subtitle: `${category.sessions_count || 0} sessions`,
-    icon: PiGridFourBold,
-    bgColor: 'bg-teal-50',
-    textColor: 'text-teal-600',
-    darkBgColor: 'dark:bg-teal-900/20',
-    darkTextColor: 'dark:text-teal-400',
-    blurColor: 'bg-teal-50/50',
-    darkBlurColor: 'dark:bg-teal-900/10',
-    link: category.link,
-    compact: true,
-  }));
+      title:
+        category.category_name_ar ||
+        category.category_name_en ||
+        `Category ${category.category_id}`,
+      value: `${category.reservations_count || 0}`,
+      subtitle: `${category.sessions_count || 0} sessions`,
+      icon: PiGridFourBold,
+      bgColor: 'bg-teal-50',
+      textColor: 'text-teal-600',
+      darkBgColor: 'dark:bg-teal-900/20',
+      darkTextColor: 'dark:text-teal-400',
+      blurColor: 'bg-teal-50/50',
+      darkBlurColor: 'dark:bg-teal-900/10',
+      link: category.link,
+      compact: true,
+    }));
 
   const CATEGORIES_PER_ROW = 6;
   const categoryCards = categoriesExpanded
@@ -691,7 +722,7 @@ export default function ReservationStatistics({
 
   // Row 4: Clients
   const totalUniqueCustomersValue: number = Number(stats.customers?.total_unique_customers?.count ?? 0);
-    
+
   const clientCards = [
     {
       title: 'Total Unique Customers',
@@ -750,6 +781,23 @@ export default function ReservationStatistics({
 
   return (
     <div className={cn('w-full space-y-6', className)}>
+      {showUnknownSourceAlert || (stats.unassigned_count ?? 0) > 0 ? (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200">
+          <p className="font-semibold">Red Flags</p>
+          <ul className="mt-1 list-disc space-y-0.5 ps-5">
+            {showUnknownSourceAlert && (
+              <li>
+                Unknown Source is {formatPercent(unknownSourceRate)} ({unknownCount} reservations) — above 20% threshold.
+              </li>
+            )}
+            {(stats.unassigned_count ?? 0) > 0 && (
+              <li>
+                {stats.unassigned_count} unassigned open reservation(s) without a doctor.
+              </li>
+            )}
+          </ul>
+        </div>
+      ) : null}
       {rows.map((row, rowIndex) => {
         const isServicesRow = row.title === 'Services';
         const hasMoreServices = isServicesRow && allServiceCards.length > SERVICES_PER_ROW;
@@ -805,8 +853,8 @@ export default function ReservationStatistics({
                 <StatCard key="total-source-campaigns" {...totalSourceCampaignCard} />
               )}
               {row.cards.map((card: any, cardIndex: number) => (
-                <StatCard 
-                  key={cardIndex} 
+                <StatCard
+                  key={cardIndex}
                   {...card}
                   onCheckboxChange={card.campaignKey ? (checked: boolean) => handleSourceCampaignCheckboxChange(card.campaignKey, checked) : undefined}
                 />

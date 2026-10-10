@@ -48,56 +48,56 @@ export default function AbandonedReservationsTablePage() {
           You do not have permission to view this page.
         </div>
       ) : (
-      <TableLayout
-        title={pageHeader.title}
-        breadcrumb={pageHeader.breadcrumb}
-        data={{
-          columns: selectedColumns
-            .filter((column) => column !== 'checked' && column !== 'action')
-            .map((column: String) =>
-              column.replace(/\./g, '_').replace(/\s/g, '_')
-            ),
-          rows: selectedRowKeys,
-        }}
-        fileName="abandoned-reservations"
-        header="Client,Created At"
-        createName={reservationPermissions.create ? 'Create Reservation' : undefined}
-        createElementButton={
-          reservationPermissions.create ? <CreateOrUpdateReservation /> : undefined
-        }
-        importButton={reservationPermissions.import ? 'reservations/import' : undefined}
-        canCreate={reservationPermissions.create}
-        canImport={reservationPermissions.import}
-        canExport={reservationPermissions.export}
-      >
+        <TableLayout
+          title={pageHeader.title}
+          breadcrumb={pageHeader.breadcrumb}
+          data={{
+            columns: selectedColumns
+              .filter((column) => column !== 'checked' && column !== 'action')
+              .map((column: String) =>
+                column.replace(/\./g, '_').replace(/\s/g, '_')
+              ),
+            rows: selectedRowKeys,
+          }}
+          fileName="abandoned-reservations"
+          header="Client,Created At"
+          createName={reservationPermissions.create ? 'Create Reservation' : undefined}
+          createElementButton={
+            reservationPermissions.create ? <CreateOrUpdateReservation /> : undefined
+          }
+          importButton={reservationPermissions.import ? 'reservations/import' : undefined}
+          canCreate={reservationPermissions.create}
+          canImport={reservationPermissions.import}
+          canExport={reservationPermissions.export}
+        >
 
 
-        {isLoading ? (
-          <div className="m-auto">
-            <Spinner size="lg" />
-          </div>
-        ) : (
-          <>
-            <ReservationStatistics
-              statistics={data?.statistics}
-              className="mb-6"
-            />
+          {isLoading ? (
+            <div className="m-auto">
+              <Spinner size="lg" />
+            </div>
+          ) : (
+            <>
+              <ReservationStatistics
+                statistics={data?.statistics}
+                className="mb-6"
+              />
 
-            <ReservationsTable
-              data={data?.data}
-              getSelectedColumns={setSelectedColumns}
-              getSelectedRowKeys={setSelectedRowKeys}
-              totalItems={data?.meta?.total}
-              canView={reservationPermissions.view}
-              canEdit={reservationPermissions.edit}
-              canDelete={reservationPermissions.delete}
-              canInviteDoctors={reservationPermissions.inviteDoctors}
-              canSendPaymentWhatsapp={reservationPermissions.sendPaymentWhatsapp}
-              canSendInvoiceWhatsapp={reservationPermissions.sendInvoiceWhatsapp}
-            />
-          </>
-        )}
-      </TableLayout>
+              <ReservationsTable
+                data={data?.data}
+                getSelectedColumns={setSelectedColumns}
+                getSelectedRowKeys={setSelectedRowKeys}
+                totalItems={data?.meta?.total}
+                canView={reservationPermissions.view}
+                canEdit={reservationPermissions.edit}
+                canDelete={reservationPermissions.delete}
+                canInviteDoctors={reservationPermissions.inviteDoctors}
+                canSendPaymentWhatsapp={reservationPermissions.sendPaymentWhatsapp}
+                canSendInvoiceWhatsapp={reservationPermissions.sendInvoiceWhatsapp}
+              />
+            </>
+          )}
+        </TableLayout>
       )}
     </>
   );

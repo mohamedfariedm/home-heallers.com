@@ -125,6 +125,7 @@ export const useUpdateReservationStatus = () => {
       status: number;
       paid?: boolean;
       notes?: string;
+      status_reason?: string;
     }) => {
       const response = await client.reservations.updateStatus(input);
       return response?.data?.[0] ?? response?.data ?? response;

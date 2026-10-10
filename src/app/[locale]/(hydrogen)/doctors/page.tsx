@@ -4,6 +4,7 @@ import Spinner from '@/components/ui/spinner';
 import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import DoctorsTable from '@/app/shared/doctors/table';
+import DoctorStatistics from '@/app/shared/doctors/doctor-statistics';
 import { useDoctors } from '@/framework/doctors';
 import CreateOrUpdateDoctors from '@/app/shared/doctors/doctors-form';
 
@@ -28,11 +29,12 @@ export default function DoctorsTablePage() {
   });
   if (!queryParams.get('page')) queryParams.set('page', '1');
   if (!queryParams.get('limit')) queryParams.set('limit', '10');
+  queryParams.set('include_statistics', 'true');
 
   const { data, isLoading } = useDoctors(queryParams.toString());
   const [selectedColumns, setSelectedColumns] = useState<any[]>([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState<any[]>([]);
-  
+
   return (
     <TableLayout
       title={pageHeader.title}
@@ -55,12 +57,15 @@ export default function DoctorsTablePage() {
           <Spinner size="lg" />
         </div>
       ) : (
-        <DoctorsTable
-          data={data?.data}
-          getSelectedColumns={setSelectedColumns}
-          getSelectedRowKeys={setSelectedRowKeys}
-          totalItems={data?.meta?.total}
-        />
+        <>
+          <DoctorStatistics statistics={data?.statistics} className="mb-6" />
+          <DoctorsTable
+            data={data?.data}
+            getSelectedColumns={setSelectedColumns}
+            getSelectedRowKeys={setSelectedRowKeys}
+            totalItems={data?.meta?.total}
+          />
+        </>
       )}
     </TableLayout>
   );

@@ -59,4 +59,12 @@ export interface CustomerSupportStatistics {
     link: string;
   }>;
   leads?: LeadsSummary;
+  /** New Backend dashboard metrics (additive) */
+  by_failure_reason?: import('./dashboard-statistics').FailureReasonStat[];
+  follow_up_aging?: import('./dashboard-statistics').FollowUpAgingStat;
+  unset_status_count?: number;
+  by_agent?: import('./dashboard-statistics').AgentPerformanceStat[];
+  converted_via_lead?: import('./dashboard-statistics').ConvertedViaLeadStat;
+  offer_conversion?: import('./dashboard-statistics').OfferConversionStat[];
 }
+
