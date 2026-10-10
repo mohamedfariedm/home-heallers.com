@@ -42,7 +42,7 @@ function resolveEntityName(item: any): string {
   return `#${item?.id}`;
 }
 
-const BannerSection: React.FC<BannerSectionProps> = ({ banners, onUpdate }) => {
+const BannerSection: React.FC<BannerSectionProps> = ({ banners = [], onUpdate }) => {
   const { t } = useTranslation();
   const [selectedBanner, setSelectedBanner] = useState<Banner | null>(null);
 
