@@ -39,6 +39,11 @@ const nextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'backend.home-healers.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
         hostname: 'flagcdn.com',
       },
       {

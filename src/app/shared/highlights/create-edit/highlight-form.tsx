@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import Select from '@/components/ui/select';
@@ -206,12 +205,11 @@ export default function HighlightForm({
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
               {coverPreview && (
                 <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-full border border-gray-300 bg-gray-50">
-                  <Image
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
                     src={coverPreview}
                     alt="Cover preview"
-                    fill
-                    sizes="80px"
-                    className="object-cover"
+                    className="h-full w-full object-cover"
                   />
                 </div>
               )}

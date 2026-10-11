@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import Image from 'next/image';
 import { Title, Text } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -342,12 +341,11 @@ export default function ElementsManager({
                     controls
                   />
                 ) : (
-                  <Image
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
                     src={el.media_url}
                     alt={t('highlights_el_media_alt')}
-                    fill
-                    sizes="300px"
-                    className="object-cover"
+                    className="h-full w-full object-cover"
                   />
                 )}
                 <div className="absolute left-2 top-2 flex items-center gap-1.5">

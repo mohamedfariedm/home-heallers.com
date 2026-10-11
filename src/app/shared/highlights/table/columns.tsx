@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { HeaderCell } from '@/components/ui/table';
 import { ActionIcon } from '@/components/ui/action-icon';
 import { Badge } from '@/components/ui/badge';
@@ -43,12 +42,11 @@ export const getColumns = ({
         <div className="flex items-center gap-3">
           <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full border border-gray-200 bg-gray-100">
             {row.cover ? (
-              <Image
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
                 src={row.cover}
                 alt={titleEn}
-                fill
-                sizes="48px"
-                className="object-cover"
+                className="h-full w-full object-cover"
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-xs text-gray-400">
