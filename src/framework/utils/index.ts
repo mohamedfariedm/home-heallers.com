@@ -13,6 +13,11 @@ import type {
     WhatsAppQrResponse,
     WhatsAppSessionStatus,
 } from '@/types/whatsapp';
+import type {
+    SendSupportMediaInput,
+    SendSupportTextInput,
+    SupportTicketsSettings,
+} from '@/types/support-tickets';
 
 
 
@@ -1057,6 +1062,55 @@ class Client {
         reorder: (ids: number[]) => HttpClient.post('/onboarding-screens/reorder', { ids }),
         toggleActive: (id: string | number) =>
             HttpClient.post(`/onboarding-screens/${id}/toggle-active`, {}),
+    };
+
+    supportTickets = {
+        config: () => HttpClient.get<any>('/support-tickets/config'),
+        stats: () => HttpClient.get<any>('/support-tickets/stats'),
+        unreadCount: () => HttpClient.get<any>('/support-tickets/unread-count'),
+        agents: () => HttpClient.get<any>('/support-tickets/agents'),
+        all: (param = '') => HttpClient.get<any>(`/support-tickets${param ? `?${param}` : ''}`),
+        findOne: (id: string | number) => HttpClient.get<any>(`/support-tickets/${id}`),
+        messages: (id: string | number, params: { cursor?: string | null; limit?: number } = {}) =>
+            HttpClient.get<any>(`/support-tickets/${id}/messages`, {
+                limit: params.limit ?? 30,
+                ...(params.cursor ? { cursor: params.cursor } : {}),
+            }),
+        markRead: (id: string | number, lastReadMessageId?: number) =>
+            HttpClient.post<any>(
+                `/support-tickets/${id}/read`,
+                lastReadMessageId ? { last_read_message_id: lastReadMessageId } : {}
+            ),
+        sendMessage: (id: string | number, input: SendSupportTextInput) =>
+            HttpClient.post<any>(`/support-tickets/${id}/messages`, input),
+        sendMedia: (id: string | number, input: SendSupportMediaInput) => {
+            const form = new FormData();
+            form.append('type', input.type);
+            if (input.fileName) form.append('file', input.file, input.fileName);
+            else form.append('file', input.file);
+            if (input.client_message_id) form.append('client_message_id', input.client_message_id);
+            Object.entries(input.metadata ?? {}).forEach(([key, value]) => {
+                if (value !== undefined && value !== null) form.append(`metadata[${key}]`, String(value));
+            });
+            return HttpClient.post<any>(`/support-tickets/${id}/messages/media`, form, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            });
+        },
+        deleteMessage: (id: string | number, messageId: string | number) =>
+            HttpClient.delete<any>(`/support-tickets/${id}/messages/${messageId}`),
+        changeStage: (id: string | number, stage: 'in_progress' | 'resolved') =>
+            HttpClient.patch<any>(`/support-tickets/${id}/stage`, { stage }),
+        claim: (id: string | number) => HttpClient.post<any>(`/support-tickets/${id}/claim`, {}),
+        assign: (id: string | number, userId: number | null) =>
+            HttpClient.post<any>(`/support-tickets/${id}/assign`, { user_id: userId }),
+        close: (id: string | number, note?: string) =>
+            HttpClient.post<any>(`/support-tickets/${id}/close`, note ? { note } : {}),
+        dismissCloseRequest: (id: string | number) =>
+            HttpClient.post<any>(`/support-tickets/${id}/close-request/dismiss`, {}),
+        settings: {
+            get: () => HttpClient.get<any>('/support-tickets/settings'),
+            update: (data: SupportTicketsSettings) => HttpClient.put<any>('/support-tickets/settings', data),
+        },
     };
 }
 

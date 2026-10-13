@@ -41,6 +41,7 @@ import {
   PiShieldCheckDuotone,
   PiLockKeyDuotone,
   PiChatCenteredDotsDuotone,
+  PiLifebuoyDuotone,
   PiMagicWandDuotone,
   PiCalendarPlusDuotone,
   PiListChecks,
@@ -282,6 +283,13 @@ export const menuItemsHaydrogen = [
     href: '/customer-supports-seo-kanban',
     icon: <PiGlobe />,
     permissions: 'customer_supports_seo',
+  },
+  {
+    name: 'Support Tickets',
+    nameAr: 'تذاكر الدعم الفني',
+    href: routes.supportTickets.index,
+    icon: <PiLifebuoyDuotone />,
+    permissions: 'support_tickets',
   },
   {
     name: 'WhatsApp Inbox',

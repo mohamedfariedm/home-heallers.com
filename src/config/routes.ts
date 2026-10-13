@@ -249,6 +249,12 @@ export const routes = {
     create: '/highlights/create',
     edit: (id: string | number) => `/highlights/${id}/edit`,
   },
+  supportTickets: {
+    index: '/support-tickets',
+    detail: (id: string | number) => `/support-tickets/${id}`,
+    clientHistory: (clientId: string | number) =>
+      `/support-tickets?tab=all&client_id=${clientId}`,
+  },
   onboardingScreens: {
     index: '/onboarding-screens',
     create: '/onboarding-screens/create',
