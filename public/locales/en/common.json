@@ -469,8 +469,7 @@
   "geo_skip_daily_cap": "The user already received a geo notification today",
   "geo_skip_lower_priority": "An overlapping region with a higher priority was sent",
   "geo_skip_region_inactive": "The region was stopped, expired or deleted before sending",
-  "geo_skip_coupon_unavailable": "The coupon is inactive, expired, exhausted, or already used by the user"
-  "settings_conditions_desc": "Manage your privacy policy content in both Arabic and English.",
+  "geo_skip_coupon_unavailable": "The coupon is inactive, expired, exhausted, or already used by the user",
   "Support Tickets": "Support Tickets",
   "st_page_title": "Support Tickets",
   "st_breadcrumb_home": "Home",
