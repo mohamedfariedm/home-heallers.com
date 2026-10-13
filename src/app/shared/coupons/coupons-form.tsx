@@ -779,11 +779,15 @@ function TargetingTab({
 
 export default function CreateOrUpdateCoupon({
   initValues,
+  onCreated,
 }: {
   initValues?: any;
+  /** Called with the new coupon after a successful create (used by geo regions). */
+  onCreated?: (coupon: any) => void;
 }) {
   const { closeModal } = useModal();
-  const { mutate: createCoupon, isPending: isCreating } = useCreateCoupons();
+  const { mutate: createCoupon, isPending: isCreating } =
+    useCreateCoupons(onCreated);
   const { mutate: updateCoupon, isPending: isUpdating } = useUpdateCoupons();
   const { data: servicesData, isLoading: isServicesLoading } = useServices('');
   const { data: citiesData, isLoading: isCitiesLoading } = useCities('');

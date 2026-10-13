@@ -1112,6 +1112,19 @@ class Client {
             update: (data: SupportTicketsSettings) => HttpClient.put<any>('/support-tickets/settings', data),
         },
     };
+
+    geoRegions = {
+        all: (param = '') => HttpClient.get(`/geo-regions${param ? `?${param}` : ''}`),
+        findOne: (id: string | number) => HttpClient.get(`/geo-regions/${id}`),
+        create: (input: any) => HttpClient.post('/geo-regions', input),
+        update: (input: { id: string | number; data: any }) =>
+            HttpClient.put(`/geo-regions/${input.id}`, input.data),
+        delete: (id: string | number) => HttpClient.delete(`/geo-regions/${id}`),
+        toggleActive: (id: string | number) =>
+            HttpClient.post(`/geo-regions/${id}/toggle-active`, {}),
+        visits: (id: string | number, param = '') =>
+            HttpClient.get(`/geo-regions/${id}/visits${param ? `?${param}` : ''}`),
+    };
 }
 
 
