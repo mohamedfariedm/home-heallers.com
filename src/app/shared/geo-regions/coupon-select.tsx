@@ -15,9 +15,8 @@ import type { MarketCoupon } from '@/types/coupon';
 interface CouponSelectProps {
   value: string | null;
   onChange: (couponId: string | null) => void;
-  countryId: number | null;
   lang: 'ar' | 'en';
-  /** The coupon already linked to the region (edit), shown even if filtered out. */
+  /** The coupon already linked to the region (edit), shown even if it is not in the current page. */
   currentCoupon?: GeoRegionCoupon | null;
   error?: string;
   disabled?: boolean;
@@ -50,7 +49,6 @@ function formatDate(value?: string | null) {
 export default function CouponSelect({
   value,
   onChange,
-  countryId,
   lang,
   currentCoupon,
   error,
@@ -80,9 +78,6 @@ export default function CouponSelect({
 
     const eligible = list.filter((c) => {
       if (c.ends_at && new Date(c.ends_at).getTime() < now) return false;
-      // Coupons restricted to other countries are rejected by the server.
-      if (countryId && c.country_ids?.length && !c.country_ids.includes(countryId))
-        return false;
       return true;
     });
 
@@ -112,7 +107,7 @@ export default function CouponSelect({
       { value: NONE, label: t('geo_coupon_none', 'No coupon') },
       ...mapped,
     ];
-  }, [data?.data, countryId, lang, value, currentCoupon, t]);
+  }, [data?.data, lang, value, currentCoupon, t]);
 
   const selected =
     options.find((o) => o.value === (value ?? NONE)) ?? options[0];
@@ -191,10 +186,7 @@ export default function CouponSelect({
         <p className="mt-1 text-sm text-red-500">{error}</p>
       ) : (
         <Text className="mt-1 text-xs text-gray-500">
-          {t(
-            'geo_coupon_hint',
-            'Only active coupons available in the region country are listed.'
-          )}
+          {t('geo_coupon_hint', 'Only active coupons are listed.')}
         </Text>
       )}
     </div>

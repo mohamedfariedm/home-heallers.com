@@ -31,7 +31,7 @@ export interface GeoRegionCoupon {
 
 export interface GeoRegion {
   id: number;
-  country_id: number;
+  country_id: number | null;
   country?: { id: number; name: Partial<GeoBilingual> | string } | null;
   name: GeoBilingual;
   push_title: GeoBilingual;
@@ -58,7 +58,6 @@ export interface GeoRegion {
 }
 
 export interface GeoRegionPayload {
-  country_id: number;
   name: GeoBilingual;
   push_title: GeoBilingual;
   push_body: GeoBilingual;
