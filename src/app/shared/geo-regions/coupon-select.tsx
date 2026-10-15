@@ -11,6 +11,7 @@ import CreateOrUpdateCoupon from '@/app/shared/coupons/coupons-form';
 import { useCoupons } from '@/framework/coupons';
 import type { GeoRegionCoupon } from '@/types/geo-regions';
 import type { MarketCoupon } from '@/types/coupon';
+import { resolveLocalizedName } from '@/utils/resolve-localized-name';
 
 interface CouponSelectProps {
   value: string | null;
@@ -35,9 +36,7 @@ function pickName(
   name: { ar?: string; en?: string } | string | null | undefined,
   lang: 'ar' | 'en'
 ) {
-  if (!name) return '';
-  if (typeof name === 'string') return name;
-  return name[lang] || name.en || name.ar || '';
+  return resolveLocalizedName(name, lang);
 }
 
 function formatDate(value?: string | null) {

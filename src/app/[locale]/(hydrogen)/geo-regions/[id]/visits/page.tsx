@@ -23,6 +23,7 @@ import {
 import { useGeoRegion, useGeoRegionVisits } from '@/framework/geo-regions';
 import { routes } from '@/config/routes';
 import type { GeoLang } from '@/types/geo-regions';
+import { resolveLocalizedName } from '@/utils/resolve-localized-name';
 
 const PAGE_SIZE = 20;
 
@@ -67,8 +68,7 @@ export default function GeoRegionVisitsPage() {
     query.toString()
   );
 
-  const regionName =
-    region?.name?.[lang] || region?.name?.en || region?.name?.ar || '';
+  const regionName = resolveLocalizedName(region?.name, lang);
 
   const pageHeader = {
     title: regionName
@@ -203,10 +203,12 @@ export default function GeoRegionVisitsPage() {
                   <tr key={visit.id}>
                     <td className="px-4 py-3">
                       <p className="font-medium text-gray-900" dir="auto">
-                        {visit.client?.name || '—'}
+                        {resolveLocalizedName(visit.client?.name, lang) || '—'}
                       </p>
                       <p className="text-xs text-gray-500" dir="ltr">
-                        {visit.client?.mobile || ''}
+                        {typeof visit.client?.mobile === 'string'
+                          ? visit.client.mobile
+                          : ''}
                       </p>
                     </td>
                     <td className="px-4 py-3 text-gray-700">{visit.day}</td>

@@ -26,6 +26,7 @@ import type {
   GeoRegion,
   GeoRegionPayload,
 } from '@/types/geo-regions';
+import { resolveLocalizedName } from '@/utils/resolve-localized-name';
 import CouponSelect from './coupon-select';
 import CouponStatusAlert from './coupon-status-alert';
 import {
@@ -78,8 +79,20 @@ const SHAPE_ERROR_KEY: Record<GeoShapeError, [string, string]> = {
   ],
 };
 
-function emptyBilingual(): GeoBilingual {
-  return { ar: '', en: '' };
+function asText(value: unknown, lang: GeoLang = 'en'): string {
+  return typeof value === 'string' ? value : resolveLocalizedName(value, lang);
+}
+
+function toBilingual(value: unknown): GeoBilingual {
+  if (!value || typeof value === 'string') {
+    const text = typeof value === 'string' ? value : '';
+    return { ar: text, en: text };
+  }
+  const record = value as Partial<Record<GeoLang, unknown>>;
+  return {
+    ar: asText(record.ar, 'ar'),
+    en: asText(record.en, 'en'),
+  };
 }
 
 function CharCounter({ value, max }: { value: string; max: number }) {
@@ -98,13 +111,13 @@ export default function RegionForm({ initialValues }: RegionFormProps) {
   const isEdit = Boolean(initialValues?.id);
 
   const [name, setName] = useState<GeoBilingual>(
-    initialValues?.name ?? emptyBilingual()
+    toBilingual(initialValues?.name)
   );
   const [pushTitle, setPushTitle] = useState<GeoBilingual>(
-    initialValues?.push_title ?? emptyBilingual()
+    toBilingual(initialValues?.push_title)
   );
   const [pushBody, setPushBody] = useState<GeoBilingual>(
-    initialValues?.push_body ?? emptyBilingual()
+    toBilingual(initialValues?.push_body)
   );
   // Draw from the saved points: the server may have reversed the winding.
   const [points, setPoints] = useState<GeoPoint[]>(
@@ -267,6 +280,29 @@ export default function RegionForm({ initialValues }: RegionFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+      {/* Coupon */}
+      <div className={cardCls}>
+        <Title as="h3" className="text-base font-semibold text-gray-900">
+          {t('geo_section_coupon', 'Coupon')}
+        </Title>
+        <div className="max-w-xl">
+          <CouponSelect
+            value={couponId}
+            onChange={(id) => {
+              setCouponId(id);
+              clearError('market_coupon_id');
+            }}
+            lang={uiLang}
+            currentCoupon={initialValues?.coupon}
+            error={errors.market_coupon_id}
+            disabled={isSaving}
+          />
+        </div>
+        {isEdit && couponId === initialValues?.market_coupon_id && (
+          <CouponStatusAlert status={initialValues?.coupon_status} />
+        )}
+      </div>
+
       {/* Settings */}
       <div className={cardCls}>
         <Title as="h3" className="text-base font-semibold text-gray-900">
@@ -416,6 +452,52 @@ export default function RegionForm({ initialValues }: RegionFormProps) {
         })}
       </div>
 
+      {/* Preview */}
+      <div className={cardCls}>
+        <div className="flex items-center justify-between gap-3">
+          <Title as="h3" className="text-base font-semibold text-gray-900">
+            {t('geo_section_preview', 'Notification preview')}
+          </Title>
+          <div className="inline-flex rounded-lg border border-gray-200 bg-white p-1">
+            {LANGS.map(({ key, label }) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setPreviewLang(key)}
+                className={`rounded-md px-3 py-1 text-sm font-medium transition ${
+                  previewLang === key
+                    ? 'bg-gray-900 text-white'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                {key.toUpperCase()}
+                <span className="sr-only"> {label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+        <div
+          dir={previewLang === 'ar' ? 'rtl' : 'ltr'}
+          className="max-w-md rounded-2xl border border-gray-200 bg-gray-50 p-4 shadow-sm"
+        >
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-900 text-white">
+              <PiBellSimpleRingingFill className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-gray-900">
+                {pushTitle[previewLang] ||
+                  t('geo_preview_title_ph', 'Notification title')}
+              </p>
+              <p className="mt-0.5 break-words text-sm text-gray-600">
+                {pushBody[previewLang] ||
+                  t('geo_preview_body_ph', 'Notification body appears here.')}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Map */}
       <div className={cardCls}>
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -465,75 +547,6 @@ export default function RegionForm({ initialValues }: RegionFormProps) {
             <span>{mapError}</span>
           </div>
         )}
-      </div>
-
-      {/* Coupon */}
-      <div className={cardCls}>
-        <Title as="h3" className="text-base font-semibold text-gray-900">
-          {t('geo_section_coupon', 'Coupon')}
-        </Title>
-        <div className="max-w-xl">
-          <CouponSelect
-            value={couponId}
-            onChange={(id) => {
-              setCouponId(id);
-              clearError('market_coupon_id');
-            }}
-            lang={uiLang}
-            currentCoupon={initialValues?.coupon}
-            error={errors.market_coupon_id}
-            disabled={isSaving}
-          />
-        </div>
-        {isEdit && couponId === initialValues?.market_coupon_id && (
-          <CouponStatusAlert status={initialValues?.coupon_status} />
-        )}
-      </div>
-
-      {/* Preview */}
-      <div className={cardCls}>
-        <div className="flex items-center justify-between gap-3">
-          <Title as="h3" className="text-base font-semibold text-gray-900">
-            {t('geo_section_preview', 'Notification preview')}
-          </Title>
-          <div className="inline-flex rounded-lg border border-gray-200 bg-white p-1">
-            {LANGS.map(({ key, label }) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setPreviewLang(key)}
-                className={`rounded-md px-3 py-1 text-sm font-medium transition ${
-                  previewLang === key
-                    ? 'bg-gray-900 text-white'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                {key.toUpperCase()}
-                <span className="sr-only"> {label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-        <div
-          dir={previewLang === 'ar' ? 'rtl' : 'ltr'}
-          className="max-w-md rounded-2xl border border-gray-200 bg-gray-50 p-4 shadow-sm"
-        >
-          <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-900 text-white">
-              <PiBellSimpleRingingFill className="h-5 w-5" />
-            </div>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-gray-900">
-                {pushTitle[previewLang] ||
-                  t('geo_preview_title_ph', 'Notification title')}
-              </p>
-              <p className="mt-0.5 break-words text-sm text-gray-600">
-                {pushBody[previewLang] ||
-                  t('geo_preview_body_ph', 'Notification body appears here.')}
-              </p>
-            </div>
-          </div>
-        </div>
       </div>
 
       <div className="flex justify-end gap-3">
