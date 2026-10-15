@@ -14,9 +14,7 @@ import { REQUIRED_POINTS } from './geometry';
 interface RegionMapProps {
   points: GeoPoint[];
   onChange: (points: GeoPoint[]) => void;
-  /** Used to centre the map when no points are drawn yet. */
-  countryName?: string | null;
-  /** Other active regions in the same country, drawn faded and inert. */
+  /** Other active regions, drawn faded and inert. */
   otherRegions?: GeoPoint[][];
   hasError?: boolean;
   disabled?: boolean;
@@ -40,7 +38,6 @@ const OTHER_COLOR = '#94a3b8';
 export default function RegionMap({
   points,
   onChange,
-  countryName,
   otherRegions = [],
   hasError = false,
   disabled = false,
@@ -54,9 +51,7 @@ export default function RegionMap({
     null
   );
   const othersRef = useRef<google.maps.Polygon[]>([]);
-  const geocoderRef = useRef<google.maps.Geocoder | null>(null);
   const fittedInitialRef = useRef(false);
-  const lastCountryRef = useRef<string | null>(null);
 
   const [ready, setReady] = useState(false);
   const [loadError, setLoadError] = useState(false);
@@ -77,7 +72,6 @@ export default function RegionMap({
     Promise.all([
       loader.importLibrary('maps'),
       loader.importLibrary('places'),
-      loader.importLibrary('geocoding'),
     ])
       .then(() => {
         if (cancelled || !mapDivRef.current) return;
@@ -92,7 +86,6 @@ export default function RegionMap({
           gestureHandling: 'greedy',
         });
         mapRef.current = map;
-        geocoderRef.current = new google.maps.Geocoder();
 
         map.addListener('click', (e: google.maps.MapMouseEvent) => {
           if (disabledRef.current || !e.latLng) return;
@@ -228,34 +221,20 @@ export default function RegionMap({
       );
   }, [otherRegions, ready]);
 
-  // Initial fit: existing points (edit) or the selected country (create).
+  // Edit: fit the saved shape once. Create stays on the default view
+  // until the admin moves the map with search.
   useEffect(() => {
     const map = mapRef.current;
-    if (!ready || !map) return;
-
-    if (points.length > 0 && !fittedInitialRef.current) {
-      fittedInitialRef.current = true;
-      const bounds = new google.maps.LatLngBounds();
-      points.forEach((p) => bounds.extend(p));
-      map.fitBounds(bounds, 60);
-      return;
-    }
+    if (!ready || !map || fittedInitialRef.current) return;
     fittedInitialRef.current = true;
+    if (points.length === 0) return;
 
-    if (countryName && lastCountryRef.current !== countryName) {
-      lastCountryRef.current = countryName;
-      geocoderRef.current?.geocode(
-        { address: countryName },
-        (results, status) => {
-          if (status !== 'OK' || !results?.[0]) return;
-          const { viewport, location } = results[0].geometry;
-          if (viewport) map.fitBounds(viewport);
-          else map.setCenter(location);
-        }
-      );
-    }
+    const bounds = new google.maps.LatLngBounds();
+    points.forEach((p) => bounds.extend(p));
+    map.fitBounds(bounds, 60);
+    // Saved points are present at mount; later drawing must not recenter.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, countryName]);
+  }, [ready]);
 
   const isComplete = points.length === REQUIRED_POINTS;
 

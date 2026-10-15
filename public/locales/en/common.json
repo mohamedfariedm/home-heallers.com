@@ -446,7 +446,7 @@
   "geo_coupon_ends": "Ends",
   "geo_coupon_search": "Search coupons by name",
   "geo_coupon_no_results": "No coupons found",
-  "geo_coupon_hint": "Only active coupons available in the region country are listed.",
+  "geo_coupon_hint": "Only active coupons are listed.",
   "geo_coupon_warn_inactive": "The coupon is inactive. The notification will not be sent until you change or remove it.",
   "geo_coupon_warn_not_started": "The coupon has not started yet. The notification will not be sent until it starts.",
   "geo_coupon_warn_expired": "The coupon has expired. The notification will not be sent until you change or remove it.",

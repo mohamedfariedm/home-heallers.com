@@ -13,7 +13,6 @@ import { Switch } from '@/components/ui/switch';
 import { DatePicker } from '@/components/ui/datepicker';
 import { Title, Text } from '@/components/ui/text';
 import Spinner from '@/components/ui/spinner';
-import { useCountries } from '@/framework/countrues';
 import {
   useCreateGeoRegion,
   useGeoRegions,
@@ -83,15 +82,6 @@ function emptyBilingual(): GeoBilingual {
   return { ar: '', en: '' };
 }
 
-function pickName(
-  name: { ar?: string; en?: string } | string | null | undefined,
-  lang: GeoLang
-) {
-  if (!name) return '';
-  if (typeof name === 'string') return name;
-  return name[lang] || name.en || name.ar || '';
-}
-
 function CharCounter({ value, max }: { value: string; max: number }) {
   const over = value.length > max;
   return (
@@ -107,9 +97,6 @@ export default function RegionForm({ initialValues }: RegionFormProps) {
   const uiLang: GeoLang = i18n.language?.startsWith('ar') ? 'ar' : 'en';
   const isEdit = Boolean(initialValues?.id);
 
-  const [countryId, setCountryId] = useState<number | ''>(
-    initialValues?.country_id ?? ''
-  );
   const [name, setName] = useState<GeoBilingual>(
     initialValues?.name ?? emptyBilingual()
   );
@@ -140,20 +127,8 @@ export default function RegionForm({ initialValues }: RegionFormProps) {
   const update = useUpdateGeoRegion();
   const isSaving = create.isPending || update.isPending;
 
-  const { data: countriesData, isLoading: countriesLoading } = useCountries('');
-  const countries: any[] = Array.isArray(countriesData?.data)
-    ? countriesData.data
-    : [];
-  const selectedCountry = countries.find((c) => c.id === countryId);
-  const countryGeocodeName = selectedCountry
-    ? pickName(selectedCountry.name, 'en')
-    : pickName(initialValues?.country?.name, 'en');
-
-  // Other active regions in the same country, drawn faded for overlap context.
-  const { data: othersData } = useGeoRegions(
-    `country_id=${countryId}&status=active&limit=100`,
-    Boolean(countryId)
-  );
+  // Other active regions, drawn faded for overlap context.
+  const { data: othersData } = useGeoRegions('status=active&limit=100');
   const otherRegions = useMemo(
     () =>
       (othersData?.data ?? [])
@@ -176,8 +151,6 @@ export default function RegionForm({ initialValues }: RegionFormProps) {
   const validate = (): FieldErrors => {
     const found: FieldErrors = {};
     const required = t('geo_required', 'This field is required');
-
-    if (!countryId) found.country_id = required;
 
     LANGS.forEach(({ key }) => {
       if (!name[key].trim()) found[`name.${key}`] = required;
@@ -239,7 +212,6 @@ export default function RegionForm({ initialValues }: RegionFormProps) {
     }
 
     const payload: GeoRegionPayload = {
-      country_id: Number(countryId),
       name: { ar: name.ar.trim(), en: name.en.trim() },
       push_title: { ar: pushTitle.ar.trim(), en: pushTitle.en.trim() },
       push_body: { ar: pushBody.ar.trim(), en: pushBody.en.trim() },
@@ -300,37 +272,7 @@ export default function RegionForm({ initialValues }: RegionFormProps) {
         <Title as="h3" className="text-base font-semibold text-gray-900">
           {t('geo_section_settings', 'Region settings')}
         </Title>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <div>
-            <label className={labelCls}>
-              {t('geo_field_country', 'Country')}{' '}
-              <span className="text-red-500">*</span>
-            </label>
-            <select
-              value={countryId}
-              disabled={countriesLoading}
-              onChange={(e) => {
-                setCountryId(e.target.value ? Number(e.target.value) : '');
-                clearError('country_id');
-              }}
-              className={`w-full rounded-lg border bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 ${
-                errors.country_id ? 'border-red-500' : 'border-gray-300'
-              }`}
-            >
-              <option value="">
-                {t('geo_select_country', 'Select a country')}
-              </option>
-              {countries.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {pickName(c.name, uiLang) || `#${c.id}`}
-                </option>
-              ))}
-            </select>
-            {errors.country_id && (
-              <p className="mt-1 text-sm text-red-500">{errors.country_id}</p>
-            )}
-          </div>
-
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div>
             <label className={labelCls}>
               {t('geo_field_priority', 'Priority')}
@@ -495,7 +437,6 @@ export default function RegionForm({ initialValues }: RegionFormProps) {
             setPoints(next);
             clearError('points');
           }}
-          countryName={countryGeocodeName}
           otherRegions={otherRegions}
           hasError={Boolean(mapError)}
           disabled={isSaving}
@@ -538,7 +479,6 @@ export default function RegionForm({ initialValues }: RegionFormProps) {
               setCouponId(id);
               clearError('market_coupon_id');
             }}
-            countryId={countryId ? Number(countryId) : null}
             lang={uiLang}
             currentCoupon={initialValues?.coupon}
             error={errors.market_coupon_id}
