@@ -8,6 +8,7 @@ import type {
   GeoSkipReason,
   GeoVisitStatus,
 } from '@/types/geo-regions';
+import { resolveLocalizedName } from '@/utils/resolve-localized-name';
 
 export function RegionStatusBadge({ status }: { status: GeoRegionStatus }) {
   const { t } = useTranslation();
@@ -55,9 +56,11 @@ const SKIP_DEFAULTS: Record<GeoSkipReason, string> = {
 };
 
 export function useSkipReasonText() {
-  const { t } = useTranslation();
-  return (reason: GeoSkipReason | null) => {
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language?.startsWith('ar') ? 'ar' : 'en';
+  return (reason: GeoSkipReason | { ar?: string; en?: string } | null) => {
     if (!reason) return '';
+    if (typeof reason === 'object') return resolveLocalizedName(reason, lang);
     return t(`geo_skip_${reason}`, SKIP_DEFAULTS[reason] ?? reason);
   };
 }

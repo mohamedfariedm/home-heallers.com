@@ -78,7 +78,11 @@ export type GeoSkipReason =
 
 export interface GeoRegionVisit {
   id: number;
-  client: { id: number; name: string; mobile: string } | null;
+  client: {
+    id: number;
+    name: string | Partial<GeoBilingual> | null;
+    mobile: string | null;
+  } | null;
   day: string;
   entered_at: string | null;
   status: GeoVisitStatus;
