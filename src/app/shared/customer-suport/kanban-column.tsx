@@ -54,6 +54,11 @@ const columnColors: Record<
   string,
   { bg: string; border: string; header: string }
 > = {
+  draft: {
+    bg: 'bg-gray-50 dark:bg-gray-950/20',
+    border: 'border-gray-200 dark:border-gray-800',
+    header: 'bg-gray-100 dark:bg-gray-900/40 text-gray-900 dark:text-gray-100',
+  },
   new: {
     bg: 'bg-blue-50 dark:bg-blue-950/20',
     border: 'border-blue-200 dark:border-blue-800',

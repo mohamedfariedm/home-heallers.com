@@ -5,6 +5,7 @@ import { isLeadsQualificationFilterKey } from './kanban-filter-columns';
 
 export const kanbanStatusOptions = [
 
+  { label: 'Draft', value: 'draft' },
   { label: 'New', value: 'new' },
   { label: 'Negotiation', value: 'negotiation' },
   { label: 'Success', value: 'success' },

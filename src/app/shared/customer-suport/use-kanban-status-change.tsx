@@ -6,6 +6,7 @@ import client from '@/framework/utils';
 import {
   extractQualificationRecord,
   isQualificationComplete,
+  requiresQualificationForStatus,
 } from '@/app/shared/customer-suport/leads-qualification-utils';
 import LeadsQualificationModal from '@/app/shared/customer-suport/leads-qualification-modal';
 import { LeadsQualification } from '@/app/shared/customer-suport/leads-qualification-constants';
@@ -35,6 +36,15 @@ export function useKanbanStatusChange({
 
       const item = allItems.find((entry: any) => entry.id === itemId);
       if (!item) return false;
+
+      if (!requiresQualificationForStatus(newStatus)) {
+        updateCustomerSupport({
+          lead_id: itemId,
+          ...item,
+          status: newStatus,
+        });
+        return true;
+      }
 
       let qualification = null;
 

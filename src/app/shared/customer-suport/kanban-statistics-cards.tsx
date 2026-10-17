@@ -40,6 +40,14 @@ interface KanbanStatisticsCardsProps {
 
 // Color schemes for different statuses
 const statusColors: Record<string, { bg: string; text: string; darkBg: string; darkText: string; blur: string; darkBlur: string }> = {
+  draft: {
+    bg: 'bg-gray-50',
+    text: 'text-gray-600',
+    darkBg: 'dark:bg-gray-900/20',
+    darkText: 'dark:text-gray-400',
+    blur: 'bg-gray-50/50',
+    darkBlur: 'dark:bg-gray-900/10',
+  },
   new: {
     bg: 'bg-blue-50',
     text: 'text-blue-600',
