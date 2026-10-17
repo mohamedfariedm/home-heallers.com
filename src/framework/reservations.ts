@@ -35,8 +35,10 @@ export function useReservationsCalendarMonth(params: {
   month: number; // 1-12
   status?: SessionStatus | '';
   doctor_id?: number | string;
+  date_from?: string;
+  date_to?: string;
 }) {
-  const { year, month, status, doctor_id } = params;
+  const { year, month, status, doctor_id, date_from, date_to } = params;
   const monthParam = `${year}-${String(month).padStart(2, '0')}`;
 
   return useQuery<ReservationCalendarResponse, Error>({
@@ -46,12 +48,16 @@ export function useReservationsCalendarMonth(params: {
       monthParam,
       status || '',
       doctor_id || '',
+      date_from || '',
+      date_to || '',
     ],
     queryFn: async () => {
       const queryParams: ReservationsCalendarParams = {
         month: monthParam,
         ...(status ? { status } : {}),
         ...(doctor_id ? { doctor_id } : {}),
+        ...(date_from ? { date_from } : {}),
+        ...(date_to ? { date_to } : {}),
       };
 
       const response = (await client.reservations.calendar(

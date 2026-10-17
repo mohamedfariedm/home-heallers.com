@@ -392,7 +392,15 @@ function InfoTile({
   );
 }
 
-export default function ReservationsCalendar({ className }: { className?: string }) {
+export default function ReservationsCalendar({
+  className,
+  dateFrom,
+  dateTo,
+}: {
+  className?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}) {
   const { openModal } = useModal();
   const [currentDate, setCurrentDate] = useState(() =>
     dayjs().startOf('month').toDate()
@@ -413,6 +421,8 @@ export default function ReservationsCalendar({ className }: { className?: string
       month,
       status: status || undefined,
       doctor_id: doctorId || undefined,
+      date_from: dateFrom,
+      date_to: dateTo,
     });
 
   const sessions = calendarResponse?.data ?? [];

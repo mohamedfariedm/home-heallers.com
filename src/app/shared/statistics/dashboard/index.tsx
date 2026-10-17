@@ -188,8 +188,16 @@ const DASHBOARD_TABS: Array<{
   },
 ];
 
+function getLast10DaysRange(): StatisticsFilters {
+  const today = new Date();
+  const from = new Date(today);
+  from.setDate(today.getDate() - 10);
+  const fmt = (d: Date) => d.toISOString().split('T')[0];
+  return { date_from: fmt(from), date_to: fmt(today) };
+}
+
 export default function StatisticsDashboard() {
-  const [filters, setFilters] = useState<StatisticsFilters>({});
+  const [filters, setFilters] = useState<StatisticsFilters>(getLast10DaysRange());
   const [aggregateData, setAggregateData] = useState<AggregateData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -367,9 +375,7 @@ export default function StatisticsDashboard() {
         </div>
       </div>
 
-      {!isCalendarTab && (
-        <StatisticsFiltersComponent onFilter={handleFilter} className="mb-6" />
-      )}
+      <StatisticsFiltersComponent onFilter={handleFilter} className="mb-6" />
 
       {loading && !isCalendarTab ? (
         <div className="flex min-h-[400px] items-center justify-center">
@@ -625,7 +631,10 @@ export default function StatisticsDashboard() {
 
             {/* Calendar */}
             <TabPanel className="outline-none">
-              <ReservationsCalendar />
+              <ReservationsCalendar
+                dateFrom={filters.date_from}
+                dateTo={filters.date_to}
+              />
             </TabPanel>
           </TabPanels>
 
