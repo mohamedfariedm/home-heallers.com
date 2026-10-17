@@ -17,6 +17,8 @@ import DateCell from '@/components/ui/date-cell';
 import DeletePopover from '@/app/shared/delete-popover';
 import CreateButton from '../create-button';
 import CreateRole from './create-categories';
+import CategoryBulkPrice from './category-bulk-price';
+import { PiCurrencyCircleDollarBold } from 'react-icons/pi';
 import { IPermission } from '@/types';
 import TrashIcon from '@/components/icons/trash';
 import { resolveLocalizedName } from '@/utils/resolve-localized-name';
@@ -96,6 +98,30 @@ export const getColumns = ({
               label=''
               className='p-0 m-0 bg-transparent text-gray-700'
               customSize="1200px"
+            />
+          </Tooltip>
+          <Tooltip
+            size="sm"
+            content={() => 'Bulk price'}
+            placement="top"
+            color="invert"
+          >
+            <CreateButton
+              icon={
+                <ActionIcon
+                  tag="span"
+                  size="sm"
+                  variant="outline"
+                  aria-label="Bulk price"
+                  className="hover:!border-gray-900 hover:text-gray-700"
+                >
+                  <PiCurrencyCircleDollarBold className="h-4 w-4" />
+                </ActionIcon>
+              }
+              view={<CategoryBulkPrice category={row} />}
+              label=''
+              className='p-0 m-0 bg-transparent text-gray-700'
+              customSize="600px"
             />
           </Tooltip>
           <DeletePopover
