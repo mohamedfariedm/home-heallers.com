@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import SelectBox from '@/components/ui/select';
@@ -9,7 +9,8 @@ import {
   PiXBold, 
   PiFunnelBold, 
   PiCaretDownBold, 
-  PiCaretUpBold 
+  PiCaretUpBold,
+  PiArrowCounterClockwiseBold,
 } from 'react-icons/pi';
 import cn from '@/utils/class-names';
 import { useCenters } from '@/framework/centers';
@@ -57,6 +58,15 @@ interface StatisticsFiltersProps {
   className?: string;
 }
 
+/** Last 10 days, today inclusive. Matches the dashboard's initial date range. */
+function getLast10DaysRange(): { date_from: string; date_to: string } {
+  const today = new Date();
+  const from = new Date(today);
+  from.setDate(today.getDate() - 10);
+  const fmt = (d: Date) => d.toISOString().split('T')[0];
+  return { date_from: fmt(from), date_to: fmt(today) };
+}
+
 const reservationStatusOptions = [
   { value: '1', label: 'Reviewing' },
   { value: '2', label: 'Awaiting Confirmation' },
@@ -101,8 +111,9 @@ export default function StatisticsFiltersComponent({
   onFilter,
   className,
 }: StatisticsFiltersProps) {
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
+  const defaults = useMemo(() => getLast10DaysRange(), []);
+  const [dateFrom, setDateFrom] = useState(defaults.date_from);
+  const [dateTo, setDateTo] = useState(defaults.date_to);
   const [doctorId, setDoctorId] = useState('');
   const [clientId, setClientId] = useState('');
   const [centerId, setCenterId] = useState('');
@@ -236,15 +247,20 @@ export default function StatisticsFiltersComponent({
   };
 
   const handleReset = () => {
-    setDateFrom('');
-    setDateTo('');
+    setDateFrom(defaults.date_from);
+    setDateTo(defaults.date_to);
     setDoctorId('');
     setClientId('');
     setCenterId('');
     setSelectedStatuses([]);
     setSelectedSupportTypes([]);
     setSelectedSourceCampaigns([]);
-    onFilter({});
+    onFilter({ date_from: defaults.date_from, date_to: defaults.date_to });
+  };
+
+  const handleLast10Days = () => {
+    setDateFrom(defaults.date_from);
+    setDateTo(defaults.date_to);
   };
 
   const toggleStatus = (status: string) => {
@@ -462,6 +478,14 @@ export default function StatisticsFiltersComponent({
 
         {/* Action Buttons */}
         <div className="mt-8 flex items-center justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-700">
+          <Button
+            variant="text"
+            onClick={handleLast10Days}
+            className="me-auto text-blue-600 hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-900/20"
+          >
+            <PiArrowCounterClockwiseBold className="me-1.5 h-4 w-4" />
+            Last 10 days
+          </Button>
           <Button
             variant="text"
             onClick={handleReset}
