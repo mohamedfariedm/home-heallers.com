@@ -10,7 +10,10 @@ export interface KanbanColumnData {
   isLoading: boolean;
 }
 
+export const DRAFT_STATUS = 'draft';
+
 export const STATUS_COLUMNS: KanbanStatusColumn[] = [
+  { id: DRAFT_STATUS, label: 'Draft', status: DRAFT_STATUS },
   { id: 'new', label: 'New', status: 'new' },
   { id: 'negotiation', label: 'Negotiation', status: 'negotiation' },
   { id: 'success', label: 'Success', status: 'success' },
@@ -21,6 +24,10 @@ export const STATUS_COLUMNS: KanbanStatusColumn[] = [
 export function normalizeStatus(status: string | null | undefined): string {
   if (!status) return '';
   return status.toLowerCase().trim();
+}
+
+export function isDraftStatus(status: string | null | undefined): boolean {
+  return normalizeStatus(status) === DRAFT_STATUS;
 }
 
 /** Groups one customer-support list response into per-status kanban columns. */
