@@ -13,6 +13,7 @@ import type {
     WhatsAppQrResponse,
     WhatsAppSessionStatus,
 } from '@/types/whatsapp';
+import type { CategoryBulkPricePayload, CategoryBulkPriceResponse } from '@/types/category-bulk-price';
 
 
 
@@ -476,6 +477,8 @@ class Client {
             return HttpClient.patch(`/categories/${id ?? role_id}`, body);
         },
         delete: (input: { role_id: number[] }) => HttpClient.delete(`/categories/${input.role_id}`),
+        bulkPrice: ({ id, ...body }: CategoryBulkPricePayload) =>
+            HttpClient.post<CategoryBulkPriceResponse>(`/categories/${id}/bulk-price`, body),
     }
     journeys = {
         all: (param: string) => HttpClient.get(`${routes.journeys.index}/index?${param}`),
