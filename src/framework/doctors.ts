@@ -4,6 +4,19 @@ import toast from 'react-hot-toast';
 import { useModal } from '@/app/shared/modal-views/use-modal';
 import { routes } from '@/config/routes';
 
+export function isActiveDoctor(doctor: {
+  status?: boolean | number | string | null;
+}) {
+  const status = doctor?.status;
+  return (
+    status === true ||
+    status === 1 ||
+    status === '1' ||
+    status === 'true' ||
+    status === 'active'
+  );
+}
+
 export function useDoctors(param: string) {
   return useQuery<any, Error>({ queryKey: [routes.doctors.index, param], queryFn: () => client.doctors.all(param) });
 };

@@ -17,7 +17,7 @@ import {
   useToggleHighlightElementActive,
 } from '@/framework/highlights';
 import { usePackages } from '@/framework/packages';
-import { useDoctors } from '@/framework/doctors';
+import { isActiveDoctor, useDoctors } from '@/framework/doctors';
 import { useCategories } from '@/framework/categories';
 import { useCoupons } from '@/framework/coupons';
 import {
@@ -51,17 +51,6 @@ type NamedEntity = {
   code?: string | null;
   status?: boolean | number | string | null;
 };
-
-function isActiveDoctor(item: NamedEntity) {
-  const status = item.status;
-  return (
-    status === true ||
-    status === 1 ||
-    status === '1' ||
-    status === 'true' ||
-    status === 'active'
-  );
-}
 
 function entityLabel(item: NamedEntity) {
   const code = String(item.code || '').trim();
