@@ -11,7 +11,7 @@ const settingsPrice = optionalPrice(
   'Price must be a number of at least 0'
 );
 
-export const categoryBulkPriceSchema = z.object({
+export const doctorsBulkPriceSchema = z.object({
   doctor_session_price: optionalPrice(
     (value) => Number.isInteger(value) && value >= 300,
     'Doctor session price must be a whole number of at least 300'
@@ -21,4 +21,4 @@ export const categoryBulkPriceSchema = z.object({
   reservation_price: settingsPrice,
 });
 
-export type CategoryBulkPriceInput = z.infer<typeof categoryBulkPriceSchema>;
+export type DoctorsBulkPriceInput = z.infer<typeof doctorsBulkPriceSchema>;

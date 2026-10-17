@@ -13,7 +13,7 @@ import type {
     WhatsAppQrResponse,
     WhatsAppSessionStatus,
 } from '@/types/whatsapp';
-import type { CategoryBulkPricePayload, CategoryBulkPriceResponse } from '@/types/category-bulk-price';
+import type { DoctorsBulkPricePayload, DoctorsBulkPriceResponse } from '@/types/doctors-bulk-price';
 import type {
     SendSupportMediaInput,
     SendSupportTextInput,
@@ -292,7 +292,9 @@ class Client {
         ) => HttpClient.get(`${routes.doctors.index}/${id}`, params),
         create: (input: any) => HttpClient.post(`${routes.doctors.index}`, input),
         update: (input: any) => HttpClient.patch(`${routes.doctors.index}/${input.doctor_id}`, input),
-        delete: (input: { doctor_id: number[] }) => HttpClient.delete(`${routes.doctors.index}/${input.doctor_id}`)
+        delete: (input: { doctor_id: number[] }) => HttpClient.delete(`${routes.doctors.index}/${input.doctor_id}`),
+        bulkPrice: (input: DoctorsBulkPricePayload) =>
+            HttpClient.post<DoctorsBulkPriceResponse>(`${routes.doctors.index}/bulk-price`, input),
     }
     doctorTargets = {
         all: (param: string) => HttpClient.get(`/doctor-targets?${param}`),
@@ -500,8 +502,6 @@ class Client {
             return HttpClient.patch(`/categories/${id ?? role_id}`, body);
         },
         delete: (input: { role_id: number[] }) => HttpClient.delete(`/categories/${input.role_id}`),
-        bulkPrice: ({ id, ...body }: CategoryBulkPricePayload) =>
-            HttpClient.post<CategoryBulkPriceResponse>(`/categories/${id}/bulk-price`, body),
     }
     journeys = {
         all: (param: string) => HttpClient.get(`${routes.journeys.index}/index?${param}`),

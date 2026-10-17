@@ -6,6 +6,9 @@ import { useState } from 'react';
 import DoctorsTable from '@/app/shared/doctors/table';
 import { useDoctors } from '@/framework/doctors';
 import CreateOrUpdateDoctors from '@/app/shared/doctors/doctors-form';
+import DoctorsBulkPrice from '@/app/shared/doctors/doctors-bulk-price';
+import CreateButton from '@/app/shared/create-button';
+import { PiCurrencyCircleDollarBold } from 'react-icons/pi';
 
 const pageHeader = {
   title: 'Doctors',
@@ -49,6 +52,17 @@ export default function DoctorsTablePage() {
       header="Doctor,Created At"
       createName="Create Doctor"
       createElementButton={<CreateOrUpdateDoctors />}
+      headerActions={
+        <CreateButton
+          label="Bulk price"
+          icon={<PiCurrencyCircleDollarBold className="me-1.5 h-[17px] w-[17px]" />}
+          view={<DoctorsBulkPrice />}
+          variant="outline"
+          className="mt-0 w-full text-xs capitalize @lg:w-auto sm:text-sm lg:mt-0"
+          disabled={isLoading}
+          customSize="600px"
+        />
+      }
     >
       {isLoading ? (
         <div className="m-auto">

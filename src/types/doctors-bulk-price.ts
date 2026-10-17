@@ -4,13 +4,12 @@ export type SettingsPriceKey = (typeof SETTINGS_PRICE_KEYS)[number];
 
 export type SettingsPrices = Record<SettingsPriceKey, number | string | null>;
 
-export interface CategoryBulkPricePayload {
-  id: number | string;
+export interface DoctorsBulkPricePayload {
   session_price?: number;
   settings?: Partial<Record<SettingsPriceKey, number>>;
 }
 
-export interface CategoryBulkPriceResponse {
+export interface DoctorsBulkPriceResponse {
   message: string;
   data: {
     doctors_updated: number;
