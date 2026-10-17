@@ -49,7 +49,19 @@ type NamedEntity = {
   id: number | string;
   name?: { en?: string; ar?: string } | string | null;
   code?: string | null;
+  status?: boolean | number | string | null;
 };
+
+function isActiveDoctor(item: NamedEntity) {
+  const status = item.status;
+  return (
+    status === true ||
+    status === 1 ||
+    status === '1' ||
+    status === 'true' ||
+    status === 'active'
+  );
+}
 
 function entityLabel(item: NamedEntity) {
   const code = String(item.code || '').trim();
@@ -134,7 +146,9 @@ export default function ElementsManager({
       return toEntityOptions(packagesData?.data as NamedEntity[] | undefined);
     }
     if (ctaType === 'doctors') {
-      return toEntityOptions(doctorsData?.data as NamedEntity[] | undefined);
+      return toEntityOptions(
+        (doctorsData?.data as NamedEntity[] | undefined)?.filter(isActiveDoctor)
+      );
     }
     if (ctaType === 'categories') {
       return toEntityOptions(categoriesData?.data as NamedEntity[] | undefined);
