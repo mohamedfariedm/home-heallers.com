@@ -83,7 +83,4 @@ export interface ReservationsCalendarParams {
   doctor_id?: number | string;
   limit?: number;
   page?: number;
-  /** Dashboard global date range filter */
-  date_from?: string;
-  date_to?: string;
 }
