@@ -107,6 +107,8 @@ const defaultColors = {
   darkBlur: 'dark:bg-slate-900/10',
 };
 
+const NOT_SPECIFIED_LABEL = 'Not Specified';
+
 // Helper function to convert API link to frontend query params
 const convertApiLinkToQueryParams = (apiLink: string | undefined): string => {
   if (!apiLink) return '';
@@ -323,7 +325,7 @@ export default function KanbanStatisticsCards({
   // Initialize checked state for all campaigns on first render
   useEffect(() => {
     if (checkedSourceCampaigns.size === 0 && allSourceCampaigns.length > 0) {
-      const initialChecked = new Set(allSourceCampaigns.map(c => c.source_campaign || ''));
+      const initialChecked = new Set(allSourceCampaigns.map(c => c.source_campaign || NOT_SPECIFIED_LABEL));
       setCheckedSourceCampaigns(initialChecked);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -468,7 +470,7 @@ export default function KanbanStatisticsCards({
   const allSourceCampaignCards = allSourceCampaigns
     .sort((a, b) => (b.count || 0) - (a.count || 0)) // Sort by count descending
     .map((campaign) => {
-      const campaignKey = campaign.source_campaign || 'Unknown';
+      const campaignKey = campaign.source_campaign || NOT_SPECIFIED_LABEL;
       const isChecked = checkedSourceCampaigns.has(campaignKey);
       
       return {
@@ -529,7 +531,7 @@ export default function KanbanStatisticsCards({
   const allLeadQualityCampaignCards = (statistics.lead_quality_by_source_campaign || [])
     .sort((a, b) => (b.total_leads || 0) - (a.total_leads || 0))
     .map((campaign) => ({
-      title: campaign.source_campaign || 'Unknown',
+      title: campaign.source_campaign || NOT_SPECIFIED_LABEL,
       value: `${Number(campaign.lead_quality_rate || 0).toFixed(2)}%`,
       subtitle: `${campaign.qualified_leads || 0} / ${campaign.total_leads || 0} qualified`,
       icon: PiChartLineUpBold,
@@ -597,7 +599,7 @@ export default function KanbanStatisticsCards({
   const allOfferCards = (statistics.by_offer || [])
     .sort((a, b) => (b.count || 0) - (a.count || 0)) // Sort by count descending
     .map((offer) => ({
-      title: offer.offer || 'Unknown',
+      title: offer.offer || NOT_SPECIFIED_LABEL,
       value: offer.count || 0,
       icon: PiTagBold,
       bgColor: 'bg-pink-50',
@@ -619,7 +621,7 @@ export default function KanbanStatisticsCards({
   const allCityCards = (statistics.by_city || [])
     .sort((a, b) => (b.count || 0) - (a.count || 0))
     .map((item) => ({
-      title: item.city || 'Unknown',
+      title: item.city || NOT_SPECIFIED_LABEL,
       value: item.count || 0,
       icon: PiMapPinBold,
       bgColor: 'bg-violet-50',
@@ -641,7 +643,7 @@ export default function KanbanStatisticsCards({
   const allStateCards = (statistics.by_state || [])
     .sort((a, b) => (b.count || 0) - (a.count || 0))
     .map((item) => ({
-      title: item.state || 'Unknown',
+      title: item.state || NOT_SPECIFIED_LABEL,
       value: item.count || 0,
       icon: PiBuildingsBold,
       bgColor: 'bg-fuchsia-50',
