@@ -8,11 +8,11 @@ import { Title } from '@/components/ui/text';
 import { useModal } from '@/app/shared/modal-views/use-modal';
 import { LeadFormInput, leadFormSchema } from '@/utils/validators/suport-form.schema';
 import { CC_OPTIONS } from '@/app/shared/cc-options';
+import { SOURCE_CAMPAIGN_OPTIONS } from '@/app/shared/source-campaign-options';
 import {
   kanbanCommunicationChannelOptions,
   kanbanOperationCommunicationChannelOptions,
   kanbanSeoCommunicationChannelOptions,
-  kanbanSourceCampaignOptions,
 } from '@/app/shared/customer-suport/kanban-column-select-options';
 import { Textarea } from 'rizzui';
 import { useCreateCustomerSupport, useUpdateCustomerSupport } from '@/framework/customer-suport';
@@ -186,7 +186,7 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
   const { closeModal } = useModal();
   const isInbound = type === 'operation';
   const isSeo = type === 'seo';
-  const sourceCampaignOptions = kanbanSourceCampaignOptions;
+  const sourceCampaignOptions = SOURCE_CAMPAIGN_OPTIONS;
   const communicationChannelOptions = isSeo
     ? kanbanSeoCommunicationChannelOptions
     : isInbound

@@ -20,6 +20,7 @@ import cn from '@/utils/class-names';
 import { useRouter, usePathname } from 'next/navigation';
 import type { CustomerSupportStatistics } from '@/types/customer-support-statistics';
 import { KANBAN_FILTERABLE_COLUMNS } from './kanban-filter-columns';
+import { NOT_SPECIFIED_LABEL } from '@/app/shared/source-campaign-options';
 
 type StatusCountMap = {
   new?: number;
@@ -106,8 +107,6 @@ const defaultColors = {
   blur: 'bg-slate-50/50',
   darkBlur: 'dark:bg-slate-900/10',
 };
-
-const NOT_SPECIFIED_LABEL = 'Not Specified';
 
 // Helper function to convert API link to frontend query params
 const convertApiLinkToQueryParams = (apiLink: string | undefined): string => {

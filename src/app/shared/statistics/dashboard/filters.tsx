@@ -13,6 +13,11 @@ import {
 } from 'react-icons/pi';
 import cn from '@/utils/class-names';
 import { useCenters } from '@/framework/centers';
+import {
+  NOT_SPECIFIED_LABEL,
+  SOURCE_CAMPAIGN_NOT_SPECIFIED_VALUE,
+  SOURCE_CAMPAIGN_OPTIONS,
+} from '@/app/shared/source-campaign-options';
 
 export interface StatisticsFilters {
   date_from?: string;
@@ -22,7 +27,29 @@ export interface StatisticsFilters {
   center_id?: string;
   reservation_statuses?: number[];
   customer_support_types?: string[];
-  source_campaign?: string;
+  source_campaigns?: string[];
+}
+
+/** Query string shared by the aggregates, monthly and weekly statistics requests. */
+export function buildStatisticsQueryParams(filters: StatisticsFilters): URLSearchParams {
+  const params = new URLSearchParams();
+
+  if (filters.date_from) params.append('date_from', filters.date_from);
+  if (filters.date_to) params.append('date_to', filters.date_to);
+  if (filters.doctor_id) params.append('doctor_id', filters.doctor_id);
+  if (filters.client_id) params.append('client_id', filters.client_id);
+  if (filters.center_id) params.append('center_id', filters.center_id);
+  filters.reservation_statuses?.forEach((status) =>
+    params.append('reservation_statuses[]', status.toString())
+  );
+  filters.customer_support_types?.forEach((type) =>
+    params.append('customer_support_types[]', type)
+  );
+  filters.source_campaigns?.forEach((campaign) =>
+    params.append('source_campaigns[]', campaign)
+  );
+
+  return params;
 }
 
 interface StatisticsFiltersProps {
@@ -46,6 +73,11 @@ const customerSupportTypeOptions = [
   { value: 'maintenance', label: 'Maintenance' },
   { value: 'consultation', label: 'Consultation' },
   { value: 'emergency', label: 'Emergency' },
+];
+
+const sourceCampaignFilterOptions = [
+  ...SOURCE_CAMPAIGN_OPTIONS,
+  { value: SOURCE_CAMPAIGN_NOT_SPECIFIED_VALUE, label: NOT_SPECIFIED_LABEL },
 ];
 
 function toSelectValue(value: unknown): string {
@@ -74,9 +106,9 @@ export default function StatisticsFiltersComponent({
   const [doctorId, setDoctorId] = useState('');
   const [clientId, setClientId] = useState('');
   const [centerId, setCenterId] = useState('');
-  const [sourceCampaign, setSourceCampaign] = useState('');
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [selectedSupportTypes, setSelectedSupportTypes] = useState<string[]>([]);
+  const [selectedSourceCampaigns, setSelectedSourceCampaigns] = useState<string[]>([]);
   
   // Doctors, Clients, and Centers lists
   const [doctors, setDoctors] = useState<Array<{ id: number; name: { en: string; ar: string } }>>([]);
@@ -190,12 +222,14 @@ export default function StatisticsFiltersComponent({
     if (normalizedDoctorId) filters.doctor_id = normalizedDoctorId;
     if (normalizedClientId) filters.client_id = normalizedClientId;
     if (normalizedCenterId) filters.center_id = normalizedCenterId;
-    if (sourceCampaign) filters.source_campaign = sourceCampaign;
     if (selectedStatuses.length > 0) {
       filters.reservation_statuses = selectedStatuses.map(s => parseInt(s));
     }
     if (selectedSupportTypes.length > 0) {
       filters.customer_support_types = selectedSupportTypes;
+    }
+    if (selectedSourceCampaigns.length > 0) {
+      filters.source_campaigns = selectedSourceCampaigns;
     }
 
     onFilter(filters);
@@ -207,9 +241,9 @@ export default function StatisticsFiltersComponent({
     setDoctorId('');
     setClientId('');
     setCenterId('');
-    setSourceCampaign('');
     setSelectedStatuses([]);
     setSelectedSupportTypes([]);
+    setSelectedSourceCampaigns([]);
     onFilter({});
   };
 
@@ -224,6 +258,12 @@ export default function StatisticsFiltersComponent({
   const toggleSupportType = (type: string) => {
     setSelectedSupportTypes((prev) =>
       prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
+    );
+  };
+
+  const toggleSourceCampaign = (campaign: string) => {
+    setSelectedSourceCampaigns((prev) =>
+      prev.includes(campaign) ? prev.filter((c) => c !== campaign) : [...prev, campaign]
     );
   };
 
@@ -390,6 +430,31 @@ export default function StatisticsFiltersComponent({
               );
             })}
           </div>
+        </div>
+      </div>
+
+      {/* Source Campaigns */}
+      <div className="mt-6 space-y-3">
+        <label className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+          Source Campaign
+        </label>
+        <div className="flex flex-wrap gap-2">
+          {sourceCampaignFilterOptions.map((option) => (
+            <Button
+              key={option.value}
+              size="sm"
+              variant={selectedSourceCampaigns.includes(option.value) ? 'solid' : 'outline'}
+              onClick={() => toggleSourceCampaign(option.value)}
+              className={cn(
+                'rounded-full px-4 h-8 transition-all duration-200 border',
+                selectedSourceCampaigns.includes(option.value)
+                  ? 'bg-purple-600 border-purple-600 text-white shadow-sm hover:bg-purple-700'
+                  : 'bg-transparent border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700'
+              )}
+            >
+              {option.label}
+            </Button>
+          ))}
         </div>
       </div>
 

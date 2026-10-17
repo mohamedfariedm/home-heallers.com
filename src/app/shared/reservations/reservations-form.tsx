@@ -35,6 +35,7 @@ import { useCities } from '@/framework/cities';
 import { useStates } from '@/framework/states';
 import { Badge } from '@/components/ui/badge';
 import { CC_OPTIONS } from '@/app/shared/cc-options';
+import { SOURCE_CAMPAIGN_OPTIONS } from '@/app/shared/source-campaign-options';
 import { resolveLocalizedName } from '@/utils/resolve-localized-name';
 import { isReservationLockedSource } from './reservation-source';
 
@@ -1173,21 +1174,11 @@ export default function CreateOrUpdateReservation({
               className="w-full rounded-lg border border-gray-300 p-2"
             >
               <option value="">Select Source</option>
-              <option value="google">Google</option>
-              <option value="facebook">Facebook</option>
-              <option value="application">Application</option>
-              <option value="instagram">Instagram</option>
-              <option value="snapchat">Snapchat</option>
-              <option value="telegram">Telegram</option>
-              <option value="twitter">Twitter</option>
-              <option value="tiktok">TikTok</option>
-              <option value="whatsapp">WhatsApp</option>
-              <option value="call">Call</option>
-              <option value="youtube">YouTube</option>
-              <option value="website">Website</option>
-              <option value="referral">Referral</option>
-              <option value="center">Center</option>
-              <option value="other">Other</option>
+              {SOURCE_CAMPAIGN_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
           </div>
           

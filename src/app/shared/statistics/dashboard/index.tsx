@@ -7,7 +7,7 @@ import {
   PiCurrencyDollarBold,
   PiGearBold,
 } from 'react-icons/pi';
-import StatisticsFiltersComponent, { StatisticsFilters } from './filters';
+import StatisticsFiltersComponent, { StatisticsFilters, buildStatisticsQueryParams } from './filters';
 import StatCards, { type StatisticsSection } from './stat-cards';
 import StatusBreakdown from './status-breakdown';
 import SupportTypeBreakdown from './support-type-breakdown';
@@ -36,7 +36,7 @@ interface AggregateData {
       type: string; 
       label: string; 
       count: number;
-      by_source_campaign?: Array<{ source_campaign: string; count: number }>;
+      by_source_campaign?: Array<{ source_campaign: string | null; count: number }>;
     }>;
     total: number;
   };
@@ -45,7 +45,7 @@ interface AggregateData {
       status: number | string; 
       label: string; 
       count: number;
-      by_source_campaign?: Array<{ source_campaign: string; count: number }>;
+      by_source_campaign?: Array<{ source_campaign: string | null; count: number }>;
     }>;
     total: number;
   };
@@ -85,7 +85,7 @@ interface AggregateData {
   };
   total_revenue?: number;
   cost_ratio?: Array<{
-    source_campaign: string;
+    source_campaign: string | null;
     customer_support_count: number;
     confirmed_reservations_count: number;
     cost_ratio: number | null;
@@ -101,7 +101,7 @@ interface AggregateData {
     rate: number;
   };
   conversion_rate?: Array<{
-    source_campaign: string;
+    source_campaign: string | null;
     customer_support_count: number;
     reservations_count: number;
     conversion_rate: number;
@@ -244,26 +244,7 @@ export default function StatisticsDashboard() {
     setError(null);
     
     try {
-      const params = new URLSearchParams();
-      
-      if (filters.date_from) params.append('date_from', filters.date_from);
-      if (filters.date_to) params.append('date_to', filters.date_to);
-      if (filters.doctor_id) params.append('doctor_id', filters.doctor_id);
-      if (filters.client_id) params.append('client_id', filters.client_id);
-      if (filters.center_id) params.append('center_id', filters.center_id);
-      if (filters.source_campaign) params.append('source_campaign', filters.source_campaign);
-      
-      if (filters.reservation_statuses && filters.reservation_statuses.length > 0) {
-        filters.reservation_statuses.forEach(status => {
-          params.append('reservation_statuses[]', status.toString());
-        });
-      }
-      
-      if (filters.customer_support_types && filters.customer_support_types.length > 0) {
-        filters.customer_support_types.forEach(type => {
-          params.append('customer_support_types[]', type);
-        });
-      }
+      const params = buildStatisticsQueryParams(filters);
 
       const response = await fetch(`/api/statistics/aggregates?${params.toString()}`);
       

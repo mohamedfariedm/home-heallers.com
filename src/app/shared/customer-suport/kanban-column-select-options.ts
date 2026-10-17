@@ -1,5 +1,6 @@
 /** Options aligned with `suport-form.tsx` selects — used for kanban column filters. */
 
+import { SOURCE_CAMPAIGN_OPTIONS } from '@/app/shared/source-campaign-options';
 import { isLeadsQualificationFilterKey } from './kanban-filter-columns';
 
 export const kanbanStatusOptions = [
@@ -9,23 +10,6 @@ export const kanbanStatusOptions = [
   { label: 'Success', value: 'success' },
   { label: 'Possible', value: 'possible' },
   { label: 'Failed', value: 'failed' },
-];
-
-export const kanbanSourceCampaignOptions = [
-  { label: 'Google', value: 'google' },
-  { label: 'Facebook', value: 'facebook' },
-  { label: 'Instagram', value: 'instagram' },
-  { label: 'Snapchat', value: 'snapchat' },
-  { label: 'Telegram', value: 'telegram' },
-  { label: 'Twitter', value: 'twitter' },
-  { label: 'TikTok', value: 'tiktok' },
-  { label: 'Mobile Application', value: 'mobile_application' },
-  { label: 'Call', value: 'call' },
-  { label: 'YouTube', value: 'youtube' },
-  { label: 'Website', value: 'website' },
-  { label: 'Referral', value: 'referral' },
-  { label: 'Center', value: 'center' },
-  { label: 'Other', value: 'other' },
 ];
 
 export const kanbanGenderOptions = [
@@ -61,7 +45,7 @@ export const kanbanYesNoOptions = [
 ];
 
 /** No separate list in the lead form; same channel set as Source for consistent filtering. */
-export const kanbanLeadSourceOptions = kanbanSourceCampaignOptions;
+export const kanbanLeadSourceOptions = SOURCE_CAMPAIGN_OPTIONS;
 
 const specialtyKeys = new Set(['specialtie_1', 'specialtie_2', 'specialtie_3']);
 
@@ -91,7 +75,7 @@ export function getKanbanStaticSelectOptions(
     case 'lead_source':
       return kanbanLeadSourceOptions;
     case 'source_campaign':
-      return kanbanSourceCampaignOptions;
+      return SOURCE_CAMPAIGN_OPTIONS;
     case 'communication_channel':
       return kanbanCommunicationChannelOptions;
     case 'specialtie_1':

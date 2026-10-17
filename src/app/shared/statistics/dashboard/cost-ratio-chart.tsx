@@ -16,10 +16,11 @@ import { Title } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
 import TopTenModal from './top-ten-modal';
 import cn from '@/utils/class-names';
+import { formatSourceCampaign } from '@/app/shared/source-campaign-options';
 
 interface CostRatioChartProps {
   data: Array<{
-    source_campaign: string;
+    source_campaign: string | null;
     customer_support_count: number;
     confirmed_reservations_count: number;
     cost_ratio: number | null;
@@ -45,8 +46,7 @@ export default function CostRatioChart({
   // Process data - only use support and reservations from API
   const chartData = data.map((item, index) => {
     return {
-      name:
-        item.source_campaign === 'unknown' ? 'Unknown' : item.source_campaign,
+      name: formatSourceCampaign(item.source_campaign),
       support: item.customer_support_count,
       reservations: item.confirmed_reservations_count,
       fill: COLORS[index % COLORS.length],
@@ -64,7 +64,7 @@ export default function CostRatioChart({
   
   const topTenItems = sortedData.slice(0, 10).map((item) => {
     return {
-      name: item.source_campaign === 'unknown' ? 'Unknown' : item.source_campaign,
+      name: formatSourceCampaign(item.source_campaign),
       value: item.customer_support_count + item.confirmed_reservations_count,
       percentage: 0, // Will be calculated based on max
       additionalInfo: {
@@ -168,10 +168,10 @@ export default function CostRatioChart({
           {sortedData.slice(0, 4).map((item) => {
             const total = item.customer_support_count + item.confirmed_reservations_count;
             return (
-              <div key={item.source_campaign} className="space-y-2 p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
+              <div key={formatSourceCampaign(item.source_campaign)} className="space-y-2 p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                    {item.source_campaign === 'unknown' ? 'Unknown' : item.source_campaign}
+                    {formatSourceCampaign(item.source_campaign)}
                   </span>
                 </div>
                 <div className="text-2xl font-bold text-gray-900 dark:text-white">

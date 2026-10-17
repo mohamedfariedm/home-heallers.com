@@ -13,7 +13,7 @@ interface SupportTypeData {
   type: string;
   label: string;
   count: number;
-  by_source_campaign?: Array<{ source_campaign: string; count: number }>;
+  by_source_campaign?: Array<{ source_campaign: string | null; count: number }>;
 }
 
 interface SupportTypeBreakdownProps {
