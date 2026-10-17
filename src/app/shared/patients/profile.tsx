@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { ActionIcon } from '@/components/ui/action-icon';
 import EyeIcon from '@/components/icons/eye';
 import { useMemo, useState } from 'react';
+import { usePermissions } from '@/context/PermissionsContext';
+import WalletTab from '@/app/shared/wallet/wallet-tab';
 import {
   PiCalendarBold,
   PiPhoneBold,
@@ -58,9 +60,11 @@ export default function PatientProfileView({ patient }: { patient: any }) {
     patient?.name?.en ??
     patient?.name?.ar ??
     patient?.name ??
-    '—';
+    '???';
   const isFemale = patient?.gender === 'female';
-  const [activeTab, setActiveTab] = useState<'overview' | 'reservations' | 'attachments'>('overview');
+  const { permissions } = usePermissions();
+  const canViewWallet = permissions.includes('wallet.view');
+  const [activeTab, setActiveTab] = useState<'overview' | 'reservations' | 'attachments' | 'wallet'>('overview');
 
   const kpis = useMemo(() => {
     const reservations = Array.isArray(patient?.reservations) ? patient.reservations : [];
@@ -147,6 +151,9 @@ export default function PatientProfileView({ patient }: { patient: any }) {
           <TabBtn active={activeTab === 'overview'} onClick={() => setActiveTab('overview')}>Overview</TabBtn>
           <TabBtn active={activeTab === 'reservations'} onClick={() => setActiveTab('reservations')}>Reservations</TabBtn>
           <TabBtn active={activeTab === 'attachments'} onClick={() => setActiveTab('attachments')}>Attachments</TabBtn>
+          {canViewWallet && (
+            <TabBtn active={activeTab === 'wallet'} onClick={() => setActiveTab('wallet')}>Wallet</TabBtn>
+          )}
         </div>
       </div>
 
@@ -256,6 +263,14 @@ export default function PatientProfileView({ patient }: { patient: any }) {
           <Text className="mb-4 text-base font-semibold">All attachments</Text>
           <AttachmentsGrid reservations={patient?.reservations ?? []} isImage={isImage} isPdf={isPdf} />
         </section>
+      )}
+
+      {activeTab === 'wallet' && canViewWallet && (
+        <WalletTab
+          owner="clients"
+          ownerId={patient?.id}
+          ownerName={name}
+        />
       )}
     </div>
   );
