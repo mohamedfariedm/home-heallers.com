@@ -17,17 +17,19 @@ export function useCoupon(couponId: string, enabled = true) {
   });
 }
 
-export const useCreateCoupons = () => {
+export const useCreateCoupons = (onCreated?: (coupon: any) => void) => {
 
     const queryClient = useQueryClient();
     const { closeModal } = useModal();
   
     const {mutate, isPending} = useMutation({
       mutationFn: client.coupons.create,
-      onSuccess() {
+      onSuccess(res: any) {
         queryClient.invalidateQueries({queryKey: [routes.coupons.index]})
         toast.success('Coupons created successfully')
         closeModal()
+        const body = res?.data;
+        onCreated?.(body?.data ?? body)
       },
       onError: (error) => {
         toast.error(`Error ${error?.message}`)
