@@ -38,6 +38,7 @@ import { CC_OPTIONS } from '@/app/shared/cc-options';
 import { SOURCE_CAMPAIGN_OPTIONS } from '@/app/shared/source-campaign-options';
 import { resolveLocalizedName } from '@/utils/resolve-localized-name';
 import { isReservationLockedSource } from './reservation-source';
+import client from '@/framework/utils';
 
 const timePeriods = [
   { id: 'morning', name: 'Morning' },
@@ -62,6 +63,29 @@ const toFormTime = (d: any): string =>
     : (typeof d?.end_time === 'string'
         ? d.end_time.split('T')[1]?.substring(0, 5)
         : '') || '';
+
+/** Session doctor only. Never fall back to the reservation doctor. */
+const sessionDoctorId = (session: any): string => {
+  const id = session?.doctor_id ?? session?.doctor?.id;
+  if (id == null || id === '') return '';
+  return String(id);
+};
+
+const toFormDateRow = (session: any) => ({
+  id: session?.id != null ? Number(session.id) : undefined,
+  date: toFormDate(session),
+  time: toFormTime(session),
+  time_period: session?.time_period || 'morning',
+  doctor_id: sessionDoctorId(session),
+  status: session?.status || 'pending',
+});
+
+const unwrapReservation = (response: any) => {
+  const payload = response?.data ?? response;
+  if (Array.isArray(payload)) return payload[0];
+  if (Array.isArray(payload?.data)) return payload.data[0];
+  return payload?.data ?? payload;
+};
 
 const firstErrorMessage = (
   errs: any,
@@ -317,13 +341,7 @@ export default function CreateOrUpdateReservation({
 
       // 🧩 nested dates handling - improved to handle both data structures
       dates: (initValues?.dates && Array.isArray(initValues.dates) && initValues.dates.length > 0)
-        ? initValues.dates.map((d: any) => ({
-            date: toFormDate(d),
-            time: toFormTime(d),
-            time_period: d?.time_period || 'morning',
-            doctor_id: d?.doctor?.id?.toString() || '',
-            status: d?.status || 'pending',
-          }))
+        ? initValues.dates.map((d: any) => toFormDateRow(d))
         : [
         {
           date: '',
@@ -425,6 +443,7 @@ export default function CreateOrUpdateReservation({
       prevSessionsCountRef.current = watchSessionsCount;
       const currentDates = getValues('dates') || [];
       const newDates = Array.from({ length: sessionCount }, (_, i) => ({
+        id: currentDates[i]?.id,
         date: currentDates[i]?.date || '',
         time: currentDates[i]?.time || '',
         time_period: currentDates[i]?.time_period || 'morning',
@@ -436,19 +455,60 @@ export default function CreateOrUpdateReservation({
   }, [watchSessionsCount, setValue, getValues]);
 
   const prevDoctorIdRef = useRef<string | undefined>();
+  const reservationDoctorReadyRef = useRef(false);
   useEffect(() => {
-    if (watchDoctorId && watchDoctorId !== prevDoctorIdRef.current) {
+    // The first value is the reservation doctor from the loaded record.
+    // Do not copy it onto session rows — each session keeps its own doctor.
+    if (!reservationDoctorReadyRef.current) {
+      reservationDoctorReadyRef.current = true;
       prevDoctorIdRef.current = watchDoctorId;
-      const currentDates = getValues('dates') || [];
-      if (currentDates.length > 0) {
-        const updatedDates = currentDates.map((date: any) => ({
-          ...date,
-          doctor_id: watchDoctorId,
-        }));
-        setValue('dates', updatedDates, { shouldValidate: false });
-      }
+      return;
     }
+    if (!watchDoctorId || watchDoctorId === prevDoctorIdRef.current) {
+      prevDoctorIdRef.current = watchDoctorId;
+      return;
+    }
+    prevDoctorIdRef.current = watchDoctorId;
+    const currentDates = getValues('dates') || [];
+    if (currentDates.length === 0) return;
+    const updatedDates = currentDates.map((date: any) =>
+      date?.doctor_id ? date : { ...date, doctor_id: watchDoctorId }
+    );
+    setValue('dates', updatedDates, { shouldValidate: false });
   }, [watchDoctorId, setValue, getValues]);
+
+  const loadedSessionDoctorsRef = useRef(
+    (initValues?.dates || [])
+      .map((session: any) => `${session?.id ?? ''}:${sessionDoctorId(session)}`)
+      .join('|')
+  );
+  useEffect(() => {
+    if (!initValues?.id) return;
+    let cancelled = false;
+    client.reservations
+      .findOne(initValues.id)
+      .then((response: any) => {
+        if (cancelled) return;
+        const reservation = unwrapReservation(response);
+        if (!Array.isArray(reservation?.dates) || reservation.dates.length === 0) return;
+        const current = getValues('dates') || [];
+        const currentKey = current
+          .map((session: any) => `${session?.id ?? ''}:${session?.doctor_id || ''}`)
+          .join('|');
+        if (currentKey !== loadedSessionDoctorsRef.current) return;
+        const nextDates = reservation.dates.map((session: any) => toFormDateRow(session));
+        loadedSessionDoctorsRef.current = nextDates
+          .map((session: any) => `${session?.id ?? ''}:${session?.doctor_id || ''}`)
+          .join('|');
+        setValue('dates', nextDates, { shouldValidate: false });
+      })
+      .catch(() => {
+        // The list row already filled the form; a failed refresh keeps that.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [initValues?.id, setValue, getValues]);
 
   // Clear center_id when source_campaign changes away from "center"
   const prevSourceCampaignRef = useRef<string | undefined>();
@@ -572,17 +632,26 @@ export default function CreateOrUpdateReservation({
       dates: (data.dates && Array.isArray(data.dates) && data.dates.length > 0)
         ? data.dates.map((date: any, i: number) => {
             // Without start/end the backend rebuilds both from date+time, collapsing the slot's end time.
-            const original = initValues?.dates?.[i];
+            const original =
+              initValues?.dates?.find((session: any) => session?.id != null && session.id === date?.id) ??
+              initValues?.dates?.[i];
             const slotUnchanged =
               original?.start_time &&
               (date?.date || '') === toFormDate(original) &&
               (date?.time || '') === toFormTime(original);
+            const selectedDoctorId = date?.doctor_id ? Number(date.doctor_id) : undefined;
+            const existingDoctorId = sessionDoctorId(original);
+            // An empty select must not clear a doctor the session already has.
+            const doctorId =
+              selectedDoctorId ??
+              (existingDoctorId ? Number(existingDoctorId) : undefined);
 
             return {
+              ...(date?.id != null ? { id: Number(date.id) } : original?.id != null ? { id: Number(original.id) } : {}),
               date: date?.date || '',
               time: date?.time || '',
               time_period: date?.time_period || 'morning',
-              doctor_id: date?.doctor_id ? Number(date.doctor_id) : undefined,
+              ...(doctorId != null && !Number.isNaN(doctorId) ? { doctor_id: doctorId } : {}),
               status: date?.status || undefined,
               ...(slotUnchanged
                 ? {
@@ -620,7 +689,15 @@ export default function CreateOrUpdateReservation({
         updateReservation(
           { reservation_id: initValues.id, ...requestBody },
           {
-            onSuccess: () => {
+            onSuccess: (response: any) => {
+              const reservation = unwrapReservation(response);
+              if (Array.isArray(reservation?.dates) && reservation.dates.length > 0) {
+                setValue(
+                  'dates',
+                  reservation.dates.map((session: any) => toFormDateRow(session)),
+                  { shouldValidate: false }
+                );
+              }
               if (onSuccess) {
                 onSuccess();
               }

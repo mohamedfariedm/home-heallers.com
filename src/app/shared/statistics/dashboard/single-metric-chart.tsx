@@ -24,6 +24,53 @@ interface SingleMetricChartProps {
   data: ChartData;
   metric: 'reservations' | 'sessions' | 'clients' | 'revenue';
   className?: string;
+  /** When set on daily data, show only this many calendar days ending at date_to. */
+  lastDays?: number;
+}
+
+function parseLocalDate(value: string): Date | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+  if (!match) return null;
+  return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+}
+
+function formatIsoDate(date: Date): string {
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
+function buildLastDaysWindow(
+  points: ChartDataPoint[],
+  dateFrom: string,
+  dateTo: string,
+  lastDays: number
+): { points: ChartDataPoint[]; dateFrom: string; dateTo: string } {
+  const end = parseLocalDate(dateTo) ?? parseLocalDate(points[points.length - 1]?.date ?? '') ?? new Date();
+  const rangeStart = parseLocalDate(dateFrom);
+  const start = new Date(end);
+  start.setDate(end.getDate() - (lastDays - 1));
+  if (rangeStart && start < rangeStart) {
+    start.setTime(rangeStart.getTime());
+  }
+
+  const byDate = new Map(
+    points.map((point) => [point.date.slice(0, 10), point])
+  );
+  const windowPoints: ChartDataPoint[] = [];
+  const cursor = new Date(start);
+
+  while (cursor <= end) {
+    const date = formatIsoDate(cursor);
+    windowPoints.push(byDate.get(date) ?? { date, count: 0, amount: 0 });
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  return {
+    points: windowPoints,
+    dateFrom: formatIsoDate(start),
+    dateTo: formatIsoDate(end),
+  };
 }
 
 // Format date based on group_by type
@@ -83,7 +130,7 @@ const metricConfig = {
   },
 };
 
-export default function SingleMetricChart({ data, metric, className }: SingleMetricChartProps) {
+export default function SingleMetricChart({ data, metric, className, lastDays }: SingleMetricChartProps) {
   const config = metricConfig[metric];
   const metricData = data[metric];
 
@@ -93,9 +140,16 @@ export default function SingleMetricChart({ data, metric, className }: SingleMet
 
   // Sort dates
   const sortedData = [...metricData].sort((a, b) => a.date.localeCompare(b.date));
+  const windowed =
+    lastDays && data.group_by === 'daily'
+      ? buildLastDaysWindow(sortedData, data.date_from, data.date_to, lastDays)
+      : null;
+  const series = windowed?.points ?? sortedData;
+  const rangeFrom = windowed?.dateFrom ?? data.date_from;
+  const rangeTo = windowed?.dateTo ?? data.date_to;
 
   // Prepare chart data
-  const chartData = sortedData.map(item => ({
+  const chartData = series.map(item => ({
     date: item.date,
     formattedDate: formatDate(item.date, data.group_by),
     value: config.getValue(item),
@@ -107,7 +161,7 @@ export default function SingleMetricChart({ data, metric, className }: SingleMet
   return (
     <WidgetCard
       title={config.title}
-      description={`From ${data.date_from} to ${data.date_to}`}
+      description={`From ${rangeFrom} to ${rangeTo}`}
       className={cn('min-h-[350px]', className)}
     >
       <div className="h-[300px] w-full pt-5 @lg:h-[350px]">
@@ -125,7 +179,7 @@ export default function SingleMetricChart({ data, metric, className }: SingleMet
               axisLine={false}
               tickLine={false}
               tick={{ fontSize: 11, fill: '#6B7280' }}
-              interval="preserveStartEnd"
+              interval={lastDays ? 0 : 'preserveStartEnd'}
             />
             <YAxis 
               axisLine={false}

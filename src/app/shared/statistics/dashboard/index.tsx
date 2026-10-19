@@ -533,6 +533,7 @@ export default function StatisticsDashboard() {
                             <SingleMetricChart
                               data={aggregateData.chart_data}
                               metric="reservations"
+                              lastDays={10}
                               className="h-full"
                             />
                           )}
@@ -542,6 +543,7 @@ export default function StatisticsDashboard() {
                             <SingleMetricChart
                               data={aggregateData.chart_data}
                               metric="sessions"
+                              lastDays={10}
                               className="h-full"
                             />
                           )}
@@ -551,6 +553,7 @@ export default function StatisticsDashboard() {
                             <SingleMetricChart
                               data={aggregateData.chart_data}
                               metric="clients"
+                              lastDays={10}
                               className="h-full"
                             />
                           )}
