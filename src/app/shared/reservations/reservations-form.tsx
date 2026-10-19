@@ -87,6 +87,26 @@ const unwrapReservation = (response: any) => {
   return payload?.data ?? payload;
 };
 
+function asRecordList(payload: any): any[] {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.data?.data)) return payload.data.data;
+  return [];
+}
+
+function relationId(source: any, key: 'service' | 'category'): string {
+  const nested = source?.[key];
+  const id = nested?.id ?? source?.[`${key}_id`];
+  if (id == null || id === '') return '';
+  return String(id);
+}
+
+function withSelectedRecord(list: any[], selected: any, selectedId: string) {
+  if (!selectedId) return list;
+  if (list.some((item) => String(item?.id) === selectedId)) return list;
+  return [{ ...(selected ?? {}), id: selected?.id ?? selectedId }, ...list];
+}
+
 const firstErrorMessage = (
   errs: any,
   path: string[] = []
@@ -217,10 +237,10 @@ export default function CreateOrUpdateReservation({
     useUpdateReservation();
 
   const { data: patients, isLoading: isPatientsLoading } = usePatients('');
-  const { data: services, isLoading: isServicesLoading } = useServices('');
+  const { data: services, isLoading: isServicesLoading } = useServices('limit=1000');
   const { data: doctors, isLoading: isDoctorsLoading } = useDoctors('');
   const { data: categories, isLoading: isCategoriesLoading } =
-    useCategories('');
+    useCategories('limit=1000');
   const { data: centers, isLoading: isCentersLoading } = useCenters('');
 
   const { closeModal } = useModal();
@@ -272,8 +292,10 @@ export default function CreateOrUpdateReservation({
       // 🧩 base IDs
       patient_id: initValues?.patient?.id?.toString() || leadPatientId?.toString() || '',
       doctor_id: initValues?.doctor?.id?.toString() || '',
-      service_id: initValues?.service?.id?.toString() || '',
-      category_id: initValues?.category?.id?.toString() || '',
+      service_id: relationId(initValues, 'service'),
+      category_id:
+        relationId(initValues, 'category') ||
+        relationId(initValues?.service, 'category'),
       sessions_count: initialSessionsCount,
 
       // 🧩 numbers and billing
@@ -477,6 +499,10 @@ export default function CreateOrUpdateReservation({
     setValue('dates', updatedDates, { shouldValidate: false });
   }, [watchDoctorId, setValue, getValues]);
 
+  const [loadedService, setLoadedService] = useState<any>(initValues?.service ?? null);
+  const [loadedCategory, setLoadedCategory] = useState<any>(
+    initValues?.category ?? initValues?.service?.category ?? null
+  );
   const loadedSessionDoctorsRef = useRef(
     (initValues?.dates || [])
       .map((session: any) => `${session?.id ?? ''}:${sessionDoctorId(session)}`)
@@ -490,6 +516,31 @@ export default function CreateOrUpdateReservation({
       .then((response: any) => {
         if (cancelled) return;
         const reservation = unwrapReservation(response);
+        if (!reservation) return;
+        if (reservation.service) setLoadedService(reservation.service);
+        const categoryRecord = reservation.category ?? reservation.service?.category;
+        if (categoryRecord) setLoadedCategory(categoryRecord);
+        const serviceId = relationId(reservation, 'service');
+        const categoryId =
+          relationId(reservation, 'category') ||
+          relationId(reservation.service, 'category');
+        const currentServiceId = getValues('service_id');
+        if (
+          serviceId &&
+          (!currentServiceId || currentServiceId === relationId(initValues, 'service'))
+        ) {
+          setValue('service_id', serviceId, { shouldValidate: false });
+        }
+        const currentCategoryId = getValues('category_id');
+        const initialCategoryId =
+          relationId(initValues, 'category') ||
+          relationId(initValues?.service, 'category');
+        if (
+          categoryId &&
+          (!currentCategoryId || currentCategoryId === initialCategoryId)
+        ) {
+          setValue('category_id', categoryId, { shouldValidate: false });
+        }
         if (!Array.isArray(reservation?.dates) || reservation.dates.length === 0) return;
         const current = getValues('dates') || [];
         const currentKey = current
@@ -963,9 +1014,13 @@ export default function CreateOrUpdateReservation({
             <option value="">
               {isServicesLoading ? 'Loading services...' : 'Select Service'}
             </option>
-            {services?.data?.map((service: any) => (
-              <option key={service.id} value={service.id}>
-                {service.name?.en}
+            {withSelectedRecord(
+              asRecordList(services?.data ?? services),
+              loadedService,
+              watch('service_id')
+            ).map((service: any) => (
+              <option key={service.id} value={String(service.id)}>
+                {resolveLocalizedName(service.name) || `Service #${service.id}`}
               </option>
             ))}
           </select>
@@ -1005,9 +1060,13 @@ export default function CreateOrUpdateReservation({
           <option value="">
             {isCategoriesLoading ? 'Loading categories...' : 'Select Category'}
           </option>
-          {categories?.data?.map((category: any) => (
-            <option key={category.id} value={category.id}>
-              {category.name?.en}
+          {withSelectedRecord(
+            asRecordList(categories?.data ?? categories),
+            loadedCategory,
+            watch('category_id')
+          ).map((category: any) => (
+            <option key={category.id} value={String(category.id)}>
+              {resolveLocalizedName(category.name) || `Category #${category.id}`}
             </option>
           ))}
         </select>
