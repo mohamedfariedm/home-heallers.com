@@ -9,11 +9,11 @@ export function usePatients(param:string) {
   return useQuery<any, Error>({queryKey: [routes.patients.index,param], queryFn: () => client.patients.all(param)});
 };
 
-export function usePatient(id: string | number) {
+export function usePatient(id: string | number, enabled = true) {
   return useQuery<any, Error>({
     queryKey: [routes.patients.index, id],
     queryFn: () => client.patients.findOne(Number(id)),
-    enabled: !!id,
+    enabled: Boolean(id) && enabled,
   });
 }
 
@@ -52,6 +52,28 @@ export const useCreatePatients = () => {
       }
     })
   }
+
+  export type ClientFieldPatch = {
+    id: number | string;
+    nationality_id?: number;
+    national_id?: string;
+  };
+
+  export const useUpdateClientFields = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+      mutationFn: (input: ClientFieldPatch) => client.patients.updateFields(input),
+      onSuccess: (_res, variables) => {
+        queryClient.invalidateQueries({ queryKey: [routes.patients.index] });
+        queryClient.invalidateQueries({
+          queryKey: [routes.patients.index, variables.id],
+        });
+      },
+      onError: (error) => {
+        toast.error(error?.message || 'تعذر حفظ بيانات العميل');
+      },
+    });
+  };
 
 
   export const useDeletePatients = () => {

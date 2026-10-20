@@ -9,6 +9,10 @@ import SelectBox from '@/components/ui/select';
 import { useModal } from '@/app/shared/modal-views/use-modal';
 import { useCreateCreditNote } from '@/framework/zatca';
 import { useRouter } from 'next/navigation';
+import {
+  getZatcaErrorMessage,
+  isZatcaValidationError,
+} from '@/app/shared/zatca/zatca-fix-error';
 import type { ZatcaInvoice, ZatcaMode } from '@/types/zatca';
 
 export default function CreateCreditNoteButton({ invoice }: { invoice: ZatcaInvoice }) {
@@ -46,8 +50,11 @@ export default function CreateCreditNoteButton({ invoice }: { invoice: ZatcaInvo
           const newId = res.data?.data?.invoice_id;
           if (newId) router.push(`/invoices/${newId}`);
         },
-        onError: (err: any) => {
-          if (err?.response?.status === 422) setAmountError(err.message);
+        onError: (err: unknown) => {
+          if (isZatcaValidationError(err)) return;
+          const status = (err as { response?: { status?: number } })?.response
+            ?.status;
+          if (status === 422) setAmountError(getZatcaErrorMessage(err));
         },
       }
     );

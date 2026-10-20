@@ -144,6 +144,34 @@ export interface ZatcaRevalidateResponse {
   data?: { xml_hash: string | null };
 }
 
+export type ZatcaFixField =
+  | 'client.nationality'
+  | 'client.national_id'
+  | 'invoice.tax_percentage'
+  | 'invoice.tax_total'
+  | null;
+
+export interface ZatcaFixErrorItem {
+  code: string;
+  message: string;
+  message_en?: string;
+  fix_field: ZatcaFixField | string | null;
+}
+
+export interface ZatcaFixErrorData {
+  invoice_id?: number | string | null;
+  client_id?: number | string | null;
+  fix_fields?: Array<ZatcaFixField | string | null>;
+}
+
+export interface ZatcaFixErrorPayload {
+  success?: boolean;
+  message: string;
+  message_en?: string;
+  errors: ZatcaFixErrorItem[];
+  data?: ZatcaFixErrorData | null;
+}
+
 export const TERMINAL_ZATCA_STATUSES: ZatcaStatus[] = [
   'REPORTED',
   'CLEARED',

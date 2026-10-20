@@ -276,6 +276,14 @@ class Client {
         findOne: (id: number) => HttpClient.get(`${routes.patients.index}/${id}`),
         create: (input: any) => HttpClient.post(`${routes.patients.index}`, input),
         update: (input: any) => HttpClient.patch(`${routes.patients.index}/${input.lead_id}`, input),
+        updateFields: (input: {
+            id: number | string;
+            nationality_id?: number;
+            national_id?: string;
+        }) => {
+            const { id, ...fields } = input;
+            return HttpClient.put(`${routes.patients.index}/${id}`, fields);
+        },
         delete: (input: { region_id: number[] }) => HttpClient.delete(`${routes.patients.index}/${input.region_id}`)
     }
     doctors = {
