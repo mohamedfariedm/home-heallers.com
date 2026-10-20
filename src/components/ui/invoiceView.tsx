@@ -47,6 +47,8 @@ type ApiInvoice = {
   status: string;
   is_paid?: boolean;           // payment status
   notes?: string | null;       // <-- renamed in your JSON as "notes"
+  zatca_status?: string | null;
+  zatca_qr?: string | null;
   creator?: {
     id: number;
     name: { en: string; ar: string };
@@ -85,13 +87,15 @@ export default function InvoiceView({ invoiceData }: InvoiceViewProps) {
   const invoiceRef = useRef<HTMLDivElement>(null);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const isMobile = useMedia('(max-width: 768px)', false);
-console.log("Invoice Data:", invoiceData);
 
   // Header tax (used only as fallback if a detail doesn't include its own)
   const headerTaxRate = useMemo(() => taxRateFrom(invoiceData.tax_percentage), [invoiceData.tax_percentage]);
   const headerTaxLabel = useMemo(() => normalizeTaxLabel(invoiceData.tax_percentage), [invoiceData.tax_percentage]);
 
-  const qrValue = `https://home-healers-web.vercel.app/invoice/${invoiceData.id}`;
+  const zatcaQr =
+    typeof invoiceData.zatca_qr === 'string' && invoiceData.zatca_qr.trim() !== ''
+      ? invoiceData.zatca_qr.trim()
+      : null;
 
 // Unique services (header display)
   const uniqueServices = useMemo(() => {
@@ -426,10 +430,6 @@ console.log("Invoice Data:", invoiceData);
     }
   };
 
-  // Your embedded logo for the QR center
-  const logoBase64 =
-    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADoAAABICAYAAACnUebiAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAWWSURBVHgB1ZtdchNHEMf/syQV8wQ5AesThJwg4gbmBFFOAHlJDHmweEgZU6kCnwDlBLFPwOYEJifw5gQxValKXMAO3dOSvZL2Y77ahX6UZEvMeve/PdPTPdNrcBMc2gkMDuh1HxZ36ZuaXhX9/gxPTI0bwECb5/Y1vU/RfwUz/GyeQRldoUf2JVnt8Wi7Bg/x1JxAET2h0l3feLU1uMB/2MXMXECJAloYfN/x7Sl4bK7D4/Yr7EERPaGWHE8btprFW3r93XPEfSjyBbQo8DuNvdOrzw2JNJhAPO58QzDfBEX0hAJ3SNi91ueaPt8hQRd0E96S8FULqgs9tCX9nKB9QQ1dzC8m7cQWX6M9rRQ0Drk7s/trUG60v9WyfiqsqaHzFYubeYkTQ19O6eSvNxovx5ShC/hADiRUeIjX5Zu7b3YRy8zexW13U78DG02CkmssHvQ7I2nMB72ku31GE/+5uym+PDEVvR97teUIKQa+mc/tG+zgH3edljz3usgFIV63dJYPEbxvOFjoF8u9xuBHuilzhCACzxc9ZuJzCAstEUZbcDnamsVS16FjTpwwoabvjmkcfUvh3yv4wudjC4rAEgGkeF0WfE5h3nisKt24QgpHlgOQV31dc4z0gMFSUM4xrSZH9oDOM48VyeSJjDhwP7RnzvvlRkTOkEjMGO2Gc80d5LVsJpH4Eue5Y91ptm78wj7KInJB/qCeu/GRHc9Bh5DIxt8be6CVvRzgVxuXjfA494+ovCnWAu88sHe8hT+inJOM8xKZ0ctH+WJ3SGwIPC6H1pcS0BTKTJzn9IHHZUbns462UAkoODYdYjkuEwKCMVKF1l6tCurCQ3HxbbDVS+Q4V+8lpNBQ5uFzAWyprpyXkflybDqqo1O5BUVSd5Hk/EErKxlisjG/+o3L2p0jEZ5e0sYFbyl89L7bBytd2GdcZtq2yOOMnrqcshpt1+7CEiqWI0fMg5PyHvJ5XYsfPFtO3H6Mz1ZF4rhsk0+odC+/NSKfoCDzTlveefR/cix+jmmMGtxtM5JXKG8SNd5W7cfSKn/mfdP8kdElpVdpVq2R2ZpMfqHpVq00dsF1Yt0Uq2b0tG10hMZbda5V06CXvcRYVcmaTOG28TQIt+pcs0KlyDTvdRNiVZ5SFNFNvH2tamh7UrYt1NBfYfCxao4gY4RioHgiD+NWrb0ylCItndS3KDNkVV9P26QLraHNsFUr3AAF/Yv3uiHdqduqqlNKm8JVoMQS0p26rBoSIJjUrtsk1feE7a+sWjU0eP8GsfyLdwXeJ4zRwpW7+NO2amiAYBJK6Oi8xaKiskYMXCD1mw3dpJrDd0pZwiv98cuyNb/J9GLxJ2J5770oJnB3tYHHGDxCPDW/idAiYZwWdBE+ZThtQsK9F26fdQ+xWPzFP0RogxPEMrTdkApvPjWBW4+bOCOKUO5OaVmM//ZgCHk2hSt+uw4BU9MkqTfKJ1ZW8qdIQbKimn9tC43vvtd/I724alkG57OSP0YrQDFrJzlLmq+uqRcr7XPvI6QUlb3r42wbwha7S4uuCuVtPZu1KIrH/vFgvS/PkRJ45BMozLFvrqaxVaF8V3dwBoWqkKtC5yXWVUiXatv5LWvK6dfpq8jeJmTYzNpfbSbeMq4qbC+1Sx7W6F5hkBCtxjZS4GHXE1HdQrlv8wGaS6EacJf9qdvp9a8Z8QFSdbIdcOn62rhsM/4Q3jY4J9lPnQ418XvakDMICa5LfG54iGT8lju5G0utT43PCZlGpj5Nw58fPbQzl4Mq1u15IMl7QF4bLpSRRHvW84yoHjwLNMNOp//QFETwdCG4hBYSOp66QCDyqeF8jz5Lqeoe/UVelpwgnWqxllXl2GnLJ3Sd5cqdcY9S3nML0O1xLf/XfoTrHY392q0zX9Ir8/PenwB3AhuB1WZ4lAAAAABJRU5ErkJggg==";
-
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white" dir="rtl">
       <div className="flex justify-center items-center mb-4">
@@ -549,16 +549,24 @@ console.log("Invoice Data:", invoiceData);
 
       {/* الإجماليات + QR */}
       <div className="grid grid-cols-2 gap-8 mb-8">
-        <div className="flex justify-center items-center">
-            <div className="relative w-32 h-32">
-              <QRCode value={qrValue} size={128} bgColor="#ffffff" fgColor="#000000" level="H" style={{ width: '100%', height: '100%' }} />
-              <div
-                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl p-[4px]"
-                style={{ width: 36, height: 36 }}
-              >
-                <img src={logoBase64} alt="Logo" className="w-full h-full object-contain rounded-full" />
+        <div className="flex flex-col items-center justify-center gap-2">
+            {zatcaQr ? (
+              <div className="h-32 w-32">
+                <QRCode value={zatcaQr} size={128} bgColor="#ffffff" fgColor="#000000" level="M" style={{ width: '100%', height: '100%' }} />
               </div>
-            </div>
+            ) : (
+              <p className="max-w-[12rem] text-center text-sm text-gray-600">
+                لم يتم إرسال الفاتورة إلى هيئة الزكاة بعد
+              </p>
+            )}
+            <a
+              href={`https://home-healers.com/invoice/${invoiceData.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-blue-600 underline"
+            >
+              رابط صفحة الفاتورة
+            </a>
           </div>
         <div className="space-y-2">
           <div className="flex justify-between">
