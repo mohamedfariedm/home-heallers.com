@@ -126,7 +126,10 @@ export interface ZatcaPaginatedResponse<T> {
 
 export interface ZatcaQrResponse {
   base64: string;
-  decoded: Array<{ tag: number; name: string; value: string }>;
+  decoded:
+    | Record<string, string | number | null>
+    | Array<{ tag: number; name: string; value: string }>
+    | null;
 }
 
 export interface ZatcaXmlResponse {
