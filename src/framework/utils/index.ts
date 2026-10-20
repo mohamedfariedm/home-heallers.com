@@ -234,6 +234,7 @@ class Client {
     }
     invoices = {
         all: (param: string) => HttpClient.get(`${`/invoices`}?${param}`),
+        findOne: (id: number | string) => HttpClient.get(`${`/invoices`}/${id}`),
         create: (input: any) => HttpClient.post(`${`/invoices`}`, input),
         update: (input: any) => HttpClient.patch(`${`/invoices`}/${input.id}`, input),
         delete: (input: { region_id: number[] }) => HttpClient.delete(`${`/invoices`}/${input.region_id}`)

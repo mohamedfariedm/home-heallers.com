@@ -189,8 +189,10 @@ const useInvoiceCalculations = (
 // -------------------- Component --------------------
 export default function InvoiceManager({
   initValues,
+  onSaved,
 }: {
   initValues?: Invoice;
+  onSaved?: () => void;
 }) {
   const { closeModal } = useModal();
   const [editingDetail, setEditingDetail] = useState<InvoiceDetail | null>(
@@ -422,7 +424,10 @@ export default function InvoiceManager({
 
     // Modal is closed by the mutation's onSuccess so failures stay visible.
     if (initValues?.id) {
-      update({ ...payload, id: initValues.id });
+      update(
+        { ...payload, id: initValues.id },
+        onSaved ? { onSuccess: onSaved } : undefined
+      );
     } else {
       create(payload);
     }

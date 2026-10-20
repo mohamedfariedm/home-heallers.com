@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
+  canEditClient,
   collectFixFields,
+  detectNationalityHint,
   getZatcaErrorMessage,
   isZatcaValidationError,
+  nationalityHintText,
   normalizeNationalId,
   parseZatcaValidationError,
   toEnglishDigits,
@@ -82,6 +85,85 @@ describe('parseZatcaValidationError', () => {
     expect(
       parseZatcaValidationError({
         response: { status: 500, data: payload },
+      })
+    ).toBeNull();
+  });
+});
+
+describe('canEditClient', () => {
+  it('allows patients or clients, and denies neither', () => {
+    expect(canEditClient(['patients'])).toBe(true);
+    expect(canEditClient(['clients'])).toBe(true);
+    expect(canEditClient(['patients', 'invoices'])).toBe(true);
+    expect(canEditClient(['invoices', 'zatca.submit'])).toBe(false);
+    expect(canEditClient([])).toBe(false);
+  });
+});
+
+describe('detectNationalityHint', () => {
+  it('suggests non-Saudi when a Saudi 15% invoice has an iqama', () => {
+    const hint = detectNationalityHint({
+      message: 'يلزم تصحيح البيانات',
+      errors: [
+        {
+          code: 'ZATCA_TAX_NATIONALITY_MISMATCH',
+          message:
+            'العميل أحمد مسجل سعودي، لكن الفاتورة عليها ضريبة 15%. فواتير السعوديين ضريبتها 0% (تتحملها الدولة). عدّل نسبة الضريبة في الفاتورة أو جنسية العميل.',
+          message_en:
+            'Client Ahmed is registered as Saudi, but the invoice has 15% tax.',
+          fix_field: 'invoice.tax_percentage',
+        },
+        {
+          code: 'ZATCA_INVALID_BUYER_ID',
+          message:
+            'رقم هوية العميل أحمد غير صحيح: يبدو رقم إقامة (يبدأ بـ 2).',
+          message_en:
+            "Client Ahmed's ID number is invalid: it looks like an iqama (starts with 2).",
+          fix_field: 'client.national_id',
+        },
+      ],
+    });
+    expect(hint).toBe('likely_non_saudi');
+    expect(nationalityHintText(hint)).toMatch(/غير سعودي/);
+  });
+
+  it('suggests Saudi when a 0% invoice has a national ID and unset nationality', () => {
+    const hint = detectNationalityHint({
+      message: 'يلزم تصحيح البيانات',
+      errors: [
+        {
+          code: 'ZATCA_TAX_NATIONALITY_MISMATCH',
+          message:
+            'العميل أحمد غير مسجل سعودي (أو جنسيته غير محددة)، لكن الفاتورة معفاة/0%. حدّد جنسية العميل إذا كان سعودياً، أو عدّل الضريبة إلى 15%.',
+          message_en:
+            'Client Ahmed is not registered as Saudi (or nationality is unset), but the invoice is exempt/0%.',
+          fix_field: 'client.nationality',
+        },
+        {
+          code: 'ZATCA_INVALID_BUYER_ID',
+          message:
+            'رقم هوية العميل أحمد غير صحيح: يبدو رقم هوية وطنية (يبدأ بـ 1).',
+          message_en:
+            "Client Ahmed's ID number is invalid: it looks like a national ID (starts with 1).",
+          fix_field: 'client.national_id',
+        },
+      ],
+    });
+    expect(hint).toBe('likely_saudi');
+    expect(nationalityHintText(hint)).toMatch(/سعودي/);
+  });
+
+  it('returns null when only one of the two errors is present', () => {
+    expect(
+      detectNationalityHint({
+        message: 'x',
+        errors: [
+          {
+            code: 'ZATCA_TAX_NATIONALITY_MISMATCH',
+            message: 'العميل أحمد مسجل سعودي، لكن الفاتورة عليها ضريبة 15%.',
+            fix_field: 'invoice.tax_percentage',
+          },
+        ],
       })
     ).toBeNull();
   });
