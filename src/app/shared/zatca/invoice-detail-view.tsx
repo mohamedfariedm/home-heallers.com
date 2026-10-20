@@ -59,7 +59,10 @@ export default function InvoiceDetailView({
     return <Text>Invoice not found.</Text>;
   }
 
-  const submissions = (submissionsData?.data ?? []) as ZatcaSubmission[];
+  const rawSubmissions = submissionsData?.data;
+  const submissions = Array.isArray(rawSubmissions)
+    ? (rawSubmissions as ZatcaSubmission[])
+    : [];
   const lastSub = invoice.last_submission ?? submissions[0];
 
   const tabs: { key: TabKey; label: string; show: boolean }[] = [

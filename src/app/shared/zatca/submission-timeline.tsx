@@ -10,11 +10,13 @@ export default function SubmissionTimeline({
 }: {
   submissions: ZatcaSubmission[];
 }) {
-  if (!submissions.length) {
+  const list = Array.isArray(submissions) ? submissions : [];
+
+  if (!list.length) {
     return <Text className="text-sm text-gray-500">No submission history yet.</Text>;
   }
 
-  const sorted = [...submissions].sort(
+  const sorted = [...list].sort(
     (a, b) =>
       new Date(b.created_at ?? b.submitted_at ?? 0).getTime() -
       new Date(a.created_at ?? a.submitted_at ?? 0).getTime()
