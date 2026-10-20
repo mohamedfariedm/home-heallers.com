@@ -1,7 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import Link from 'next/link';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import toast from 'react-hot-toast';
 import { useSession } from 'next-auth/react';
 import {
@@ -26,11 +25,14 @@ import { isSaudiNationalityRecord } from '@/utils/is-saudi-nationality';
 import {
   canEditClient,
   collectFixFields,
+  detectNationalityHint,
   getZatcaErrorMessage,
+  nationalityHintText,
   normalizeNationalId,
   parseZatcaValidationError,
   validateNationalId,
 } from '@/app/shared/zatca/zatca-fix-error';
+import ZatcaInvoiceEditor from '@/app/shared/zatca/zatca-invoice-editor';
 import type { ZatcaFixErrorPayload } from '@/types/zatca';
 
 type ClientRecord = {
@@ -110,12 +112,14 @@ export default function ZatcaFixPopup({
   payload: initialPayload,
   invoiceNumber: invoiceNumberProp,
   onRetry,
+  awaitingReissue: awaitingReissueProp = false,
 }: {
   payload: ZatcaFixErrorPayload;
   invoiceNumber?: string;
   onRetry: () => Promise<unknown>;
+  awaitingReissue?: boolean;
 }) {
-  const { closeModal } = useModal();
+  const { closeModal, openModal } = useModal();
   const { permissions } = usePermissions();
   const { data: session } = useSession();
   const effectivePermissions =
@@ -124,17 +128,23 @@ export default function ZatcaFixPopup({
   const allowClientEdit = canEditClient(effectivePermissions);
 
   const [payload, setPayload] = useState(initialPayload);
+  const [awaitingReissue, setAwaitingReissue] = useState(awaitingReissueProp);
   const [nationalityId, setNationalityId] = useState<number | ''>('');
   const [nationalId, setNationalId] = useState('');
   const [nationalIdError, setNationalIdError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [issuing, setIssuing] = useState(false);
+  const nationalityFieldRef = useRef<HTMLDivElement>(null);
 
   const invoiceId = payload.data?.invoice_id ?? null;
   const clientId = payload.data?.client_id ?? null;
   const fixFields = collectFixFields(payload);
+  const nationalityHint = detectNationalityHint(payload);
+  const hintText = nationalityHintText(nationalityHint);
 
-  const needsNationality = fixFields.some((field) => field === 'client.nationality');
+  const needsNationality =
+    fixFields.some((field) => field === 'client.nationality') ||
+    nationalityHint != null;
   const needsNationalId = fixFields.some((field) => field === 'client.national_id');
   const needsClientForm = Boolean(clientId) && (needsNationality || needsNationalId);
   const needsInvoiceEdit = fixFields.some((field) => field.startsWith('invoice.'));
@@ -180,7 +190,14 @@ export default function ZatcaFixPopup({
 
   useEffect(() => {
     setPayload(initialPayload);
-  }, [initialPayload]);
+    setAwaitingReissue(awaitingReissueProp);
+  }, [initialPayload, awaitingReissueProp]);
+
+  useEffect(() => {
+    if (!allowClientEdit || !needsNationality || !hintText) return;
+    const button = nationalityFieldRef.current?.querySelector('button');
+    button?.focus();
+  }, [allowClientEdit, needsNationality, hintText, client]);
 
   useEffect(() => {
     if (!client) return;
@@ -243,6 +260,36 @@ export default function ZatcaFixPopup({
     }
   };
 
+  const reopenPopup = (nextAwaitingReissue: boolean) => {
+    window.setTimeout(() => {
+      openModal({
+        customSize: '560px',
+        view: (
+          <ZatcaFixPopup
+            payload={payload}
+            invoiceNumber={invoiceNumber}
+            onRetry={onRetry}
+            awaitingReissue={nextAwaitingReissue}
+          />
+        ),
+      });
+    }, 0);
+  };
+
+  const handleEditInvoice = () => {
+    if (invoiceId == null) return;
+    openModal({
+      customSize: '750px',
+      view: (
+        <ZatcaInvoiceEditor
+          invoiceId={invoiceId}
+          onSaved={() => reopenPopup(true)}
+          onCancel={() => reopenPopup(awaitingReissue)}
+        />
+      ),
+    });
+  };
+
   const handleSaveAndIssue = async () => {
     if (needsClientForm && allowClientEdit) {
       setSaving(true);
@@ -270,6 +317,7 @@ export default function ZatcaFixPopup({
             fix_fields: next.data?.fix_fields ?? next.errors.map((item) => item.fix_field),
           },
         });
+        setAwaitingReissue(false);
       } else {
         toast.error(getZatcaErrorMessage(err));
       }
@@ -279,7 +327,8 @@ export default function ZatcaFixPopup({
   };
 
   const showSaveButtons = allowClientEdit && needsClientForm && !missingClient;
-  const showRetryWithoutSave = !missingClient && allowClientEdit && !needsClientForm;
+  const showRetryWithoutSave =
+    !awaitingReissue && !missingClient && allowClientEdit && !needsClientForm;
   const busy = saving || issuing;
   const nationalityMissing = needsNationality && allowClientEdit && nationalityId === '';
 
@@ -315,13 +364,19 @@ export default function ZatcaFixPopup({
 
       {missingClient ? (
         <div className="mb-5 rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700">
-          لا يوجد عميل مرتبط بهذه الفاتورة. اربط عميلاً من صفحة تعديل الفاتورة ثم حاول الإصدار مرة أخرى.
+          لا يوجد عميل مرتبط بهذه الفاتورة. اربط عميلاً من تعديل الفاتورة ثم حاول الإصدار مرة أخرى.
         </div>
       ) : null}
 
       {!allowClientEdit && needsClientForm ? (
         <div className="mb-5 rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700">
           اطلب من المسؤول تعديل بيانات العميل
+        </div>
+      ) : null}
+
+      {hintText ? (
+        <div className="mb-5 rounded-lg border border-sky-300 bg-sky-50 px-3 py-2.5 text-sm font-medium text-sky-950">
+          {hintText}
         </div>
       ) : null}
 
@@ -338,6 +393,7 @@ export default function ZatcaFixPopup({
                 <Text className="font-medium text-gray-900">{clientDisplayName(client)}</Text>
               </div>
               {needsNationality ? (
+                <div ref={nationalityFieldRef} id="zatca-nationality-field">
                 <SelectBox
                   label="الجنسية"
                   placeholder="اختر الجنسية"
@@ -358,6 +414,7 @@ export default function ZatcaFixPopup({
                   disabled={nationalitiesLoading || busy}
                   error={nationalityMissing ? 'الجنسية مطلوبة' : undefined}
                 />
+                </div>
               ) : null}
               {needsNationalId ? (
                 <Input
@@ -385,20 +442,25 @@ export default function ZatcaFixPopup({
 
       {(needsInvoiceEdit || missingClient) && invoiceId != null ? (
         <div className="mb-5">
-          <Link href="/invoices" onClick={closeModal}>
-            <Button variant="outline" className="w-full">
-              تعديل الفاتورة
-            </Button>
-          </Link>
+          <Button variant="outline" className="w-full" onClick={handleEditInvoice} disabled={busy}>
+            تعديل الفاتورة
+          </Button>
         </div>
       ) : null}
 
       <div className="flex flex-wrap justify-start gap-2">
+        {awaitingReissue ? (
+          <Button isLoading={issuing} disabled={busy} onClick={handleSaveAndIssue}>
+            إعادة الإصدار
+          </Button>
+        ) : null}
         {showSaveButtons ? (
           <>
+            {!awaitingReissue ? (
             <Button isLoading={issuing} disabled={busy} onClick={handleSaveAndIssue}>
               حفظ وإصدار
             </Button>
+            ) : null}
             <Button
               variant="outline"
               isLoading={saving && !issuing}

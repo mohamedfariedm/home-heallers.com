@@ -129,5 +129,57 @@ export function collectFixFields(
 }
 
 export function canEditClient(permissions: string[]): boolean {
-  return permissions.includes('clients');
+  return permissions.includes('patients') || permissions.includes('clients');
+}
+
+export type NationalityHint = 'likely_non_saudi' | 'likely_saudi' | null;
+
+const LIKELY_NON_SAUDI_HINT =
+  'رقم الهوية رقم إقامة والفاتورة 15% — غالباً العميل غير سعودي. غيّر الجنسية بدلاً من تعديل الفاتورة.';
+const LIKELY_SAUDI_HINT = 'غالباً العميل سعودي. حدّد الجنسية سعودي.';
+
+export function nationalityHintText(hint: NationalityHint): string | null {
+  if (hint === 'likely_non_saudi') return LIKELY_NON_SAUDI_HINT;
+  if (hint === 'likely_saudi') return LIKELY_SAUDI_HINT;
+  return null;
+}
+
+function combinedMessage(item: ZatcaFixErrorItem | undefined): string {
+  if (!item) return '';
+  return `${item.message ?? ''} ${item.message_en ?? ''}`;
+}
+
+export function detectNationalityHint(
+  payload: ZatcaFixErrorPayload
+): NationalityHint {
+  const mismatch = payload.errors.find(
+    (item) => item.code === 'ZATCA_TAX_NATIONALITY_MISMATCH'
+  );
+  const invalidId = payload.errors.find(
+    (item) => item.code === 'ZATCA_INVALID_BUYER_ID'
+  );
+  if (!mismatch || !invalidId) return null;
+
+  const mismatchText = combinedMessage(mismatch);
+  const idText = combinedMessage(invalidId);
+
+  const saudiWith15 =
+    /مسجل سعودي/.test(mismatchText) ||
+    /registered as Saudi/i.test(mismatchText);
+  const idStartsWith2 =
+    /يبدأ بـ 2/.test(idText) ||
+    /starts with 2/i.test(idText) ||
+    /iqama/i.test(idText);
+
+  const nonSaudiWithZero =
+    /غير مسجل سعودي/.test(mismatchText) ||
+    /not registered as Saudi/i.test(mismatchText);
+  const idStartsWith1 =
+    /يبدأ بـ 1/.test(idText) ||
+    /starts with 1/i.test(idText) ||
+    /national ID/i.test(idText);
+
+  if (saudiWith15 && idStartsWith2) return 'likely_non_saudi';
+  if (nonSaudiWithZero && idStartsWith1) return 'likely_saudi';
+  return null;
 }

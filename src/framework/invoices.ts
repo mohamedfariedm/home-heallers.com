@@ -8,6 +8,14 @@ export function useInvoices(param: string) {
   return useQuery<any, Error>({ queryKey: [routes.invoices.index, param], queryFn: () => client.invoices.all(param) });
 }
 
+export function useInvoice(id: number | string, enabled = true) {
+  return useQuery<any, Error>({
+    queryKey: [routes.invoices.index, id],
+    queryFn: () => client.invoices.findOne(id),
+    enabled: Boolean(id) && enabled,
+  });
+}
+
 export const useCreateInvoices = () => {
   const queryClient = useQueryClient();
   const { closeModal } = useModal();
