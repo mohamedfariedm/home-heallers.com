@@ -1,6 +1,10 @@
+import { useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import client from '@/framework/utils';
 import toast from 'react-hot-toast';
+import { useModal } from '@/app/shared/modal-views/use-modal';
+import { presentZatcaValidationError } from '@/app/shared/zatca/zatca-fix-popup';
+import { getZatcaErrorMessage } from '@/app/shared/zatca/zatca-fix-error';
 import type {
   ZatcaInvoice,
   ZatcaPaginatedResponse,
@@ -66,9 +70,49 @@ function invalidateInvoice(queryClient: ReturnType<typeof useQueryClient>, id?: 
   if (id) queryClient.invalidateQueries({ queryKey: zatcaKeys.detail(id) });
 }
 
+function lookupInvoiceNumber(
+  queryClient: ReturnType<typeof useQueryClient>,
+  id: number | string
+): string | undefined {
+  const detail = queryClient.getQueryData<{ data?: ZatcaInvoice }>(zatcaKeys.detail(id));
+  return detail?.data?.invoice_number;
+}
+
+function useZatcaValidationPopup<TVars extends { id: number | string }>() {
+  const { openModal } = useModal();
+  const queryClient = useQueryClient();
+  const mutateAsyncRef = useRef<(vars: TVars) => Promise<unknown>>();
+  const suppressErrorRef = useRef(false);
+
+  const onError = (err: unknown, vars: TVars) => {
+    if (suppressErrorRef.current) return;
+    const handled = presentZatcaValidationError(err, openModal, {
+      invoiceNumber: lookupInvoiceNumber(queryClient, vars.id),
+      fallbackInvoiceId: vars.id,
+      onRetry: async () => {
+        suppressErrorRef.current = true;
+        try {
+          return await mutateAsyncRef.current!(vars);
+        } finally {
+          suppressErrorRef.current = false;
+        }
+      },
+    });
+    if (!handled) {
+      toast.error(getZatcaErrorMessage(err));
+    }
+  };
+
+  return { onError, mutateAsyncRef };
+}
+
 export function useIssueInvoice() {
   const queryClient = useQueryClient();
-  return useMutation({
+  const { onError, mutateAsyncRef } = useZatcaValidationPopup<{
+    id: number | string;
+    mode?: ZatcaMode;
+  }>();
+  const mutation = useMutation({
     mutationFn: async ({ id, mode }: { id: number | string; mode?: ZatcaMode }) => {
       const res = await client.zatca.issue(id, { mode: mode ?? 'reporting' });
       return res;
@@ -77,8 +121,10 @@ export function useIssueInvoice() {
       toast.success(res.data?.message ?? 'Invoice submission queued');
       invalidateInvoice(queryClient, id);
     },
-    onError: (err: any) => toast.error(err.message),
+    onError,
   });
+  mutateAsyncRef.current = mutation.mutateAsync;
+  return mutation;
 }
 
 export function useCancelInvoice() {
@@ -95,7 +141,12 @@ export function useCancelInvoice() {
 
 export function useZatcaSubmit() {
   const queryClient = useQueryClient();
-  return useMutation({
+  const { onError, mutateAsyncRef } = useZatcaValidationPopup<{
+    id: number | string;
+    mode?: ZatcaMode;
+    force?: boolean;
+  }>();
+  const mutation = useMutation({
     mutationFn: ({
       id,
       mode,
@@ -109,13 +160,20 @@ export function useZatcaSubmit() {
       toast.success(res.data?.message ?? 'Submission queued');
       invalidateInvoice(queryClient, id);
     },
-    onError: (err: any) => toast.error(err.message),
+    onError,
   });
+  mutateAsyncRef.current = mutation.mutateAsync;
+  return mutation;
 }
 
 export function useZatcaRetry() {
   const queryClient = useQueryClient();
-  return useMutation({
+  const { onError, mutateAsyncRef } = useZatcaValidationPopup<{
+    id: number | string;
+    mode?: ZatcaMode;
+    force?: boolean;
+  }>();
+  const mutation = useMutation({
     mutationFn: ({
       id,
       mode,
@@ -129,8 +187,10 @@ export function useZatcaRetry() {
       toast.success(res.data?.message ?? 'Retry submission queued');
       invalidateInvoice(queryClient, id);
     },
-    onError: (err: any) => toast.error(err.message),
+    onError,
   });
+  mutateAsyncRef.current = mutation.mutateAsync;
+  return mutation;
 }
 
 export function useZatcaRevalidate() {
@@ -142,7 +202,13 @@ export function useZatcaRevalidate() {
 
 export function useCreateCreditNote() {
   const queryClient = useQueryClient();
-  return useMutation({
+  const { onError, mutateAsyncRef } = useZatcaValidationPopup<{
+    id: number | string;
+    amount: number;
+    adjustment_reason: string;
+    mode?: ZatcaMode;
+  }>();
+  const mutation = useMutation({
     mutationFn: ({
       id,
       amount,
@@ -159,14 +225,22 @@ export function useCreateCreditNote() {
         adjustment_reason,
         mode: mode ?? 'reporting',
       }),
-    onError: (err: any) => toast.error(err.message),
+    onError,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['zatca-invoices'] }),
   });
+  mutateAsyncRef.current = mutation.mutateAsync;
+  return mutation;
 }
 
 export function useCreateDebitNote() {
   const queryClient = useQueryClient();
-  return useMutation({
+  const { onError, mutateAsyncRef } = useZatcaValidationPopup<{
+    id: number | string;
+    amount: number;
+    adjustment_reason: string;
+    mode?: ZatcaMode;
+  }>();
+  const mutation = useMutation({
     mutationFn: ({
       id,
       amount,
@@ -183,9 +257,11 @@ export function useCreateDebitNote() {
         adjustment_reason,
         mode: mode ?? 'reporting',
       }),
-    onError: (err: any) => toast.error(err.message),
+    onError,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['zatca-invoices'] }),
   });
+  mutateAsyncRef.current = mutation.mutateAsync;
+  return mutation;
 }
 
 export function useZatcaExport() {
