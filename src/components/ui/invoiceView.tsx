@@ -551,8 +551,11 @@ export default function InvoiceView({ invoiceData }: InvoiceViewProps) {
       <div className="grid grid-cols-2 gap-8 mb-8">
         <div className="flex flex-col items-center justify-center gap-2">
             {zatcaQr ? (
-              <div className="h-32 w-32">
-                <QRCode value={zatcaQr} size={128} bgColor="#ffffff" fgColor="#000000" level="M" style={{ width: '100%', height: '100%' }} />
+              <div
+                className="bg-white"
+                style={{ width: 300, height: 300, boxSizing: 'border-box', padding: 20 }}
+              >
+                <QRCode value={zatcaQr} size={260} bgColor="#ffffff" fgColor="#000000" level="M" style={{ width: '100%', height: '100%' }} />
               </div>
             ) : (
               <p className="max-w-[12rem] text-center text-sm text-gray-600">
