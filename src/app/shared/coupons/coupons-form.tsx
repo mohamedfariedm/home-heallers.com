@@ -43,6 +43,11 @@ import { useCountries } from '@/framework/countrues';
 import { useCategories } from '@/framework/categories';
 import { DatePicker } from '@/components/ui/datepicker';
 import {
+  COUPON_CODE_MAX,
+  COUPON_DESCRIPTION_MAX,
+  COUPON_FIXED_MAX,
+  COUPON_NAME_MAX,
+  COUPON_PERCENT_MAX,
   COUPON_TYPES,
   ELIGIBLE_USER_TYPES,
   FIRST_BOOKING_SCOPES,
@@ -150,6 +155,43 @@ function CouponPortalSelect({
   );
 }
 
+function CountedInput({
+  label,
+  max,
+  value,
+  error,
+  ...inputProps
+}: {
+  label: string;
+  max: number;
+  value?: string;
+  error?: string;
+} & Omit<React.ComponentProps<typeof Input>, 'label' | 'error'>) {
+  const length = value?.length ?? 0;
+  const over = length > max;
+
+  return (
+    <div>
+      <div className="mb-1.5 flex items-baseline justify-between gap-3">
+        <span className="text-sm font-medium text-gray-900">{label}</span>
+        <span
+          className={cn(
+            'text-xs tabular-nums',
+            over ? 'font-medium text-red-500' : 'text-gray-400'
+          )}
+        >
+          {length}/{max}
+        </span>
+      </div>
+      <Input
+        {...inputProps}
+        error={error}
+        helperText={`Up to ${max} characters, including spaces`}
+      />
+    </div>
+  );
+}
+
 function toSelectOptions(
   items: any[] | undefined,
   lang: 'en' | 'ar' = 'en'
@@ -240,6 +282,7 @@ type FormFieldsProps = {
   setInsuranceTypes: React.Dispatch<
     React.SetStateAction<CouponInsuranceFilter[]>
   >;
+  linkedClient: boolean;
 };
 
 function GeneralTab({
@@ -250,22 +293,32 @@ function GeneralTab({
   errors,
   serviceOptions,
   isServicesLoading,
+  linkedClient,
 }: FormFieldsProps) {
   const watchType = watch('type');
+  const nameEn = watch('name.en') ?? '';
+  const nameAr = watch('name.ar') ?? '';
+  const descriptionEn = watch('description.en') ?? '';
+  const descriptionAr = watch('description.ar') ?? '';
+  const isGlobal = watch('global');
 
   return (
     <div className="space-y-5">
       <TabPanelCard
         title="Coupon identity"
-        description="Names and code shown to customers"
+        description="Names and code shown on the coupon card"
       >
-        <Input
+        <CountedInput
           label="Coupon Name (English)"
+          max={COUPON_NAME_MAX}
+          value={nameEn}
           {...register('name.en')}
           error={errors.name?.en?.message}
         />
-        <Input
+        <CountedInput
           label="Coupon Name (Arabic)"
+          max={COUPON_NAME_MAX}
+          value={nameAr}
           {...register('name.ar')}
           error={errors.name?.ar?.message}
         />
@@ -274,28 +327,51 @@ function GeneralTab({
           {...register('code')}
           error={errors.code?.message}
           placeholder="SAVE20"
+          maxLength={COUPON_CODE_MAX}
           className="font-mono uppercase"
+          helperText={`1–${COUPON_CODE_MAX} characters: A–Z and 0–9 only`}
         />
-        <div className="flex items-end sm:col-span-2">
+        <div className="space-y-3 sm:col-span-2">
           <Checkbox
             label="Active — coupon can be redeemed"
             checked={watch('is_active')}
             onChange={() => setValue('is_active', !watch('is_active'))}
           />
+          <Checkbox
+            label="Global — shown to every signed-in customer"
+            checked={isGlobal}
+            onChange={() => setValue('global', !isGlobal)}
+          />
+          <Text className="text-xs leading-5 text-gray-500">
+            Audience rules such as new customers, phone, city, country,
+            insurance, and segment are skipped while Global is on. A coupon
+            linked to one client stays with that client. Dates, usage limits,
+            minimum order, services, and first-booking rules still apply.
+          </Text>
+          {linkedClient && isGlobal && (
+            <Text className="text-xs leading-5 text-amber-700">
+              This coupon is linked to a client, so turning Global on will not
+              offer it to anyone else.
+            </Text>
+          )}
         </div>
       </TabPanelCard>
 
       <TabPanelCard
         title="Description"
-        description="Optional marketing copy for the coupon"
+        description="Optional line on the coupon card"
       >
-        <Input
+        <CountedInput
           label="Description (English)"
+          max={COUPON_DESCRIPTION_MAX}
+          value={descriptionEn}
           {...register('description.en')}
           error={errors.description?.en?.message}
         />
-        <Input
+        <CountedInput
           label="Description (Arabic)"
+          max={COUPON_DESCRIPTION_MAX}
+          value={descriptionAr}
           {...register('description.ar')}
           error={errors.description?.ar?.message}
         />
@@ -322,9 +398,16 @@ function GeneralTab({
           <Input
             label={watchType === 'percent' ? 'Value (%)' : 'Value (SAR)'}
             type="number"
-            step="0.01"
+            step="1"
+            min={1}
+            max={watchType === 'percent' ? COUPON_PERCENT_MAX : COUPON_FIXED_MAX}
             {...register('value')}
             error={errors.value?.message}
+            helperText={
+              watchType === 'percent'
+                ? `Whole number from 1 to ${COUPON_PERCENT_MAX}`
+                : `Whole number from 1 to ${COUPON_FIXED_MAX}`
+            }
           />
         )}
         {watchType === 'percent' && (
@@ -834,6 +917,10 @@ export default function CreateOrUpdateCoupon({
     );
 
     if (initValues?.id) {
+      const previousGlobal = initValues.global === true;
+      if (payload.global === previousGlobal) {
+        delete payload.global;
+      }
       updateCoupon({ coupon_id: initValues.id, ...payload });
     } else {
       createCoupon(payload);
@@ -900,6 +987,7 @@ export default function CreateOrUpdateCoupon({
             ? String(initValues.first_booking_category_id)
             : '',
           is_active: initValues?.is_active !== false,
+          global: initValues?.global === true,
           service_ids: initValues?.service_ids ?? [],
           free_service_ids: initValues?.free_service_ids ?? [],
           city_ids: initValues?.city_ids ?? [],
@@ -928,9 +1016,11 @@ export default function CreateOrUpdateCoupon({
           isCategoriesLoading,
           insuranceTypes,
           setInsuranceTypes,
+          linkedClient: Boolean(initValues?.client_id),
         };
 
         const isActive = watch('is_active');
+        const isGlobal = watch('global');
         const codePreview = watch('code');
 
         return (
@@ -954,6 +1044,7 @@ export default function CreateOrUpdateCoupon({
                     <Badge color={isActive ? 'success' : 'danger'}>
                       {isActive ? 'Active' : 'Inactive'}
                     </Badge>
+                    {isGlobal && <Badge color="info">Global</Badge>}
                   </div>
                 </div>
               </div>

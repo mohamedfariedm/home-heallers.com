@@ -162,6 +162,17 @@ export const getColumns = ({
       ),
     },
     {
+      title: <HeaderCell title="Global" />,
+      dataIndex: 'global',
+      key: 'global',
+      width: 90,
+      render: (value: boolean) => (
+        <Badge color={value === true ? 'info' : 'secondary'}>
+          {value === true ? 'Yes' : 'No'}
+        </Badge>
+      ),
+    },
+    {
       title: <HeaderCell title="Redemptions" />,
       dataIndex: 'redemptions_count',
       key: 'redemptions_count',

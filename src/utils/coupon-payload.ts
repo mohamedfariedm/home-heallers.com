@@ -52,6 +52,7 @@ export function buildCouponPayload(
         ? Number(data.first_booking_category_id)
         : null,
     is_active: data.is_active,
+    global: data.global === true,
     service_ids: data.service_ids,
     free_service_ids: data.free_service_ids,
     city_ids: data.city_ids,

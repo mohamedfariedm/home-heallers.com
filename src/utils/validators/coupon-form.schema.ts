@@ -1,4 +1,11 @@
 import { z, type Schema } from 'zod';
+import {
+  COUPON_CODE_MAX,
+  COUPON_DESCRIPTION_MAX,
+  COUPON_FIXED_MAX,
+  COUPON_NAME_MAX,
+  COUPON_PERCENT_MAX,
+} from '@/utils/coupon-constants';
 
 const optionalNumberString = z
   .string()
@@ -16,22 +23,52 @@ const insuranceTypeSchema = z.object({
 export const couponFormSchema = z
   .object({
     name: z.object({
-      en: z.string().min(1, 'English coupon name is required'),
-      ar: z.string().min(1, 'Arabic coupon name is required'),
+      en: z
+        .string()
+        .min(1, 'English coupon name is required')
+        .max(
+          COUPON_NAME_MAX,
+          `English name must be ${COUPON_NAME_MAX} characters or fewer, including spaces`
+        ),
+      ar: z
+        .string()
+        .min(1, 'Arabic coupon name is required')
+        .max(
+          COUPON_NAME_MAX,
+          `Arabic name must be ${COUPON_NAME_MAX} characters or fewer, including spaces`
+        ),
     }),
     description: z
       .object({
         en: z.preprocess(
           (val) => (val == null ? '' : String(val)),
-          z.string()
+          z
+            .string()
+            .max(
+              COUPON_DESCRIPTION_MAX,
+              `English description must be ${COUPON_DESCRIPTION_MAX} characters or fewer, including spaces`
+            )
         ),
         ar: z.preprocess(
           (val) => (val == null ? '' : String(val)),
-          z.string()
+          z
+            .string()
+            .max(
+              COUPON_DESCRIPTION_MAX,
+              `Arabic description must be ${COUPON_DESCRIPTION_MAX} characters or fewer, including spaces`
+            )
         ),
       })
       .default({ en: '', ar: '' }),
-    code: z.string().min(1, 'Coupon code is required'),
+    code: z
+      .string()
+      .trim()
+      .min(1, 'Coupon code is required')
+      .transform((value) => value.toUpperCase())
+      .refine(
+        (value) => new RegExp(`^[A-Z0-9]{1,${COUPON_CODE_MAX}}$`).test(value),
+        `Use 1–${COUPON_CODE_MAX} letters or digits (A–Z, 0–9). No spaces or dashes`
+      ),
     type: z.enum(['percent', 'fixed', 'free_service', 'free_delivery'], {
       message: 'Invalid coupon type',
     }),
@@ -47,6 +84,7 @@ export const couponFormSchema = z
     first_booking_scope: z.enum(['none', 'any_service', 'category']),
     first_booking_category_id: z.string().optional(),
     is_active: z.boolean(),
+    global: z.boolean().default(false),
     service_ids: z.array(z.number()).catch([]),
     free_service_ids: z.array(z.number()).catch([]),
     city_ids: z.array(z.number()).catch([]),
@@ -56,15 +94,18 @@ export const couponFormSchema = z
     patient_segments: z.array(z.string()).catch([]),
   })
   .superRefine((data, ctx) => {
-    if (
-      (data.type === 'percent' || data.type === 'fixed') &&
-      (!data.value || !/^\d+(\.\d{1,2})?$/.test(data.value))
-    ) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Value is required',
-        path: ['value'],
-      });
+    if (data.type === 'percent' || data.type === 'fixed') {
+      const max = data.type === 'percent' ? COUPON_PERCENT_MAX : COUPON_FIXED_MAX;
+      const label = data.type === 'percent' ? 'Percentage' : 'Fixed amount';
+      const wholeNumber = data.value != null && /^\d+$/.test(data.value);
+      const amount = wholeNumber ? Number(data.value) : NaN;
+      if (!wholeNumber || amount < 1 || amount > max) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `${label} must be a whole number from 1 to ${max}`,
+          path: ['value'],
+        });
+      }
     }
     if (data.starts_at && data.ends_at && data.ends_at < data.starts_at) {
       ctx.addIssue({
