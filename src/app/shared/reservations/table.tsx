@@ -11,9 +11,12 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { ActionIcon } from 'rizzui';
 import { PiCaretDownBold, PiCaretUpBold } from 'react-icons/pi';
 import { useDeleteReservation } from '@/framework/reservations';
+import { useServices } from '@/framework/services';
+import { useCategories } from '@/framework/categories';
 import { useModal } from '@/app/shared/modal-views/use-modal';
 import { Button } from '@/components/ui/button';
 import BulkPersonalCouponsForm from '@/app/shared/reservations/bulk-personal-coupons-panel';
+import { asRecordList, catalogNameMap } from '@/app/shared/reservations/reservation-relations';
 
 const FilterElement = dynamic(
   () => import('@/app/shared/reservations/filter-element'),
@@ -71,6 +74,16 @@ export default function ReservationsTable({
 }) {
   const { mutate: deleteReservation } = useDeleteReservation();
   const { openModal } = useModal();
+  const { data: servicesCatalog } = useServices('limit=1000');
+  const { data: categoriesCatalog } = useCategories('limit=1000');
+  const serviceNames = React.useMemo(
+    () => catalogNameMap(asRecordList(servicesCatalog?.data ?? servicesCatalog)),
+    [servicesCatalog]
+  );
+  const categoryNames = React.useMemo(
+    () => catalogNameMap(asRecordList(categoriesCatalog?.data ?? categoriesCatalog)),
+    [categoriesCatalog]
+  );
   const searchParams = useSearchParams();
   const router = useRouter();
   const [pageSize, setPageSize] = useState(Number(searchParams.get('limit')) || 10);
@@ -207,8 +220,10 @@ export default function ReservationsTable({
         canSendInvoiceWhatsapp,
         canPersonalCoupons,
         onPersonalCoupon: canPersonalCoupons ? openPersonalCoupons : undefined,
+        serviceNames,
+        categoryNames,
       }),
-    [selectedRowKeys, onHeaderCellClick, sortConfig.key, sortConfig.direction, onDeleteItem, handleRowSelect, handleSelectAll, canView, canEdit, canDelete, canInviteDoctors, canSendPaymentWhatsapp, canSendInvoiceWhatsapp, canPersonalCoupons, openPersonalCoupons]
+    [selectedRowKeys, onHeaderCellClick, sortConfig.key, sortConfig.direction, onDeleteItem, handleRowSelect, handleSelectAll, canView, canEdit, canDelete, canInviteDoctors, canSendPaymentWhatsapp, canSendInvoiceWhatsapp, canPersonalCoupons, openPersonalCoupons, serviceNames, categoryNames]
   );
 
   const { visibleColumns, checkedColumns, setCheckedColumns } = useColumn(columns);

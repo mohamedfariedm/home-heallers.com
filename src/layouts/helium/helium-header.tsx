@@ -12,10 +12,15 @@ import {
   PiGearFill,
 } from 'react-icons/pi';
 import Sidebar from './helium-sidebar';
+import SupportChatButton from '@/layouts/support-chat-button';
 
 function HeaderMenuRight() {
   return (
-    <div className="ms-auto grid shrink-0 grid-cols-3 items-center gap-2 text-gray-700 xs:gap-3 xl:gap-4">
+    <div className="ms-auto flex shrink-0 items-center gap-2 text-gray-700 xs:gap-3 xl:gap-4">
+      <SupportChatButton
+        className="overflow-hidden rounded-full shadow backdrop-blur-md before:absolute before:h-full before:w-full before:-rotate-45 before:rounded-full before:bg-gradient-to-l before:from-blue-dark/25 before:via-blue-dark/0 before:to-blue-dark/0 3xl:h-10 3xl:w-10"
+        iconClassName="h-[18px] w-auto 3xl:h-5"
+      />
       <NotificationBellButton
         className="overflow-hidden rounded-full shadow backdrop-blur-md before:absolute before:h-full before:w-full before:-rotate-45 before:rounded-full before:bg-gradient-to-l before:from-orange-dark/25 before:via-orange-dark/0 before:to-orange-dark/0 3xl:h-10 3xl:w-10"
         badgeClassName="right-1 top-2.5 -translate-x-1 -translate-y-1/4 translate-x-0"

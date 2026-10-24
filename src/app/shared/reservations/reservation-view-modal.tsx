@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   PiXBold,
   PiUser,
@@ -22,6 +22,8 @@ import { Tooltip, modalTooltipClassName } from '@/components/ui/tooltip';
 import cn from '@/utils/class-names';
 import ConfirmCashPaymentModal from './confirm-cash-payment-modal';
 import client from '@/framework/utils';
+import { useServices } from '@/framework/services';
+import { useCategories } from '@/framework/categories';
 import toast from 'react-hot-toast';
 import ChatSolidIcon from '@/components/icons/chat-solid';
 
@@ -29,6 +31,7 @@ import {
   getReservationPatientName,
   resolveLocalizedNameOrFallback,
 } from '@/utils/resolve-localized-name';
+import { reservationRelationLabel, asRecordList, catalogNameMap } from './reservation-relations';
 import {
   canConfirmCashPayment,
   getConfirmCashPaymentDisabledReason,
@@ -211,10 +214,17 @@ function DetailItem({
   );
 }
 
-function useReservationDetails(reservation: any) {
+function useReservationDetails(
+  reservation: any,
+  names?: {
+    services?: ReadonlyMap<string, string>;
+    categories?: ReadonlyMap<string, string>;
+  }
+) {
   const patientName = getReservationPatientName(reservation);
 
-  const serviceName = resolveLocalizedNameOrFallback(reservation?.service?.name);
+  const serviceName = reservationRelationLabel(reservation, 'service', names?.services) || '—';
+  const categoryName = reservationRelationLabel(reservation, 'category', names?.categories) || '—';
   const doctorName = resolveLocalizedNameOrFallback(reservation?.doctor?.name);
 
   const cityName =
@@ -247,6 +257,7 @@ function useReservationDetails(reservation: any) {
   return {
     patientName,
     serviceName,
+    categoryName,
     doctorName,
     cityName,
     stateName,
@@ -272,15 +283,25 @@ export function ReservationViewContent({
   const locale = i18n.language?.startsWith('ar') ? 'ar' : 'en';
   const currency = t('reservation_view_currency');
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const { data: servicesCatalog } = useServices('limit=1000');
+  const { data: categoriesCatalog } = useCategories('limit=1000');
+  const relationNames = useMemo(
+    () => ({
+      services: catalogNameMap(asRecordList(servicesCatalog?.data ?? servicesCatalog)),
+      categories: catalogNameMap(asRecordList(categoriesCatalog?.data ?? categoriesCatalog)),
+    }),
+    [servicesCatalog, categoriesCatalog]
+  );
   const {
     patientName,
     serviceName,
+    categoryName,
     doctorName,
     cityName,
     stateName,
     countryName,
     addressText,
-  } = useReservationDetails(reservation);
+  } = useReservationDetails(reservation, relationNames);
 
   const paidLabel = getPaymentStatusLabel(reservation);
   const paymentStatusBadge = getPaymentStatusBadgeLabel(reservation?.payment_status);
@@ -464,6 +485,7 @@ export function ReservationViewContent({
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <DetailItem label={t('reservation_view_doctor')} value={doctorName} />
             <DetailItem label={t('reservation_view_service')} value={serviceName} />
+            <DetailItem label={t('reservation_view_category')} value={categoryName} />
             <DetailItem
               label={t('reservation_view_seen')}
               value={

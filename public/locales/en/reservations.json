@@ -18,6 +18,7 @@
   "reservation_view_appointment": "Appointment",
   "reservation_view_doctor": "Doctor",
   "reservation_view_service": "Service",
+  "reservation_view_category": "Category",
   "reservation_view_seen": "Seen",
   "reservation_view_yes": "Yes",
   "reservation_view_no": "No",
