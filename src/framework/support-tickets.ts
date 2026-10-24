@@ -76,12 +76,15 @@ export function useSupportTicketsStats(options: { poll?: boolean } = {}) {
   });
 }
 
-export function useSupportTicketsUnreadCount(enabled = true) {
+export function useSupportTicketsUnreadCount(
+  enabled = true,
+  options: { refetchInterval?: number | false } = {}
+) {
   return useQuery<SupportTicketsUnreadCount, Error>({
     queryKey: supportTicketsKeys.unread(),
     queryFn: async () => unwrap<SupportTicketsUnreadCount>(await client.supportTickets.unreadCount()),
     enabled,
-    refetchInterval: 60_000,
+    refetchInterval: options.refetchInterval ?? 60_000,
   });
 }
 

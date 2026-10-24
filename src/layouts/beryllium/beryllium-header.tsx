@@ -16,10 +16,12 @@ import cn from '@/utils/class-names';
 import Sidebar from '@/layouts/beryllium/beryllium-sidebar-drawer';
 import { useIsMounted } from '@/hooks/use-is-mounted';
 import { useWindowScroll } from '@/hooks/use-window-scroll';
+import SupportChatButton from '@/layouts/support-chat-button';
 
 function HeaderMenuRight() {
   return (
     <div className="ms-auto flex shrink-0 items-center gap-2 text-gray-700 xs:gap-3 xl:gap-4">
+      <SupportChatButton className="3xl:h-10 3xl:w-10" iconClassName="h-6 w-auto" />
       <NotificationBellButton
         className="3xl:h-10 3xl:w-10"
         badgeClassName="right-1 top-2.5 -translate-x-1 -translate-y-1/4 translate-x-0"
