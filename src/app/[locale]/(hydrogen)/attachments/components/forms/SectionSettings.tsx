@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { FormField } from '../ui/FormField';
 import { FormSection } from '../ui/FormSection';
-import { Save, Settings } from 'lucide-react';
+import { Settings } from 'lucide-react';
 import { Section } from '@/types/form';
 
 interface SectionSettingsProps {
@@ -16,6 +17,7 @@ export const SectionSettings: React.FC<SectionSettingsProps> = ({
   onUpdate,
   isLoading = false
 }) => {
+  const { t } = useTranslation('attachments');
   const { register, handleSubmit, formState: { errors } } = useForm({
     defaultValues: {
       title_en: section?.title?.en === "Empty" ? "" : section?.title?.en,
@@ -40,31 +42,31 @@ export const SectionSettings: React.FC<SectionSettingsProps> = ({
   };
 
   return (
-    <FormSection title="Section Settings" className="mb-6">
+    <FormSection title={t('attachments_section_settings', 'Section Settings')} className="mb-6">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid md:grid-cols-2 gap-6">
           <FormField
             name="title_en"
-            label="Section Title (English)"
+            label={t('attachments_title_en', 'Section Title (English)')}
             type="text"
             register={register}
             errors={errors}
-            placeholder="Enter English title"
+            placeholder={t('attachments_title_en_ph', 'Enter English title')}
           />
           <FormField
             name="title_ar"
-            label="Section Title (Arabic)"
+            label={t('attachments_title_ar', 'Section Title (Arabic)')}
             type="text"
             register={register}
             errors={errors}
-            placeholder="Enter Arabic title"
+            placeholder={t('attachments_title_ar_ph', 'Enter Arabic title')}
           />
         </div>
 
         <div className="grid md:grid-cols-3 gap-6">
           <FormField
             name="priority"
-            label="Priority"
+            label={t('attachments_priority', 'Priority')}
             type="number"
             register={register}
             errors={errors}
@@ -72,7 +74,7 @@ export const SectionSettings: React.FC<SectionSettingsProps> = ({
           />
           <div className="space-y-2">
             <label className="block text-sm font-semibold text-gray-700">
-              Status
+              {t('attachments_status', 'Status')}
             </label>
             <div className="flex items-center space-x-3">
               <label className="flex items-center space-x-2 cursor-pointer">
@@ -81,7 +83,7 @@ export const SectionSettings: React.FC<SectionSettingsProps> = ({
                   type="checkbox"
                   className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
                 />
-                <span className="text-sm text-gray-700">Active</span>
+                <span className="text-sm text-gray-700">{t('attachments_active', 'Active')}</span>
               </label>
             </div>
           </div>
@@ -98,7 +100,7 @@ export const SectionSettings: React.FC<SectionSettingsProps> = ({
             ) : (
               <Settings className="h-4 w-4" />
             )}
-            Update Section
+            {t('attachments_update_section', 'Update Section')}
           </button>
         </div>
       </form>

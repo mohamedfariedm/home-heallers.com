@@ -72,6 +72,24 @@ export const useUpdateDoctors = () => {
   })
 }
 
+export const useDoctorsBulkPrice = () => {
+  const queryClient = useQueryClient();
+  const { closeModal } = useModal();
+  return useMutation({
+    mutationFn: client.doctors.bulkPrice,
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: [routes.doctors.index] })
+      queryClient.invalidateQueries({ queryKey: [routes.settings.index] })
+      const count = response.data.data.doctors_updated
+      toast.success(`${count} ${count === 1 ? 'doctor' : 'doctors'} updated`)
+      closeModal()
+    },
+    onError: (error) => {
+      toast.error(`Error ${error?.message}`)
+    }
+  })
+}
+
 export const useDeleteDoctors = () => {
   const queryClient = useQueryClient();
   return useMutation({

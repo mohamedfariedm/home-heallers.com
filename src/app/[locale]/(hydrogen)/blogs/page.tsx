@@ -3,20 +3,13 @@ import TableLayout from '@/app/[locale]/(hydrogen)/tables/table-layout';
 import Spinner from '@/components/ui/spinner';
 import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useBlogs } from '@/framework/blog';
 import BlogsForm from '@/app/shared/blogs/address-form';
 import BlogTable from '@/app/shared/blogs/table';
-import InvoiceView from '@/components/ui/invoiceView';
-
-const pageHeader = {
-  title: 'Blogs',
-  breadcrumb: [
-    { href: '/', name: 'Home' },
-    { name: 'Blogs' },
-  ],
-};
 
 export default function AddressesTablePage() {
+  const { t } = useTranslation('blogs');
   const searchParams = useSearchParams();
   const params = new URLSearchParams(searchParams);
   if (!params.get('page')) params.set('page', '1');
@@ -25,7 +18,14 @@ export default function AddressesTablePage() {
   const { data, isLoading } = useBlogs(params.toString());
   const [selectedColumns, setSelectedColumns] = useState<any[]>([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState<any[]>([]);
-console.log(data);
+
+  const pageHeader = {
+    title: t('blogs_page_title'),
+    breadcrumb: [
+      { href: '/', name: t('blogs_home') },
+      { name: t('blogs_page_title') },
+    ],
+  };
 
   return (
     <>
@@ -38,7 +38,7 @@ console.log(data);
       }}
       fileName="Blogs/index"
       header="Street,Created At"
-      createName="Create Blog"
+      createName={t('blogs_create')}
       createElementButton={<BlogsForm />}
       customSize="800px"
     >

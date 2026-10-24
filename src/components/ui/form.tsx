@@ -2,6 +2,7 @@ import type { Schema } from 'zod';
 import { useEffect } from 'react';
 import {
   useForm,
+  SubmitErrorHandler,
   SubmitHandler,
   UseFormReturn,
   UseFormProps,
@@ -15,6 +16,7 @@ type ServerErrors<T> = {
 
 type FormProps<TFormValues extends FieldValues> = {
   onSubmit: SubmitHandler<TFormValues>;
+  onInvalid?: SubmitErrorHandler<TFormValues>;
   children: (methods: UseFormReturn<TFormValues>) => React.ReactNode;
   useFormProps?: UseFormProps<TFormValues>;
   validationSchema?: Schema<TFormValues>;
@@ -29,6 +31,7 @@ export const Form = <
   TFormValues extends Record<string, any> = Record<string, any>,
 >({
   onSubmit,
+  onInvalid,
   children,
   useFormProps,
   validationSchema,
@@ -52,7 +55,7 @@ export const Form = <
   return (
     <form
       noValidate
-      onSubmit={methods.handleSubmit(onSubmit)}
+      onSubmit={methods.handleSubmit(onSubmit, onInvalid)}
       {...formProps}
       className={className}
     >

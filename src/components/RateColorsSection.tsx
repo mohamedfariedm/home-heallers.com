@@ -10,7 +10,7 @@ interface RateColorsSectionProps {
 }
 
 const RateColorsSection: React.FC<RateColorsSectionProps> = ({ rateColors, onUpdate }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('settings');
   return (
     <div className="space-y-6">
       <div>

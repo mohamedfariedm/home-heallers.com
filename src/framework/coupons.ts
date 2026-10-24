@@ -3,6 +3,7 @@ import client from '@/framework/utils'
 import toast from 'react-hot-toast';
 import { useModal } from '@/app/shared/modal-views/use-modal';
 import { routes } from '@/config/routes';
+import type { BulkPersonalCouponRequest } from '@/types/bulk-personal-coupon';
 
 export function useCoupons(param:string) {
 
@@ -55,6 +56,12 @@ export const useCreateCoupons = () => {
     return { mutate, isPending}
   }
 
+
+  export function useCreateBulkPersonalCoupons() {
+    return useMutation({
+      mutationFn: (input: BulkPersonalCouponRequest) => client.coupons.bulkPersonal(input),
+    });
+  }
 
   export const useDeleteCoupons = () => {
 

@@ -71,7 +71,7 @@ const RateMetricRangesEditor: React.FC<RateMetricRangesEditorProps> = ({
   onChange,
   showMetricHeader = false,
 }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('settings');
   const metricLabel = t('settings_rate_metric_' + metric, {
     defaultValue: RATE_METRIC_OPTIONS.find((item) => item.key === metric)?.label ?? metric,
   });

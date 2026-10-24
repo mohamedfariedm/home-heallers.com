@@ -23,6 +23,8 @@ type Columns = {
   onDeleteItem: (id: string[]) => void;
   onHeaderCellClick: (value: string) => void;
   onChecked?: (id: string) => void;
+  t: (key: string, options?: any) => string;
+  lang: 'en' | 'ar';
 };
 
 export const getColumns = ({
@@ -33,12 +35,14 @@ export const getColumns = ({
   onHeaderCellClick,
   handleSelectAll,
   onChecked,
+  t,
+  lang,
 }: Columns) => [
   {
     title: (
       <div className="ps-2">
         <Checkbox
-          title={'Select All'}
+          title={t('blogs_select_all')}
           onChange={handleSelectAll}
           checked={checkedItems.length === data.length}
           className="cursor-pointer"
@@ -68,7 +72,7 @@ export const getColumns = ({
       <div className="flex items-center gap-3">
         <Tooltip
           size="sm"
-          content={() => 'Edit Invoice'}
+          content={() => t('blogs_edit')}
           placement="top"
           color="invert"
         >
@@ -90,14 +94,14 @@ export const getColumns = ({
           />
         </Tooltip>
         <DeletePopover
-          title={`Delete Report`}
-          description={`Are you sure you want to delete this #${row.id} `}
+          title={t('blogs_delete_title')}
+          description={t('blogs_delete_confirm', { id: row.id })}
           onDelete={() => onDeleteItem([row.id])}
         >
           <ActionIcon
             size="sm"
             variant="outline"
-            aria-label={'Delete Item'}
+            aria-label={t('blogs_delete_item')}
             className="cursor-pointer hover:!border-gray-900 hover:text-gray-700"
           >
             <TrashIcon className="h-4 w-4" />
@@ -107,21 +111,21 @@ export const getColumns = ({
     ),
   },
   {
-    title: <HeaderCell align="center" title="Name" />,
+    title: <HeaderCell align="center" title={t('blogs_col_name')} />,
     dataIndex: 'name',
     key: 'name',
     width: 100,
     hidden: 'name',
 
     render: (_: string, row: any) => {
-      const slug = getBlogSlug(row, 'en');
+      const slug = getBlogSlug(row, lang);
       return (
         <div className="flex w-full justify-center  text-center">
           {
             <AvatarCard
               //@ts-ignore
               src={row?.image?.original || ''}
-              name={resolveLocalizedName(row?.name, 'en') || resolveLocalizedName(row?.name, 'ar')}
+              name={resolveLocalizedName(row?.name, lang) || resolveLocalizedName(row?.name, lang === 'ar' ? 'en' : 'ar')}
               description={slug || '—'}
             />
           }
@@ -130,7 +134,7 @@ export const getColumns = ({
     },
   },
   {
-    title: <HeaderCell align="center" title="Slug" />,
+    title: <HeaderCell align="center" title={t('blogs_col_slug')} />,
     dataIndex: 'slug',
     key: 'slug',
     width: 160,
@@ -142,7 +146,7 @@ export const getColumns = ({
     ),
   },
   {
-    title: <HeaderCell align="center" title={'description'} />,
+    title: <HeaderCell align="center" title={t('blogs_col_description')} />,
     dataIndex: 'description',
     key: 'description',
     width: 30,
@@ -150,8 +154,8 @@ export const getColumns = ({
 
     render: (_: string, row: any) => {
       const description =
-        resolveLocalizedName(row?.description, 'en') ||
-        resolveLocalizedName(row?.description, 'ar') ||
+        resolveLocalizedName(row?.description, lang) ||
+        resolveLocalizedName(row?.description, lang === 'ar' ? 'en' : 'ar') ||
         '';
       const plain = stripHtml(description).replace(/\s+/g, ' ').trim();
       return (
@@ -162,7 +166,7 @@ export const getColumns = ({
     },
   },
   {
-    title: <HeaderCell align="center" title={'date'} />,
+    title: <HeaderCell align="center" title={t('blogs_col_date')} />,
     dataIndex: 'date',
     key: 'date',
     width: 30,
@@ -178,14 +182,14 @@ export const getColumns = ({
     },
   },
   {
-    title: <HeaderCell align="center" title={'show in home page'} />,
+    title: <HeaderCell align="center" title={t('blogs_col_home')} />,
     dataIndex: 'show_in_home_page',
     key: 'show_in_home_page',
     width: 30,
     hidden: 'show_in_home_page',
 
     render: (_: string, row: any) => (
-      <div className="w-full  text-center">{row.show_in_home_page==1?"show":"Hidden"}</div>
+      <div className="w-full  text-center">{row.show_in_home_page==1?t('blogs_show'):t('blogs_hidden')}</div>
     ),
   },
 
@@ -195,7 +199,7 @@ export const getColumns = ({
     title: (
       <HeaderCell
         align="center"
-        title={'Updated'}
+        title={t('blogs_col_updated')}
         sortable
         ascending={
           sortConfig?.direction === 'asc' && sortConfig?.key === 'updated_at'
@@ -215,7 +219,7 @@ export const getColumns = ({
     title: (
       <HeaderCell
         align="center"
-        title={'Created'}
+        title={t('blogs_col_created')}
         sortable
         ascending={
           sortConfig?.direction === 'asc' && sortConfig?.key === 'created_at'

@@ -31,6 +31,7 @@ import {
   seoFormDefaults,
 } from '@/utils/seo-fields';
 import type { SeoLocale } from '@/types/seo-locale';
+import { useTranslation } from 'react-i18next';
 
 export default function BlogsForm({ initValues }: { initValues?: any }) {
   const id = initValues?.id;
@@ -49,6 +50,8 @@ export default function BlogsForm({ initValues }: { initValues?: any }) {
 }
 
 function BlogFormFields({ initValues }: { initValues?: any }) {
+  const { t, i18n } = useTranslation('blogs');
+  const uiLang = i18n.language === 'ar' ? 'ar' : 'en';
   const { closeModal } = useModal();
   const methodsRef = useRef<UseFormReturn<BlogFormInput> | null>(null);
   const { mutateAsync: update } = useUpdateBlog();
@@ -83,9 +86,13 @@ function BlogFormFields({ initValues }: { initValues?: any }) {
         if (type === 'Image') {
           setImage(response.data.data);
         }
-        toast.success(`${type} Uploaded successfully`);
+        toast.success(
+          t('blogs_uploaded', {
+            type: t(type === 'Image' ? 'blogs_type_image' : 'blogs_type_file'),
+          })
+        );
       })
-      .catch(() => toast.error('Please Try Again'))
+      .catch(() => toast.error(t('blogs_upload_retry')))
       .finally(() => setLoading(false));
   };
 
@@ -150,28 +157,28 @@ function BlogFormFields({ initValues }: { initValues?: any }) {
           <>
             <div className="flex items-center justify-between">
               <Title as="h4" className="font-semibold">
-                {initValues ? 'Update Blog' : 'Add a New Blog'}
+                {initValues ? t('blogs_update') : t('blogs_add')}
               </Title>
               <ActionIcon size="sm" variant="text" onClick={closeModal}>
                 <PiXBold className="w-5 h-auto" />
               </ActionIcon>
             </div>
 
-            <Input label="Name (EN)" {...register('nameEN')} error={errors.nameEN?.message} />
-            <Input label="Name (AR)" {...register('nameAR')} error={errors.nameAR?.message} />
+            <Input label={t('blogs_name_en')} {...register('nameEN')} error={errors.nameEN?.message} />
+            <Input label={t('blogs_name_ar')} {...register('nameAR')} error={errors.nameAR?.message} />
             <QuillEditor
               name="descriptionEN"
-              label="Description (EN)"
+              label={t('blogs_desc_en')}
               error={errors.descriptionEN?.message}
               control={control}
             />
             <QuillEditor
               name="descriptionAR"
-              label="Description (AR)"
+              label={t('blogs_desc_ar')}
               error={errors.descriptionAR?.message}
               control={control}
             />
-            <Input label="Date" type="date" {...register('date')} error={errors.date?.message} />
+            <Input label={t('blogs_date')} type="date" {...register('date')} error={errors.date?.message} />
 
             <EntitySeoSection
               locale={locale}
@@ -184,7 +191,7 @@ function BlogFormFields({ initValues }: { initValues?: any }) {
               names={{ en: watch('nameEN'), ar: watch('nameAR') }}
             />
 
-            <FormGroup title="Tags" className="pt-7 @2xl:pt-9 @3xl:grid-cols-12 @3xl:pt-11">
+            <FormGroup title={t('blogs_tags')} className="pt-7 @2xl:pt-9 @3xl:grid-cols-12 @3xl:pt-11">
               <Controller
                 name="tags"
                 control={control}
@@ -197,7 +204,7 @@ function BlogFormFields({ initValues }: { initValues?: any }) {
                       label: tag,
                     }))}
                     onChange={(selected) => field.onChange(selected ? selected.map((s: any) => s.value) : [])}
-                    placeholder="Select or create tags"
+                    placeholder={t('blogs_tags_placeholder')}
                     styles={{
                       control: (base) => ({
                         ...base,
@@ -212,7 +219,7 @@ function BlogFormFields({ initValues }: { initValues?: any }) {
               )}
             </FormGroup>
 
-            <FormGroup title="Related Blogs" className="pt-7 @2xl:pt-9 @3xl:grid-cols-12 @3xl:pt-11">
+            <FormGroup title={t('blogs_related')} className="pt-7 @2xl:pt-9 @3xl:grid-cols-12 @3xl:pt-11">
               <Controller
                 name="relatedBlogs"
                 control={control}
@@ -221,14 +228,14 @@ function BlogFormFields({ initValues }: { initValues?: any }) {
                     isMulti
                     options={data?.data?.map((blog: any) => ({
                       value: blog.id,
-                      label: resolveLocalizedName(blog.name, 'en') || `Blog #${blog.id}`,
+                      label: resolveLocalizedName(blog.name, uiLang) || t('blogs_blog_fallback', { id: blog.id }),
                     }))}
                     value={field.value?.map((id: string) => ({
                       value: id,
-                      label: resolveLocalizedName(data?.data?.find((b: any) => b.id === id)?.name, 'en') || '',
+                      label: resolveLocalizedName(data?.data?.find((b: any) => b.id === id)?.name, uiLang) || '',
                     }))}
                     onChange={(selected) => field.onChange(selected ? selected.map((s: any) => s.value) : [])}
-                    placeholder="Select related blogs"
+                    placeholder={t('blogs_related_placeholder')}
                     isLoading={isBlogsLoading}
                     styles={{
                       control: (base) => ({
@@ -249,11 +256,11 @@ function BlogFormFields({ initValues }: { initValues?: any }) {
                 checked={watch('show_in_home_page')}
                 onChange={(e) => setValue('show_in_home_page', e.target.checked)}
               />
-              <label className="text-sm text-gray-900">Show in Home Page</label>
+              <label className="text-sm text-gray-900">{t('blogs_show_in_home')}</label>
             </div>
 
             <FormGroup
-              title="Image"
+              title={t('blogs_image')}
               className="relative pt-7 @2xl:pt-9 @3xl:grid-cols-12 @3xl:pt-11"
             >
               {isLoading && (
@@ -263,7 +270,7 @@ function BlogFormFields({ initValues }: { initValues?: any }) {
               )}
               <div className="flex flex-col gap-2">
                 <Upload
-                  title="Image"
+                  title={t('blogs_image')}
                   accept="img"
                   onChange={(e) => {
                     setImageError(0);
@@ -271,20 +278,20 @@ function BlogFormFields({ initValues }: { initValues?: any }) {
                   }}
                 />
                 {imageError > 0 && (
-                  <p className="text-xs text-red-500">Image is required.</p>
+                  <p className="text-xs text-red-500">{t('blogs_image_required')}</p>
                 )}
                 {(isImageData?.[0]?.thumbnail || isImageData?.[0]?.original) && (
                   <div className="relative flex justify-center items-center w-full mt-2">
                     <img
                       src={isImageData[0].thumbnail || isImageData[0].original}
-                      alt="Uploaded Preview"
+                      alt={t('blogs_preview_alt')}
                       className="w-48 h-auto rounded border border-gray-200 shadow-sm"
                     />
                     <button
                       type="button"
                       onClick={() => setImage(null)}
                       className="absolute -top-2 -right-2 bg-white border border-gray-300 rounded-full p-1 shadow hover:bg-red-50"
-                      title="Remove Image"
+                      title={t('blogs_remove_image')}
                     >
                       <PiXBold className="w-4 h-4 text-red-500" />
                     </button>
@@ -295,10 +302,10 @@ function BlogFormFields({ initValues }: { initValues?: any }) {
 
             <div className="flex justify-end gap-4">
               <Button variant="outline" onClick={closeModal} className="w-full @xl:w-auto">
-                Cancel
+                {t('blogs_cancel')}
               </Button>
               <Button type="submit" isLoading={isPending} className="w-full @xl:w-auto">
-                {initValues ? 'Update Blog' : 'Create Blog'}
+                {initValues ? t('blogs_update') : t('blogs_create')}
               </Button>
             </div>
           </>

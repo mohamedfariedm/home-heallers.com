@@ -1,19 +1,15 @@
 'use client';
 import TableLayout from '@/app/[locale]/(hydrogen)/tables/table-layout';
-import * as tr from '@/app/[locale]/dictionaries/index';
 import FaqForm from '@/app/shared/faqs/faq-form';
 import FaqsTable from '@/app/shared/faqs/table';
 import Spinner from '@/components/ui/spinner';
 import { useFaqs } from '@/framework/faqs';
 import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
-export default function FaqsTablePage({
-  params: { locale },
-}: {
-  params: { locale: any };
-}) {
-
+export default function FaqsTablePage() {
+  const { t } = useTranslation('faqs');
   const searchParams = useSearchParams();
   const params = new URLSearchParams(searchParams);
   if (!params.get('page')) params.set('page', '1');
@@ -24,16 +20,15 @@ export default function FaqsTablePage({
   const [selectedColumns, setSelectedColumns] = useState<any[]>([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState<any[]>([]);
 
-
   const pageHeader = {
-    title: `Faqs`,
+    title: t('faqs_page_title'),
     breadcrumb: [
       {
         href: '/',
-        name: ` Home`,
+        name: t('faqs_home'),
       },
       {
-        name: `Faqs`,
+        name: t('faqs_page_title'),
       },
     ],
   };
@@ -55,7 +50,7 @@ export default function FaqsTablePage({
             }}
             fileName="Teams"
             header="User,Created At"
-            createName={'Create Faq'}
+            createName={t('faqs_create')}
             createElementButton={<FaqForm />}
           >
             {isLoading ? (

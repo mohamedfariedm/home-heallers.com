@@ -41,7 +41,7 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
   initialSettings,
   onSave,
 }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('settings');
   const [settings, setSettings] = useState<Settings>(() => {
     const seo = { ...(initialSettings?.seo || {}) };
     const emptySEO = {

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   BarChart,
   Bar,
@@ -15,6 +16,7 @@ import { Title } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
 import TopTenModal from './top-ten-modal';
 import cn from '@/utils/class-names';
+import { formatSourceCampaign } from '@/app/shared/source-campaign-options';
 import {
   formatRatePercent,
   getPerformanceColors,
@@ -22,7 +24,7 @@ import {
 } from './metric-thresholds';
 
 export interface ConversionRateItem {
-  source_campaign: string;
+  source_campaign: string | null;
   customer_support_count: number;
   reservations_count: number;
   conversion_rate: number;
@@ -37,6 +39,7 @@ export default function ConversionRateChart({
   data,
   className,
 }: ConversionRateChartProps) {
+  const { t } = useTranslation('statistics');
   const [isTopTenOpen, setIsTopTenOpen] = useState(false);
 
   const chartData = data
@@ -44,10 +47,7 @@ export default function ConversionRateChart({
       const status = getRatePerformance(item.conversion_rate, 'conversion_rate');
       const colors = getPerformanceColors(status);
       return {
-        name:
-          item.source_campaign === 'unknown'
-            ? 'Unknown'
-            : item.source_campaign,
+        name: formatSourceCampaign(item.source_campaign),
         ratePercent: item.conversion_rate * 100,
         support: item.customer_support_count,
         reservations: item.reservations_count,
@@ -86,10 +86,13 @@ export default function ConversionRateChart({
               as="h6"
               className="mb-1 font-semibold text-gray-900 dark:text-white"
             >
-              Conversion Rate by Campaign
+              {t('stats_conversion_by_campaign', 'Conversion Rate by Campaign')}
             </Title>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Reservations per customer support ticket, by source
+              {t(
+                'stats_conversion_by_campaign_desc',
+                'Reservations per customer support ticket, by source'
+              )}
             </p>
           </div>
           <Button
@@ -98,19 +101,19 @@ export default function ConversionRateChart({
             onClick={() => setIsTopTenOpen(true)}
             className="text-xs"
           >
-            Top 10
+            {t('shared_top_10', 'Top 10')}
           </Button>
         </div>
 
         <div className="mb-4 flex flex-wrap gap-2 text-xs">
           <span className="rounded-full bg-green-100 px-2 py-0.5 text-green-800 dark:bg-green-900/30 dark:text-green-300">
-            Excellent: 18%+
+            {t('stats_excellent_18', 'Excellent: 18%+')}
           </span>
           <span className="rounded-full bg-amber-100 px-2 py-0.5 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
-            Average: 10–17%
+            {t('stats_average_10', 'Average: 10–17%')}
           </span>
           <span className="rounded-full bg-red-100 px-2 py-0.5 text-red-800 dark:bg-red-900/30 dark:text-red-300">
-            Risk: &lt;10%
+            {t('stats_risk_10', 'Risk: <10%')}
           </span>
         </div>
 
@@ -153,16 +156,18 @@ export default function ConversionRateChart({
                 }}
                 formatter={(value: number, name: string) => {
                   if (name === 'ratePercent') {
-                    return [`${value.toFixed(1)}%`, 'Conversion Rate'];
+                    return [`${value.toFixed(1)}%`, t('stats_conversion_rate', 'Conversion Rate')];
                   }
                   return [value.toLocaleString(), name];
                 }}
-                labelFormatter={(label) => `Campaign: ${label}`}
+                labelFormatter={(label) =>
+                  t('stats_campaign_label', { label, defaultValue: 'Campaign: {{label}}' })
+                }
               />
               <Bar
                 dataKey="ratePercent"
                 radius={[0, 4, 4, 0]}
-                name="Conversion Rate"
+                name={t('stats_conversion_rate', 'Conversion Rate')}
               >
                 {chartData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.fill} />
@@ -201,7 +206,7 @@ export default function ConversionRateChart({
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div>
                       <span className="text-gray-500 dark:text-gray-400">
-                        Support:{' '}
+                        {t('stats_support_label', 'Support')}:{' '}
                       </span>
                       <span className="font-semibold text-gray-900 dark:text-white">
                         {item.support.toLocaleString()}
@@ -209,7 +214,7 @@ export default function ConversionRateChart({
                     </div>
                     <div>
                       <span className="text-gray-500 dark:text-gray-400">
-                        Reservations:{' '}
+                        {t('stats_reservations_label', 'Reservations')}:{' '}
                       </span>
                       <span className="font-semibold text-emerald-600 dark:text-emerald-400">
                         {item.reservations.toLocaleString()}
@@ -226,17 +231,17 @@ export default function ConversionRateChart({
       <TopTenModal
         isOpen={isTopTenOpen}
         onClose={() => setIsTopTenOpen(false)}
-        title="Top Campaigns by Conversion Rate"
+        title={t('stats_top_campaigns_conversion', 'Top Campaigns by Conversion Rate')}
         items={topTenItems.map((item) => ({
           ...item,
           percentage: maxRate > 0 ? (item.value / maxRate) * 100 : 0,
         }))}
-        valueLabel="Conversion Rate"
+        valueLabel={t('stats_conversion_rate', 'Conversion Rate')}
         showPercentage={false}
         additionalColumns={[
           {
             key: 'support',
-            label: 'Support Tickets',
+            label: t('stats_support_tickets', 'Support Tickets'),
             render: (item) => (
               <span className="text-sm text-gray-600 dark:text-gray-400">
                 {item.additionalInfo?.support?.toLocaleString() || 0}
@@ -245,7 +250,7 @@ export default function ConversionRateChart({
           },
           {
             key: 'reservations',
-            label: 'Reservations',
+            label: t('stats_reservations_label', 'Reservations'),
             render: (item) => (
               <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
                 {item.additionalInfo?.reservations?.toLocaleString() || 0}

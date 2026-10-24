@@ -17,7 +17,7 @@ import ColumnFilterPopover from '@/app/shared/customer-suport/column-filter-popo
 import client from '@/framework/utils';
 import toast from 'react-hot-toast';
 import InviteDoctorsButton from './invite-doctors-button';
-import { PiDeviceMobile, PiGlobe, PiReceipt } from 'react-icons/pi';
+import { PiDeviceMobile, PiGlobe, PiReceipt, PiTicket } from 'react-icons/pi';
 import {
   getReservationPatientName,
   resolveLocalizedName,
@@ -86,6 +86,8 @@ interface Columns {
   canInviteDoctors?: boolean;
   canSendPaymentWhatsapp?: boolean;
   canSendInvoiceWhatsapp?: boolean;
+  canPersonalCoupons?: boolean;
+  onPersonalCoupon?: (row: any) => void;
 }
 
 export const getColumns = ({
@@ -103,6 +105,8 @@ export const getColumns = ({
   canInviteDoctors = false,
   canSendPaymentWhatsapp = false,
   canSendInvoiceWhatsapp = false,
+  canPersonalCoupons = false,
+  onPersonalCoupon,
 }: Columns) => [
   {
     title: (
@@ -126,7 +130,7 @@ export const getColumns = ({
       />
     ),
   },
-  ...(canView || canEdit || canDelete || canInviteDoctors || canSendPaymentWhatsapp || canSendInvoiceWhatsapp
+  ...(canView || canEdit || canDelete || canInviteDoctors || canSendPaymentWhatsapp || canSendInvoiceWhatsapp || canPersonalCoupons
     ? [{
     title: <></>,
     dataIndex: 'actions',
@@ -269,6 +273,28 @@ export const getColumns = ({
                 {...(invoiceWhatsappEnabled && { onClick: handleSendInvoiceWhatsapp })}
               >
                 <PiReceipt className="h-4 w-4" />
+              </ActionIcon>
+            </Tooltip>
+          )}
+
+          {canPersonalCoupons && onPersonalCoupon && (
+            <Tooltip
+              size="sm"
+              content={() =>
+                checkedItems.length > 1
+                  ? `Personal coupons for ${checkedItems.length} selected`
+                  : 'Personal coupon'
+              }
+              placement="top"
+              color="invert"
+            >
+              <ActionIcon
+                size="sm"
+                variant="outline"
+                className="cursor-pointer text-primary hover:text-primary"
+                onClick={() => onPersonalCoupon(row)}
+              >
+                <PiTicket className="h-4 w-4" />
               </ActionIcon>
             </Tooltip>
           )}

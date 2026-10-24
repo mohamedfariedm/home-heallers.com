@@ -9,7 +9,7 @@ interface BusinessInfoSectionProps {
 }
 
 const BusinessInfoSection: React.FC<BusinessInfoSectionProps> = ({ businessInfo, onUpdate }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('settings');
   const handleChange = (field: keyof BusinessInfo, value: string) => {
     onUpdate({
       ...businessInfo,

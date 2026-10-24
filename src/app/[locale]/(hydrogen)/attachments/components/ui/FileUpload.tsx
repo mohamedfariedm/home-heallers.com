@@ -3,6 +3,7 @@ import { Upload, X, Image as ImageIcon, Video, FileText } from 'lucide-react';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 interface FileUploadProps {
   label: string;
@@ -36,12 +37,12 @@ function isImageFile(accept?: string, src?: string | null): boolean {
 }
 
 /** Human-readable hint for the drop zone */
-function acceptHint(accept: string): string {
-  if (accept === '*/*') return 'All file types';
-  if (accept === 'image/*') return 'PNG, JPG, GIF, WEBP';
-  if (accept === 'video/*') return 'MP4, WEBM, MOV, AVI';
-  if (accept.includes('video') && accept.includes('image')) return 'Images & Videos';
-  if (accept.includes('pdf')) return 'PDF, Images, Videos';
+function acceptHint(accept: string, t: (key: string, fallback?: string) => string): string {
+  if (accept === '*/*') return t('attachments_accept_all', 'All file types');
+  if (accept === 'image/*') return t('attachments_accept_images', 'PNG, JPG, GIF, WEBP');
+  if (accept === 'video/*') return t('attachments_accept_videos', 'MP4, WEBM, MOV, AVI');
+  if (accept.includes('video') && accept.includes('image')) return t('attachments_accept_media', 'Images & Videos');
+  if (accept.includes('pdf')) return t('attachments_accept_docs', 'PDF, Images, Videos');
   return accept;
 }
 
@@ -55,6 +56,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   isLoading: externalLoading = false,
   uploadUrl = process.env.NEXT_PUBLIC_ATTACHMENT_URL || '/api/upload',
 }) => {
+  const { t } = useTranslation('attachments');
   const [dragActive, setDragActive] = useState(false);
   const [internalLoading, setInternalLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -106,10 +108,10 @@ export const FileUpload: React.FC<FileUploadProps> = ({
 
       const uploadedFiles = data.data || data;
       onUpload?.(multiple ? uploadedFiles : uploadedFiles.slice(0, 1));
-      toast.success('File uploaded successfully');
+      toast.success(t('attachments_upload_success', 'File uploaded successfully'));
     } catch (error) {
       console.error('Upload error:', error);
-      toast.error('Upload failed. Please try again.');
+      toast.error(t('attachments_upload_failed', 'Upload failed. Please try again.'));
     } finally {
       setInternalLoading(false);
       setUploadProgress(0);
@@ -151,7 +153,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
           ) : src && showImage ? (
             <img
               src={src}
-              alt={`Upload ${index + 1}`}
+              alt={t('attachments_upload_alt', { n: index + 1, defaultValue: 'Upload {{n}}' })}
               className="w-full h-full object-cover"
             />
           ) : src ? (
@@ -205,11 +207,13 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         {isLoading ? (
           <div className="flex flex-col items-center justify-center gap-3">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
-            <span className="text-sm text-gray-600">Uploading…</span>
+            <span className="text-sm text-gray-600">
+              {t('attachments_upload_uploading', 'Uploading…')}
+            </span>
             {uploadProgress > 0 && (
               <div className="w-full max-w-xs">
                 <div className="flex justify-between text-xs text-gray-500 mb-1">
-                  <span>Progress</span>
+                  <span>{t('attachments_upload_progress', 'Progress')}</span>
                   <span>{uploadProgress}%</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
@@ -234,10 +238,13 @@ export const FileUpload: React.FC<FileUploadProps> = ({
               {dropZoneIcon}
               <div className="text-center">
                 <p className="text-sm font-medium text-gray-700">
-                  Click to upload or drag and drop
+                  {t('attachments_upload_click', 'Click to upload or drag and drop')}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
-                  {acceptHint(accept)} · {multiple ? 'Multiple files' : 'Single file'}
+                  {acceptHint(accept, t)} ·{' '}
+                  {multiple
+                    ? t('attachments_multiple_files', 'Multiple files')
+                    : t('attachments_single_file', 'Single file')}
                 </p>
               </div>
             </div>

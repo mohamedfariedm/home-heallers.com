@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslation } from 'react-i18next';
 import {
   BarChart,
   Bar,
@@ -21,6 +22,7 @@ interface InvoiceBreakdownProps {
 const COLORS = ['#10b981', '#f59e0b', '#ef4444', '#3b82f6'];
 
 export default function InvoiceBreakdown({ byStatus, className }: InvoiceBreakdownProps) {
+  const { t } = useTranslation('statistics');
   // Calculate total for percentage
   const total = byStatus.reduce((acc, curr) => acc + curr.count, 0);
 
@@ -39,10 +41,10 @@ export default function InvoiceBreakdown({ byStatus, className }: InvoiceBreakdo
       )}
     >
       <Title as="h6" className="mb-1 font-semibold text-gray-900 dark:text-white">
-        Invoice Status
+        {t('stats_invoice_status', 'Invoice Status')}
       </Title>
       <p className="mb-6 text-sm text-gray-500 dark:text-gray-400">
-        Breakdown of invoice statuses
+        {t('stats_invoice_status_desc', 'Breakdown of invoice statuses')}
       </p>
 
       <div className="h-[280px] w-full">
@@ -72,7 +74,10 @@ export default function InvoiceBreakdown({ byStatus, className }: InvoiceBreakdo
                 boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
                 padding: '12px',
               }}
-              formatter={(value: number) => [`${value} Invoices`, 'Count']}
+              formatter={(value: number) => [
+                t('stats_invoices_n', { count: value, defaultValue: '{{count}} Invoices' }),
+                t('shared_count', 'Count'),
+              ]}
             />
             <Bar dataKey="value" radius={[0, 4, 4, 0]} background={{ fill: '#f3f4f6', radius: [0, 4, 4, 0] }}>
               {data.map((entry, index) => (

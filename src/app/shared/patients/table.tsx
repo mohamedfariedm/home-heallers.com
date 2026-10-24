@@ -12,6 +12,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { ActionIcon } from 'rizzui';
 import { PiCaretDownBold, PiCaretUpBold } from 'react-icons/pi';
 import { useDeletePatients } from '@/framework/patients';
+import { useModal } from '@/app/shared/modal-views/use-modal';
+import { Button } from '@/components/ui/button';
+import BulkPersonalCouponsForm from '@/app/shared/reservations/bulk-personal-coupons-panel';
 
 const FilterElement = dynamic(
   () => import('@/app/shared/patients/filter-element'),
@@ -47,13 +50,16 @@ export default function PationtsTable({
   getSelectedColumns,
   getSelectedRowKeys,
   totalItems,
+  canPersonalCoupons = false,
 }: {
   data: any[];
   getSelectedColumns: React.Dispatch<React.SetStateAction<any[]>>;
   getSelectedRowKeys: React.Dispatch<React.SetStateAction<any[]>>;
   totalItems: number;
+  canPersonalCoupons?: boolean;
 }) {
   const { mutate: deletePatient } = useDeletePatients();
+  const { openModal } = useModal();
   const searchParams = useSearchParams();
   const router = useRouter();
   const [pageSize, setPageSize] = useState(Number(searchParams.get('limit')) || 10);
@@ -117,6 +123,25 @@ export default function PationtsTable({
     handleReset,
   } = useTable(data, pageSize, filterState);
 
+  const openPersonalCoupons = useCallback((row?: any) => {
+    const selected = data.filter((item) =>
+      selectedRowKeys.some((key) => String(key) === String(item?.id))
+    );
+    let clients = selected;
+    if (selected.length > 1) {
+      if (row && !selected.some((item) => String(item?.id) === String(row?.id))) {
+        clients = [row, ...selected];
+      }
+    } else if (row) {
+      clients = [row];
+    }
+    const key = `${Date.now()}-${clients.map((item) => item?.id).join('-')}`;
+    openModal({
+      view: <BulkPersonalCouponsForm key={key} clients={clients} />,
+      customSize: '820px',
+    });
+  }, [data, openModal, selectedRowKeys]);
+
   const drawerFilterKeys = ['status', 'gender'] as const;
 
   const applyAllFilters = () => {
@@ -161,6 +186,8 @@ export default function PationtsTable({
         onChecked: handleRowSelect,
         handleSelectAll,
         onFilterChange: handleFilterChange,
+        canPersonalCoupons,
+        onPersonalCoupon: canPersonalCoupons ? openPersonalCoupons : undefined,
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
@@ -171,6 +198,8 @@ export default function PationtsTable({
       onDeleteItem,
       handleRowSelect,
       handleSelectAll,
+      canPersonalCoupons,
+      openPersonalCoupons,
     ]
   );
 
@@ -260,7 +289,13 @@ export default function PationtsTable({
               setSelectedRowKeys([]);
               handleDelete(ids);
             }}
-          />
+          >
+            {canPersonalCoupons && selectedRowKeys.length > 1 ? (
+              <Button size="sm" onClick={() => openPersonalCoupons()}>
+                Personal coupons ({selectedRowKeys.length})
+              </Button>
+            ) : null}
+          </TableFooter>
         }
         className="overflow-hidden rounded-md border border-gray-200 text-sm shadow-sm [&_.rc-table-placeholder_.rc-table-expanded-row-fixed>div]:h-60 [&_.rc-table-placeholder_.rc-table-expanded-row-fixed>div]:justify-center [&_.rc-table-row:last-child_td.rc-table-cell]:border-b-0 [&_thead.rc-table-thead]:border-t-0"
       />

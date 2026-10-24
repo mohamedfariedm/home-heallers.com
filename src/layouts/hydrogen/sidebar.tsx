@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { Fragment } from 'react';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { Title } from '@/components/ui/text';
 import cn from '@/utils/class-names';
 import SimpleBar from '@/components/ui/simplebar';
@@ -14,21 +14,17 @@ import { usePermissions } from '@/context/PermissionsContext';
 import { filterMenuItemsByPermissions } from '@/utils/menuUtils';
 import { useSession } from 'next-auth/react';
 import Cookies from 'js-cookie';
+import { getLocaleFromPathname, withLocalePrefix } from '@/lib/locale';
 
 export default function Sidebar({ className }: { className?: string }) {
   const { data: session, status } = useSession();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const { t } = useTranslation();
-  const locale = Cookies.get('NEXT_LOCALE') || 'en';
+  const { t } = useTranslation('menu');
+  const locale = getLocaleFromPathname(pathname);
   const { permissions } = usePermissions();
 
 
-  const pathName = (selectedPath: string) => {
-    const segments = pathname.split('/');
-    segments[1] = locale;
-    return segments[0].concat('/', segments[1], selectedPath);
-  };
+  const pathName = (selectedPath: string) => withLocalePrefix(selectedPath, locale);
 
   const hasAuthToken = Boolean(Cookies.get('auth_token'));
   const effectivePermissions = session?.user?.permissions || permissions;

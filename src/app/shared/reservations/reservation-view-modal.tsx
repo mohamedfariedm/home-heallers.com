@@ -268,7 +268,7 @@ export function ReservationViewContent({
   canSendInvoiceWhatsapp?: boolean;
   onReservationUpdate?: (updated: any) => void;
 }) {
-  const { t, i18n } = useTranslation();
+  const { t, i18n } = useTranslation('reservations');
   const locale = i18n.language?.startsWith('ar') ? 'ar' : 'en';
   const currency = t('reservation_view_currency');
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
@@ -615,6 +615,10 @@ export function ReservationViewContent({
                   const signedAtText = formatSignedAt(session?.signed_at, locale);
                   const reportUrl = session?.report_url;
                   const attended = session?.doctor_attended === true;
+                  const sessionDoctor = resolveLocalizedNameOrFallback(
+                    session?.doctor?.name,
+                    ''
+                  );
                   return (
                     <li
                       key={session?.id ?? index}
@@ -628,6 +632,11 @@ export function ReservationViewContent({
                         <p className="mt-0.5 text-sm text-gray-600">
                           {timePeriod} · {start} – {end}
                         </p>
+                        {sessionDoctor && (
+                          <p className="mt-0.5 text-sm font-medium text-gray-800">
+                            {sessionDoctor}
+                          </p>
+                        )}
                         <div className="mt-2 flex flex-wrap items-center gap-2">
                           {status && (
                             <span className="inline-block rounded-full bg-white px-2 py-0.5 text-xs font-medium text-gray-600 ring-1 ring-gray-200">
@@ -803,7 +812,7 @@ export default function ReservationViewModal({
   canSendPaymentWhatsapp?: boolean;
   canSendInvoiceWhatsapp?: boolean;
 }) {
-  const { t } = useTranslation();
+  const { t } = useTranslation('reservations');
   const { closeModal } = useModal();
   const [localReservation, setLocalReservation] = useState(reservation);
 

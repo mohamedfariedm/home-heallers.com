@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import SelectBox from '@/components/ui/select';
@@ -9,10 +10,16 @@ import {
   PiXBold, 
   PiFunnelBold, 
   PiCaretDownBold, 
-  PiCaretUpBold 
+  PiCaretUpBold,
+  PiArrowCounterClockwiseBold,
 } from 'react-icons/pi';
 import cn from '@/utils/class-names';
 import { useCenters } from '@/framework/centers';
+import {
+  NOT_SPECIFIED_LABEL,
+  SOURCE_CAMPAIGN_NOT_SPECIFIED_VALUE,
+  SOURCE_CAMPAIGN_OPTIONS,
+} from '@/app/shared/source-campaign-options';
 
 export interface StatisticsFilters {
   date_from?: string;
@@ -22,7 +29,29 @@ export interface StatisticsFilters {
   center_id?: string;
   reservation_statuses?: number[];
   customer_support_types?: string[];
-  source_campaign?: string;
+  source_campaigns?: string[];
+}
+
+/** Query string shared by the aggregates, monthly and weekly statistics requests. */
+export function buildStatisticsQueryParams(filters: StatisticsFilters): URLSearchParams {
+  const params = new URLSearchParams();
+
+  if (filters.date_from) params.append('date_from', filters.date_from);
+  if (filters.date_to) params.append('date_to', filters.date_to);
+  if (filters.doctor_id) params.append('doctor_id', filters.doctor_id);
+  if (filters.client_id) params.append('client_id', filters.client_id);
+  if (filters.center_id) params.append('center_id', filters.center_id);
+  filters.reservation_statuses?.forEach((status) =>
+    params.append('reservation_statuses[]', status.toString())
+  );
+  filters.customer_support_types?.forEach((type) =>
+    params.append('customer_support_types[]', type)
+  );
+  filters.source_campaigns?.forEach((campaign) =>
+    params.append('source_campaigns[]', campaign)
+  );
+
+  return params;
 }
 
 interface StatisticsFiltersProps {
@@ -30,22 +59,40 @@ interface StatisticsFiltersProps {
   className?: string;
 }
 
+/** Last 10 days, today inclusive. Matches the dashboard's initial date range. */
+function getLast10DaysRange(): { date_from: string; date_to: string } {
+  const today = new Date();
+  const from = new Date(today);
+  from.setDate(today.getDate() - 9);
+  const fmt = (d: Date) => {
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${d.getFullYear()}-${month}-${day}`;
+  };
+  return { date_from: fmt(from), date_to: fmt(today) };
+}
+
 const reservationStatusOptions = [
-  { value: '1', label: 'Reviewing' },
-  { value: '2', label: 'Awaiting Confirmation' },
-  { value: '3', label: 'Confirmed' },
-  { value: '4', label: 'Canceled' },
-  { value: '5', label: 'Completed' },
-  { value: '6', label: 'Failed' },
-  { value: '7', label: 'Draft' },
+  { value: '1', labelKey: 'stats_status_reviewing', label: 'Reviewing' },
+  { value: '2', labelKey: 'stats_status_awaiting', label: 'Awaiting Confirmation' },
+  { value: '3', labelKey: 'stats_status_confirmed', label: 'Confirmed' },
+  { value: '4', labelKey: 'stats_status_canceled', label: 'Canceled' },
+  { value: '5', labelKey: 'stats_status_completed', label: 'Completed' },
+  { value: '6', labelKey: 'stats_status_failed', label: 'Failed' },
+  { value: '7', labelKey: 'stats_status_draft', label: 'Draft' },
 ];
 
 const customerSupportTypeOptions = [
-  { value: 'operation', label: 'Operation' },
-  { value: 'marketing', label: 'Marketing' },
-  { value: 'maintenance', label: 'Maintenance' },
-  { value: 'consultation', label: 'Consultation' },
-  { value: 'emergency', label: 'Emergency' },
+  { value: 'operation', labelKey: 'stats_type_operation', label: 'Inbound' },
+  { value: 'marketing', labelKey: 'stats_type_marketing', label: 'Outbound' },
+  { value: 'maintenance', labelKey: 'stats_type_maintenance', label: 'Maintenance' },
+  { value: 'consultation', labelKey: 'stats_type_consultation', label: 'Consultation' },
+  { value: 'emergency', labelKey: 'stats_type_emergency', label: 'Emergency' },
+];
+
+const sourceCampaignFilterOptions = [
+  ...SOURCE_CAMPAIGN_OPTIONS,
+  { value: SOURCE_CAMPAIGN_NOT_SPECIFIED_VALUE, label: NOT_SPECIFIED_LABEL },
 ];
 
 function toSelectValue(value: unknown): string {
@@ -69,14 +116,17 @@ export default function StatisticsFiltersComponent({
   onFilter,
   className,
 }: StatisticsFiltersProps) {
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
+  const { t, i18n } = useTranslation('statistics');
+  const lang = i18n.language === 'ar' ? 'ar' : 'en';
+  const defaults = useMemo(() => getLast10DaysRange(), []);
+  const [dateFrom, setDateFrom] = useState(defaults.date_from);
+  const [dateTo, setDateTo] = useState(defaults.date_to);
   const [doctorId, setDoctorId] = useState('');
   const [clientId, setClientId] = useState('');
   const [centerId, setCenterId] = useState('');
-  const [sourceCampaign, setSourceCampaign] = useState('');
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [selectedSupportTypes, setSelectedSupportTypes] = useState<string[]>([]);
+  const [selectedSourceCampaigns, setSelectedSourceCampaigns] = useState<string[]>([]);
   
   // Doctors, Clients, and Centers lists
   const [doctors, setDoctors] = useState<Array<{ id: number; name: { en: string; ar: string } }>>([]);
@@ -156,26 +206,53 @@ export default function StatisticsFiltersComponent({
   }));
 
   const doctorOptions = [
-    { value: '', name: loadingDoctors ? 'Loading...' : 'Select Doctor' },
+    {
+      value: '',
+      name: loadingDoctors
+        ? t('shared_loading', 'Loading...')
+        : t('stats_select_doctor', 'Select Doctor'),
+    },
     ...doctors.map((doctor) => ({
       value: String(doctor.id),
-      name: doctor.name?.ar || doctor.name?.en || `Doctor ${doctor.id}`,
+      name:
+        doctor.name?.[lang] ||
+        doctor.name?.en ||
+        doctor.name?.ar ||
+        t('stats_doctor_n', { id: doctor.id, defaultValue: 'Doctor {{id}}' }),
     })),
   ];
 
   const clientOptions = [
-    { value: '', name: loadingClients ? 'Loading...' : 'Select Client' },
+    {
+      value: '',
+      name: loadingClients
+        ? t('shared_loading', 'Loading...')
+        : t('stats_select_client', 'Select Client'),
+    },
     ...clients.map((client) => ({
       value: String(client.id),
-      name: client.name?.ar || client.name?.en || `Client ${client.id}`,
+      name:
+        client.name?.[lang] ||
+        client.name?.en ||
+        client.name?.ar ||
+        t('stats_client_n', { id: client.id, defaultValue: 'Client {{id}}' }),
     })),
   ];
 
   const centerOptions = [
-    { value: '', name: loadingCenters ? 'Loading...' : 'Select Center' },
+    {
+      value: '',
+      name: loadingCenters
+        ? t('shared_loading', 'Loading...')
+        : t('stats_select_center', 'Select Center'),
+    },
     ...normalizedCenters.map((center) => ({
       value: String(center.id),
-      name: center.name?.ar || center.name?.en || `Center ${center.id}`,
+      name:
+        center.name?.[lang] ||
+        center.name?.en ||
+        center.name?.ar ||
+        t('stats_center_n', { id: center.id, defaultValue: 'Center {{id}}' }),
     })),
   ];
 
@@ -190,29 +267,35 @@ export default function StatisticsFiltersComponent({
     if (normalizedDoctorId) filters.doctor_id = normalizedDoctorId;
     if (normalizedClientId) filters.client_id = normalizedClientId;
     if (normalizedCenterId) filters.center_id = normalizedCenterId;
-    if (sourceCampaign) filters.source_campaign = sourceCampaign;
     if (selectedStatuses.length > 0) {
       filters.reservation_statuses = selectedStatuses.map(s => parseInt(s));
     }
     if (selectedSupportTypes.length > 0) {
       filters.customer_support_types = selectedSupportTypes;
     }
+    if (selectedSourceCampaigns.length > 0) {
+      filters.source_campaigns = selectedSourceCampaigns;
+    }
 
     onFilter(filters);
   };
 
   const handleReset = () => {
-    setDateFrom('');
-    setDateTo('');
+    setDateFrom(defaults.date_from);
+    setDateTo(defaults.date_to);
     setDoctorId('');
     setClientId('');
     setCenterId('');
-    setSourceCampaign('');
     setSelectedStatuses([]);
     setSelectedSupportTypes([]);
-    onFilter({});
+    setSelectedSourceCampaigns([]);
+    onFilter({ date_from: defaults.date_from, date_to: defaults.date_to });
   };
 
+  const handleLast10Days = () => {
+    setDateFrom(defaults.date_from);
+    setDateTo(defaults.date_to);
+  };
   const toggleStatus = (status: string) => {
     setSelectedStatuses((prev) =>
       prev.includes(status)
@@ -227,14 +310,27 @@ export default function StatisticsFiltersComponent({
     );
   };
 
+  const toggleSourceCampaign = (campaign: string) => {
+    setSelectedSourceCampaigns((prev) =>
+      prev.includes(campaign) ? prev.filter((c) => c !== campaign) : [...prev, campaign]
+    );
+  };
+
   return (
     <div className={cn('rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800', className)}>
-      <div className="flex items-center justify-between border-b border-gray-100 p-5 dark:border-gray-700">
+      <div
+        className={cn(
+          'flex items-center justify-between p-5',
+          isOpen && 'border-b border-gray-100 dark:border-gray-700'
+        )}
+      >
         <div className="flex items-center gap-2">
           <div className="flex bg-blue-50 p-2 text-blue-600 rounded-lg dark:bg-blue-900/20 dark:text-blue-400">
               <PiFunnelBold className="h-5 w-5" />
           </div>
-          <h3 className="text-base font-bold text-gray-900 dark:text-gray-100">Filters</h3>
+          <h3 className="text-base font-bold text-gray-900 dark:text-gray-100">
+            {t('shared_filters', 'Filters')}
+          </h3>
         </div>
         <Button 
           variant="text" 
@@ -249,14 +345,20 @@ export default function StatisticsFiltersComponent({
           )}
         </Button>
       </div>
-      
-      <div className={cn('grid transition-all duration-300 ease-in-out', isOpen ? 'grid-rows-[1fr] opacity-100 p-5' : 'grid-rows-[0fr] opacity-0 p-0 overflow-hidden')}>
-        <div className="overflow-hidden">
+
+      <div
+        className={cn(
+          'grid transition-[grid-template-rows] duration-300 ease-in-out',
+          isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+        )}
+      >
+        <div className="min-h-0 overflow-hidden">
+          <div className="p-5">
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-5">
         {/* Date From */}
         <div className="space-y-1.5">
           <label className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-            Date From
+            {t('shared_date_from', 'Date From')}
           </label>
           <Input
             type="date"
@@ -270,7 +372,7 @@ export default function StatisticsFiltersComponent({
         {/* Date To */}
         <div className="space-y-1.5">
           <label className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-            Date To
+            {t('shared_date_to', 'Date To')}
           </label>
           <Input
             type="date"
@@ -284,7 +386,7 @@ export default function StatisticsFiltersComponent({
         {/* Doctor Dropdown */}
         <div className="space-y-1.5">
           <label className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-            Doctor
+            {t('stats_doctor', 'Doctor')}
           </label>
           <SelectBox
             value={doctorId}
@@ -292,7 +394,7 @@ export default function StatisticsFiltersComponent({
             getOptionValue={(option) => option.value}
             displayValue={(selected) => getSelectDisplayName(selected, doctorOptions)}
             options={doctorOptions}
-            placeholder="Select Doctor"
+            placeholder={t('stats_select_doctor', 'Select Doctor')}
             className="w-full"
             selectClassName="border-gray-200 dark:border-gray-700 focus:ring-blue-500 rounded-lg h-[38px]"
           />
@@ -301,7 +403,7 @@ export default function StatisticsFiltersComponent({
         {/* Client Dropdown */}
         <div className="space-y-1.5">
           <label className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-            Client
+            {t('stats_client', 'Client')}
           </label>
           <SelectBox
             value={clientId}
@@ -309,7 +411,7 @@ export default function StatisticsFiltersComponent({
             getOptionValue={(option) => option.value}
             displayValue={(selected) => getSelectDisplayName(selected, clientOptions)}
             options={clientOptions}
-            placeholder="Select Client"
+            placeholder={t('stats_select_client', 'Select Client')}
             className="w-full"
             selectClassName="border-gray-200 dark:border-gray-700 focus:ring-blue-500 rounded-lg h-[38px]"
           />
@@ -318,7 +420,7 @@ export default function StatisticsFiltersComponent({
         {/* Center Dropdown */}
         <div className="space-y-1.5">
           <label className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-            Center
+            {t('stats_center', 'Center')}
           </label>
           <SelectBox
             value={centerId}
@@ -326,7 +428,7 @@ export default function StatisticsFiltersComponent({
             getOptionValue={(option) => option.value}
             displayValue={(selected) => getSelectDisplayName(selected, centerOptions)}
             options={centerOptions}
-            placeholder="Select Center"
+            placeholder={t('stats_select_center', 'Select Center')}
             className="w-full"
             selectClassName="border-gray-200 dark:border-gray-700 focus:ring-blue-500 rounded-lg h-[38px]"
           />
@@ -338,7 +440,7 @@ export default function StatisticsFiltersComponent({
         {/* Reservation Statuses */}
         <div className="space-y-3">
           <label className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-            Reservation Status
+            {t('stats_reservation_status', 'Reservation Status')}
           </label>
           <div className="flex flex-wrap gap-2">
             {reservationStatusOptions.map((option) => (
@@ -354,7 +456,7 @@ export default function StatisticsFiltersComponent({
                     : 'bg-transparent border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700'
                 )}
               >
-                {option.label}
+                {t(option.labelKey, option.label)}
               </Button>
             ))}
           </div>
@@ -363,15 +465,10 @@ export default function StatisticsFiltersComponent({
         {/* Customer Support Types */}
         <div className="space-y-3">
           <label className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-            Customer Support Type
+            {t('stats_support_type', 'Customer Support Type')}
           </label>
           <div className="flex flex-wrap gap-2">
             {customerSupportTypeOptions.map((option) => {
-              const displayLabel = option.label.toLowerCase() === 'operation' 
-                ? 'inbound' 
-                : option.label.toLowerCase() === 'marketing' 
-                ? 'outbound' 
-                : option.label;
               return (
                 <Button
                   key={option.value}
@@ -385,7 +482,7 @@ export default function StatisticsFiltersComponent({
                       : 'bg-transparent border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700'
                   )}
                 >
-                  {displayLabel}
+                  {t(option.labelKey, option.label)}
                 </Button>
               );
             })}
@@ -393,25 +490,63 @@ export default function StatisticsFiltersComponent({
         </div>
       </div>
 
+      {/* Source Campaigns */}
+      <div className="mt-6 space-y-3">
+        <label className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+          {t('stats_source_campaign', 'Source Campaign')}
+        </label>
+        <div className="flex flex-wrap gap-2">
+          {sourceCampaignFilterOptions.map((option) => (
+            <Button
+              key={option.value}
+              size="sm"
+              variant={selectedSourceCampaigns.includes(option.value) ? 'solid' : 'outline'}
+              onClick={() => toggleSourceCampaign(option.value)}
+              className={cn(
+                'rounded-full px-4 h-8 transition-all duration-200 border',
+                selectedSourceCampaigns.includes(option.value)
+                  ? 'bg-purple-600 border-purple-600 text-white shadow-sm hover:bg-purple-700'
+                  : 'bg-transparent border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700'
+              )}
+            >
+              {t(
+                option.value === SOURCE_CAMPAIGN_NOT_SPECIFIED_VALUE
+                  ? 'campaign_not_specified'
+                  : `campaign_${option.value}`,
+                option.label
+              )}
+            </Button>
+          ))}
         </div>
+      </div>
 
-        {/* Action Buttons */}
-        <div className="mt-8 flex items-center justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-700">
-          <Button
-            variant="text"
-            onClick={handleReset}
-            className="text-red-500 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-900/20"
-          >
-            <PiXBold className="me-1.5 h-4 w-4" />
-            Reset Filters
-          </Button>
-          <Button
-            onClick={handleApplyFilters}
-            className="bg-gray-900 px-8 text-white hover:bg-gray-800 dark:bg-gray-100 dark:text-gray-900"
-          >
-            <PiMagnifyingGlassBold className="me-1.5 h-4 w-4" />
-            Apply Filters
-          </Button>
+          {/* Action Buttons */}
+          <div className="mt-8 flex items-center justify-end gap-3 border-t border-gray-100 pt-4 dark:border-gray-700">
+            <Button
+              variant="text"
+              onClick={handleLast10Days}
+              className="me-auto text-blue-600 hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-900/20"
+            >
+              <PiArrowCounterClockwiseBold className="me-1.5 h-4 w-4" />
+              {t('stats_last_10_days', 'Last 10 days')}
+            </Button>
+            <Button
+              variant="text"
+              onClick={handleReset}
+              className="text-red-500 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-900/20"
+            >
+              <PiXBold className="me-1.5 h-4 w-4" />
+              {t('shared_reset_filters', 'Reset Filters')}
+            </Button>
+            <Button
+              onClick={handleApplyFilters}
+              className="bg-gray-900 px-8 text-white hover:bg-gray-800 dark:bg-gray-100 dark:text-gray-900"
+            >
+              <PiMagnifyingGlassBold className="me-1.5 h-4 w-4" />
+              {t('shared_apply_filters', 'Apply Filters')}
+            </Button>
+          </div>
+          </div>
         </div>
       </div>
     </div>

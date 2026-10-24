@@ -52,6 +52,8 @@ export const DatePicker = ({
   onCalendarClose,
   inputProps,
   calendarClassName,
+  popperClassName,
+  popperProps,
   ...props
 }: DatePickerProps<boolean>) => {
   const [isCalenderOpen, setIsCalenderOpen] = useState(false);
@@ -93,6 +95,8 @@ export const DatePicker = ({
           timeOnlyClasses.base,
           calendarClassName
         )}
+        popperClassName={cn('!z-[9999]', popperClassName)}
+        popperProps={popperProps}
         {...props}
       />
     </div>

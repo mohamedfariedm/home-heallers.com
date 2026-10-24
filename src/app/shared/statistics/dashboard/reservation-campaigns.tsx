@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslation } from 'react-i18next';
 import {
   PieChart,
   Pie,
@@ -10,13 +11,14 @@ import {
 } from 'recharts';
 import { Title } from '@/components/ui/text';
 import cn from '@/utils/class-names';
+import { formatSourceCampaign } from '@/app/shared/source-campaign-options';
 
 interface ReservationCampaignsChartProps {
   data: Array<{
     status: number | string;
     label: string;
     count: number;
-    by_source_campaign?: Array<{ source_campaign: string; count: number }>;
+    by_source_campaign?: Array<{ source_campaign: string | null; count: number }>;
   }>;
   className?: string;
 }
@@ -24,15 +26,17 @@ interface ReservationCampaignsChartProps {
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#6366f1', '#14b8a6'];
 
 export default function ReservationCampaignsChart({ data, className }: ReservationCampaignsChartProps) {
+  const { t } = useTranslation('statistics');
   // Aggregate data by source_campaign across all statuses
   const aggregatedData = data.reduce((acc, curr) => {
     if (curr.by_source_campaign) {
       curr.by_source_campaign.forEach((campaign) => {
-        const existing = acc.find((item) => item.name === campaign.source_campaign);
+        const name = formatSourceCampaign(campaign.source_campaign);
+        const existing = acc.find((item) => item.name === name);
         if (existing) {
           existing.value += campaign.count;
         } else {
-          acc.push({ name: campaign.source_campaign, value: campaign.count });
+          acc.push({ name, value: campaign.count });
         }
       });
     }
@@ -43,10 +47,7 @@ export default function ReservationCampaignsChart({ data, className }: Reservati
   // Let's sort descending
   aggregatedData.sort((a, b) => b.value - a.value);
 
-  const chartData = aggregatedData.map((item) => ({
-    ...item,
-    name: item.name === 'unknown' ? 'Unknown' : item.name,
-  }));
+  const chartData = aggregatedData;
 
   return (
     <div
@@ -56,10 +57,10 @@ export default function ReservationCampaignsChart({ data, className }: Reservati
       )}
     >
       <Title as="h6" className="mb-1 font-semibold text-gray-900 dark:text-white">
-        Reservations by Campaign
+        {t('stats_reservations_by_campaign', 'Reservations by Campaign')}
       </Title>
       <p className="mb-6 text-sm text-gray-500 dark:text-gray-400">
-        Source breakdown for all reservations
+        {t('stats_reservations_by_campaign_desc', 'Source breakdown for all reservations')}
       </p>
 
       <div className="h-[300px] w-full">

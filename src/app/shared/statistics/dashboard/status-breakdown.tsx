@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import WidgetCard from '@/components/cards/widget-card';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { Button } from '@/components/ui/button';
@@ -13,7 +14,7 @@ interface StatusData {
   status: number | string;
   label: string;
   count: number;
-  by_source_campaign?: Array<{ source_campaign: string; count: number }>;
+  by_source_campaign?: Array<{ source_campaign: string | null; count: number }>;
 }
 
 interface StatusBreakdownProps {
@@ -25,6 +26,7 @@ export default function StatusBreakdown({
   byStatus,
   className,
 }: StatusBreakdownProps) {
+  const { t } = useTranslation('statistics');
   const [isTopTenOpen, setIsTopTenOpen] = useState(false);
   
   const data = byStatus.map((item, index) => ({
@@ -50,8 +52,11 @@ export default function StatusBreakdown({
   return (
     <>
       <WidgetCard
-        title="Reservations by Status"
-        description={`Total: ${totalCount.toLocaleString()} reservations`}
+        title={t('stats_reservations_by_status', 'Reservations by Status')}
+        description={t('stats_total_reservations_n', {
+          count: totalCount.toLocaleString(),
+          defaultValue: 'Total: {{count}} reservations',
+        })}
         className={cn('flex flex-col', className)}
         headerClassName="flex items-center justify-between"
         action={
@@ -61,7 +66,7 @@ export default function StatusBreakdown({
             onClick={() => setIsTopTenOpen(true)}
             className="text-xs"
           >
-            Top 10
+            {t('shared_top_10', 'Top 10')}
           </Button>
         }
       >
@@ -136,11 +141,17 @@ export default function StatusBreakdown({
                   </div>
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-gray-500 dark:text-gray-400">
-                      {status.count.toLocaleString()} reservations
+                      {t('stats_reservations_n', {
+                        count: status.count.toLocaleString(),
+                        defaultValue: '{{count}} reservations',
+                      })}
                     </span>
                     {status.by_source_campaign && status.by_source_campaign.length > 0 && (
                       <span className="text-gray-500 dark:text-gray-400">
-                        {status.by_source_campaign.length} campaigns
+                        {t('stats_campaigns_n', {
+                          count: status.by_source_campaign.length,
+                          defaultValue: '{{count}} campaigns',
+                        })}
                       </span>
                     )}
                   </div>
@@ -155,14 +166,14 @@ export default function StatusBreakdown({
     <TopTenModal
       isOpen={isTopTenOpen}
       onClose={() => setIsTopTenOpen(false)}
-      title="Reservations by Status"
+      title={t('stats_reservations_by_status', 'Reservations by Status')}
       items={topTenItems}
-      valueLabel="Reservations"
+      valueLabel={t('stats_reservations_label', 'Reservations')}
       showPercentage={true}
       additionalColumns={[
         {
           key: 'campaigns',
-          label: 'Campaigns',
+          label: t('stats_campaigns', 'Campaigns'),
           render: (item) => (
             <span className="text-sm text-gray-600 dark:text-gray-400">
               {item.additionalInfo?.campaigns || 0}

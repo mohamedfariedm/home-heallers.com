@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Modal } from '@/components/ui/modal';
 import { Title } from '@/components/ui/text';
 import { ActionIcon } from '@/components/ui/action-icon';
@@ -29,6 +30,7 @@ export default function RateColorsModal({
   onSave,
   isSaving = false,
 }: RateColorsModalProps) {
+  const { t } = useTranslation('statistics');
   const [draftRanges, setDraftRanges] = useState<RateColorRange[]>([]);
 
   useEffect(() => {
@@ -58,7 +60,7 @@ export default function RateColorsModal({
         <div className="mb-6 flex items-center justify-between">
           <div>
             <Title as="h3" className="text-xl font-semibold text-gray-900 dark:text-white">
-              Edit Rate Colors
+              {t('stats_edit_rate_colors', 'Edit Rate Colors')}
             </Title>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{metricLabel}</p>
           </div>
@@ -75,10 +77,10 @@ export default function RateColorsModal({
 
         <div className="mt-6 flex justify-end gap-3">
           <Button variant="outline" onClick={onClose} disabled={isSaving}>
-            Cancel
+            {t('shared_cancel', 'Cancel')}
           </Button>
           <Button onClick={handleSave} isLoading={isSaving}>
-            Save to Settings
+            {t('stats_save_to_settings', 'Save to Settings')}
           </Button>
         </div>
       </div>

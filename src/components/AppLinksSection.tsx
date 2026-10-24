@@ -13,7 +13,7 @@ const AppLinksSection: React.FC<AppLinksSectionProps> = ({
   androidLink,
   onUpdate
 }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('settings');
   const handleIOSChange = (value: string) => {
     onUpdate(value, androidLink);
   };

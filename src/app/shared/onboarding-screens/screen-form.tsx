@@ -49,7 +49,7 @@ function initialLangState(
 
 export default function ScreenForm({ initialValues }: ScreenFormProps) {
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t } = useTranslation('onboarding-screens');
   const isEdit = Boolean(initialValues?.id);
 
   const [langs, setLangs] = useState<Record<OnboardingLang, LangState>>({

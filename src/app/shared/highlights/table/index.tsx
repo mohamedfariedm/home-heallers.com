@@ -26,7 +26,7 @@ export default function HighlightsTable({
   getSelectedColumns?: (columns: any[]) => void;
   getSelectedRowKeys?: (keys: any[]) => void;
 }) {
-  const { t } = useTranslation();
+  const { t } = useTranslation('highlights');
   const { mutate: deleteHighlight } = useDeleteHighlight();
   const { mutate: toggleActive } = useToggleHighlightActive();
 

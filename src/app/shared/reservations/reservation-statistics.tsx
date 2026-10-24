@@ -25,6 +25,7 @@ import {
 } from 'react-icons/pi';
 import cn from '@/utils/class-names';
 import { useRouter, usePathname } from 'next/navigation';
+import { formatSourceCampaign } from '@/app/shared/source-campaign-options';
 
 interface StatusCount {
   count?: number;
@@ -66,7 +67,7 @@ interface ReservationStatistics {
     link?: string;
   };
   by_source_campaign?: Array<{
-    source_campaign?: string;
+    source_campaign?: string | null;
     reservations_count?: number;
     sessions_count?: number;
     link?: string;
@@ -564,7 +565,7 @@ export default function ReservationStatistics({
   // Initialize checked state for all campaigns on first render
   useEffect(() => {
     if (checkedSourceCampaigns.size === 0 && allSourceCampaigns.length > 0) {
-      const initialChecked = new Set(allSourceCampaigns.map(c => c.source_campaign || ''));
+      const initialChecked = new Set(allSourceCampaigns.map(c => formatSourceCampaign(c.source_campaign)));
       setCheckedSourceCampaigns(initialChecked);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -573,7 +574,7 @@ export default function ReservationStatistics({
   const sourceCampaignCards = allSourceCampaigns
     .filter((campaign) => (campaign.reservations_count || 0) !== 0)
     .map((campaign) => {
-    const campaignKey = campaign.source_campaign || 'Unknown';
+    const campaignKey = formatSourceCampaign(campaign.source_campaign);
     const isChecked = checkedSourceCampaigns.has(campaignKey);
     
     return {

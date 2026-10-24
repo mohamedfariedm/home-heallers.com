@@ -9,6 +9,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test": "vitest run",
     "generate-icons": "node generate-icons-data.js",
     "format": "prettier --write .",
     "prepare": "husky install"
@@ -137,7 +138,8 @@
     "prettier": "3.0.3",
     "prettier-plugin-tailwindcss": "^0.5.7",
     "rimraf": "^5.0.5",
-    "tailwindcss": "^3.3.5"
+    "tailwindcss": "^3.3.5",
+    "vitest": "^3.2.4"
   },
   "engines": {
     "node": ">=18.15.0"

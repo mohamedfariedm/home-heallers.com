@@ -1,9 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import cn from '@/utils/class-names';
-import { useDirection } from '@/hooks/use-direction';
 import CogSolidIcon from '@/components/icons/cog-solid';
 import { ActionIcon } from '@/components/ui/action-icon';
 import { DrawerHeader } from '@/components/settings/settings-drawer';
@@ -26,17 +24,10 @@ export default function SettingsButton({
 }) {
   const COLOR_PRESETS = usePresets();
   const { openDrawer, closeDrawer } = useDrawer();
-  const { direction } = useDirection();
   const { colorPresets } = useColorPresets();
 
   // to apply color preset value in css variable
   useApplyColorPreset<any>(colorPresets ?? COLOR_PRESETS[0].colors);
-
-  // to set html dir attribute on direction change
-  useEffect(() => {
-    document.documentElement.dir = direction ?? 'ltr';
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [direction]);
 
   return (
     <ActionIcon

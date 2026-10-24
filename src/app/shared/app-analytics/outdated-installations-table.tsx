@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslation } from 'react-i18next';
 import WidgetCard from '@/components/cards/widget-card';
 import cn from '@/utils/class-names';
 import type { OutdatedInstallationItem } from '@/types/app-analytics';
@@ -24,25 +25,37 @@ export default function OutdatedInstallationsTable({
   items,
   className,
 }: OutdatedInstallationsTableProps) {
+  const { t } = useTranslation('app-analytics');
   if (count === 0) return null;
 
   return (
     <WidgetCard
-      title="Outdated Installations"
-      description={`${count.toLocaleString()} installations need an update${count > items.length ? ` (showing first ${items.length})` : ''}`}
+      title={t('analytics_outdated_title', 'Outdated Installations')}
+      description={
+        count > items.length
+          ? t('analytics_outdated_showing', {
+              count: count.toLocaleString(),
+              shown: items.length,
+              defaultValue: '{{count}} installations need an update (showing first {{shown}})',
+            })
+          : t('analytics_outdated_desc', {
+              count: count.toLocaleString(),
+              defaultValue: '{{count}} installations need an update',
+            })
+      }
       className={cn(className)}
     >
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead>
             <tr className="text-left text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-              <th className="px-3 py-3">ID</th>
-              <th className="px-3 py-3">Platform</th>
-              <th className="px-3 py-3">Version</th>
-              <th className="px-3 py-3">Build</th>
-              <th className="px-3 py-3">Device</th>
-              <th className="px-3 py-3">Last Seen</th>
-              <th className="px-3 py-3">Latest Supported</th>
+              <th className="px-3 py-3">{t('analytics_col_id', 'ID')}</th>
+              <th className="px-3 py-3">{t('analytics_col_platform', 'Platform')}</th>
+              <th className="px-3 py-3">{t('analytics_col_version', 'Version')}</th>
+              <th className="px-3 py-3">{t('analytics_col_build', 'Build')}</th>
+              <th className="px-3 py-3">{t('analytics_col_device', 'Device')}</th>
+              <th className="px-3 py-3">{t('analytics_col_last_seen', 'Last Seen')}</th>
+              <th className="px-3 py-3">{t('analytics_col_latest_supported', 'Latest Supported')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-gray-800">

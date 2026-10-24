@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslation } from 'react-i18next';
 import WidgetCard from '@/components/cards/widget-card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import cn from '@/utils/class-names';
@@ -24,6 +25,53 @@ interface SingleMetricChartProps {
   data: ChartData;
   metric: 'reservations' | 'sessions' | 'clients' | 'revenue';
   className?: string;
+  /** When set on daily data, show only this many calendar days ending at date_to. */
+  lastDays?: number;
+}
+
+function parseLocalDate(value: string): Date | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+  if (!match) return null;
+  return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+}
+
+function formatIsoDate(date: Date): string {
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
+function buildLastDaysWindow(
+  points: ChartDataPoint[],
+  dateFrom: string,
+  dateTo: string,
+  lastDays: number
+): { points: ChartDataPoint[]; dateFrom: string; dateTo: string } {
+  const end = parseLocalDate(dateTo) ?? parseLocalDate(points[points.length - 1]?.date ?? '') ?? new Date();
+  const rangeStart = parseLocalDate(dateFrom);
+  const start = new Date(end);
+  start.setDate(end.getDate() - (lastDays - 1));
+  if (rangeStart && start < rangeStart) {
+    start.setTime(rangeStart.getTime());
+  }
+
+  const byDate = new Map(
+    points.map((point) => [point.date.slice(0, 10), point])
+  );
+  const windowPoints: ChartDataPoint[] = [];
+  const cursor = new Date(start);
+
+  while (cursor <= end) {
+    const date = formatIsoDate(cursor);
+    windowPoints.push(byDate.get(date) ?? { date, count: 0, amount: 0 });
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  return {
+    points: windowPoints,
+    dateFrom: formatIsoDate(start),
+    dateTo: formatIsoDate(end),
+  };
 }
 
 // Format date based on group_by type
@@ -50,40 +98,49 @@ const formatDate = (date: string, groupBy: string): string => {
 
 const metricConfig = {
   reservations: {
+    titleKey: 'stats_reservations_trend',
     title: 'Reservations Trend',
     color: '#3B82F6',
     dataKey: 'reservations',
+    labelKey: 'stats_reservations_label',
     label: 'Reservations',
     getValue: (item: ChartDataPoint) => item.count || 0,
     formatValue: (value: number) => value.toLocaleString(),
   },
   sessions: {
+    titleKey: 'stats_sessions_trend',
     title: 'Sessions Trend',
     color: '#10B981',
     dataKey: 'sessions',
+    labelKey: 'stats_sessions',
     label: 'Sessions',
     getValue: (item: ChartDataPoint) => item.count || 0,
     formatValue: (value: number) => value.toLocaleString(),
   },
   clients: {
+    titleKey: 'stats_clients_trend',
     title: 'Clients Trend',
     color: '#F59E0B',
     dataKey: 'clients',
+    labelKey: 'stats_clients',
     label: 'Clients',
     getValue: (item: ChartDataPoint) => item.count || 0,
     formatValue: (value: number) => value.toLocaleString(),
   },
   revenue: {
+    titleKey: 'stats_revenue_trend',
     title: 'Revenue Trend',
     color: '#EF4444',
     dataKey: 'revenue',
+    labelKey: 'stats_revenue',
     label: 'Revenue',
     getValue: (item: ChartDataPoint) => item.amount || 0,
-    formatValue: (value: number) => `${value.toLocaleString()} SAR`,
+    formatValue: (value: number) => value.toLocaleString(),
   },
 };
 
-export default function SingleMetricChart({ data, metric, className }: SingleMetricChartProps) {
+export default function SingleMetricChart({ data, metric, className, lastDays }: SingleMetricChartProps) {
+  const { t } = useTranslation('statistics');
   const config = metricConfig[metric];
   const metricData = data[metric];
 
@@ -93,9 +150,16 @@ export default function SingleMetricChart({ data, metric, className }: SingleMet
 
   // Sort dates
   const sortedData = [...metricData].sort((a, b) => a.date.localeCompare(b.date));
+  const windowed =
+    lastDays && data.group_by === 'daily'
+      ? buildLastDaysWindow(sortedData, data.date_from, data.date_to, lastDays)
+      : null;
+  const series = windowed?.points ?? sortedData;
+  const rangeFrom = windowed?.dateFrom ?? data.date_from;
+  const rangeTo = windowed?.dateTo ?? data.date_to;
 
   // Prepare chart data
-  const chartData = sortedData.map(item => ({
+  const chartData = series.map(item => ({
     date: item.date,
     formattedDate: formatDate(item.date, data.group_by),
     value: config.getValue(item),
@@ -106,8 +170,12 @@ export default function SingleMetricChart({ data, metric, className }: SingleMet
 
   return (
     <WidgetCard
-      title={config.title}
-      description={`From ${data.date_from} to ${data.date_to}`}
+      title={t(config.titleKey, config.title)}
+      description={t('stats_from_to', {
+        from: rangeFrom,
+        to: rangeTo,
+        defaultValue: 'From {{from}} to {{to}}',
+      })}
       className={cn('min-h-[350px]', className)}
     >
       <div className="h-[300px] w-full pt-5 @lg:h-[350px]">
@@ -125,14 +193,14 @@ export default function SingleMetricChart({ data, metric, className }: SingleMet
               axisLine={false}
               tickLine={false}
               tick={{ fontSize: 11, fill: '#6B7280' }}
-              interval="preserveStartEnd"
+              interval={lastDays ? 0 : 'preserveStartEnd'}
             />
             <YAxis 
               axisLine={false}
               tickLine={false}
               tick={{ fontSize: 12, fill: '#6B7280' }}
               label={{ 
-                value: metric === 'revenue' ? 'Revenue (SAR)' : 'Count', 
+                value: metric === 'revenue' ? t('stats_revenue_sar', 'Revenue (SAR)') : t('shared_count', 'Count'), 
                 angle: -90, 
                 position: 'insideLeft', 
                 style: { fill: '#6B7280' } 
@@ -145,8 +213,13 @@ export default function SingleMetricChart({ data, metric, className }: SingleMet
                 borderRadius: '8px',
                 boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
               }}
-              formatter={(value: number) => [config.formatValue(value), config.label]}
-              labelFormatter={(label) => `Date: ${label}`}
+              formatter={(value: number) => [
+                metric === 'revenue'
+                  ? `${config.formatValue(value)} ${t('currency', 'SAR')}`
+                  : config.formatValue(value),
+                t(config.labelKey, config.label),
+              ]}
+              labelFormatter={(label) => t('stats_date_label', { label, defaultValue: 'Date: {{label}}' })}
             />
             <Line 
               type="monotone" 

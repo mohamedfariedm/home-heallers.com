@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   PiCalendarCheckBold,
   PiUsersBold,
@@ -164,6 +165,7 @@ export default function StatCards({
   onSaveRateColors,
   isSavingRateColors,
 }: StatCardsProps) {
+  const { t } = useTranslation('statistics');
   const [editingMetric, setEditingMetric] = useState<RateMetricKey | null>(null);
 
   if (!data) return null;
@@ -180,6 +182,7 @@ export default function StatCards({
   const rateCards: Array<{
     permission: string;
     title: string;
+    titleKey: string;
     value: string;
     subtitle?: string;
     icon: typeof PiArrowUpRightBold;
@@ -190,11 +193,16 @@ export default function StatCards({
     {
       permission: 'dashboard.reservation_rate',
       title: 'Reservation Rate',
+      titleKey: 'stats_reservation_rate',
       value: data.reservation_rate
         ? formatRatePercent(data.reservation_rate.rate)
         : '0%',
       subtitle: data.reservation_rate
-        ? `${data.reservation_rate.successful_count.toLocaleString()} / ${data.reservation_rate.total_count.toLocaleString()} confirmed`
+        ? t('stats_subtitle_confirmed', {
+            success: data.reservation_rate.successful_count.toLocaleString(),
+            total: data.reservation_rate.total_count.toLocaleString(),
+            defaultValue: '{{success}} / {{total}} confirmed',
+          })
         : undefined,
       icon: PiCalendarCheckBold,
       metric: 'reservation_rate',
@@ -204,11 +212,19 @@ export default function StatCards({
     {
       permission: 'dashboard.conversion_rate',
       title: 'Conversion Rate',
+      titleKey: 'stats_conversion_rate',
       value: formatRatePercent(overallConversionRate),
       subtitle: data.conversion_rate?.length
-        ? `${data.conversion_rate.length} campaigns`
+        ? t('stats_subtitle_campaigns', {
+            count: data.conversion_rate.length,
+            defaultValue: '{{count}} campaigns',
+          })
         : data.customer_support?.total
-          ? `${(data.reservations?.total ?? 0).toLocaleString()} / ${data.customer_support.total.toLocaleString()} tickets`
+          ? t('stats_subtitle_tickets', {
+              reservations: (data.reservations?.total ?? 0).toLocaleString(),
+              tickets: data.customer_support.total.toLocaleString(),
+              defaultValue: '{{reservations}} / {{tickets}} tickets',
+            })
           : undefined,
       icon: PiArrowUpRightBold,
       metric: 'conversion_rate',
@@ -220,11 +236,16 @@ export default function StatCards({
     {
       permission: 'dashboard.package_conversion_rate',
       title: 'Package Conversion',
+      titleKey: 'stats_package_conversion',
       value: data.package_conversion_rate
         ? formatRatePercent(data.package_conversion_rate.rate)
         : '0%',
       subtitle: data.package_conversion_rate
-        ? `${data.package_conversion_rate.repeat_clients.toLocaleString()} / ${data.package_conversion_rate.clients_with_reservation.toLocaleString()} repeat clients`
+        ? t('stats_subtitle_repeat', {
+            repeat: data.package_conversion_rate.repeat_clients.toLocaleString(),
+            total: data.package_conversion_rate.clients_with_reservation.toLocaleString(),
+            defaultValue: '{{repeat}} / {{total}} repeat clients',
+          })
         : undefined,
       icon: PiRepeatBold,
       metric: 'package_conversion',
@@ -234,9 +255,14 @@ export default function StatCards({
     {
       permission: 'dashboard.lead_quality_rate',
       title: 'Lead Quality Rate',
+      titleKey: 'stats_lead_quality_rate',
       value: `${Number(data.leads?.lead_quality_rate ?? 0).toFixed(2)}%`,
       subtitle: data.leads
-        ? `${data.leads.qualified_leads.toLocaleString()} / ${data.leads.total_leads.toLocaleString()} qualified`
+        ? t('stats_subtitle_qualified', {
+            qualified: data.leads.qualified_leads.toLocaleString(),
+            total: data.leads.total_leads.toLocaleString(),
+            defaultValue: '{{qualified}} / {{total}} qualified',
+          })
         : undefined,
       icon: PiChartLineUpBold,
       metric: 'lead_quality',
@@ -246,9 +272,14 @@ export default function StatCards({
     {
       permission: 'dashboard.lead_quality_rate',
       title: 'Inbound Quality Rate',
+      titleKey: 'stats_inbound_quality_rate',
       value: `${Number(data.inbound_leads?.lead_quality_rate ?? 0).toFixed(2)}%`,
       subtitle: data.inbound_leads
-        ? `${data.inbound_leads.qualified_leads.toLocaleString()} / ${data.inbound_leads.total_leads.toLocaleString()} qualified`
+        ? t('stats_subtitle_qualified', {
+            qualified: data.inbound_leads.qualified_leads.toLocaleString(),
+            total: data.inbound_leads.total_leads.toLocaleString(),
+            defaultValue: '{{qualified}} / {{total}} qualified',
+          })
         : undefined,
       icon: PiChartLineUpBold,
       metric: 'lead_quality',
@@ -258,9 +289,14 @@ export default function StatCards({
     {
       permission: 'dashboard.lead_quality_rate',
       title: 'Outbound Quality Rate',
+      titleKey: 'stats_outbound_quality_rate',
       value: `${Number(data.outbound_leads?.lead_quality_rate ?? 0).toFixed(2)}%`,
       subtitle: data.outbound_leads
-        ? `${data.outbound_leads.qualified_leads.toLocaleString()} / ${data.outbound_leads.total_leads.toLocaleString()} qualified`
+        ? t('stats_subtitle_qualified', {
+            qualified: data.outbound_leads.qualified_leads.toLocaleString(),
+            total: data.outbound_leads.total_leads.toLocaleString(),
+            defaultValue: '{{qualified}} / {{total}} qualified',
+          })
         : undefined,
       icon: PiChartLineUpBold,
       metric: 'lead_quality',
@@ -273,6 +309,7 @@ export default function StatCards({
     {
       permission: 'dashboard.total_reservations',
       title: 'Total Reservations',
+      titleKey: 'stats_total_reservations',
       value: String(data.reservations?.total || 0),
       icon: PiCalendarCheckBold,
       bgColor: 'bg-blue-50',
@@ -286,6 +323,7 @@ export default function StatCards({
     {
       permission: 'dashboard.support_tickets',
       title: 'Support Tickets',
+      titleKey: 'stats_support_tickets',
       value: String(data.customer_support?.total || 0),
       icon: PiFileTextBold,
       bgColor: 'bg-indigo-50',
@@ -299,6 +337,7 @@ export default function StatCards({
     {
       permission: 'dashboard.total_leads',
       title: 'Total Leads',
+      titleKey: 'stats_total_leads',
       value: String(data.leads?.total_leads ?? 0),
       icon: PiUsersBold,
       bgColor: 'bg-sky-50',
@@ -312,6 +351,7 @@ export default function StatCards({
     {
       permission: 'dashboard.total_leads',
       title: 'Inbound Leads',
+      titleKey: 'stats_inbound_leads',
       value: String(data.inbound_leads?.total_leads ?? 0),
       icon: PiUsersBold,
       bgColor: 'bg-blue-50',
@@ -325,6 +365,7 @@ export default function StatCards({
     {
       permission: 'dashboard.total_leads',
       title: 'Outbound Leads',
+      titleKey: 'stats_outbound_leads',
       value: String(data.outbound_leads?.total_leads ?? 0),
       icon: PiUsersBold,
       bgColor: 'bg-violet-50',
@@ -338,6 +379,7 @@ export default function StatCards({
     {
       permission: 'dashboard.qualified_leads',
       title: 'Qualified Leads',
+      titleKey: 'stats_qualified_leads',
       value: String(data.leads?.qualified_leads ?? 0),
       icon: PiListChecksBold,
       bgColor: 'bg-lime-50',
@@ -351,6 +393,7 @@ export default function StatCards({
     {
       permission: 'dashboard.qualified_leads',
       title: 'Inbound Qualified',
+      titleKey: 'stats_inbound_qualified',
       value: String(data.inbound_leads?.qualified_leads ?? 0),
       icon: PiListChecksBold,
       bgColor: 'bg-teal-50',
@@ -364,6 +407,7 @@ export default function StatCards({
     {
       permission: 'dashboard.qualified_leads',
       title: 'Outbound Qualified',
+      titleKey: 'stats_outbound_qualified',
       value: String(data.outbound_leads?.qualified_leads ?? 0),
       icon: PiListChecksBold,
       bgColor: 'bg-fuchsia-50',
@@ -377,6 +421,7 @@ export default function StatCards({
     {
       permission: 'dashboard.total_invoices',
       title: 'Total Invoices',
+      titleKey: 'stats_total_invoices',
       value: String(data.invoices?.total || 0),
       icon: PiReceiptBold,
       bgColor: 'bg-purple-50',
@@ -390,6 +435,7 @@ export default function StatCards({
     {
       permission: 'dashboard.total_revenue',
       title: 'Total Revenue',
+      titleKey: 'stats_total_revenue',
       value: data.total_revenue?.toLocaleString() || '0',
       icon: PiReceiptBold,
       bgColor: 'bg-emerald-50',
@@ -403,6 +449,7 @@ export default function StatCards({
     {
       permission: 'dashboard.active_doctors',
       title: 'Active Doctors',
+      titleKey: 'stats_active_doctors',
       value: String(data.doctors?.total || 0),
       icon: PiUserCircleBold,
       bgColor: 'bg-orange-50',
@@ -416,6 +463,7 @@ export default function StatCards({
     {
       permission: 'dashboard.total_clients',
       title: 'Total Clients',
+      titleKey: 'stats_total_clients',
       value: String(data.clients?.total || 0),
       icon: PiUsersBold,
       bgColor: 'bg-pink-50',
@@ -429,6 +477,7 @@ export default function StatCards({
     {
       permission: 'dashboard.total_sessions',
       title: 'Total Sessions',
+      titleKey: 'stats_total_sessions',
       value: String(data.sessions_statistics?.total_sessions || 0),
       icon: PiClockBold,
       bgColor: 'bg-cyan-50',
@@ -528,13 +577,13 @@ export default function StatCards({
                     : undefined
                 }
               >
-                {customLabel || getPerformanceLabel(status)}
+                {customLabel || t(`stats_perf_${status}`, getPerformanceLabel(status))}
               </span>
             </div>
 
             <div className="mt-4">
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                {card.title}
+                {t(card.titleKey, card.title)}
               </p>
               <p
                 className={cn(
@@ -592,7 +641,7 @@ export default function StatCards({
 
           <div className="mt-4">
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-              {card.title}
+              {t(card.titleKey, card.title)}
             </p>
             <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-white">
               {card.value}

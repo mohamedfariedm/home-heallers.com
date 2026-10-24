@@ -52,7 +52,7 @@ function ScreenRow({
   onToggleActive,
   onDelete,
 }: RowProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation('onboarding-screens');
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: screen.id, disabled: !sortable });
 

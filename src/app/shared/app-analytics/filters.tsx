@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/datepicker';
 import {
@@ -31,6 +32,7 @@ export default function AppAnalyticsFiltersComponent({
   onFilter,
   className,
 }: AppAnalyticsFiltersProps) {
+  const { t } = useTranslation('app-analytics');
   const [from, setFrom] = useState<Date | null>(null);
   const [to, setTo] = useState<Date | null>(null);
   const [date, setDate] = useState<Date | null>(null);
@@ -67,7 +69,9 @@ export default function AppAnalyticsFiltersComponent({
           <div className="flex rounded-lg bg-blue-50 p-2 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400">
             <PiFunnelBold className="h-5 w-5" />
           </div>
-          <h3 className="text-base font-bold text-gray-900 dark:text-gray-100">Filters</h3>
+          <h3 className="text-base font-bold text-gray-900 dark:text-gray-100">
+            {t('shared_filters', 'Filters')}
+          </h3>
         </div>
         <Button
           variant="text"
@@ -95,7 +99,7 @@ export default function AppAnalyticsFiltersComponent({
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             <div className="space-y-1.5">
               <label className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                Date From
+                {t('analytics_date_from', 'Date From')}
               </label>
               <DatePicker
                 selected={from}
@@ -116,7 +120,7 @@ export default function AppAnalyticsFiltersComponent({
 
             <div className="space-y-1.5">
               <label className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                Date To
+                {t('analytics_date_to', 'Date To')}
               </label>
               <DatePicker
                 selected={to}
@@ -134,7 +138,7 @@ export default function AppAnalyticsFiltersComponent({
 
             <div className="space-y-1.5">
               <label className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                Active Users Date
+                {t('analytics_active_users_date', 'Active Users Date')}
               </label>
               <DatePicker
                 selected={date}
@@ -158,14 +162,14 @@ export default function AppAnalyticsFiltersComponent({
             className="text-red-500 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-900/20"
           >
             <PiXBold className="me-1.5 h-4 w-4" />
-            Reset Filters
+            {t('shared_reset_filters', 'Reset Filters')}
           </Button>
           <Button
             onClick={handleApplyFilters}
             className="bg-gray-900 px-8 text-white hover:bg-gray-800 dark:bg-gray-100 dark:text-gray-900"
           >
             <PiMagnifyingGlassBold className="me-1.5 h-4 w-4" />
-            Apply Filters
+            {t('shared_apply_filters', 'Apply Filters')}
           </Button>
         </div>
       </div>

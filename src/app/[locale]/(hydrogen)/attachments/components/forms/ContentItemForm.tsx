@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { FormField } from '../ui/FormField';
 import { FileUpload } from '../ui/FileUpload';
 import { FormSection } from '../ui/FormSection';
@@ -22,6 +23,7 @@ export const ContentItemForm: React.FC<ContentItemFormProps> = ({
   isLoading = false,
   hasImages = false,
 }) => {
+  const { t } = useTranslation('attachments');
   const [currentImages, setCurrentImages] = useState(item.attachment || []);
   const isMultiple = Array.isArray(item.attachment) && item.attachment.length > 1;
 
@@ -84,26 +86,32 @@ export const ContentItemForm: React.FC<ContentItemFormProps> = ({
   };
 
   return (
-    <FormSection title={`Content Item #${item.id}`} className="mb-6">
+    <FormSection
+      title={t('attachments_content_item', {
+        id: item.id,
+        defaultValue: 'Content Item #{{id}}',
+      })}
+      className="mb-6"
+    >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Title Fields */}
         <div className="grid md:grid-cols-2 gap-6">
           <FormField
             name="title_en"
-            label="Title (English)"
+            label={t('attachments_field_title_en', 'Title (English)')}
             type="text"
             register={register}
             errors={errors}
-            placeholder="Enter English title"
+            placeholder={t('attachments_field_title_en_ph', 'Enter English title')}
             required
           />
           <FormField
             name="title_ar"
-            label="Title (Arabic)"
+            label={t('attachments_field_title_ar', 'Title (Arabic)')}
             type="text"
             register={register}
             errors={errors}
-            placeholder="Enter Arabic title"
+            placeholder={t('attachments_field_title_ar_ph', 'Enter Arabic title')}
             required
           />
         </div>
@@ -113,11 +121,11 @@ export const ContentItemForm: React.FC<ContentItemFormProps> = ({
           <div className="grid md:grid-cols-3 gap-6">
             <FormField
               name="title_value"
-              label="Value"
+              label={t('attachments_field_value', 'Value')}
               type="number"
               register={register}
               errors={errors}
-              placeholder="Enter value"
+              placeholder={t('attachments_field_value_ph', 'Enter value')}
             />
           </div>
         )}
@@ -127,19 +135,19 @@ export const ContentItemForm: React.FC<ContentItemFormProps> = ({
           <div className="grid md:grid-cols-2 gap-6">
             <FormField
               name="description_en"
-              label="Description (English)"
+              label={t('attachments_field_desc_en', 'Description (English)')}
               type="textarea"
               register={register}
               errors={errors}
-              placeholder="Enter English description"
+              placeholder={t('attachments_field_desc_en_ph', 'Enter English description')}
             />
             <FormField
               name="description_ar"
-              label="Description (Arabic)"
+              label={t('attachments_field_desc_ar', 'Description (Arabic)')}
               type="textarea"
               register={register}
               errors={errors}
-              placeholder="Enter Arabic description"
+              placeholder={t('attachments_field_desc_ar_ph', 'Enter Arabic description')}
             />
           </div>
         )}
@@ -147,17 +155,17 @@ export const ContentItemForm: React.FC<ContentItemFormProps> = ({
           <div className="grid md:grid-cols-2 gap-6">
             <QuillEditor
               name="description_en"
-              label="Description (English)"
+              label={t('attachments_field_desc_en', 'Description (English)')}
               control={control}
               error={errors.description_en?.message}
-              placeholder="Enter English description"
+              placeholder={t('attachments_field_desc_en_ph', 'Enter English description')}
             />
             <QuillEditor
               name="description_ar"
-              label="Description (Arabic)"
+              label={t('attachments_field_desc_ar', 'Description (Arabic)')}
               error={errors.description_ar?.message}
               control={control}
-              placeholder="Enter Arabic description"
+              placeholder={t('attachments_field_desc_ar_ph', 'Enter Arabic description')}
             />
           </div>
         )}
@@ -166,7 +174,7 @@ export const ContentItemForm: React.FC<ContentItemFormProps> = ({
         {item.additional?.link !== undefined && (
           <FormField
             name="additional_link"
-            label="Link"
+            label={t('attachments_field_link', 'Link')}
             type="url"
             register={register}
             errors={errors}
@@ -178,19 +186,19 @@ export const ContentItemForm: React.FC<ContentItemFormProps> = ({
           <div className="grid md:grid-cols-2 gap-6">
             <FormField
               name="additional_date_en"
-              label="Date (English)"
+              label={t('attachments_field_date_en', 'Date (English)')}
               type="text"
               register={register}
               errors={errors}
-              placeholder="Enter date in English"
+              placeholder={t('attachments_field_date_en_ph', 'Enter date in English')}
             />
             <FormField
               name="additional_date_ar"
-              label="Date (Arabic)"
+              label={t('attachments_field_date_ar', 'Date (Arabic)')}
               type="text"
               register={register}
               errors={errors}
-              placeholder="Enter date in Arabic"
+              placeholder={t('attachments_field_date_ar_ph', 'Enter date in Arabic')}
             />
           </div>
         )}
@@ -198,7 +206,7 @@ export const ContentItemForm: React.FC<ContentItemFormProps> = ({
         {/* File Upload */}
         {hasImages && (
           <FileUpload
-            label="Images"
+            label={t('attachments_images', 'Images')}
             onUpload={handleFileUpload}
             onRemove={handleRemoveFile}
             currentFiles={currentImages}
@@ -215,7 +223,7 @@ export const ContentItemForm: React.FC<ContentItemFormProps> = ({
               className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
             >
               <Trash2 className="h-4 w-4" />
-              Delete
+              {t('shared_delete', 'Delete')}
             </button>
           )}
           <div className="flex gap-3 ml-auto">
@@ -230,7 +238,7 @@ export const ContentItemForm: React.FC<ContentItemFormProps> = ({
               ) : (
                 <Save className="h-4 w-4" />
               )}
-              Update
+              {t('shared_update', 'Update')}
             </button>
           </div>
         </div>

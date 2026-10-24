@@ -1,35 +1,41 @@
 'use client';
-import PasswordSettingsView from '@/app/shared/attachments/password-settings';
 import PageHeader from '@/app/shared/page-header';
-import ToggleSection from '@/app/shared/ToggleSection';
 import Spinner from '@/components/ui/spinner';
 import { routes } from '@/config/routes';
 import { useEditSection, usePosts, useUpdateSection } from '@/framework/attachments';
-import { useSearchParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ContentManager } from './components/forms/ContentManager';
 import toast from 'react-hot-toast';
 
 export default function ProfileSettingsFormPage() {
+  const { t } = useTranslation('attachments');
+  const routeParams = useParams();
+  const lang = routeParams?.locale === 'ar' ? 'ar' : 'en';
   const searchParams = useSearchParams();
   const params = new URLSearchParams(searchParams);
   if (!params.get('section_id')) params.set('section_id', '1');
   const { data, isLoading } = usePosts(params.get('section_id') || '1');
-  console.log('section data', data);
   let [key,setKey]=useState(0)
-  const { mutate: update, isPending } = useEditSection();
+  const { mutate: update } = useEditSection();
     const { mutate } = useUpdateSection();
   
+  const sectionTitle =
+    data?.section?.title?.[lang] ||
+    data?.section?.title?.en ||
+    data?.section?.title?.ar ||
+    t('attachments_page_fallback', 'Description Page');
 
   const pageHeader = {
-    title: `${data?.section?.title?.en||"Description Page"}`,
+    title: sectionTitle,
     breadcrumb: [
       {
         href: routes.pages.index,
-        name: 'Home',
+        name: t('attachments_home', 'Home'),
       },
       {
-        name: `${data?.section?.title?.en||"Description Page"}`,
+        name: sectionTitle,
       },
     ],
   };
@@ -59,7 +65,7 @@ export default function ProfileSettingsFormPage() {
       
     } catch (error) {
       console.error('Failed to update item:', error);
-      alert('Failed to update item');
+      toast.error(t('attachments_update_failed', 'Failed to update item'));
     }
   };
 

@@ -10,7 +10,7 @@ interface SocialSectionProps {
 }
 
 const SocialSection: React.FC<SocialSectionProps> = ({ social, onUpdate }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('settings');
   const handleChange = (field: keyof Social, value: Partial<SocialLink>) => {
     const current = social[field] || { url: '', show: false };
     onUpdate({ 

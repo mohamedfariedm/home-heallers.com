@@ -1,24 +1,29 @@
 'use client';
 
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useState } from 'react';
-import i18nConfig from '@/i18nConfig';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import SelectBox from '@/components/ui/select';
+import {
+  getLocaleFromPathname,
+  isSupportedLocale,
+  localeDir,
+  setLocaleCookie,
+  withLocalePrefix,
+} from '@/lib/locale';
+import i18n from '@/lib/i18n';
 
-export default function LanguageChanger({
-  buttonClassName,
-}: {
+export default function LanguageChanger(_props?: {
   buttonClassName?: string;
 }) {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const currentPathname = usePathname();
-
-  const params = new URLSearchParams(searchParams);
-  const segments = currentPathname.split('/');
-  const currentLocale = segments[1];
+  const currentLocale = getLocaleFromPathname(currentPathname);
 
   const [selectedLang, setSelectedLang] = useState(currentLocale);
+
+  useEffect(() => {
+    setSelectedLang(currentLocale);
+  }, [currentLocale]);
 
   const options = [
     { name: 'En', value: 'en' },
@@ -26,23 +31,22 @@ export default function LanguageChanger({
   ];
 
   const handleChange = (newLocale: string) => {
-    if (!i18nConfig.locales.includes(newLocale)) return;
+    if (!isSupportedLocale(newLocale) || newLocale === currentLocale) return;
 
     setSelectedLang(newLocale);
+    setLocaleCookie(newLocale);
+    void i18n.changeLanguage(newLocale);
 
-    // Set NEXT_LOCALE cookie
-    const date = new Date();
-    date.setTime(date.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days
-    document.cookie = `NEXT_LOCALE=${newLocale}; expires=${date.toUTCString()}; path=/`;
+    const dir = localeDir(newLocale);
+    document.documentElement.lang = newLocale;
+    document.documentElement.dir = dir;
+    document.body.dir = dir;
 
-    // Reconstruct path with new locale
-    const newSegments = [...segments];
-    newSegments[1] = newLocale;
-    const newPath = newSegments.join('/');
+    const params = new URLSearchParams(searchParams);
+    const newPath = withLocalePrefix(currentPathname, newLocale);
     const fullUrl = params.toString() ? `${newPath}?${params}` : newPath;
 
-    // Navigate then reload
-    window.location.replace(fullUrl); // Use replace to avoid adding to history
+    window.location.replace(fullUrl);
   };
 
   return (

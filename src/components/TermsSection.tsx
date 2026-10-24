@@ -25,7 +25,7 @@ interface TermsSectionProps {
 export default function TermsSection({ terms, onUpdate }: TermsSectionProps) {
   const [lang, setLang] = useState<"ar" | "en">("ar");
   const [isPreview, setIsPreview] = useState(false);
-  const { t: tt } = useTranslation();
+  const { t: tt } = useTranslation('settings');
 
   const t = terms?.[lang] || {
     title: "",

@@ -359,6 +359,10 @@ select:-webkit-autofill:focus {
 /* ................................................... */
 /* ?React Datepicker Styling */
 /* ................................................... */
+.react-datepicker-popper {
+  z-index: 9999;
+}
+
 .react-datepicker-popper .react-datepicker {
   @apply bg-gray-0 font-inter text-gray-600 dark:border-gray-300 dark:bg-gray-100;
 }
@@ -1040,7 +1044,7 @@ textarea::placeholder {
 /* .gmnoprint {
   @apply hidden;
 } */
-div[style='z-index: 1000;'],
+.gm-style div[style='z-index: 1000;'],
 .gm-style-cc {
   @apply hidden;
 }

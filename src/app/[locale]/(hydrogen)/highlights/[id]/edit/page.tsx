@@ -14,7 +14,7 @@ import { routes } from '@/config/routes';
 import { useTranslation } from 'react-i18next';
 
 export default function EditHighlightPage() {
-  const { t } = useTranslation();
+  const { t } = useTranslation('highlights');
   const params = useParams();
   const id = params?.id as string;
 

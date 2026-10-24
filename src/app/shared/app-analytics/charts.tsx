@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslation } from 'react-i18next';
 import WidgetCard from '@/components/cards/widget-card';
 import {
   PieChart,
@@ -30,12 +31,14 @@ function RankedBarChart({
   data,
   labelKey,
   valueKey,
+  countLabel,
 }: {
   title: string;
   description?: string;
   data: Array<Record<string, string | number>>;
   labelKey: string;
   valueKey: string;
+  countLabel: string;
 }) {
   if (!data.length) return null;
 
@@ -66,7 +69,7 @@ function RankedBarChart({
                 border: '1px solid #e5e7eb',
                 borderRadius: '8px',
               }}
-              formatter={(value: number) => [value.toLocaleString(), 'Count']}
+              formatter={(value: number) => [value.toLocaleString(), countLabel]}
             />
             <Bar dataKey="count" fill="#6366F1" radius={[4, 4, 0, 0]} />
           </BarChart>
@@ -77,6 +80,7 @@ function RankedBarChart({
 }
 
 export default function AppAnalyticsCharts({ data, className }: AppAnalyticsChartsProps) {
+  const { t } = useTranslation('app-analytics');
   const { installations, devices } = data;
 
   const platformData = [
@@ -95,8 +99,11 @@ export default function AppAnalyticsCharts({ data, className }: AppAnalyticsChar
     <div className={cn('grid grid-cols-1 gap-6 xl:grid-cols-2', className)}>
       {platformData.length > 0 && (
         <WidgetCard
-          title="Platform Distribution"
-          description={`${totalPlatform.toLocaleString()} total installs`}
+          title={t('analytics_platform_distribution', 'Platform Distribution')}
+          description={t('analytics_total_installs_desc', {
+            count: totalPlatform.toLocaleString(),
+            defaultValue: '{{count}} total installs',
+          })}
           className="min-h-[360px]"
         >
           <div className="h-[280px] w-full pt-4">
@@ -126,8 +133,8 @@ export default function AppAnalyticsCharts({ data, className }: AppAnalyticsChar
 
       {versionData.length > 0 && (
         <WidgetCard
-          title="App Versions"
-          description="Installations by app version"
+          title={t('analytics_app_versions', 'App Versions')}
+          description={t('analytics_app_versions_desc', 'Installations by app version')}
           className="min-h-[360px]"
         >
           <div className="h-[280px] w-full pt-4">
@@ -144,7 +151,12 @@ export default function AppAnalyticsCharts({ data, className }: AppAnalyticsChar
                   tick={{ fontSize: 11, fill: '#6B7280' }}
                 />
                 <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280' }} />
-                <Tooltip formatter={(value: number) => [value.toLocaleString(), 'Installs']} />
+                <Tooltip
+                  formatter={(value: number) => [
+                    value.toLocaleString(),
+                    t('analytics_installs', 'Installs'),
+                  ]}
+                />
                 <Bar dataKey="count" fill="#10B981" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -153,36 +165,40 @@ export default function AppAnalyticsCharts({ data, className }: AppAnalyticsChar
       )}
 
       <RankedBarChart
-        title="Top Device Models"
-        description="Most common devices across platforms"
+        title={t('analytics_top_device_models', 'Top Device Models')}
+        description={t('analytics_top_device_models_desc', 'Most common devices across platforms')}
         data={devices.top_device_models}
         labelKey="device_model"
         valueKey="count"
+        countLabel={t('shared_count', 'Count')}
       />
 
       <RankedBarChart
-        title="Top Android OS Versions"
+        title={t('analytics_top_android_os', 'Top Android OS Versions')}
         data={devices.top_android_versions}
         labelKey="os_version"
         valueKey="count"
+        countLabel={t('shared_count', 'Count')}
       />
 
       <RankedBarChart
-        title="Top iPhone Models"
+        title={t('analytics_top_iphone_models', 'Top iPhone Models')}
         data={devices.top_iphone_models}
         labelKey="device_model"
         valueKey="count"
+        countLabel={t('shared_count', 'Count')}
       />
 
       <RankedBarChart
-        title="Old App Versions"
-        description="Installations on outdated app versions"
+        title={t('analytics_old_app_versions', 'Old App Versions')}
+        description={t('analytics_old_app_versions_desc', 'Installations on outdated app versions')}
         data={devices.old_app_versions.map((item) => ({
           device_model: `${item.app_version} (${item.platform})`,
           count: item.count,
         }))}
         labelKey="device_model"
         valueKey="count"
+        countLabel={t('shared_count', 'Count')}
       />
     </div>
   );
