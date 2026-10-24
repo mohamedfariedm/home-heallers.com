@@ -249,10 +249,22 @@ export const routes = {
     create: '/highlights/create',
     edit: (id: string | number) => `/highlights/${id}/edit`,
   },
+  supportTickets: {
+    index: '/support-tickets',
+    detail: (id: string | number) => `/support-tickets/${id}`,
+    clientHistory: (clientId: string | number) =>
+      `/support-tickets?tab=all&client_id=${clientId}`,
+  },
   onboardingScreens: {
     index: '/onboarding-screens',
     create: '/onboarding-screens/create',
     edit: (id: string | number) => `/onboarding-screens/${id}/edit`,
+  },
+  geoRegions: {
+    index: '/geo-regions',
+    create: '/geo-regions/create',
+    edit: (id: string | number) => `/geo-regions/${id}/edit`,
+    visits: (id: string | number) => `/geo-regions/${id}/visits`,
   },
   invoices: {
     index: '/invoices',
