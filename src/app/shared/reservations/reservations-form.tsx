@@ -38,6 +38,12 @@ import { CC_OPTIONS } from '@/app/shared/cc-options';
 import { SOURCE_CAMPAIGN_OPTIONS } from '@/app/shared/source-campaign-options';
 import { resolveLocalizedName } from '@/utils/resolve-localized-name';
 import { isReservationLockedSource } from './reservation-source';
+import {
+  asRecordList,
+  relationLabel,
+  reservationRelation,
+  reservationRelationId,
+} from './reservation-relations';
 import client from '@/framework/utils';
 
 const timePeriods = [
@@ -87,18 +93,19 @@ const unwrapReservation = (response: any) => {
   return payload?.data ?? payload;
 };
 
-function asRecordList(payload: any): any[] {
-  if (Array.isArray(payload)) return payload;
-  if (Array.isArray(payload?.data)) return payload.data;
-  if (Array.isArray(payload?.data?.data)) return payload.data.data;
-  return [];
-}
-
-function relationId(source: any, key: 'service' | 'category'): string {
-  const nested = source?.[key];
-  const id = nested?.id ?? source?.[`${key}_id`];
-  if (id == null || id === '') return '';
-  return String(id);
+function catalogMatch(list: any[], id: string, label: string) {
+  if (id) {
+    const byId = list.find((item) => String(item?.id) === id);
+    if (byId) return byId;
+  }
+  if (!label) return null;
+  return (
+    list.find((item) => {
+      const english = resolveLocalizedName(item?.name);
+      const arabic = resolveLocalizedName(item?.name, 'ar');
+      return english === label || arabic === label;
+    }) ?? null
+  );
 }
 
 function withSelectedRecord(list: any[], selected: any, selectedId: string) {
@@ -292,10 +299,10 @@ export default function CreateOrUpdateReservation({
       // 🧩 base IDs
       patient_id: initValues?.patient?.id?.toString() || leadPatientId?.toString() || '',
       doctor_id: initValues?.doctor?.id?.toString() || '',
-      service_id: relationId(initValues, 'service'),
+      service_id: reservationRelationId(initValues, 'service'),
       category_id:
-        relationId(initValues, 'category') ||
-        relationId(initValues?.service, 'category'),
+        reservationRelationId(initValues, 'category') ||
+        reservationRelationId(initValues?.service, 'category'),
       sessions_count: initialSessionsCount,
 
       // 🧩 numbers and billing
@@ -499,9 +506,12 @@ export default function CreateOrUpdateReservation({
     setValue('dates', updatedDates, { shouldValidate: false });
   }, [watchDoctorId, setValue, getValues]);
 
-  const [loadedService, setLoadedService] = useState<any>(initValues?.service ?? null);
+  const [loadedService, setLoadedService] = useState<any>(
+    reservationRelation(initValues, 'service')
+  );
   const [loadedCategory, setLoadedCategory] = useState<any>(
-    initValues?.category ?? initValues?.service?.category ?? null
+    reservationRelation(initValues, 'category') ??
+      reservationRelation(initValues?.service, 'category')
   );
   const loadedSessionDoctorsRef = useRef(
     (initValues?.dates || [])
@@ -517,24 +527,27 @@ export default function CreateOrUpdateReservation({
         if (cancelled) return;
         const reservation = unwrapReservation(response);
         if (!reservation) return;
-        if (reservation.service) setLoadedService(reservation.service);
-        const categoryRecord = reservation.category ?? reservation.service?.category;
+        const serviceRecord = reservationRelation(reservation, 'service');
+        if (serviceRecord) setLoadedService(serviceRecord);
+        const categoryRecord =
+          reservationRelation(reservation, 'category') ??
+          reservationRelation(reservation.service, 'category');
         if (categoryRecord) setLoadedCategory(categoryRecord);
-        const serviceId = relationId(reservation, 'service');
+        const serviceId = reservationRelationId(reservation, 'service');
         const categoryId =
-          relationId(reservation, 'category') ||
-          relationId(reservation.service, 'category');
+          reservationRelationId(reservation, 'category') ||
+          reservationRelationId(reservation.service, 'category');
         const currentServiceId = getValues('service_id');
         if (
           serviceId &&
-          (!currentServiceId || currentServiceId === relationId(initValues, 'service'))
+          (!currentServiceId || currentServiceId === reservationRelationId(initValues, 'service'))
         ) {
           setValue('service_id', serviceId, { shouldValidate: false });
         }
         const currentCategoryId = getValues('category_id');
         const initialCategoryId =
-          relationId(initValues, 'category') ||
-          relationId(initValues?.service, 'category');
+          reservationRelationId(initValues, 'category') ||
+          reservationRelationId(initValues?.service, 'category');
         if (
           categoryId &&
           (!currentCategoryId || currentCategoryId === initialCategoryId)
@@ -560,6 +573,48 @@ export default function CreateOrUpdateReservation({
       cancelled = true;
     };
   }, [initValues?.id, setValue, getValues]);
+
+  // The list row sometimes only has an id or a name. Match it to the catalog
+  // so the Service and Category selects show the saved values.
+  useEffect(() => {
+    const serviceList = asRecordList(services?.data ?? services);
+    const categoryList = asRecordList(categories?.data ?? categories);
+    const serviceLabel = relationLabel(reservationRelation(initValues, 'service'));
+    const categoryLabel =
+      relationLabel(reservationRelation(initValues, 'category')) ||
+      relationLabel(reservationRelation(initValues?.service, 'category'));
+
+    const currentServiceId = getValues('service_id');
+    const serviceMatch = catalogMatch(
+      serviceList,
+      currentServiceId || reservationRelationId(initValues, 'service'),
+      serviceLabel
+    );
+    if (serviceMatch) {
+      setLoadedService(serviceMatch);
+      if (!currentServiceId) {
+        setValue('service_id', String(serviceMatch.id), { shouldValidate: false });
+      }
+    }
+
+    const currentCategoryId = getValues('category_id');
+    const categoryFromService =
+      serviceMatch?.category_id ?? serviceMatch?.category?.id ?? '';
+    const categoryMatch = catalogMatch(
+      categoryList,
+      currentCategoryId ||
+        reservationRelationId(initValues, 'category') ||
+        reservationRelationId(initValues?.service, 'category') ||
+        (categoryFromService ? String(categoryFromService) : ''),
+      categoryLabel || relationLabel(serviceMatch?.category)
+    );
+    if (categoryMatch) {
+      setLoadedCategory(categoryMatch);
+      if (!currentCategoryId) {
+        setValue('category_id', String(categoryMatch.id), { shouldValidate: false });
+      }
+    }
+  }, [services, categories, initValues, getValues, setValue]);
 
   // Clear center_id when source_campaign changes away from "center"
   const prevSourceCampaignRef = useRef<string | undefined>();

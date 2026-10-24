@@ -23,6 +23,7 @@ import {
   resolveLocalizedName,
   resolveLocalizedNameOrFallback,
 } from '@/utils/resolve-localized-name';
+import { reservationRelationLabel } from './reservation-relations';
 import {
   getPaymentStatusBadgeClasses,
   getPaymentStatusBadgeLabel,
@@ -88,6 +89,8 @@ interface Columns {
   canSendInvoiceWhatsapp?: boolean;
   canPersonalCoupons?: boolean;
   onPersonalCoupon?: (row: any) => void;
+  serviceNames?: ReadonlyMap<string, string>;
+  categoryNames?: ReadonlyMap<string, string>;
 }
 
 export const getColumns = ({
@@ -107,6 +110,8 @@ export const getColumns = ({
   canSendInvoiceWhatsapp = false,
   canPersonalCoupons = false,
   onPersonalCoupon,
+  serviceNames,
+  categoryNames,
 }: Columns) => [
   {
     title: (
@@ -428,10 +433,26 @@ export const getColumns = ({
     ),
     dataIndex: 'service',
     key: 'service',
-    render: (_: any, row: any) => {
-      if (!row?.service) return '—';
-      return resolveLocalizedNameOrFallback(row.service.name);
-    },
+    render: (_: any, row: any) =>
+      reservationRelationLabel(row, 'service', serviceNames) || '—',
+  },
+
+  {
+    title: (
+      <div className="flex items-center gap-1">
+        <HeaderCell title="Category" />
+        {onFilterChange && (
+          <ColumnFilterPopover
+            columnKey="category"
+            onFilterChange={onFilterChange}
+          />
+        )}
+      </div>
+    ),
+    dataIndex: 'category',
+    key: 'category',
+    render: (_: any, row: any) =>
+      reservationRelationLabel(row, 'category', categoryNames) || '—',
   },
 
   // ✅ City
