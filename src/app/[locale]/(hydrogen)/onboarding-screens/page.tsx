@@ -32,7 +32,7 @@ const FILTERS: { value: StatusFilter; labelKey: string; label: string }[] = [
 
 export default function OnboardingScreensPage() {
   const params = useParams();
-  const { t } = useTranslation();
+  const { t } = useTranslation('onboarding-screens');
   const lang = params?.locale === 'ar' ? 'ar' : 'en';
   const pageHeader = {
     title: t('Tutorial'),

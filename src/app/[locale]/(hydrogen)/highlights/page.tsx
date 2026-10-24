@@ -18,7 +18,7 @@ import { useTranslation } from 'react-i18next';
 import { PiPlusBold, PiGearBold } from 'react-icons/pi';
 
 export default function HighlightsPage() {
-  const { t } = useTranslation();
+  const { t } = useTranslation('highlights');
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();

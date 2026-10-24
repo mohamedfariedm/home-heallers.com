@@ -67,39 +67,26 @@ function DoctorsBulkPriceForm({
 
   const [values, setValues] = useState<DoctorsBulkPriceInput>({
     doctor_session_price: '',
-    session_price: String(currentSettings.session_price ?? ''),
-    booking_price: String(currentSettings.booking_price ?? ''),
-    reservation_price: String(currentSettings.reservation_price ?? ''),
   });
   const [pending, setPending] = useState<DoctorsBulkPricePayload | null>(null);
-  const [formError, setFormError] = useState<string | null>(null);
 
   const onSubmit: SubmitHandler<DoctorsBulkPriceInput> = (data) => {
     setValues(data);
 
-    const payload: DoctorsBulkPricePayload = {};
-    if (data.doctor_session_price !== '') {
-      payload.session_price = Number(data.doctor_session_price);
-    }
+    const price = Number(data.doctor_session_price);
+    const payload: DoctorsBulkPricePayload = { session_price: price };
 
-    // Only changed Settings prices are sent; an emptied field keeps the current value.
     const settings: NonNullable<DoctorsBulkPricePayload['settings']> = {};
     SETTINGS_PRICE_KEYS.forEach((key) => {
       const current = currentSettings[key];
-      if (data[key] !== '' && (current == null || Number(data[key]) !== Number(current))) {
-        settings[key] = Number(data[key]);
+      if (current == null || Number(current) !== price) {
+        settings[key] = price;
       }
     });
     if (Object.keys(settings).length > 0) {
       payload.settings = settings;
     }
 
-    if (payload.session_price === undefined && payload.settings === undefined) {
-      setFormError('Enter a doctor session price or change at least one Settings price.');
-      return;
-    }
-
-    setFormError(null);
     setPending(payload);
   };
 
@@ -177,25 +164,11 @@ function DoctorsBulkPriceForm({
             min={300}
             step={1}
             label="Doctor session price (SAR)"
-            placeholder="Leave empty to keep doctors' current prices"
-            helperText={`Overwrites the session price of ${allDoctorsLabel}.`}
+            placeholder="Enter a price for all doctors"
+            helperText={`Overwrites the session price of ${allDoctorsLabel}, and the settings session, booking, and reservation prices.`}
             {...register('doctor_session_price')}
             error={errors.doctor_session_price?.message}
           />
-
-          {SETTINGS_PRICE_KEYS.map((key) => (
-            <Input
-              key={key}
-              type="number"
-              min={0}
-              step="any"
-              label={`${SETTINGS_PRICE_LABELS[key]} (SAR)`}
-              {...register(key)}
-              error={errors[key]?.message}
-            />
-          ))}
-
-          {formError && <Text className="text-sm text-red-500">{formError}</Text>}
 
           <div className="flex items-center justify-end gap-4">
             <Button variant="outline" onClick={closeModal} className="w-full @xl:w-auto">

@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import { Calendar, dayjsLocalizer, type View } from 'react-big-calendar';
 import {
@@ -183,6 +184,7 @@ function SessionDetailModal({
 }: {
   session: ReservationCalendarSession;
 }) {
+  const { t } = useTranslation('statistics');
   const { closeModal, openModal } = useModal();
   const [loadingReservation, setLoadingReservation] = useState(false);
   const isGuest = session.patient?.id == null;
@@ -244,7 +246,7 @@ function SessionDetailModal({
             </span>
             {isGuest && (
               <span className="rounded-full bg-white/80 px-2.5 py-1 text-xs font-medium text-amber-700 ring-1 ring-amber-200">
-                Guest
+                {t('cal_guest', 'Guest')}
               </span>
             )}
           </div>
@@ -301,7 +303,7 @@ function SessionDetailModal({
             </p>
             <p className="mt-0.5 flex items-center gap-1.5 text-sm text-gray-500">
               <PiPhoneBold className="h-3.5 w-3.5" />
-              {session.patient?.mobile || 'No mobile'}
+              {session.patient?.mobile || t('cal_no_mobile', 'No mobile')}
             </p>
           </div>
           <div className="text-right">
@@ -317,27 +319,30 @@ function SessionDetailModal({
         <div className="grid gap-3 sm:grid-cols-2">
           <InfoTile
             icon={<PiStethoscopeBold className="h-4 w-4" />}
-            label="Doctor"
+            label={t('cal_doctor', 'Doctor')}
             value={doctorName}
           />
           <InfoTile
             icon={<PiPackageBold className="h-4 w-4" />}
-            label="Service"
+            label={t('cal_service', 'Service')}
             value={serviceName}
           />
           <InfoTile
             icon={<PiCalendarCheckBold className="h-4 w-4" />}
-            label="Booking status"
+            label={t('cal_booking_status', 'Booking status')}
             value={session.reservation?.status_label || '—'}
           />
           <InfoTile
             icon={<PiSparkleBold className="h-4 w-4" />}
-            label="Plan"
+            label={t('cal_plan', 'Plan')}
             value={
               [
                 session.reservation?.type,
                 session.reservation?.sessions_count != null
-                  ? `${session.reservation.sessions_count} sessions`
+                  ? t('stats_sessions_n', {
+                      count: session.reservation.sessions_count,
+                      defaultValue: '{{count}} sessions',
+                    })
                   : null,
               ]
                 .filter(Boolean)
@@ -393,6 +398,7 @@ function InfoTile({
 }
 
 export default function ReservationsCalendar({ className }: { className?: string }) {
+  const { t } = useTranslation('statistics');
   const { openModal } = useModal();
   const [currentDate, setCurrentDate] = useState(() =>
     dayjs().startOf('month').toDate()
@@ -402,7 +408,7 @@ export default function ReservationsCalendar({ className }: { className?: string
   const [doctorId, setDoctorId] = useState('');
   const [doctors, setDoctors] = useState<
     Array<{ value: string; label: string; name: string }>
-  >([{ value: '', label: 'All doctors', name: 'All doctors' }]);
+  >([{ value: '', label: t('cal_all_doctors', 'All doctors'), name: t('cal_all_doctors', 'All doctors') }]);
 
   const year = dayjs(currentDate).year();
   const month = dayjs(currentDate).month() + 1;
@@ -425,11 +431,11 @@ export default function ReservationsCalendar({ className }: { className?: string
         const result = await response.json();
         const doctorsData = result.data || result || [];
         setDoctors([
-          { value: '', label: 'All doctors', name: 'All doctors' },
+          { value: '', label: t('cal_all_doctors', 'All doctors'), name: t('cal_all_doctors', 'All doctors') },
           ...doctorsData.map((doctor: any) => {
             const name = resolveLocalizedNameOrFallback(
               doctor.name,
-              `Doctor #${doctor.id}`
+              t('cal_doctor_n', { id: doctor.id, defaultValue: 'Doctor #{{id}}' })
             );
             return {
               value: String(doctor.id),
@@ -557,10 +563,12 @@ export default function ReservationsCalendar({ className }: { className?: string
           className
         )}
       >
-        <p className="text-lg font-semibold text-rose-700">Failed to load calendar</p>
+        <p className="text-lg font-semibold text-rose-700">
+          {t('cal_load_failed', 'Failed to load calendar')}
+        </p>
         <p className="mt-2 text-sm text-rose-600/80">{error.message}</p>
         <Button className="mt-5 rounded-xl" onClick={() => refetch()}>
-          Try again
+          {t('shared_try_again', 'Try Again')}
         </Button>
       </div>
     );
@@ -575,18 +583,23 @@ export default function ReservationsCalendar({ className }: { className?: string
             <div>
               <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-primary ring-1 ring-primary/15">
                 <PiCalendarBlankBold className="h-3.5 w-3.5" />
-                Sessions calendar
+                {t('cal_sessions', 'Sessions calendar')}
               </div>
               <h2 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
                 {dayjs(currentDate).format('MMMM YYYY')}
               </h2>
               <p className="mt-1 text-sm text-gray-500">
-                {totalSessions} session{totalSessions === 1 ? '' : 's'} this
-                month
+                {totalSessions === 1
+                  ? t('cal_session_month', { count: totalSessions, defaultValue: '{{count}} session this month' })
+                  : t('cal_sessions_month', { count: totalSessions, defaultValue: '{{count}} sessions this month' })}
                 {status
-                  ? ` · showing ${sessions.length} ${status}`
+                  ? t('cal_showing_status', {
+                      count: sessions.length,
+                      status: t(`cal_${status}`, status),
+                      defaultValue: ' · showing {{count}} {{status}}',
+                    })
                   : ''}
-                {isLoading || isFetching ? ' · refreshing…' : ''}
+                {isLoading || isFetching ? t('cal_refreshing', ' · refreshing…') : ''}
               </p>
             </div>
 
@@ -597,7 +610,7 @@ export default function ReservationsCalendar({ className }: { className?: string
                   size="sm"
                   className="h-9 w-9 rounded-lg p-0"
                   onClick={() => shiftMonth(-1)}
-                  aria-label="Previous month"
+                  aria-label={t('cal_prev_month', 'Previous month')}
                 >
                   <PiCaretLeftBold className="h-4 w-4" />
                 </Button>
@@ -607,14 +620,14 @@ export default function ReservationsCalendar({ className }: { className?: string
                   className="h-9 rounded-lg px-3"
                   onClick={goToday}
                 >
-                  Today
+                  {t('cal_today', 'Today')}
                 </Button>
                 <Button
                   variant="text"
                   size="sm"
                   className="h-9 w-9 rounded-lg p-0"
                   onClick={() => shiftMonth(1)}
-                  aria-label="Next month"
+                  aria-label={t('cal_next_month', 'Next month')}
                 >
                   <PiCaretRightBold className="h-4 w-4" />
                 </Button>
@@ -633,7 +646,7 @@ export default function ReservationsCalendar({ className }: { className?: string
                         : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
                     )}
                   >
-                    {v}
+                    {t(`cal_view_${v}`, v)}
                   </button>
                 ))}
               </div>
@@ -658,7 +671,7 @@ export default function ReservationsCalendar({ className }: { className?: string
                 )}
               >
                 <span className={cn('h-2 w-2 rounded-full', meta.bar)} />
-                {meta.label}
+                {t(`cal_${key}`, meta.label)}
                 <span className="rounded-full bg-white/70 px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-gray-700">
                   {statusCounts[key] || 0}
                 </span>
@@ -669,18 +682,28 @@ export default function ReservationsCalendar({ className }: { className?: string
           <div className="flex flex-wrap gap-3">
             <div className="w-44">
               <SelectBox
-                options={SESSION_STATUS_OPTIONS}
+                options={SESSION_STATUS_OPTIONS.map((o) => ({
+                  ...o,
+                  name: o.value
+                    ? t(`cal_${o.value}`, o.name)
+                    : t('cal_all_statuses', o.name),
+                  label: o.value
+                    ? t(`cal_${o.value}`, o.label)
+                    : t('cal_all_statuses', o.label),
+                }))}
                 value={status}
                 onChange={(value) =>
                   setStatus(toSelectValue(value) as SessionStatus | '')
                 }
-                placeholder="Status"
+                placeholder={t('shared_status', 'Status')}
                 getOptionValue={(option) => option.value}
-                displayValue={(selected) =>
-                  SESSION_STATUS_OPTIONS.find(
+                displayValue={(selected) => {
+                  const match = SESSION_STATUS_OPTIONS.find(
                     (o) => o.value === toSelectValue(selected)
-                  )?.name ?? 'All statuses'
-                }
+                  );
+                  if (!match || !match.value) return t('cal_all_statuses', 'All statuses');
+                  return t(`cal_${match.value}`, match.name);
+                }}
               />
             </div>
             <div className="w-52">
@@ -688,11 +711,11 @@ export default function ReservationsCalendar({ className }: { className?: string
                 options={doctors}
                 value={doctorId}
                 onChange={(value) => setDoctorId(toSelectValue(value))}
-                placeholder="Doctor"
+                placeholder={t('cal_doctor', 'Doctor')}
                 getOptionValue={(option) => option.value}
                 displayValue={(selected) =>
                   doctors.find((o) => o.value === toSelectValue(selected))
-                    ?.name ?? 'All doctors'
+                    ?.name ?? t('cal_all_doctors', 'All doctors')
                 }
               />
             </div>
@@ -710,7 +733,9 @@ export default function ReservationsCalendar({ className }: { className?: string
             <div className="flex min-h-[640px] items-center justify-center rounded-2xl bg-gray-50/50">
               <div className="text-center">
                 <Loader size="xl" />
-                <p className="mt-3 text-sm text-gray-500">Loading month sessions…</p>
+                <p className="mt-3 text-sm text-gray-500">
+                  {t('cal_loading', 'Loading month sessions…')}
+                </p>
               </div>
             </div>
           ) : (

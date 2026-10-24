@@ -2,6 +2,7 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import Backend from 'i18next-resources-to-backend';
 import i18nConfig from '@/i18nConfig';
+import { I18N_NAMESPACES } from '@/config/i18n-namespaces';
 
 function getInitialLocale() {
   if (typeof window === 'undefined') return i18nConfig.defaultLocale;
@@ -20,8 +21,9 @@ i18n
     lng: getInitialLocale(),
     supportedLngs: i18nConfig.locales,
     fallbackLng: i18nConfig.defaultLocale,
-    ns: ['common'],
+    ns: [...I18N_NAMESPACES],
     defaultNS: 'common',
+    fallbackNS: 'common',
     debug: false,
     interpolation: {
       escapeValue: false,

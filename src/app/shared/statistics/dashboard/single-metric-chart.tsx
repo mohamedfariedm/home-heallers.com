@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslation } from 'react-i18next';
 import WidgetCard from '@/components/cards/widget-card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import cn from '@/utils/class-names';
@@ -97,40 +98,49 @@ const formatDate = (date: string, groupBy: string): string => {
 
 const metricConfig = {
   reservations: {
+    titleKey: 'stats_reservations_trend',
     title: 'Reservations Trend',
     color: '#3B82F6',
     dataKey: 'reservations',
+    labelKey: 'stats_reservations_label',
     label: 'Reservations',
     getValue: (item: ChartDataPoint) => item.count || 0,
     formatValue: (value: number) => value.toLocaleString(),
   },
   sessions: {
+    titleKey: 'stats_sessions_trend',
     title: 'Sessions Trend',
     color: '#10B981',
     dataKey: 'sessions',
+    labelKey: 'stats_sessions',
     label: 'Sessions',
     getValue: (item: ChartDataPoint) => item.count || 0,
     formatValue: (value: number) => value.toLocaleString(),
   },
   clients: {
+    titleKey: 'stats_clients_trend',
     title: 'Clients Trend',
     color: '#F59E0B',
     dataKey: 'clients',
+    labelKey: 'stats_clients',
     label: 'Clients',
     getValue: (item: ChartDataPoint) => item.count || 0,
     formatValue: (value: number) => value.toLocaleString(),
   },
   revenue: {
+    titleKey: 'stats_revenue_trend',
     title: 'Revenue Trend',
     color: '#EF4444',
     dataKey: 'revenue',
+    labelKey: 'stats_revenue',
     label: 'Revenue',
     getValue: (item: ChartDataPoint) => item.amount || 0,
-    formatValue: (value: number) => `${value.toLocaleString()} SAR`,
+    formatValue: (value: number) => value.toLocaleString(),
   },
 };
 
 export default function SingleMetricChart({ data, metric, className, lastDays }: SingleMetricChartProps) {
+  const { t } = useTranslation('statistics');
   const config = metricConfig[metric];
   const metricData = data[metric];
 
@@ -160,8 +170,12 @@ export default function SingleMetricChart({ data, metric, className, lastDays }:
 
   return (
     <WidgetCard
-      title={config.title}
-      description={`From ${rangeFrom} to ${rangeTo}`}
+      title={t(config.titleKey, config.title)}
+      description={t('stats_from_to', {
+        from: rangeFrom,
+        to: rangeTo,
+        defaultValue: 'From {{from}} to {{to}}',
+      })}
       className={cn('min-h-[350px]', className)}
     >
       <div className="h-[300px] w-full pt-5 @lg:h-[350px]">
@@ -186,7 +200,7 @@ export default function SingleMetricChart({ data, metric, className, lastDays }:
               tickLine={false}
               tick={{ fontSize: 12, fill: '#6B7280' }}
               label={{ 
-                value: metric === 'revenue' ? 'Revenue (SAR)' : 'Count', 
+                value: metric === 'revenue' ? t('stats_revenue_sar', 'Revenue (SAR)') : t('shared_count', 'Count'), 
                 angle: -90, 
                 position: 'insideLeft', 
                 style: { fill: '#6B7280' } 
@@ -199,8 +213,13 @@ export default function SingleMetricChart({ data, metric, className, lastDays }:
                 borderRadius: '8px',
                 boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
               }}
-              formatter={(value: number) => [config.formatValue(value), config.label]}
-              labelFormatter={(label) => `Date: ${label}`}
+              formatter={(value: number) => [
+                metric === 'revenue'
+                  ? `${config.formatValue(value)} ${t('currency', 'SAR')}`
+                  : config.formatValue(value),
+                t(config.labelKey, config.label),
+              ]}
+              labelFormatter={(label) => t('stats_date_label', { label, defaultValue: 'Date: {{label}}' })}
             />
             <Line 
               type="monotone" 

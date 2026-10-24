@@ -21,7 +21,7 @@ export default function HighlightsSettingsModal({
   isOpen,
   onClose,
 }: HighlightsSettingsModalProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation('highlights');
   const { data, isLoading } = useHighlightSettings();
   const updateSettings = useUpdateHighlightSettings();
   const [duration, setDuration] = useState<number>(15);

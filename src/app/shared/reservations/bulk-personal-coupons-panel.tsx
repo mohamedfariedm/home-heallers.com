@@ -4,9 +4,16 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import Select, { type InputActionMeta, type StylesConfig } from 'react-select';
 import toast from 'react-hot-toast';
 import { signOut } from 'next-auth/react';
-import { PiCopy, PiTicket, PiXBold } from 'react-icons/pi';
+import {
+  FloatingPortal,
+  autoUpdate,
+  flip,
+  offset,
+  shift,
+  useFloating,
+} from '@floating-ui/react';
+import { PiCalendarBlank, PiTicket, PiXBold } from 'react-icons/pi';
 import { useModal } from '@/app/shared/modal-views/use-modal';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DatePicker } from '@/components/ui/datepicker';
@@ -17,14 +24,12 @@ import { useCreateBulkPersonalCoupons } from '@/framework/coupons';
 import { usePatients } from '@/framework/patients';
 import { getLocale } from '@/framework/utils/get-token';
 import type {
-  BulkPersonalChannelStatus,
   BulkPersonalCouponData,
   BulkPersonalCouponRequest,
   BulkPersonalDiscountType,
   BulkPersonalNotificationChannel,
 } from '@/types/bulk-personal-coupon';
 import { setAuthCredentials } from '@/utils/auth-utils';
-import cn from '@/utils/class-names';
 import {
   getReservationPatientName,
   resolveLocalizedName,
@@ -62,11 +67,6 @@ type Person = {
 type FieldErrors = Partial<
   Record<'customer_ids' | 'discount' | 'discount_type' | 'discount_value' | 'expires_at' | 'channels', string>
 >;
-
-type SubmitResult = {
-  data: BulkPersonalCouponData;
-  names: Record<number, string>;
-};
 
 const selectStyles: StylesConfig<CustomerOption, true> = {
   control: (base, state) => ({
@@ -162,9 +162,111 @@ function customersFromReservations(rows: any[], locale: 'en' | 'ar') {
   return { customers: Array.from(byId.values()), guestsWithoutAccount };
 }
 
+function pad2(value: number) {
+  return String(value).padStart(2, '0');
+}
+
 function pickerWallClockToRiyadhIso(date: Date) {
-  const pad = (value: number) => String(value).padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}+03:00`;
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}T${pad2(date.getHours())}:${pad2(date.getMinutes())}:${pad2(date.getSeconds())}+03:00`;
+}
+
+function formatExpiresAt(date: Date) {
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())} ${pad2(date.getHours())}:${pad2(date.getMinutes())}`;
+}
+
+function ExpiresAtPicker({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: Date | null;
+  onChange: (date: Date | null) => void;
+  disabled?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const { refs, floatingStyles } = useFloating({
+    open,
+    strategy: 'fixed',
+    placement: 'bottom-start',
+    middleware: [
+      offset(8),
+      flip({ padding: 16, fallbackPlacements: ['top-start', 'bottom-end', 'top-end'] }),
+      shift({ padding: 16 }),
+    ],
+    whileElementsMounted: autoUpdate,
+  });
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (refs.domReference.current?.contains(target)) return;
+      if (refs.floating.current?.contains(target)) return;
+      setOpen(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      event.stopPropagation();
+      setOpen(false);
+    };
+    document.addEventListener('mousedown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown, true);
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown, true);
+    };
+  }, [open, refs.domReference, refs.floating]);
+
+  return (
+    <div
+      ref={refs.setReference}
+      className="relative"
+      onClick={() => {
+        if (!disabled) setOpen(true);
+      }}
+    >
+      <Input
+        readOnly
+        value={value ? formatExpiresAt(value) : ''}
+        placeholder="2026-10-15 23:59"
+        disabled={disabled}
+        prefix={<PiCalendarBlank className="h-5 w-5 text-gray-500" />}
+        inputClassName="cursor-pointer"
+        onFocus={() => {
+          if (!disabled) setOpen(true);
+        }}
+      />
+      {open ? (
+        <FloatingPortal>
+          <div
+            ref={refs.setFloating}
+            data-floating-datepicker=""
+            style={{ ...floatingStyles, zIndex: 100000 }}
+            className="z-[100000] overflow-visible rounded-md border border-gray-200 bg-white p-1 shadow-xl dark:border-gray-600 dark:bg-gray-100"
+            onMouseDown={(event) => event.stopPropagation()}
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <DatePicker
+              inline
+              selected={value ?? undefined}
+              onChange={(date) => {
+                const next = Array.isArray(date) ? date[0] : date;
+                onChange(next ?? null);
+              }}
+              showTimeSelect
+              timeIntervals={1}
+              dateFormat="yyyy-MM-dd HH:mm"
+              minDate={new Date()}
+              disabled={disabled}
+              shouldCloseOnSelect={false}
+              calendarClassName="!shadow-none !border-0"
+            />
+          </div>
+        </FloatingPortal>
+      ) : null}
+    </div>
+  );
 }
 
 function riyadhInstantMs(date: Date) {
@@ -187,13 +289,6 @@ function useDebouncedValue(value: string, delayMs = 300) {
     return () => clearTimeout(timer);
   }, [value, delayMs]);
   return debounced;
-}
-
-function channelTone(status: BulkPersonalChannelStatus | undefined) {
-  if (status === 'sent' || status === 'queued') return 'success' as const;
-  if (status === 'failed') return 'danger' as const;
-  if (status === 'skipped') return 'warning' as const;
-  return 'secondary' as const;
 }
 
 function collectChannelCounts(data: BulkPersonalCouponData) {
@@ -264,7 +359,6 @@ export default function BulkPersonalCouponsForm({
   const [selected, setSelected] = useState<Customer[]>(() =>
     seedCustomers(reservations, clients, dashboardLocale()).customers.slice(0, MAX_CUSTOMERS)
   );
-  const [createCoupon, setCreateCoupon] = useState(true);
   const [discountType, setDiscountType] =
     useState<BulkPersonalDiscountType>('percentage');
   const [discountValue, setDiscountValue] = useState('20');
@@ -274,7 +368,6 @@ export default function BulkPersonalCouponsForm({
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [result, setResult] = useState<SubmitResult | null>(null);
 
   const clientQuery = useMemo(() => {
     const params = new URLSearchParams();
@@ -371,17 +464,15 @@ export default function BulkPersonalCouponsForm({
       errors.customer_ids = 'You can select at most 200 customers.';
     }
 
-    let discountValueNumber = Number(discountValue);
-    if (createCoupon) {
-      if (!Number.isFinite(discountValueNumber)) {
-        errors.discount_value = 'Discount value is required.';
-      } else if (discountType === 'percentage' || discountType === 'percent') {
-        if (discountValueNumber < 1 || discountValueNumber > 100) {
-          errors.discount_value = 'Percentage discount must be between 1 and 100.';
-        }
-      } else if (discountValueNumber < 0.01) {
-        errors.discount_value = 'Fixed discount must be at least 0.01.';
+    const discountValueNumber = Number(discountValue);
+    if (!Number.isFinite(discountValueNumber)) {
+      errors.discount_value = 'Discount value is required.';
+    } else if (discountType === 'percentage' || discountType === 'percent') {
+      if (discountValueNumber < 1 || discountValueNumber > 100) {
+        errors.discount_value = 'Percentage discount must be between 1 and 100.';
       }
+    } else if (discountValueNumber < 0.01) {
+      errors.discount_value = 'Fixed discount must be at least 0.01.';
     }
 
     if (hasExpiration) {
@@ -397,17 +488,15 @@ export default function BulkPersonalCouponsForm({
 
     const payload: BulkPersonalCouponRequest = {
       customer_ids: uniqueIds,
-      create_coupon: createCoupon,
+      create_coupon: true,
       has_expiration: hasExpiration,
       notification_channels: channels,
-    };
-
-    if (createCoupon) {
-      payload.discount = {
+      discount: {
         type: discountType,
         value: discountValueNumber,
-      };
-    }
+      },
+    };
+
     if (hasExpiration && expiresAt) {
       payload.expires_at = pickerWallClockToRiyadhIso(expiresAt);
     }
@@ -426,19 +515,15 @@ export default function BulkPersonalCouponsForm({
     try {
       const response = await mutateAsync(payload);
       const data = response.data;
-      const names = Object.fromEntries(selected.map((customer) => [customer.id, customer.name]));
-      setResult({ data, names });
-
       const issues = collectChannelCounts(data);
       if (!data.success) {
         toast.error('Some coupons failed to create.');
-      } else if (!createCoupon) {
-        toast.success('Request completed. No coupons were created.');
       } else if (issues.failed > 0 || issues.skipped > 0) {
         toast('Coupons created. Some delivery channels were skipped or failed.');
       } else {
         toast.success('Personal coupons created and queued.');
       }
+      closeModal();
     } catch (error) {
       const status = (error as { response?: { status?: number } })?.response?.status;
       if (status === 401) {
@@ -476,15 +561,8 @@ export default function BulkPersonalCouponsForm({
     }
   };
 
-  const resultChannels = CHANNELS.filter((channel) =>
-    result?.data.customers.some(
-      (customer) => customer.notifications?.[channel.value] != null
-    )
-  );
-  const resultIssues = result ? collectChannelCounts(result.data) : null;
-
   return (
-    <section className="flex max-h-[85vh] flex-col overflow-hidden bg-white">
+    <section className="relative flex max-h-[85vh] flex-col overflow-hidden bg-white">
       <div className="flex shrink-0 items-start justify-between gap-3 border-b border-gray-200 px-6 py-4">
         <div>
           <div className="flex items-center gap-2">
@@ -508,7 +586,7 @@ export default function BulkPersonalCouponsForm({
         </div>
       </div>
 
-      <div className="grid gap-5 overflow-y-auto px-6 py-5">
+      <div className="grid min-h-0 flex-1 gap-5 overflow-y-auto px-6 py-5">
         <div>
           <label className="mb-1.5 block text-sm font-medium text-gray-900">
             Customers
@@ -581,88 +659,79 @@ export default function BulkPersonalCouponsForm({
           ) : null}
         </div>
 
-        <div className="flex items-center gap-3">
-          <Switch
-            checked={createCoupon}
-            onChange={(event) => setCreateCoupon(event.target.checked)}
-            disabled={isSubmitting}
-          />
+        <div className="grid gap-4 @md:grid-cols-2">
+          <fieldset>
+            <legend className="mb-1.5 text-sm font-medium text-gray-900">
+              Discount type
+            </legend>
+            <div className="flex flex-wrap gap-4">
+              <label className="flex items-center gap-2 text-sm text-gray-800">
+                <input
+                  type="radio"
+                  name="bulk-discount-type"
+                  checked={discountType === 'percentage'}
+                  onChange={() => setDiscountType('percentage')}
+                  disabled={isSubmitting}
+                />
+                Percentage
+              </label>
+              <label className="flex items-center gap-2 text-sm text-gray-800">
+                <input
+                  type="radio"
+                  name="bulk-discount-type"
+                  checked={discountType === 'fixed'}
+                  onChange={() => setDiscountType('fixed')}
+                  disabled={isSubmitting}
+                />
+                Fixed (SAR)
+              </label>
+            </div>
+            {fieldErrors.discount_type ? (
+              <p className="mt-1 text-sm text-red-500">{fieldErrors.discount_type}</p>
+            ) : null}
+            {fieldErrors.discount ? (
+              <p className="mt-1 text-sm text-red-500">{fieldErrors.discount}</p>
+            ) : null}
+          </fieldset>
           <div>
-            <Text className="text-sm font-medium text-gray-900">Create coupon</Text>
-            <Text className="text-xs text-gray-500">
-              Off submits the request without creating or sending coupons.
-            </Text>
+            <label className="mb-1.5 block text-sm font-medium text-gray-900">
+              Discount value
+            </label>
+            <Input
+              type="number"
+              min={discountType === 'fixed' ? 0.01 : 1}
+              max={discountType === 'percentage' ? 100 : undefined}
+              step={discountType === 'fixed' ? 0.01 : 1}
+              value={discountValue}
+              disabled={isSubmitting}
+              onChange={(event) => {
+                setDiscountValue(event.target.value);
+                setFieldErrors((prev) => ({
+                  ...prev,
+                  discount_value: undefined,
+                  discount: undefined,
+                }));
+              }}
+            />
+            {fieldErrors.discount_value ? (
+              <p className="mt-1 text-sm text-red-500">{fieldErrors.discount_value}</p>
+            ) : null}
           </div>
         </div>
 
-        {createCoupon ? (
-          <div className="grid gap-4 @md:grid-cols-2">
-            <fieldset>
-              <legend className="mb-1.5 text-sm font-medium text-gray-900">
-                Discount type
-              </legend>
-              <div className="flex flex-wrap gap-4">
-                <label className="flex items-center gap-2 text-sm text-gray-800">
-                  <input
-                    type="radio"
-                    name="bulk-discount-type"
-                    checked={discountType === 'percentage'}
-                    onChange={() => setDiscountType('percentage')}
-                    disabled={isSubmitting}
-                  />
-                  Percentage
-                </label>
-                <label className="flex items-center gap-2 text-sm text-gray-800">
-                  <input
-                    type="radio"
-                    name="bulk-discount-type"
-                    checked={discountType === 'fixed'}
-                    onChange={() => setDiscountType('fixed')}
-                    disabled={isSubmitting}
-                  />
-                  Fixed (SAR)
-                </label>
-              </div>
-              {fieldErrors.discount_type ? (
-                <p className="mt-1 text-sm text-red-500">{fieldErrors.discount_type}</p>
-              ) : null}
-              {fieldErrors.discount ? (
-                <p className="mt-1 text-sm text-red-500">{fieldErrors.discount}</p>
-              ) : null}
-            </fieldset>
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-900">
-                Discount value
-              </label>
-              <Input
-                type="number"
-                min={discountType === 'fixed' ? 0.01 : 1}
-                max={discountType === 'percentage' ? 100 : undefined}
-                step={discountType === 'fixed' ? 0.01 : 1}
-                value={discountValue}
-                disabled={isSubmitting}
-                onChange={(event) => {
-                  setDiscountValue(event.target.value);
-                  setFieldErrors((prev) => ({
-                    ...prev,
-                    discount_value: undefined,
-                    discount: undefined,
-                  }));
-                }}
-              />
-              {fieldErrors.discount_value ? (
-                <p className="mt-1 text-sm text-red-500">{fieldErrors.discount_value}</p>
-              ) : null}
-            </div>
-          </div>
-        ) : null}
-
-        <div className="grid gap-4 @md:grid-cols-2">
+        <div className="space-y-3">
           <div className="flex items-center gap-3">
             <Switch
               checked={hasExpiration}
               onChange={(event) => {
-                setHasExpiration(event.target.checked);
+                const enabled = event.target.checked;
+                setHasExpiration(enabled);
+                if (enabled && !expiresAt) {
+                  const next = new Date();
+                  next.setDate(next.getDate() + 1);
+                  next.setHours(23, 59, 0, 0);
+                  setExpiresAt(next);
+                }
                 setFieldErrors((prev) => ({ ...prev, expires_at: undefined }));
               }}
               disabled={isSubmitting}
@@ -679,20 +748,13 @@ export default function BulkPersonalCouponsForm({
               <label className="mb-1.5 block text-sm font-medium text-gray-900">
                 Expires at
               </label>
-              <DatePicker
-                selected={expiresAt ?? undefined}
-                onChange={(date) => {
-                  const next = Array.isArray(date) ? date[0] : date;
-                  setExpiresAt(next ?? null);
+              <ExpiresAtPicker
+                value={expiresAt}
+                disabled={isSubmitting}
+                onChange={(next) => {
+                  setExpiresAt(next);
                   setFieldErrors((prev) => ({ ...prev, expires_at: undefined }));
                 }}
-                showTimeSelect
-                timeIntervals={1}
-                dateFormat="yyyy-MM-dd HH:mm"
-                placeholderText="2026-10-15 23:59"
-                minDate={new Date()}
-                disabled={isSubmitting}
-                inputProps={{ className: 'w-full' }}
               />
               <Text className="mt-1 text-xs text-gray-500">
                 Saved as Asia/Riyadh (UTC+3).
@@ -736,121 +798,6 @@ export default function BulkPersonalCouponsForm({
             Generate & send coupons
           </Button>
         </div>
-
-      {result ? (
-        <div className="mt-6 border-t border-gray-200 pt-5 dark:border-gray-700">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <Title as="h4" className="text-sm font-semibold text-gray-900">
-              Results
-            </Title>
-            <Button type="button" size="sm" variant="text" onClick={() => setResult(null)}>
-              Hide results
-            </Button>
-          </div>
-
-          <div
-            className={cn(
-              'mb-4 rounded-md border px-3 py-2 text-sm',
-              !result.data.success
-                ? 'border-red-200 bg-red-50 text-red-800'
-                : resultIssues && (resultIssues.failed > 0 || resultIssues.skipped > 0)
-                  ? 'border-amber-200 bg-amber-50 text-amber-900'
-                  : 'border-green-200 bg-green-50 text-green-800'
-            )}
-          >
-            {!result.data.success
-              ? 'Some coupons failed to create. Codes that were created are still valid.'
-              : resultIssues && (resultIssues.failed > 0 || resultIssues.skipped > 0)
-                ? 'Coupons were created. Review channel statuses below before following up.'
-                : 'Every selected customer was processed.'}
-          </div>
-
-          <div className="mb-4 flex flex-wrap gap-2">
-            <Badge color="secondary">
-              Requested {result.data.summary.requested_customers}
-            </Badge>
-            <Badge color="success">Created {result.data.summary.coupons_created}</Badge>
-            <Badge color={result.data.summary.failed > 0 ? 'danger' : 'secondary'}>
-              Failed creates {result.data.summary.failed}
-            </Badge>
-            <Badge color={result.data.success ? 'success' : 'warning'}>
-              {result.data.success ? 'Success' : 'Partial create failure'}
-            </Badge>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-sm">
-              <thead className="border-b border-gray-200 text-xs uppercase text-gray-500">
-                <tr>
-                  <th className="px-2 py-2 font-medium">Customer</th>
-                  <th className="px-2 py-2 font-medium">Coupon code</th>
-                  <th className="px-2 py-2 font-medium">Created</th>
-                  {resultChannels.map((channel) => (
-                    <th key={channel.value} className="px-2 py-2 font-medium">
-                      {channel.label}
-                    </th>
-                  ))}
-                  <th className="px-2 py-2 font-medium">Error</th>
-                </tr>
-              </thead>
-              <tbody>
-                {result.data.customers.map((customer) => (
-                  <tr key={customer.customer_id} className="border-b border-gray-100">
-                    <td className="px-2 py-2">
-                      <div className="font-medium text-gray-900">
-                        {result.names[customer.customer_id] || `Customer #${customer.customer_id}`}
-                      </div>
-                      <div className="text-xs text-gray-500">#{customer.customer_id}</div>
-                    </td>
-                    <td className="px-2 py-2">
-                      {customer.coupon_code ? (
-                        <span className="inline-flex items-center gap-1 font-mono">
-                          {customer.coupon_code}
-                          <button
-                            type="button"
-                            className="text-gray-500 hover:text-gray-900"
-                            aria-label={`Copy ${customer.coupon_code}`}
-                            onClick={() => {
-                              navigator.clipboard
-                                .writeText(customer.coupon_code || '')
-                                .then(() => toast.success('Coupon code copied'))
-                                .catch(() => toast.error('Could not copy the code'));
-                            }}
-                          >
-                            <PiCopy className="h-4 w-4" />
-                          </button>
-                        </span>
-                      ) : (
-                        '—'
-                      )}
-                    </td>
-                    <td className="px-2 py-2">
-                      <Badge color={customer.coupon_created ? 'success' : 'danger'}>
-                        {customer.coupon_created ? 'Yes' : 'No'}
-                      </Badge>
-                    </td>
-                    {resultChannels.map((channel) => {
-                      const status = customer.notifications?.[channel.value];
-                      return (
-                        <td key={channel.value} className="px-2 py-2">
-                          {status ? (
-                            <Badge color={channelTone(status)} className="capitalize">
-                              {status}
-                            </Badge>
-                          ) : (
-                            '—'
-                          )}
-                        </td>
-                      );
-                    })}
-                    <td className="px-2 py-2 text-red-600">{customer.error || '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      ) : null}
       </div>
     </section>
   );

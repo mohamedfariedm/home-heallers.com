@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Modal } from '@/components/ui/modal';
 import { Title, Text } from '@/components/ui/text';
 import { ActionIcon } from '@/components/ui/action-icon';
@@ -37,6 +37,7 @@ export default function TopTenModal({
   showPercentage = true,
   additionalColumns = [],
 }: TopTenModalProps) {
+  const { t } = useTranslation('statistics');
   const total = items.reduce((sum, item) => sum + item.value, 0);
   const topTenItems = items.slice(0, 10);
 
@@ -45,7 +46,7 @@ export default function TopTenModal({
       <div className="m-auto px-7 pb-8 pt-6">
         <div className="mb-6 flex items-center justify-between">
           <Title as="h3" className="text-xl font-semibold text-gray-900 dark:text-white">
-            {title} - Top 10
+            {t('stats_top_10_title', { title, defaultValue: '{{title}} - Top 10' })}
           </Title>
           <ActionIcon variant="text" onClick={onClose} className="h-5 w-5">
             <PiXBold className="h-5 w-5" />
@@ -57,17 +58,17 @@ export default function TopTenModal({
             <thead>
               <tr className="border-b border-gray-200 dark:border-gray-700">
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300">
-                  Rank
+                  {t('shared_rank', 'Rank')}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300">
-                  Name
+                  {t('shared_name', 'Name')}
                 </th>
                 <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300">
                   {valueLabel}
                 </th>
                 {showPercentage && (
                   <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300">
-                    Percentage
+                    {t('shared_percentage', 'Percentage')}
                   </th>
                 )}
                 {additionalColumns.map((col) => (
@@ -108,7 +109,7 @@ export default function TopTenModal({
                     </td>
                     <td className="px-4 py-3">
                       <div className="text-sm font-medium text-gray-900 dark:text-white">
-                        {item.name || 'Unknown'}
+                        {item.name || t('shared_unknown', 'Unknown')}
                       </div>
                     </td>
                     <td className="px-4 py-3 text-right">

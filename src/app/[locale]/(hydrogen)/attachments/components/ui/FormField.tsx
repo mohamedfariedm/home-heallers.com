@@ -1,5 +1,6 @@
 import React from 'react';
 import { UseFormRegister, FieldErrors } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 
 interface FormFieldProps {
   name: string;
@@ -22,7 +23,12 @@ export const FormField: React.FC<FormFieldProps> = ({
   required = false,
   className = ''
 }) => {
+  const { t } = useTranslation('attachments');
   const fieldError = name.split('.').reduce((obj, key) => obj?.[key], errors);
+  const requiredMessage = t('shared_required', {
+    label,
+    defaultValue: '{{label}} is required',
+  });
   
   const baseClasses = `
     w-full px-4 py-3 border rounded-lg transition-all duration-200
@@ -40,14 +46,14 @@ export const FormField: React.FC<FormFieldProps> = ({
       
       {type === 'textarea' ? (
         <textarea
-          {...register(name, { required: required ? `${label} is required` : false })}
+          {...register(name, { required: required ? requiredMessage : false })}
           placeholder={placeholder}
           rows={4}
           className={`${baseClasses} resize-vertical`}
         />
       ) : (
         <input
-          {...register(name, { required: required ? `${label} is required` : false })}
+          {...register(name, { required: required ? requiredMessage : false })}
           type={type}
           placeholder={placeholder}
           className={baseClasses}

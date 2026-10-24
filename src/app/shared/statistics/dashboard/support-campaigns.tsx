@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslation } from 'react-i18next';
 import {
   BarChart,
   Bar,
@@ -27,6 +28,7 @@ interface SupportCampaignsChartProps {
 const COLORS = ['#8b5cf6', '#ec4899', '#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
 
 export default function SupportCampaignsChart({ data, className }: SupportCampaignsChartProps) {
+  const { t } = useTranslation('statistics');
   // Aggregate data by source_campaign across all support types
   const aggregatedData = data.reduce((acc, curr) => {
     if (curr.by_source_campaign) {
@@ -58,10 +60,10 @@ export default function SupportCampaignsChart({ data, className }: SupportCampai
       )}
     >
       <Title as="h6" className="mb-1 font-semibold text-gray-900 dark:text-white">
-        Support Tickets by Campaign
+        {t('stats_support_by_campaign', 'Support Tickets by Campaign')}
       </Title>
       <p className="mb-6 text-sm text-gray-500 dark:text-gray-400">
-        Campaign sources driving support requests
+        {t('stats_support_by_campaign_desc', 'Campaign sources driving support requests')}
       </p>
 
       <div className="h-[300px] w-full">

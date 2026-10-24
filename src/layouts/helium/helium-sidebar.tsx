@@ -12,9 +12,11 @@ import { menuItemsHaydrogen } from '@/layouts/hydrogen/menu-items';
 // import Logo from '@/components/logo';
 import Image from 'next/image';
 import { siteConfig } from '@/config/site.config';
+import { useTranslation } from 'react-i18next';
 
 export default function HeliumSidebar({ className }: { className?: string }) {
   const pathname = usePathname();
+  const { t } = useTranslation('menu');
   return (
     <aside
       className={cn(
@@ -138,7 +140,7 @@ export default function HeliumSidebar({ className }: { className?: string }) {
                               {item?.icon}
                             </span>
                           )}
-                          {item.name}
+                          {t(item.name)}
                         </Link>
                       {/* )} */}
                     </>
@@ -150,7 +152,7 @@ export default function HeliumSidebar({ className }: { className?: string }) {
                         index !== 0 && 'mt-6 3xl:mt-7'
                       )}
                     >
-                      {item.name}
+                      {t(item.name)}
                     </Title>
                   )}
                 </Fragment>

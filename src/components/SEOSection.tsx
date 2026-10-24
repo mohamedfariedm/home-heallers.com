@@ -49,7 +49,7 @@ const ensurePageSEO = (page?: Partial<PageSEO>): PageSEO => ({
 });
 
 const SEOSection: React.FC<SEOSectionProps> = ({ seo, onUpdate }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('settings');
   const safeSeo = seo || {};
 
   const pageKeys = useMemo(() => {

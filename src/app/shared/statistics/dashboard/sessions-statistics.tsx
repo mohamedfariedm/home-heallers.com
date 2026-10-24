@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslation } from 'react-i18next';
 import WidgetCard from '@/components/cards/widget-card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import cn from '@/utils/class-names';
@@ -22,6 +23,7 @@ interface SessionsStatisticsProps {
 }
 
 export default function SessionsStatistics({ data, className }: SessionsStatisticsProps) {
+  const { t } = useTranslation('statistics');
   if (!data || !data.by_session_count || data.by_session_count.length === 0) {
     return null;
   }
@@ -30,7 +32,10 @@ export default function SessionsStatistics({ data, className }: SessionsStatisti
   const sortedData = [...data.by_session_count].sort((a, b) => a.sessions_count - b.sessions_count);
 
   const chartData = sortedData.map((item) => ({
-    name: `${item.sessions_count} session${item.sessions_count !== 1 ? 's' : ''}`,
+    name:
+      item.sessions_count === 1
+        ? t('stats_session_n', { count: item.sessions_count, defaultValue: '{{count}} session' })
+        : t('stats_sessions_n', { count: item.sessions_count, defaultValue: '{{count}} sessions' }),
     sessions_count: item.sessions_count,
     reservations: item.reservations_count,
     total_sessions: item.total_sessions,
@@ -38,8 +43,12 @@ export default function SessionsStatistics({ data, className }: SessionsStatisti
 
   return (
     <WidgetCard
-      title="Sessions Statistics"
-      description={`${data.total_reservations.toLocaleString()} reservations • ${data.total_sessions.toLocaleString()} total sessions`}
+      title={t('stats_sessions_statistics', 'Sessions Statistics')}
+      description={t('stats_sessions_desc', {
+        reservations: data.total_reservations.toLocaleString(),
+        sessions: data.total_sessions.toLocaleString(),
+        defaultValue: '{{reservations}} reservations • {{sessions}} total sessions',
+      })}
       className={cn('min-h-[400px]', className)}
     >
       <div className="h-[300px] w-full pt-5 @lg:h-[350px]">
@@ -69,10 +78,10 @@ export default function SessionsStatistics({ data, className }: SessionsStatisti
               }}
               formatter={(value: number, name: string) => {
                 if (name === 'reservations') {
-                  return [value.toLocaleString(), 'Reservations'];
+                  return [value.toLocaleString(), t('stats_reservations_label', 'Reservations')];
                 }
                 if (name === 'total_sessions') {
-                  return [value.toLocaleString(), 'Total Sessions'];
+                  return [value.toLocaleString(), t('stats_total_sessions_legend', 'Total Sessions')];
                 }
                 return [value, name];
               }}
@@ -81,13 +90,13 @@ export default function SessionsStatistics({ data, className }: SessionsStatisti
             <Bar 
               dataKey="reservations" 
               fill="#8B5CF6" 
-              name="Reservations"
+              name={t('stats_reservations_label', 'Reservations')}
               radius={[4, 4, 0, 0]}
             />
             <Bar 
               dataKey="total_sessions" 
               fill="#F59E0B" 
-              name="Total Sessions"
+              name={t('stats_total_sessions_legend', 'Total Sessions')}
               radius={[4, 4, 0, 0]}
             />
           </BarChart>

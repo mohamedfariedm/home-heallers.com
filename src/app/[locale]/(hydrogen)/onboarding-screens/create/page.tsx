@@ -9,7 +9,7 @@ import ScreenForm from '@/app/shared/onboarding-screens/screen-form';
 import { routes } from '@/config/routes';
 
 export default function CreateOnboardingScreenPage() {
-  const { t } = useTranslation();
+  const { t } = useTranslation('onboarding-screens');
   const pageHeader = {
     title: t('tutorial_new_title', 'New Tutorial'),
     breadcrumb: [

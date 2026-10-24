@@ -19,7 +19,7 @@ export default function Sidebar({ className }: { className?: string }) {
   const { data: session, status } = useSession();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { t } = useTranslation();
+  const { t } = useTranslation('menu');
   const locale = Cookies.get('NEXT_LOCALE') || 'en';
   const { permissions } = usePermissions();
 

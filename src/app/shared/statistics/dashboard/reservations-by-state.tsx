@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import WidgetCard from '@/components/cards/widget-card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Button } from '@/components/ui/button';
@@ -29,6 +30,7 @@ interface ReservationsByStateProps {
 const INITIAL_STATES_SHOWN = 5;
 
 export default function ReservationsByState({ data, className }: ReservationsByStateProps) {
+  const { t } = useTranslation('statistics');
   const [isTopTenOpen, setIsTopTenOpen] = useState(false);
   const [showAllStates, setShowAllStates] = useState(false);
   
@@ -37,7 +39,7 @@ export default function ReservationsByState({ data, className }: ReservationsByS
   }
 
   const chartData = data.by_state.map((state) => ({
-    name: state.state_name || 'Unknown',
+    name: state.state_name || t('shared_unknown', 'Unknown'),
     reservations: state.reservations_count,
     sessions: state.total_sessions,
   }));
@@ -53,7 +55,7 @@ export default function ReservationsByState({ data, className }: ReservationsByS
   const hiddenStatesCount = Math.max(0, sortedStates.length - INITIAL_STATES_SHOWN);
 
   const topTenItems = sortedStates.slice(0, 10).map((state) => ({
-    name: state.state_name || 'Unknown',
+    name: state.state_name || t('shared_unknown', 'Unknown'),
     value: state.reservations_count,
     percentage: data.total_reservations > 0 ? (state.reservations_count / data.total_reservations) * 100 : 0,
     additionalInfo: {
@@ -65,8 +67,13 @@ export default function ReservationsByState({ data, className }: ReservationsByS
   return (
     <>
     <WidgetCard
-      title="Reservations by State"
-      description={`${data.total_states} states • ${data.total_reservations.toLocaleString()} reservations • ${data.total_sessions.toLocaleString()} sessions`}
+      title={t('stats_reservations_by_state', 'Reservations by State')}
+      description={t('stats_state_desc', {
+        states: data.total_states,
+        reservations: data.total_reservations.toLocaleString(),
+        sessions: data.total_sessions.toLocaleString(),
+        defaultValue: '{{states}} states • {{reservations}} reservations • {{sessions}} sessions',
+      })}
       className={cn('min-h-[400px]', className)}
       action={
         <Button
@@ -75,7 +82,7 @@ export default function ReservationsByState({ data, className }: ReservationsByS
           onClick={() => setIsTopTenOpen(true)}
           className="text-xs"
         >
-          Top 10
+          {t('shared_top_10', 'Top 10')}
         </Button>
       }
     >
@@ -109,13 +116,13 @@ export default function ReservationsByState({ data, className }: ReservationsByS
             <Bar 
               dataKey="reservations" 
               fill="#3B82F6" 
-              name="Reservations"
+              name={t('stats_reservations_label', 'Reservations')}
               radius={[4, 4, 0, 0]}
             />
             <Bar 
               dataKey="sessions" 
               fill="#10B981" 
-              name="Sessions"
+              name={t('stats_sessions', 'Sessions')}
               radius={[4, 4, 0, 0]}
             />
           </BarChart>
@@ -156,7 +163,7 @@ export default function ReservationsByState({ data, className }: ReservationsByS
                         {index + 1}
                       </span>
                       <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                        {state.state_name || 'Unknown'}
+                        {state.state_name || t('shared_unknown', 'Unknown')}
                       </span>
                     </div>
                     <span className="text-xs text-gray-500 dark:text-gray-400">
@@ -194,7 +201,10 @@ export default function ReservationsByState({ data, className }: ReservationsByS
                     </div>
                   </div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">
-                    Avg. {avgSessionsPerReservation} sessions per reservation
+                    {t('stats_avg_sessions', {
+                      count: avgSessionsPerReservation,
+                      defaultValue: 'Avg. {{count}} sessions per reservation',
+                    })}
                   </div>
                 </div>
               );
@@ -208,8 +218,11 @@ export default function ReservationsByState({ data, className }: ReservationsByS
                   className="text-xs text-gray-600 dark:text-gray-400"
                 >
                   {showAllStates
-                    ? 'Show less'
-                    : `+${hiddenStatesCount} more states`}
+                    ? t('shared_show_less', 'Show less')
+                    : t('stats_more_states', {
+                        count: hiddenStatesCount,
+                        defaultValue: '+{{count}} more states',
+                      })}
                 </Button>
               </div>
             )}
@@ -221,14 +234,14 @@ export default function ReservationsByState({ data, className }: ReservationsByS
     <TopTenModal
       isOpen={isTopTenOpen}
       onClose={() => setIsTopTenOpen(false)}
-      title="Reservations by State"
+      title={t('stats_reservations_by_state', 'Reservations by State')}
       items={topTenItems}
-      valueLabel="Reservations"
+      valueLabel={t('stats_reservations_label', 'Reservations')}
       showPercentage={true}
       additionalColumns={[
         {
           key: 'sessions',
-          label: 'Sessions',
+          label: t('stats_sessions', 'Sessions'),
           render: (item) => (
             <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
               {item.additionalInfo?.sessions?.toLocaleString() || 0}

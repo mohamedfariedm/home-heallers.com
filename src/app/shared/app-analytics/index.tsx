@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Loader } from '@/components/ui/loader';
 import {
   useAppAnalyticsActiveUsers,
@@ -24,6 +25,7 @@ function toDateInputValue(date = new Date()) {
 }
 
 export default function AppAnalyticsDashboard() {
+  const { t } = useTranslation('app-analytics');
   const { permissions } = usePermissions();
   const canView = permissions.includes('app_analytics');
   const [filters, setFilters] = useState<AppAnalyticsFilters>({});
@@ -70,7 +72,7 @@ export default function AppAnalyticsDashboard() {
   if (!canView) {
     return (
       <div className="rounded-md border border-gray-200 bg-white p-6 text-sm text-gray-600 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300">
-        You do not have permission to view app analytics.
+        {t('analytics_no_permission', 'You do not have permission to view app analytics.')}
       </div>
     );
   }
@@ -92,16 +94,18 @@ export default function AppAnalyticsDashboard() {
         <AppAnalyticsFiltersComponent onFilter={handleFilter} />
         <div className="flex min-h-[400px] items-center justify-center">
           <div className="text-center">
-            <p className="text-lg font-medium text-red-600">Error loading app analytics</p>
+            <p className="text-lg font-medium text-red-600">
+              {t('analytics_load_error', 'Error loading app analytics')}
+            </p>
             <p className="mt-2 text-sm text-gray-500">
-              {error?.message || 'Failed to fetch analytics data'}
+              {error?.message || t('analytics_load_failed', 'Failed to fetch analytics data')}
             </p>
             <button
               type="button"
               onClick={() => refetch()}
               className="mt-4 rounded-lg bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
             >
-              Try Again
+              {t('shared_try_again', 'Try Again')}
             </button>
           </div>
         </div>
@@ -123,22 +127,27 @@ export default function AppAnalyticsDashboard() {
 
       {usingMockData && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-900/20 dark:text-amber-200">
-          Waiting for app data — live analytics counts are still zero. Showing sample
-          data so you can review the dashboard layout.
+          {t(
+            'analytics_mock_banner',
+            'Waiting for app data — live analytics counts are still zero. Showing sample data so you can review the dashboard layout.'
+          )}
         </div>
       )}
 
       {!usingMockData && isActiveUsersError && (
         <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-200">
           {activeUsersError?.message ||
-            'Invalid date for active user metrics. Please choose a valid date.'}
+            t(
+              'analytics_invalid_date',
+              'Invalid date for active user metrics. Please choose a valid date.'
+            )}
         </div>
       )}
 
       {!usingMockData && isActiveUsersFetching && (
         <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
           <Loader size="sm" />
-          Updating active user metrics…
+          {t('analytics_updating_active', 'Updating active user metrics…')}
         </div>
       )}
 

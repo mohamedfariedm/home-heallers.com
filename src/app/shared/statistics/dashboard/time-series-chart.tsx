@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslation } from 'react-i18next';
 import WidgetCard from '@/components/cards/widget-card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import cn from '@/utils/class-names';
@@ -48,6 +49,7 @@ const formatDate = (date: string, groupBy: string): string => {
 };
 
 export default function TimeSeriesChart({ data, className }: TimeSeriesChartProps) {
+  const { t } = useTranslation('statistics');
   if (!data || (!data.reservations && !data.sessions && !data.revenue && !data.clients)) {
     return null;
   }
@@ -86,17 +88,21 @@ export default function TimeSeriesChart({ data, className }: TimeSeriesChartProp
 
   // Determine title based on group_by
   const titleMap = {
-    monthly: 'Monthly Trends',
-    weekly: 'Weekly Trends',
-    daily: 'Daily Trends',
+    monthly: t('stats_monthly_trends', 'Monthly Trends'),
+    weekly: t('stats_weekly_trends', 'Weekly Trends'),
+    daily: t('stats_daily_trends', 'Daily Trends'),
   };
 
-  const title = titleMap[data.group_by] || 'Time Series Trends';
+  const title = titleMap[data.group_by] || t('stats_time_series', 'Time Series Trends');
 
   return (
     <WidgetCard
       title={title}
-      description={`From ${data.date_from} to ${data.date_to}`}
+      description={t('stats_from_to', {
+        from: data.date_from,
+        to: data.date_to,
+        defaultValue: 'From {{from}} to {{to}}',
+      })}
       className={cn('min-h-[400px]', className)}
     >
       <div className="h-[400px] w-full pt-5 @lg:h-[450px]">
@@ -121,7 +127,7 @@ export default function TimeSeriesChart({ data, className }: TimeSeriesChartProp
               axisLine={false}
               tickLine={false}
               tick={{ fontSize: 12, fill: '#6B7280' }}
-              label={{ value: 'Count', angle: -90, position: 'insideLeft', style: { fill: '#6B7280' } }}
+              label={{ value: t('shared_count', 'Count'), angle: -90, position: 'insideLeft', style: { fill: '#6B7280' } }}
             />
             <YAxis 
               yAxisId="right"
@@ -129,7 +135,7 @@ export default function TimeSeriesChart({ data, className }: TimeSeriesChartProp
               axisLine={false}
               tickLine={false}
               tick={{ fontSize: 12, fill: '#6B7280' }}
-              label={{ value: 'Revenue (SAR)', angle: 90, position: 'insideRight', style: { fill: '#6B7280' } }}
+              label={{ value: t('stats_revenue_sar', 'Revenue (SAR)'), angle: 90, position: 'insideRight', style: { fill: '#6B7280' } }}
             />
             <Tooltip 
               contentStyle={{
@@ -140,20 +146,20 @@ export default function TimeSeriesChart({ data, className }: TimeSeriesChartProp
               }}
               formatter={(value: number, name: string) => {
                 if (name === 'revenue') {
-                  return [`${value.toLocaleString()} SAR`, 'Revenue'];
+                  return [`${value.toLocaleString()} ${t('currency', 'SAR')}`, t('stats_revenue', 'Revenue')];
                 }
                 return [value.toLocaleString(), name.charAt(0).toUpperCase() + name.slice(1)];
               }}
-              labelFormatter={(label) => `Date: ${label}`}
+              labelFormatter={(label) => t('stats_date_label', { label, defaultValue: 'Date: {{label}}' })}
             />
             <Legend 
               wrapperStyle={{ paddingTop: '20px' }}
               formatter={(value) => {
                 const labels: Record<string, string> = {
-                  reservations: 'Reservations',
-                  sessions: 'Sessions',
-                  revenue: 'Revenue',
-                  clients: 'Clients',
+                  reservations: t('stats_reservations_label', 'Reservations'),
+                  sessions: t('stats_sessions', 'Sessions'),
+                  revenue: t('stats_revenue', 'Revenue'),
+                  clients: t('stats_clients', 'Clients'),
                 };
                 return labels[value] || value;
               }}

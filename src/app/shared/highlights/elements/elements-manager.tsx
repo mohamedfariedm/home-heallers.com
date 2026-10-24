@@ -80,7 +80,7 @@ export default function ElementsManager({
   highlightId,
   elements = [],
 }: ElementsManagerProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation('highlights');
   const entityTypeLabel = (type?: string | null) => {
     switch (type) {
       case 'offers':

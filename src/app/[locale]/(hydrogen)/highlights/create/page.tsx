@@ -9,7 +9,7 @@ import { routes } from '@/config/routes';
 import { useTranslation } from 'react-i18next';
 
 export default function CreateHighlightPage() {
-  const { t } = useTranslation();
+  const { t } = useTranslation('highlights');
   const { permissions } = usePermissions();
   const access = resolveHighlightsPermissions(permissions);
 

@@ -41,7 +41,7 @@ export function useOnboardingScreen(id?: string | number) {
 
 export const useCreateOnboardingScreen = () => {
   const queryClient = useQueryClient();
-  const { t } = useTranslation();
+  const { t } = useTranslation('onboarding-screens');
 
   return useMutation({
     mutationFn: (data: FormData) => client.onboardingScreens.create(data),
@@ -59,7 +59,7 @@ export const useCreateOnboardingScreen = () => {
 
 export const useUpdateOnboardingScreen = () => {
   const queryClient = useQueryClient();
-  const { t } = useTranslation();
+  const { t } = useTranslation('onboarding-screens');
 
   return useMutation({
     mutationFn: ({ id, data }: { id: string | number; data: FormData }) =>
@@ -78,7 +78,7 @@ export const useUpdateOnboardingScreen = () => {
 
 export const useDeleteOnboardingScreen = () => {
   const queryClient = useQueryClient();
-  const { t } = useTranslation();
+  const { t } = useTranslation('onboarding-screens');
 
   return useMutation({
     mutationFn: (id: string | number) => client.onboardingScreens.delete(id),
@@ -96,7 +96,7 @@ export const useDeleteOnboardingScreen = () => {
 
 export const useToggleOnboardingScreenActive = () => {
   const queryClient = useQueryClient();
-  const { t } = useTranslation();
+  const { t } = useTranslation('onboarding-screens');
 
   return useMutation({
     mutationFn: (id: string | number) => client.onboardingScreens.toggleActive(id),
@@ -116,7 +116,7 @@ export const useToggleOnboardingScreenActive = () => {
 // if the API rejects it.
 export const useReorderOnboardingScreens = () => {
   const queryClient = useQueryClient();
-  const { t } = useTranslation();
+  const { t } = useTranslation('onboarding-screens');
 
   return useMutation({
     mutationFn: (ids: number[]) => client.onboardingScreens.reorder(ids),

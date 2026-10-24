@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   BarChart,
   Bar,
@@ -41,6 +42,7 @@ export default function CostRatioChart({
   data,
   className,
 }: CostRatioChartProps) {
+  const { t } = useTranslation('statistics');
   const [isTopTenOpen, setIsTopTenOpen] = useState(false);
   
   // Process data - only use support and reservations from API
@@ -92,10 +94,13 @@ export default function CostRatioChart({
             as="h6"
             className="mb-1 font-semibold text-gray-900 dark:text-white"
           >
-            Campaign Statistics
+            {t('stats_campaign_statistics', 'Campaign Statistics')}
           </Title>
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            Support tickets and reservations by campaign source
+            {t(
+              'stats_campaign_statistics_desc',
+              'Support tickets and reservations by campaign source'
+            )}
           </p>
         </div>
         <Button
@@ -104,7 +109,7 @@ export default function CostRatioChart({
           onClick={() => setIsTopTenOpen(true)}
           className="text-xs"
         >
-          Top 10
+          {t('shared_top_10', 'Top 10')}
         </Button>
       </div>
 
@@ -146,18 +151,20 @@ export default function CostRatioChart({
               }}
               formatter={(value: number, name: string) => {
                 if (name === 'support') {
-                  return [value.toLocaleString(), 'Customer Support'];
+                  return [value.toLocaleString(), t('stats_customer_support', 'Customer Support')];
                 }
                 if (name === 'reservations') {
-                  return [value.toLocaleString(), 'Confirmed Reservations'];
+                  return [value.toLocaleString(), t('stats_confirmed_reservations', 'Confirmed Reservations')];
                 }
                 return [value.toLocaleString(), name];
               }}
-              labelFormatter={(label) => `Campaign: ${label}`}
+              labelFormatter={(label) =>
+                t('stats_campaign_label', { label, defaultValue: 'Campaign: {{label}}' })
+              }
             />
             <Legend />
-            <Bar dataKey="support" fill="#3b82f6" radius={[0, 4, 4, 0]} name="Support Tickets" />
-            <Bar dataKey="reservations" fill="#10b981" radius={[0, 4, 4, 0]} name="Reservations" />
+            <Bar dataKey="support" fill="#3b82f6" radius={[0, 4, 4, 0]} name={t('stats_support_tickets', 'Support Tickets')} />
+            <Bar dataKey="reservations" fill="#10b981" radius={[0, 4, 4, 0]} name={t('stats_reservations_label', 'Reservations')} />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -179,13 +186,17 @@ export default function CostRatioChart({
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <div>
-                    <span className="text-gray-500 dark:text-gray-400">Support: </span>
+                    <span className="text-gray-500 dark:text-gray-400">
+                      {t('stats_support_label', 'Support')}:{' '}
+                    </span>
                     <span className="font-semibold text-gray-900 dark:text-white">
                       {item.customer_support_count.toLocaleString()}
                     </span>
                   </div>
                   <div>
-                    <span className="text-gray-500 dark:text-gray-400">Reservations: </span>
+                    <span className="text-gray-500 dark:text-gray-400">
+                      {t('stats_reservations_label', 'Reservations')}:{' '}
+                    </span>
                     <span className="font-semibold text-emerald-600 dark:text-emerald-400">
                       {item.confirmed_reservations_count.toLocaleString()}
                     </span>
@@ -201,17 +212,17 @@ export default function CostRatioChart({
     <TopTenModal
       isOpen={isTopTenOpen}
       onClose={() => setIsTopTenOpen(false)}
-      title="Top Campaigns by Total Count"
+      title={t('stats_top_campaigns_count', 'Top Campaigns by Total Count')}
       items={topTenItems.map(item => ({
         ...item,
         percentage: maxValue > 0 ? (item.value / maxValue) * 100 : 0,
       }))}
-      valueLabel="Total Count"
+      valueLabel={t('stats_total_count', 'Total Count')}
       showPercentage={false}
       additionalColumns={[
         {
           key: 'support',
-          label: 'Support Tickets',
+          label: t('stats_support_tickets', 'Support Tickets'),
           render: (item) => (
             <span className="text-sm text-gray-600 dark:text-gray-400">
               {item.additionalInfo?.support?.toLocaleString() || 0}
@@ -220,7 +231,7 @@ export default function CostRatioChart({
         },
         {
           key: 'reservations',
-          label: 'Reservations',
+          label: t('stats_reservations_label', 'Reservations'),
           render: (item) => (
             <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
               {item.additionalInfo?.reservations?.toLocaleString() || 0}

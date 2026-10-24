@@ -16,7 +16,10 @@ export default function GlobalModal() {
   return (
     <Modal
       isOpen={isOpen}
-      onClose={closeModal}
+      onClose={() => {
+        if (document.querySelector('[data-floating-datepicker]')) return;
+        closeModal();
+      }}
       customSize={customSize}
       overlayClassName="dark:bg-opacity-40 dark:backdrop-blur-lg"
       containerClassName="dark:bg-gray-100 overflow-visible"

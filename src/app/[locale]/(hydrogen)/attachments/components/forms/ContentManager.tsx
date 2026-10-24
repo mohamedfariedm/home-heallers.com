@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { SectionSettings } from './SectionSettings';
 import { ContentItemForm } from './ContentItemForm';
-import { Plus, FileText, Image, List } from 'lucide-react';
+import { FileText, Image, List } from 'lucide-react';
 import { FormData } from '@/types/form';
 
 interface ContentManagerProps {
@@ -19,6 +20,8 @@ export const ContentManager: React.FC<ContentManagerProps> = ({
   onDeleteItem,
   isLoading = false
 }) => {
+  const { t, i18n } = useTranslation('attachments');
+  const lang = i18n.language === 'ar' ? 'ar' : 'en';
   const [activeItem, setActiveItem] = useState<number | null>(null);
 
   // Determine if this section has images based on existing data
@@ -53,16 +56,27 @@ export const ContentManager: React.FC<ContentManagerProps> = ({
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold text-gray-900">
-            Content Items ({data.data.length})
+            {t('attachments_content_items', {
+              count: data.data.length,
+              defaultValue: 'Content Items ({{count}})',
+            })}
           </h2>
           <div className="flex items-center gap-4 text-sm text-gray-600">
             <div className="flex items-center gap-1">
               <Image className="h-4 w-4" />
-              <span>{hasImages ? 'Has Images' : 'No Images'}</span>
+              <span>
+                {hasImages
+                  ? t('attachments_has_images', 'Has Images')
+                  : t('attachments_no_images', 'No Images')}
+              </span>
             </div>
             <div className="flex items-center gap-1">
               <FileText className="h-4 w-4" />
-              <span>{hasDescriptions ? 'Has Descriptions' : 'Titles Only'}</span>
+              <span>
+                {hasDescriptions
+                  ? t('attachments_has_descriptions', 'Has Descriptions')
+                  : t('attachments_titles_only', 'Titles Only')}
+              </span>
             </div>
           </div>
         </div>
@@ -71,10 +85,13 @@ export const ContentManager: React.FC<ContentManagerProps> = ({
           <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
             <List className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No content items yet
+              {t('attachments_empty_title', 'No content items yet')}
             </h3>
             <p className="text-gray-600 mb-4">
-              This section doesn t have any content items to display.
+              {t(
+                'attachments_empty_hint',
+                "This section doesn't have any content items to display."
+              )}
             </p>
           </div>
         ) : (
@@ -94,10 +111,20 @@ export const ContentManager: React.FC<ContentManagerProps> = ({
                       <ItemIcon className="h-5 w-5 text-gray-500" />
                       <div>
                         <h3 className="font-medium text-gray-900">
-                          {item.title?.en || `Item ${item.id}`}
+                          {item.title?.[lang] ||
+                            item.title?.en ||
+                            item.title?.ar ||
+                            t('attachments_item_fallback', {
+                              id: item.id,
+                              defaultValue: 'Item {{id}}',
+                            })}
                         </h3>
                         <p className="text-sm text-gray-600">
-                          ID: {item.id} • Updated: {new Date(item.updated_at).toLocaleDateString()}
+                          {t('attachments_item_meta', {
+                            id: item.id,
+                            date: new Date(item.updated_at).toLocaleDateString(),
+                            defaultValue: 'ID: {{id}} • Updated: {{date}}',
+                          })}
                         </p>
                       </div>
                     </div>
@@ -105,7 +132,9 @@ export const ContentManager: React.FC<ContentManagerProps> = ({
                       <span className={`px-2 py-1 text-xs rounded-full ${
                         item.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
                       }`}>
-                        {item.active ? 'Active' : 'Inactive'}
+                        {item.active
+                          ? t('shared_active', 'Active')
+                          : t('shared_inactive', 'Inactive')}
                       </span>
                       <svg 
                         className={`h-5 w-5 text-gray-400 transition-transform ${

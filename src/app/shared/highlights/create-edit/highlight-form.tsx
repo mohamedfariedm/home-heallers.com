@@ -27,7 +27,7 @@ export default function HighlightForm({
   initialValues,
   onSuccessCallback,
 }: HighlightFormProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation('highlights');
   const router = useRouter();
   const params = useParams();
   const locale = (params?.locale as string) === 'ar' ? 'ar' : 'en';

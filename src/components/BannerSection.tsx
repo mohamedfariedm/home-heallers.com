@@ -45,7 +45,7 @@ function resolveEntityName(item: any): string {
 }
 
 const BannerSection: React.FC<BannerSectionProps> = ({ banners = [], onUpdate }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('settings');
   const [selectedBanner, setSelectedBanner] = useState<Banner | null>(null);
 
   // Entity lists for the CTA pickers (offers / doctors / categories).

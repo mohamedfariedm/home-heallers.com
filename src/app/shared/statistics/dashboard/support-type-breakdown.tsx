@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import WidgetCard from '@/components/cards/widget-card';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Button } from '@/components/ui/button';
@@ -25,6 +26,7 @@ export default function SupportTypeBreakdown({
   bySupportType,
   className,
 }: SupportTypeBreakdownProps) {
+  const { t } = useTranslation('statistics');
   const [isTopTenOpen, setIsTopTenOpen] = useState(false);
   
   const data = bySupportType.map((item, index) => ({
@@ -50,8 +52,11 @@ export default function SupportTypeBreakdown({
   return (
     <>
     <WidgetCard
-      title="Support Tickets by Type"
-      description={`Total: ${totalCount.toLocaleString()} tickets`}
+      title={t('stats_support_by_type', 'Support Tickets by Type')}
+      description={t('stats_total_tickets_n', {
+        count: totalCount.toLocaleString(),
+        defaultValue: 'Total: {{count}} tickets',
+      })}
       className={cn('flex flex-col', className)}
       action={
         <Button
@@ -60,7 +65,7 @@ export default function SupportTypeBreakdown({
           onClick={() => setIsTopTenOpen(true)}
           className="text-xs"
         >
-          Top 10
+          {t('shared_top_10', 'Top 10')}
         </Button>
       }
     >
@@ -97,11 +102,12 @@ export default function SupportTypeBreakdown({
         {/* Custom Legend */}
         <div className="mt-4 flex w-full flex-wrap justify-center gap-3">
           {data.map((item, index) => {
-            const displayName = item.name.toLowerCase() === 'operation' 
-              ? 'inbound' 
-              : item.name.toLowerCase() === 'marketing' 
-              ? 'outbound' 
-              : item.name;
+            const displayName =
+              item.name.toLowerCase() === 'operation'
+                ? t('stats_type_operation', 'Inbound')
+                : item.name.toLowerCase() === 'marketing'
+                ? t('stats_type_marketing', 'Outbound')
+                : item.name;
             return (
               <div key={index} className="flex items-center gap-1.5">
                 <span 
@@ -121,11 +127,12 @@ export default function SupportTypeBreakdown({
           <div className="grid grid-cols-2 gap-4">
             {sortedTypes.slice(0, 4).map((type, index) => {
               const percentage = totalCount > 0 ? (type.count / totalCount) * 100 : 0;
-              const displayLabel = type.label.toLowerCase() === 'operation' 
-                ? 'inbound' 
-                : type.label.toLowerCase() === 'marketing' 
-                ? 'outbound' 
-                : type.label;
+              const displayLabel =
+                type.label.toLowerCase() === 'operation'
+                  ? t('stats_type_operation', 'Inbound')
+                  : type.label.toLowerCase() === 'marketing'
+                  ? t('stats_type_marketing', 'Outbound')
+                  : type.label;
               return (
                 <div key={type.type} className="space-y-1">
                   <div className="flex items-center justify-between">
@@ -147,11 +154,17 @@ export default function SupportTypeBreakdown({
                   </div>
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-gray-500 dark:text-gray-400">
-                      {type.count.toLocaleString()} tickets
+                      {t('stats_tickets_n', {
+                        count: type.count.toLocaleString(),
+                        defaultValue: '{{count}} tickets',
+                      })}
                     </span>
                     {type.by_source_campaign && type.by_source_campaign.length > 0 && (
                       <span className="text-gray-500 dark:text-gray-400">
-                        {type.by_source_campaign.length} campaigns
+                        {t('stats_campaigns_n', {
+                          count: type.by_source_campaign.length,
+                          defaultValue: '{{count}} campaigns',
+                        })}
                       </span>
                     )}
                   </div>
@@ -166,14 +179,14 @@ export default function SupportTypeBreakdown({
     <TopTenModal
       isOpen={isTopTenOpen}
       onClose={() => setIsTopTenOpen(false)}
-      title="Support Tickets by Type"
+      title={t('stats_support_by_type', 'Support Tickets by Type')}
       items={topTenItems}
-      valueLabel="Tickets"
+      valueLabel={t('stats_tickets', 'Tickets')}
       showPercentage={true}
       additionalColumns={[
         {
           key: 'campaigns',
-          label: 'Campaigns',
+          label: t('stats_campaigns', 'Campaigns'),
           render: (item) => (
             <span className="text-sm text-gray-600 dark:text-gray-400">
               {item.additionalInfo?.campaigns || 0}

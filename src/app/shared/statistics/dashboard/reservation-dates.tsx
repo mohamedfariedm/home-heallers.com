@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import WidgetCard from '@/components/cards/widget-card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Button } from '@/components/ui/button';
@@ -31,6 +32,7 @@ interface ReservationDatesProps {
 }
 
 export default function ReservationDates({ data, className }: ReservationDatesProps) {
+  const { t } = useTranslation('statistics');
   const [isTopTenOpen, setIsTopTenOpen] = useState(false);
   
   // Get all unique statuses - must be called before early return
@@ -102,8 +104,12 @@ export default function ReservationDates({ data, className }: ReservationDatesPr
   return (
     <>
     <WidgetCard
-      title="Reservations by Date"
-      description={`${data.total_dates} dates • ${data.total_slots.toLocaleString()} total slots`}
+      title={t('stats_reservations_by_date', 'Reservations by Date')}
+      description={t('stats_date_desc', {
+        dates: data.total_dates,
+        slots: data.total_slots.toLocaleString(),
+        defaultValue: '{{dates}} dates • {{slots}} total slots',
+      })}
       className={cn('min-h-[400px]', className)}
       action={
         <Button
@@ -112,7 +118,7 @@ export default function ReservationDates({ data, className }: ReservationDatesPr
           onClick={() => setIsTopTenOpen(true)}
           className="text-xs"
         >
-          Top 10
+          {t('shared_top_10', 'Top 10')}
         </Button>
       }
     >
@@ -188,14 +194,14 @@ export default function ReservationDates({ data, className }: ReservationDatesPr
     <TopTenModal
       isOpen={isTopTenOpen}
       onClose={() => setIsTopTenOpen(false)}
-      title="Top Dates by Reservations"
+      title={t('stats_top_dates', 'Top Dates by Reservations')}
       items={topTenItems}
-      valueLabel="Total Slots"
+      valueLabel={t('stats_total_slots', 'Total Slots')}
       showPercentage={true}
       additionalColumns={[
         {
           key: 'completed',
-          label: 'Completed',
+          label: t('stats_completed', 'Completed'),
           render: (item) => (
             <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
               {item.additionalInfo?.completed?.toLocaleString() || 0}
@@ -204,7 +210,7 @@ export default function ReservationDates({ data, className }: ReservationDatesPr
         },
         {
           key: 'pending',
-          label: 'Pending',
+          label: t('stats_pending', 'Pending'),
           render: (item) => (
             <span className="text-sm font-semibold text-yellow-600 dark:text-yellow-400">
               {item.additionalInfo?.pending?.toLocaleString() || 0}

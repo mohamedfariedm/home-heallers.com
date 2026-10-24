@@ -1,3 +1,5 @@
+import i18n from '@/lib/i18n';
+
 /** Canonical values of the backend `App\Enums\SourceCampaign`. */
 export const SOURCE_CAMPAIGN_OPTIONS = [
   { value: 'google', label: 'Google' },
@@ -22,4 +24,15 @@ export const NOT_SPECIFIED_LABEL = 'Not Specified';
 /** Statistics filter value the backend reads as "no source campaign". */
 export const SOURCE_CAMPAIGN_NOT_SPECIFIED_VALUE = 'null';
 
-export const formatSourceCampaign = (value?: string | null) => value || NOT_SPECIFIED_LABEL;
+export const formatSourceCampaign = (value?: string | null) => {
+  if (!value) {
+    return i18n.t('campaign_not_specified', {
+      ns: 'statistics',
+      defaultValue: NOT_SPECIFIED_LABEL,
+    });
+  }
+  return i18n.t(`campaign_${value}`, {
+    ns: 'statistics',
+    defaultValue: value,
+  });
+};

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   PiCalendarBlankBold,
   PiChartLineUpBold,
@@ -158,37 +159,48 @@ type DashboardTabId = StatisticsSection | 'calendar';
 
 const DASHBOARD_TABS: Array<{
   id: DashboardTabId;
+  labelKey: string;
   label: string;
+  descKey: string;
   description: string;
   icon: typeof PiChartLineUpBold;
 }> = [
   {
     id: 'market',
+    labelKey: 'stats_tab_market',
     label: 'Market',
+    descKey: 'stats_tab_market_desc',
     description: 'Leads, campaigns, and conversion performance',
     icon: PiChartLineUpBold,
   },
   {
     id: 'finance',
+    labelKey: 'stats_tab_finance',
     label: 'Finance',
+    descKey: 'stats_tab_finance_desc',
     description: 'Revenue, invoices, and financial trends',
     icon: PiCurrencyDollarBold,
   },
   {
     id: 'operations',
+    labelKey: 'stats_tab_operations',
     label: 'Operations',
+    descKey: 'stats_tab_operations_desc',
     description: 'Reservations, sessions, and delivery metrics',
     icon: PiGearBold,
   },
   {
     id: 'calendar',
+    labelKey: 'stats_tab_calendar',
     label: 'Calendar',
-    description: 'Monthly reservation sessions — Google Calendar style overview',
+    descKey: 'stats_tab_calendar_desc',
+    description: 'Monthly reservation sessions — calendar overview',
     icon: PiCalendarBlankBold,
   },
 ];
 
 export default function StatisticsDashboard() {
+  const { t } = useTranslation('statistics');
   const [filters, setFilters] = useState<StatisticsFilters>({});
   const [aggregateData, setAggregateData] = useState<AggregateData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -256,15 +268,15 @@ export default function StatisticsDashboard() {
       
       if (result.data) {
         setAggregateData(result.data);
-        toast.success(result.message || 'تم تحديث الإحصائيات / Statistics updated');
+        toast.success(result.message || t('stats_updated', 'Statistics updated'));
       } else {
         setAggregateData(result as unknown as AggregateData);
-        toast.success('تم تحديث الإحصائيات / Statistics updated');
+        toast.success(t('stats_updated', 'Statistics updated'));
       }
     } catch (error) {
       console.error('Error fetching statistics:', error);
-      setError(error instanceof Error ? error.message : 'Failed to fetch statistics');
-      toast.error('فشل تحميل الإحصائيات / Failed to load statistics');
+      setError(error instanceof Error ? error.message : t('stats_fetch_failed', 'Failed to fetch statistics'));
+      toast.error(t('stats_load_failed_toast', 'Failed to load statistics'));
     } finally {
       setLoading(false);
     }
@@ -282,9 +294,11 @@ export default function StatisticsDashboard() {
       <div className="@container">
         <div className="mb-6 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 @xl:text-3xl dark:text-white">Statistics Dashboard</h1>
+            <h1 className="text-2xl font-bold text-gray-900 @xl:text-3xl dark:text-white">
+              {t('stats_title', 'Statistics Dashboard')}
+            </h1>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              Switch between Market, Finance, Operations, and Calendar
+              {t('stats_subtitle', 'Switch between Market, Finance, Operations, and Calendar')}
             </p>
           </div>
         </div>
@@ -306,7 +320,7 @@ export default function StatisticsDashboard() {
                     }
                   >
                     <Icon className="h-4 w-4" />
-                    {tab.label}
+                    {t(tab.labelKey, tab.label)}
                   </Tab>
                 );
               })}
@@ -324,13 +338,15 @@ export default function StatisticsDashboard() {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
         <div className="text-center">
-          <p className="text-lg font-medium text-red-600">Error loading statistics</p>
+          <p className="text-lg font-medium text-red-600">
+            {t('stats_load_error', 'Error loading statistics')}
+          </p>
           <p className="mt-2 text-sm text-gray-500">{error}</p>
           <button
             onClick={() => fetchStatistics()}
             className="mt-4 rounded-lg bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
           >
-            Try Again
+            {t('shared_try_again', 'Try Again')}
           </button>
         </div>
       </div>
@@ -341,9 +357,11 @@ export default function StatisticsDashboard() {
     <div className="@container">
       <div className="mb-6 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 @xl:text-3xl dark:text-white">Statistics Dashboard</h1>
+          <h1 className="text-2xl font-bold text-gray-900 @xl:text-3xl dark:text-white">
+            {t('stats_title', 'Statistics Dashboard')}
+          </h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Switch between Market, Finance, Operations, and Calendar
+            {t('stats_subtitle', 'Switch between Market, Finance, Operations, and Calendar')}
           </p>
         </div>
       </div>
@@ -375,7 +393,7 @@ export default function StatisticsDashboard() {
                     }
                   >
                     <Icon className="h-4 w-4" />
-                    {tab.label}
+                    {t(tab.labelKey, tab.label)}
                   </Tab>
                 );
               })}
@@ -383,7 +401,10 @@ export default function StatisticsDashboard() {
           </div>
 
           <p className="mb-5 text-sm text-gray-500 dark:text-gray-400">
-            {DASHBOARD_TABS[activeTab]?.description}
+            {t(
+              DASHBOARD_TABS[activeTab]?.descKey || '',
+              DASHBOARD_TABS[activeTab]?.description
+            )}
           </p>
 
           <TabPanels>
@@ -426,7 +447,7 @@ export default function StatisticsDashboard() {
                 {showCampaignSection && (
                   <div className="space-y-4">
                     <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                      Campaign Analysis
+                      {t('stats_campaign_analysis', 'Campaign Analysis')}
                     </h2>
                     <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
                       <div className="lg:col-span-6">
@@ -485,7 +506,7 @@ export default function StatisticsDashboard() {
                   aggregateData.chart_data.revenue.length > 0 && (
                     <div className="space-y-4">
                       <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                        Revenue Trend
+                        {t('stats_revenue_trend', 'Revenue Trend')}
                       </h2>
                       <SingleMetricChart
                         data={aggregateData.chart_data}
@@ -524,7 +545,7 @@ export default function StatisticsDashboard() {
                   aggregateData?.chart_data && (
                     <div className="space-y-4">
                       <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                        Operational Trends
+                        {t('stats_operational_trends', 'Operational Trends')}
                       </h2>
                       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                         {hasPermission('dashboard.reservations_trend') &&
@@ -573,7 +594,7 @@ export default function StatisticsDashboard() {
                 {showLocationSection && (
                   <div className="space-y-4">
                     <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                      Location Statistics
+                      {t('stats_location_statistics', 'Location Statistics')}
                     </h2>
                     <div className="grid grid-cols-1 gap-6">
                       {hasPermission('dashboard.reservations_by_state') &&
@@ -619,9 +640,11 @@ export default function StatisticsDashboard() {
             aggregateData.customer_support?.total === 0 &&
             (aggregateData.leads?.total_leads ?? 0) === 0 && (
               <div className="mt-6 rounded-lg border border-gray-200 bg-gray-50 p-12 text-center dark:border-gray-700 dark:bg-gray-800">
-                <p className="text-lg font-medium text-gray-900 dark:text-white">No data found</p>
+                <p className="text-lg font-medium text-gray-900 dark:text-white">
+                  {t('stats_no_data', 'No data found')}
+                </p>
                 <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                  Try adjusting your filters to see statistics
+                  {t('stats_no_data_hint', 'Try adjusting your filters to see statistics')}
                 </p>
               </div>
             )}

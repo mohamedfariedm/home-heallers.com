@@ -14,7 +14,7 @@ import { routes } from '@/config/routes';
 
 export default function EditOnboardingScreenPage() {
   const params = useParams();
-  const { t } = useTranslation();
+  const { t } = useTranslation('onboarding-screens');
   const pageHeader = {
     title: t('tutorial_edit_title', 'Edit Tutorial'),
     breadcrumb: [

@@ -268,7 +268,7 @@ export function ReservationViewContent({
   canSendInvoiceWhatsapp?: boolean;
   onReservationUpdate?: (updated: any) => void;
 }) {
-  const { t, i18n } = useTranslation();
+  const { t, i18n } = useTranslation('reservations');
   const locale = i18n.language?.startsWith('ar') ? 'ar' : 'en';
   const currency = t('reservation_view_currency');
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
@@ -812,7 +812,7 @@ export default function ReservationViewModal({
   canSendPaymentWhatsapp?: boolean;
   canSendInvoiceWhatsapp?: boolean;
 }) {
-  const { t } = useTranslation();
+  const { t } = useTranslation('reservations');
   const { closeModal } = useModal();
   const [localReservation, setLocalReservation] = useState(reservation);
 

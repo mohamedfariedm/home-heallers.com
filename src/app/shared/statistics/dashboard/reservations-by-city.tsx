@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import WidgetCard from '@/components/cards/widget-card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Button } from '@/components/ui/button';
@@ -29,6 +30,7 @@ interface ReservationsByCityProps {
 const INITIAL_CITIES_SHOWN = 5;
 
 export default function ReservationsByCity({ data, className }: ReservationsByCityProps) {
+  const { t } = useTranslation('statistics');
   const [isTopTenOpen, setIsTopTenOpen] = useState(false);
   const [showAllCities, setShowAllCities] = useState(false);
   
@@ -37,7 +39,7 @@ export default function ReservationsByCity({ data, className }: ReservationsByCi
   }
 
   const chartData = data.by_city.map((city) => ({
-    name: city.city_name || 'Unknown',
+    name: city.city_name || t('shared_unknown', 'Unknown'),
     reservations: city.reservations_count,
     sessions: city.total_sessions,
   }));
@@ -53,7 +55,7 @@ export default function ReservationsByCity({ data, className }: ReservationsByCi
   const hiddenCitiesCount = Math.max(0, sortedCities.length - INITIAL_CITIES_SHOWN);
 
   const topTenItems = sortedCities.slice(0, 10).map((city) => ({
-    name: city.city_name || 'Unknown',
+    name: city.city_name || t('shared_unknown', 'Unknown'),
     value: city.reservations_count,
     percentage: data.total_reservations > 0 ? (city.reservations_count / data.total_reservations) * 100 : 0,
     additionalInfo: {
@@ -65,8 +67,13 @@ export default function ReservationsByCity({ data, className }: ReservationsByCi
   return (
     <>
     <WidgetCard
-      title="Reservations by City"
-      description={`${data.total_cities} cities • ${data.total_reservations.toLocaleString()} reservations • ${data.total_sessions.toLocaleString()} sessions`}
+      title={t('stats_reservations_by_city', 'Reservations by City')}
+      description={t('stats_city_desc', {
+        cities: data.total_cities,
+        reservations: data.total_reservations.toLocaleString(),
+        sessions: data.total_sessions.toLocaleString(),
+        defaultValue: '{{cities}} cities • {{reservations}} reservations • {{sessions}} sessions',
+      })}
       className={cn('min-h-[400px]', className)}
       action={
         <Button
@@ -75,7 +82,7 @@ export default function ReservationsByCity({ data, className }: ReservationsByCi
           onClick={() => setIsTopTenOpen(true)}
           className="text-xs"
         >
-          Top 10
+          {t('shared_top_10', 'Top 10')}
         </Button>
       }
     >
@@ -109,13 +116,13 @@ export default function ReservationsByCity({ data, className }: ReservationsByCi
             <Bar 
               dataKey="reservations" 
               fill="#3B82F6" 
-              name="Reservations"
+              name={t('stats_reservations_label', 'Reservations')}
               radius={[4, 4, 0, 0]}
             />
             <Bar 
               dataKey="sessions" 
               fill="#10B981" 
-              name="Sessions"
+              name={t('stats_sessions', 'Sessions')}
               radius={[4, 4, 0, 0]}
             />
           </BarChart>
@@ -156,7 +163,7 @@ export default function ReservationsByCity({ data, className }: ReservationsByCi
                         {index + 1}
                       </span>
                       <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                        {city.city_name || 'Unknown'}
+                        {city.city_name || t('shared_unknown', 'Unknown')}
                       </span>
                     </div>
                     <span className="text-xs text-gray-500 dark:text-gray-400">
@@ -194,7 +201,10 @@ export default function ReservationsByCity({ data, className }: ReservationsByCi
                     </div>
                   </div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">
-                    Avg. {avgSessionsPerReservation} sessions per reservation
+                    {t('stats_avg_sessions', {
+                      count: avgSessionsPerReservation,
+                      defaultValue: 'Avg. {{count}} sessions per reservation',
+                    })}
                   </div>
                 </div>
               );
@@ -208,8 +218,11 @@ export default function ReservationsByCity({ data, className }: ReservationsByCi
                   className="text-xs text-gray-600 dark:text-gray-400"
                 >
                   {showAllCities
-                    ? 'Show less'
-                    : `+${hiddenCitiesCount} more cities`}
+                    ? t('shared_show_less', 'Show less')
+                    : t('stats_more_cities', {
+                        count: hiddenCitiesCount,
+                        defaultValue: '+{{count}} more cities',
+                      })}
                 </Button>
               </div>
             )}
@@ -221,14 +234,14 @@ export default function ReservationsByCity({ data, className }: ReservationsByCi
     <TopTenModal
       isOpen={isTopTenOpen}
       onClose={() => setIsTopTenOpen(false)}
-      title="Reservations by City"
+      title={t('stats_reservations_by_city', 'Reservations by City')}
       items={topTenItems}
-      valueLabel="Reservations"
+      valueLabel={t('stats_reservations_label', 'Reservations')}
       showPercentage={true}
       additionalColumns={[
         {
           key: 'sessions',
-          label: 'Sessions',
+          label: t('stats_sessions', 'Sessions'),
           render: (item) => (
             <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
               {item.additionalInfo?.sessions?.toLocaleString() || 0}
