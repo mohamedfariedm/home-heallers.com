@@ -485,5 +485,7 @@
   "st_settings_welcome_ar": "Arabic",
   "st_settings_welcome_en": "English",
   "st_settings_saved": "Welcome message saved",
-  "st_settings_save_error": "Failed to save the welcome message"
+  "st_settings_save_error": "Failed to save the welcome message",
+  "st_header_chats": "Support chats",
+  "st_header_chats_unread": "{{count}} unread chats"
 }

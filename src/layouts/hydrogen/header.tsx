@@ -12,11 +12,13 @@ import { useIsMounted } from '@/hooks/use-is-mounted';
 import { useWindowScroll } from '@/hooks/use-window-scroll';
 import SettingsButton from '@/components/settings/settings-button';
 import LanguageChanger from '@/components/LanguageChanger';
+import SupportChatButton from '@/layouts/support-chat-button';
 
 function HeaderMenuRight() {
   return (
-    <div className="ms-auto grid shrink-0 grid-cols-4 items-center gap-2 text-gray-700 xs:gap-3 xl:gap-4">
+    <div className="ms-auto flex shrink-0 items-center gap-2 text-gray-700 xs:gap-3 xl:gap-4">
       <LanguageChanger />
+      <SupportChatButton />
       <NotificationBellButton />
       <SettingsButton />
       <ProfileMenu />

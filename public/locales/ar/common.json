@@ -485,5 +485,7 @@
   "st_settings_welcome_ar": "العربية",
   "st_settings_welcome_en": "الإنجليزية",
   "st_settings_saved": "تم حفظ رسالة الترحيب",
-  "st_settings_save_error": "تعذر حفظ رسالة الترحيب"
+  "st_settings_save_error": "تعذر حفظ رسالة الترحيب",
+  "st_header_chats": "شاتات الدعم",
+  "st_header_chats_unread": "{{count}} شات غير مقروء"
 }
