@@ -16,7 +16,10 @@ import Spinner from '@/components/ui/spinner';
 import { useSettings } from '@/framework/site-settings';
 import { MediaFolder, MediaFile } from '@/types/settings';
 import { resolveEffectiveRoles } from '@/utils/kpi-export';
-import { filterVisibleMediaFolders } from '@/utils/media-folder-access';
+import {
+  filterVisibleMediaFolders,
+  type MediaFolderViewer,
+} from '@/utils/media-folder-access';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -147,12 +150,16 @@ export default function MediaGalleryPage() {
   const { data: session } = useSession();
   const sessionRoles = (session?.user as { roles?: string[] } | undefined)?.roles;
   const userRoles = resolveEffectiveRoles(Array.isArray(sessionRoles) ? sessionRoles : []);
-  const roleKey = userRoles.map((role) => role.toLowerCase()).join('|');
+  const viewer: MediaFolderViewer = {
+    userId: session?.user?.id,
+    roles: userRoles,
+  };
+  const viewerKey = `${session?.user?.id ?? ''}|${userRoles.map((role) => role.toLowerCase()).join('|')}`;
   const folders: MediaFolder[] = useMemo(
-    () => filterVisibleMediaFolders(data?.data[0]?.setting?.media_folders ?? [], userRoles),
-    // roleKey tracks the signed-in roles without changing identity every render
+    () => filterVisibleMediaFolders(data?.data[0]?.setting?.media_folders ?? [], viewer),
+    // viewerKey tracks the signed-in user without changing identity every render
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [data, roleKey]
+    [data, viewerKey]
   );
 
   const [currentPath, setCurrentPath] = useState<string[]>([]);
@@ -242,7 +249,7 @@ export default function MediaGalleryPage() {
             <p className="text-gray-500 font-medium text-lg">No media here</p>
             <p className="text-gray-400 text-sm mt-1">
               {currentPath.length === 0
-                ? 'No folders have been created yet.'
+                ? 'No folders are visible to you yet.'
                 : 'This folder is empty.'}
             </p>
           </div>

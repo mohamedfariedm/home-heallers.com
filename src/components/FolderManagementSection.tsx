@@ -14,14 +14,19 @@ import {
   Shield,
 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
-import { MediaFolder, MediaFile } from '../types/settings';
+import { MediaFolder, MediaFile, MediaFolderUser } from '../types/settings';
 import { FileUpload } from '@/app/[locale]/(hydrogen)/attachments/components/ui/FileUpload';
-import { useRoles } from '@/framework/roles';
+import { useUsers } from '@/framework/users';
 import { resolveEffectiveRoles } from '@/utils/kpi-export';
+import { resolveLocalizedName } from '@/utils/resolve-localized-name';
 import {
+  canManageFolderAccess,
+  canMutateMediaFolder,
   canViewMediaFolder,
-  folderRoleNames,
-  normalizeRoleName,
+  folderAllowedUsers,
+  isFolderOwner,
+  normalizeUserId,
+  type MediaFolderViewer,
 } from '@/utils/media-folder-access';
 
 interface FolderManagementSectionProps {
@@ -101,19 +106,28 @@ function deleteFolderFromTree(
 interface FolderCardProps {
   folder: MediaFolder;
   visibleSubFolderCount: number;
+  viewer: MediaFolderViewer;
+  canEditAccess: boolean;
+  canDelete: boolean;
   onOpen: () => void;
   onDelete: () => void;
-  onEditRoles: () => void;
+  onEditAccess: () => void;
 }
 
 const FolderCard: React.FC<FolderCardProps> = ({
   folder,
   visibleSubFolderCount,
+  viewer,
+  canEditAccess,
+  canDelete,
   onOpen,
   onDelete,
-  onEditRoles,
+  onEditAccess,
 }) => {
-  const roles = folderRoleNames(folder);
+  const shared = folderAllowedUsers(folder);
+  const ownerLabel = folder.ownerName || (folder.ownerId ? `User #${folder.ownerId}` : 'No owner');
+  const isOwner = isFolderOwner(folder, viewer.userId);
+
   return (
     <div className="group relative bg-white border border-gray-200 rounded-xl p-4 flex flex-col items-center gap-3 hover:shadow-md hover:border-blue-300 transition-all cursor-pointer">
       <button
@@ -131,42 +145,57 @@ const FolderCard: React.FC<FolderCardProps> = ({
           {folder.files.length} file{folder.files.length !== 1 ? 's' : ''}
         </span>
         <span className="flex flex-wrap justify-center gap-1 min-h-[20px]">
-          {roles.length === 0 ? (
-            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500">
-              Everyone
-            </span>
-          ) : (
-            roles.slice(0, 2).map((role) => (
-              <span
-                key={role}
-                className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700"
-              >
-                {role}
+          {canEditAccess ? (
+            <>
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600">
+                {ownerLabel}
               </span>
-            ))
-          )}
-          {roles.length > 2 && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700">
-              +{roles.length - 2}
+              {shared.length === 0 ? (
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700">
+                  Private
+                </span>
+              ) : (
+                shared.slice(0, 2).map((user) => (
+                  <span
+                    key={user.id}
+                    className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700"
+                  >
+                    {user.name || `User #${user.id}`}
+                  </span>
+                ))
+              )}
+              {shared.length > 2 && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700">
+                  +{shared.length - 2}
+                </span>
+              )}
+            </>
+          ) : (
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500">
+              {isOwner ? 'Only you' : 'Shared with you'}
             </span>
           )}
         </span>
       </button>
       <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
-        <button
-          onClick={(e) => { e.stopPropagation(); onEditRoles(); }}
-          className="text-blue-400 hover:text-blue-600"
-          title="Folder roles"
-        >
-          <Shield className="w-4 h-4" />
-        </button>
-        <button
-          onClick={(e) => { e.stopPropagation(); onDelete(); }}
-          className="text-red-400 hover:text-red-600"
-          title="Delete folder"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
+        {canEditAccess && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onEditAccess(); }}
+            className="text-blue-400 hover:text-blue-600"
+            title="Folder access"
+          >
+            <Shield className="w-4 h-4" />
+          </button>
+        )}
+        {canDelete && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onDelete(); }}
+            className="text-red-400 hover:text-red-600"
+            title="Delete folder"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        )}
       </div>
     </div>
   );
@@ -249,11 +278,12 @@ const FilePreviewModal: React.FC<VideoModalProps> = ({ file, onClose }) => {
 
 interface FileCardProps {
   file: MediaFile;
+  canDelete: boolean;
   onDelete: () => void;
   onPreview: () => void;
 }
 
-const FileCard: React.FC<FileCardProps> = ({ file, onDelete, onPreview }) => {
+const FileCard: React.FC<FileCardProps> = ({ file, canDelete, onDelete, onPreview }) => {
   const src = file.attachment?.original || file.attachment?.thumbnail || '';
   const isVideo = isVideoFile(file.name || src);
   const isImage = !isVideo && isImageFile(file.name || src);
@@ -307,13 +337,15 @@ const FileCard: React.FC<FileCardProps> = ({ file, onDelete, onPreview }) => {
         </p>
       </div>
 
-      <button
-        onClick={onDelete}
-        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 bg-white rounded-full p-1 shadow text-red-400 hover:text-red-600 transition-all"
-        title="Delete file"
-      >
-        <Trash2 className="w-4 h-4" />
-      </button>
+      {canDelete && (
+        <button
+          onClick={onDelete}
+          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 bg-white rounded-full p-1 shadow text-red-400 hover:text-red-600 transition-all"
+          title="Delete file"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      )}
     </div>
   );
 };
@@ -386,10 +418,13 @@ interface FolderFormDialogProps {
   title: string;
   confirmLabel: string;
   initialName?: string;
-  initialRoles?: string[];
-  availableRoles: string[];
-  rolesLoading: boolean;
-  onConfirm: (name: string, roles: string[]) => void;
+  ownerLabel?: string;
+  ownerId?: string;
+  initialAllowedUsers?: MediaFolderUser[];
+  availableUsers: MediaFolderUser[];
+  usersLoading: boolean;
+  canEditAccess: boolean;
+  onConfirm: (name: string, allowedUsers: MediaFolderUser[]) => void;
   onClose: () => void;
 }
 
@@ -397,27 +432,40 @@ const FolderFormDialog: React.FC<FolderFormDialogProps> = ({
   title,
   confirmLabel,
   initialName = '',
-  initialRoles = [],
-  availableRoles,
-  rolesLoading,
+  ownerLabel,
+  ownerId,
+  initialAllowedUsers = [],
+  availableUsers,
+  usersLoading,
+  canEditAccess,
   onConfirm,
   onClose,
 }) => {
   const [name, setName] = useState(initialName);
-  const [selectedRoles, setSelectedRoles] = useState<string[]>(initialRoles);
+  const [userQuery, setUserQuery] = useState('');
+  const [selectedUsers, setSelectedUsers] = useState<MediaFolderUser[]>(initialAllowedUsers);
+  const ownerKey = normalizeUserId(ownerId);
 
-  const toggleRole = (role: string) => {
-    setSelectedRoles((current) =>
-      current.some((item) => item.toLowerCase() === role.toLowerCase())
-        ? current.filter((item) => item.toLowerCase() !== role.toLowerCase())
-        : [...current, role]
+  const toggleUser = (user: MediaFolderUser) => {
+    if (user.id === ownerKey) return;
+    setSelectedUsers((current) =>
+      current.some((item) => item.id === user.id)
+        ? current.filter((item) => item.id !== user.id)
+        : [...current, user]
     );
   };
 
   const submit = () => {
     if (!name.trim()) return;
-    onConfirm(name.trim(), selectedRoles);
+    onConfirm(name.trim(), canEditAccess ? selectedUsers : initialAllowedUsers);
   };
+
+  const filteredUsers = availableUsers.filter((user) => {
+    if (ownerKey && user.id === ownerKey) return false;
+    if (!userQuery.trim()) return true;
+    const q = userQuery.trim().toLowerCase();
+    return user.name.toLowerCase().includes(q) || user.id.toLowerCase().includes(q);
+  });
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
@@ -437,43 +485,53 @@ const FolderFormDialog: React.FC<FolderFormDialogProps> = ({
             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Who can see this folder
-          </label>
-          <p className="text-xs text-gray-500 mb-2">
-            {selectedRoles.length === 0
-              ? 'No roles selected. Everyone can see this folder. Admin always sees every folder.'
-              : 'Only users with a selected role can see this folder. Admin always sees it.'}
-          </p>
-          <div className="max-h-48 overflow-y-auto rounded-lg border border-gray-200 divide-y divide-gray-100">
-            {rolesLoading ? (
-              <p className="px-3 py-3 text-sm text-gray-400">Loading roles…</p>
-            ) : availableRoles.length === 0 ? (
-              <p className="px-3 py-3 text-sm text-gray-400">No roles found.</p>
-            ) : (
-              availableRoles.map((role) => {
-                const checked = selectedRoles.some(
-                  (item) => item.toLowerCase() === role.toLowerCase()
-                );
-                return (
-                  <label
-                    key={role}
-                    className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 cursor-pointer hover:bg-gray-50"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={() => toggleRole(role)}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-                    <span>{role}</span>
-                  </label>
-                );
-              })
+        {canEditAccess && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Folder access
+            </label>
+            <p className="text-xs text-gray-500 mb-2">
+              Only the owner and Admin see this folder until you pick users below.
+            </p>
+            {ownerLabel && (
+              <p className="text-xs text-gray-600 mb-2 px-3 py-2 rounded-lg bg-gray-50 border border-gray-100">
+                Owner: <span className="font-medium">{ownerLabel}</span>
+              </p>
             )}
+            <input
+              type="search"
+              value={userQuery}
+              onChange={(e) => setUserQuery(e.target.value)}
+              placeholder="Search users…"
+              className="w-full mb-2 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <div className="max-h-48 overflow-y-auto rounded-lg border border-gray-200 divide-y divide-gray-100">
+              {usersLoading ? (
+                <p className="px-3 py-3 text-sm text-gray-400">Loading users…</p>
+              ) : filteredUsers.length === 0 ? (
+                <p className="px-3 py-3 text-sm text-gray-400">No users found.</p>
+              ) : (
+                filteredUsers.map((user) => {
+                  const checked = selectedUsers.some((item) => item.id === user.id);
+                  return (
+                    <label
+                      key={user.id}
+                      className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 cursor-pointer hover:bg-gray-50"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => toggleUser(user)}
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span>{user.name}</span>
+                    </label>
+                  );
+                })
+              )}
+            </div>
           </div>
-        </div>
+        )}
         <div className="flex gap-3 justify-end">
           <button
             onClick={onClose}
@@ -503,23 +561,34 @@ const FolderManagementSection: React.FC<FolderManagementSectionProps> = ({
   const { data: session } = useSession();
   const sessionRoles = (session?.user as { roles?: string[] } | undefined)?.roles;
   const userRoles = resolveEffectiveRoles(Array.isArray(sessionRoles) ? sessionRoles : []);
-  const roleKey = userRoles.map((role) => role.toLowerCase()).join('|');
-  const { data: rolesData, isLoading: rolesLoading } = useRoles('page=1&limit=200');
-  const availableRoles = useMemo((): string[] => {
-    const payload = rolesData?.data;
+  const currentUserId = normalizeUserId(session?.user?.id);
+  const currentUserName = session?.user?.name || (currentUserId ? `User #${currentUserId}` : 'User');
+  const viewer: MediaFolderViewer = { userId: currentUserId, roles: userRoles };
+  const canEditAccess = canManageFolderAccess(userRoles);
+  const viewerKey = `${currentUserId}|${userRoles.map((role) => role.toLowerCase()).join('|')}`;
+  const { data: usersData, isLoading: usersLoading } = useUsers('page=1&limit=200');
+  const availableUsers = useMemo((): MediaFolderUser[] => {
+    const payload = usersData?.data;
     const list: unknown[] = Array.isArray(payload)
       ? payload
       : Array.isArray(payload?.data)
         ? payload.data
         : [];
-    return Array.from(
-      new Set(
-        list
-          .map((role) => normalizeRoleName(role))
-          .filter((role): role is string => role.length > 0)
-      )
-    );
-  }, [rolesData]);
+    const seen = new Set<string>();
+    const users: MediaFolderUser[] = [];
+    for (const item of list) {
+      const row = item as { id?: unknown; name?: unknown; email?: string };
+      const id = normalizeUserId(row?.id);
+      if (!id || seen.has(id)) continue;
+      seen.add(id);
+      const name =
+        resolveLocalizedName(row?.name) ||
+        row?.email ||
+        `User #${id}`;
+      users.push({ id, name });
+    }
+    return users;
+  }, [usersData]);
 
   // currentPath is an array of folder IDs representing the navigation stack
   const [currentPath, setCurrentPath] = useState<string[]>([]);
@@ -534,19 +603,20 @@ const FolderManagementSection: React.FC<FolderManagementSectionProps> = ({
     currentPath.length > 0 ? getFolderAtPath(folders, currentPath) : null;
 
   const displayedFolders = (currentFolder ? currentFolder.subFolders : folders).filter(
-    (folder) => canViewMediaFolder(folder, userRoles)
+    (folder) => canViewMediaFolder(folder, viewer)
   );
   const displayedFiles = currentFolder ? currentFolder.files : [];
+  const canMutateCurrent = canMutateMediaFolder(currentFolder, viewer);
 
   useEffect(() => {
     if (currentPath.length === 0) return;
     const folder = getFolderAtPath(folders, currentPath);
-    if (!folder || !canViewMediaFolder(folder, userRoles)) {
+    if (!folder || !canViewMediaFolder(folder, viewer)) {
       setCurrentPath([]);
     }
-    // roleKey tracks the signed-in roles without changing identity every render
+    // viewerKey tracks the signed-in user without changing identity every render
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [folders, currentPath, roleKey]);
+  }, [folders, currentPath, viewerKey]);
 
   // ── Breadcrumb labels ──────────────────────────────────────────────────────
 
@@ -564,11 +634,17 @@ const FolderManagementSection: React.FC<FolderManagementSectionProps> = ({
 
   // ── Handlers ───────────────────────────────────────────────────────────────
 
-  const handleCreateFolder = (name: string, roles: string[]) => {
+  const handleCreateFolder = (name: string, allowedUsers: MediaFolderUser[]) => {
+    if (!canMutateCurrent || !currentUserId) return;
+    const ownerId = currentUserId;
     const newFolder: MediaFolder = {
       id: generateId(),
       name,
-      roles,
+      ownerId: ownerId || undefined,
+      ownerName: currentUserName,
+      allowedUsers: canEditAccess
+        ? allowedUsers.filter((user) => user.id !== ownerId)
+        : [],
       subFolders: [],
       files: [],
     };
@@ -586,25 +662,30 @@ const FolderManagementSection: React.FC<FolderManagementSectionProps> = ({
     setShowNewFolder(false);
   };
 
-  const handleUpdateFolderAccess = (name: string, roles: string[]) => {
-    if (!editingFolder) return;
+  const handleUpdateFolderAccess = (name: string, allowedUsers: MediaFolderUser[]) => {
+    if (!editingFolder || !canEditAccess) return;
+    const ownerId = normalizeUserId(editingFolder.ownerId);
     onUpdate(
       updateFolderInTree(folders, [...currentPath, editingFolder.id], (f) => ({
         ...f,
         name,
-        roles,
+        allowedUsers: allowedUsers.filter((user) => user.id !== ownerId),
       }))
     );
     setEditingFolder(null);
   };
 
   const handleDeleteFolder = (folderId: string) => {
+    const target = (currentFolder ? currentFolder.subFolders : folders).find(
+      (folder) => folder.id === folderId
+    );
+    if (!target || !canMutateMediaFolder(target, viewer)) return;
     const targetPath = [...currentPath, folderId];
     onUpdate(deleteFolderFromTree(folders, targetPath));
   };
 
   const handleUploadFile = (name: string, uploadedFiles: any[]) => {
-    if (!uploadedFiles.length || currentPath.length === 0) return;
+    if (!uploadedFiles.length || currentPath.length === 0 || !canMutateCurrent) return;
     const raw = uploadedFiles[0];
     const newFile: MediaFile = {
       id: generateId(),
@@ -625,7 +706,7 @@ const FolderManagementSection: React.FC<FolderManagementSectionProps> = ({
   };
 
   const handleDeleteFile = (fileId: string) => {
-    if (currentPath.length === 0) return;
+    if (currentPath.length === 0 || !canMutateCurrent) return;
     onUpdate(
       updateFolderInTree(folders, currentPath, (f) => ({
         ...f,
@@ -655,18 +736,22 @@ const FolderManagementSection: React.FC<FolderManagementSectionProps> = ({
         <div>
           <h2 className="text-xl font-semibold text-gray-900">Folder Management</h2>
           <p className="text-xs text-gray-500 mt-1">
-            Use the shield on a folder to choose which roles can see it. No roles means everyone can see it. Admin always sees every folder.
+            {canEditAccess
+              ? 'A new folder is private to its owner. Use the shield to share it with specific users. Admin always sees every folder.'
+              : 'Folders you create are private to you. Admin can share a folder with other users.'}
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowNewFolder(true)}
-            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-          >
-            <Plus className="w-4 h-4" />
-            New Folder
-          </button>
-          {currentPath.length > 0 && (
+          {canMutateCurrent && (
+            <button
+              onClick={() => setShowNewFolder(true)}
+              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+            >
+              <Plus className="w-4 h-4" />
+              New Folder
+            </button>
+          )}
+          {currentPath.length > 0 && canMutateCurrent && (
             <button
               onClick={() => setShowUpload((v) => !v)}
               className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
@@ -703,7 +788,7 @@ const FolderManagementSection: React.FC<FolderManagementSectionProps> = ({
       </nav>
 
       {/* Upload Panel */}
-      {showUpload && (
+      {showUpload && canMutateCurrent && (
         <UploadPanel
           onUpload={handleUploadFile}
           onClose={() => setShowUpload(false)}
@@ -716,8 +801,12 @@ const FolderManagementSection: React.FC<FolderManagementSectionProps> = ({
           <FolderOpen className="w-14 h-14 mx-auto text-gray-300 mb-3" />
           <p className="text-gray-500 font-medium">
             {currentPath.length === 0
-              ? 'No folders yet. Click "New Folder" to get started.'
-              : 'This folder is empty. Create a sub-folder or upload a file.'}
+              ? canMutateCurrent
+                ? 'No folders yet. Click "New Folder" to get started.'
+                : 'No folders are shared with you yet.'
+              : canMutateCurrent
+                ? 'This folder is empty. Create a sub-folder or upload a file.'
+                : 'This folder is empty.'}
           </p>
         </div>
       ) : (
@@ -729,12 +818,17 @@ const FolderManagementSection: React.FC<FolderManagementSectionProps> = ({
               folder={folder}
               visibleSubFolderCount={
                 (folder.subFolders ?? []).filter((child) =>
-                  canViewMediaFolder(child, userRoles)
+                  canViewMediaFolder(child, viewer)
                 ).length
               }
+              viewer={viewer}
+              canEditAccess={canEditAccess}
+              canDelete={canMutateMediaFolder(folder, viewer)}
               onOpen={() => navigateInto(folder.id)}
               onDelete={() => handleDeleteFolder(folder.id)}
-              onEditRoles={() => setEditingFolder(folder)}
+              onEditAccess={() => {
+                if (canEditAccess) setEditingFolder(folder);
+              }}
             />
           ))}
 
@@ -743,6 +837,7 @@ const FolderManagementSection: React.FC<FolderManagementSectionProps> = ({
             <FileCard
               key={file.id}
               file={file}
+              canDelete={canMutateCurrent}
               onDelete={() => handleDeleteFile(file.id)}
               onPreview={() => setPreviewFile(file)}
             />
@@ -751,25 +846,34 @@ const FolderManagementSection: React.FC<FolderManagementSectionProps> = ({
       )}
 
       {/* New Folder Dialog */}
-      {showNewFolder && (
+      {showNewFolder && canMutateCurrent && (
         <FolderFormDialog
           title="New Folder"
           confirmLabel="Create"
-          availableRoles={availableRoles}
-          rolesLoading={rolesLoading}
+          ownerLabel={currentUserName}
+          ownerId={currentUserId}
+          availableUsers={availableUsers}
+          usersLoading={usersLoading}
+          canEditAccess={canEditAccess}
           onConfirm={handleCreateFolder}
           onClose={() => setShowNewFolder(false)}
         />
       )}
 
-      {editingFolder && (
+      {editingFolder && canEditAccess && (
         <FolderFormDialog
           title="Folder access"
           confirmLabel="Save"
           initialName={editingFolder.name}
-          initialRoles={folderRoleNames(editingFolder)}
-          availableRoles={availableRoles}
-          rolesLoading={rolesLoading}
+          ownerLabel={
+            editingFolder.ownerName ||
+            (editingFolder.ownerId ? `User #${editingFolder.ownerId}` : 'No owner')
+          }
+          ownerId={normalizeUserId(editingFolder.ownerId)}
+          initialAllowedUsers={folderAllowedUsers(editingFolder)}
+          availableUsers={availableUsers}
+          usersLoading={usersLoading}
+          canEditAccess={canEditAccess}
           onConfirm={handleUpdateFolderAccess}
           onClose={() => setEditingFolder(null)}
         />

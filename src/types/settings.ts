@@ -217,17 +217,21 @@ export interface MediaFile {
   attachment: Attachment;
 }
 
+export interface MediaFolderUser {
+  id: string;
+  name: string;
+}
+
 export interface MediaFolder {
   id: string;
   name: string;
   subFolders: MediaFolder[];
   files: MediaFile[];
-  /**
-   * Role names allowed to see this folder.
-   * Empty or missing: visible to every user.
-   * Admin always sees the folder even when roles are set.
-   */
-  roles?: string[];
+  /** User who created the folder. Only this user and Admin see it by default. */
+  ownerId?: string;
+  ownerName?: string;
+  /** Extra users Admin shared this folder with. */
+  allowedUsers?: MediaFolderUser[];
 }
 
 export type RateMetricKey =
