@@ -8,9 +8,7 @@ import PencilIcon from '@/components/icons/pencil';
 import AvatarCard from '@/components/ui/avatar-card';
 import DateCell from '@/components/ui/date-cell';
 import DeletePopover from '@/app/shared/delete-popover';
-// import CreateButton from '../../create-button';
 import BrandForm from './review-form';
-// import { Retailer } from '@/types';
 import TrashIcon from '@/components/icons/trash';
 import CreateButton from '../create-button';
 
@@ -22,7 +20,15 @@ type Columns = {
   onDeleteItem: (id: string[]) => void;
   onHeaderCellClick: (value: string) => void;
   onChecked?: (id: string) => void;
+  t: (key: string, options?: any) => string;
+  lang: 'en' | 'ar';
 };
+
+function localizedText(value: any, lang: 'en' | 'ar') {
+  if (!value) return '';
+  if (typeof value === 'string') return value;
+  return value[lang] || value.en || value.ar || '';
+}
 
 export const getColumns = ({
   data,
@@ -32,12 +38,14 @@ export const getColumns = ({
   onHeaderCellClick,
   handleSelectAll,
   onChecked,
+  t,
+  lang,
 }: Columns) => [
   {
     title: (
       <div className="ps-2">
         <Checkbox
-          title={'Select All'}
+          title={t('client_review_select_all')}
           onChange={handleSelectAll}
           checked={checkedItems.length === data.length}
           className="cursor-pointer"
@@ -67,7 +75,7 @@ export const getColumns = ({
       <div className="flex items-center gap-3">
         <Tooltip
           size="sm"
-          content={() => 'Edit Invoice'}
+          content={() => t('client_review_edit')}
           placement="top"
           color="invert"
         >
@@ -88,14 +96,14 @@ export const getColumns = ({
           />
         </Tooltip>
         <DeletePopover
-          title={`Delete Report`}
-          description={`Are you sure you want to delete this #${row.id} `}
+          title={t('client_review_delete_title')}
+          description={t('client_review_delete_confirm', { id: row.id })}
           onDelete={() => onDeleteItem([row.id])}
         >
           <ActionIcon
             size="sm"
             variant="outline"
-            aria-label={'Delete Item'}
+            aria-label={t('client_review_delete_item')}
             className="cursor-pointer hover:!border-gray-900 hover:text-gray-700"
           >
             <TrashIcon className="h-4 w-4" />
@@ -105,7 +113,7 @@ export const getColumns = ({
     ),
   },
   {
-    title: <HeaderCell align="center" title="Name" />,
+    title: <HeaderCell align="center" title={t('client_review_col_name')} />,
     dataIndex: 'name',
     key: 'name',
     width: 100,
@@ -117,7 +125,7 @@ export const getColumns = ({
           <AvatarCard
             //@ts-ignore
             src={row?.image?.original || ''}
-            name={row?.name?.ar ?? row?.name?.ar ?? ''}
+            name={localizedText(row?.name, lang)}
             description={`ID-${row.id}`}
           />
         }
@@ -125,40 +133,43 @@ export const getColumns = ({
     ),
   },
   {
-    title: <HeaderCell align="center" title={'position'} />,
+    title: <HeaderCell align="center" title={t('client_review_col_position')} />,
     dataIndex: 'position',
     key: 'position',
     width: 30,
     hidden: 'position',
 
     render: (_: string, row: any) => (
-      <div className="w-full  text-center">{row?.position?.ar ?? row?.position?.ar ?? ''}</div>
+      <div className="w-full  text-center">{localizedText(row?.position, lang)}</div>
     ),
   },
   {
-    title: <HeaderCell title="text" align="center" />,
+    title: <HeaderCell title={t('client_review_col_text')} align="center" />,
     dataIndex: 'text',
     key: 'text',
     width: 200,
     hidden: 'text',
-    render: (_: string, row: any) => (
+    render: (_: string, row: any) => {
+      const text = localizedText(row?.text, lang);
+      return (
       <Tooltip
         showArrow
         className=" "
-        content={() => <div className="  max-w-[400px] ">{row?.text?.ar ?? row?.text?.ar ?? ''}</div>}
+        content={() => <div className="  max-w-[400px] ">{text}</div>}
       >
         <div className="mx-auto line-clamp-2 max-w-[400px] text-center">
-        {row?.text?.ar ?? row?.text?.ar ?? ''}
+        {text}
         </div>
       </Tooltip>
-    ),
+      );
+    },
   },
   {
-    title: <HeaderCell title="rate" align="center" />,
-    dataIndex: 'text',
-    key: 'text',
+    title: <HeaderCell title={t('client_review_col_rate')} align="center" />,
+    dataIndex: 'rate',
+    key: 'rate',
     width: 200,
-    hidden: 'text',
+    hidden: 'rate',
     render: (_: string, row: any) => (
       <Tooltip
         showArrow
@@ -176,7 +187,7 @@ export const getColumns = ({
     title: (
       <HeaderCell
         align="center"
-        title={'Updated'}
+        title={t('client_review_col_updated')}
         sortable
         ascending={
           sortConfig?.direction === 'asc' && sortConfig?.key === 'updated_at'
@@ -193,7 +204,7 @@ export const getColumns = ({
     title: (
       <HeaderCell
         align="center"
-        title={'Created'}
+        title={t('client_review_col_created')}
         sortable
         ascending={
           sortConfig?.direction === 'asc' && sortConfig?.key === 'created_at'

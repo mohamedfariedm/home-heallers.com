@@ -10,8 +10,8 @@ import { getColumns } from '@/app/shared/client-review/columns';
 import { Text } from '@/components/ui/text';
 import toast from 'react-hot-toast';
 import { useSearchParams } from 'next/navigation';
-import { useDeleteBrand } from '@/framework/brand';
 import { useDeleteClientReview } from '@/framework/client-review';
+import { useTranslation } from 'react-i18next';
 // const FilterElement = dynamic(
 //   () => import('@/app/shared/invoice/invoice-list/filter-element'),
 //   { ssr: false }
@@ -38,6 +38,8 @@ export default function ClientTable({
   getSelectedRowKeys: React.Dispatch<React.SetStateAction<any[]>>;
   totalItems: number;
 }) {
+  const { t, i18n } = useTranslation('client-review');
+  const lang = i18n.language === 'ar' ? 'ar' : 'en';
   const searchParams = useSearchParams();
   const params = new URLSearchParams(searchParams);
   const [pageSize, setPageSize] = useState(Number(params.get('limit')));
@@ -56,9 +58,9 @@ export default function ClientTable({
         onSuccess: () => {
           toast.success(
             <Text>
-              Review deleted successfully
+              {t('client_review_deleted')}
               <Text as="b" className="font-semibold">
-                Success
+                {t('client_review_success')}
               </Text>
             </Text>
           );
@@ -69,7 +71,7 @@ export default function ClientTable({
   const onDeleteItem = useCallback((id: string[]) => {
     handleDelete(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [t]);
 
   const {
     isLoading,
@@ -102,6 +104,8 @@ export default function ClientTable({
         onDeleteItem,
         onChecked: handleRowSelect,
         handleSelectAll,
+        t,
+        lang,
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
@@ -112,6 +116,8 @@ export default function ClientTable({
       onDeleteItem,
       handleRowSelect,
       handleSelectAll,
+      t,
+      lang,
     ]
   );
 

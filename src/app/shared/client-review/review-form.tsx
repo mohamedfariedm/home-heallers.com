@@ -31,12 +31,14 @@ import {
   useCreateClientReview,
   useUpdateClientReview,
 } from '@/framework/client-review';
+import { useTranslation } from 'react-i18next';
 
 export default function UpdateCreateBrand({
   initValues,
 }: {
   initValues?: any;
 }) {
+  const { t } = useTranslation('client-review');
   const { closeModal } = useModal();
   const [reset, setReset] = useState({});
   const { mutate: update } = useUpdateClientReview();
@@ -61,11 +63,15 @@ export default function UpdateCreateBrand({
         if (type === 'Image') {
           setImage(response.data.data);
         }
-        toast.success(`${type} Uploaded successfully`);
+        toast.success(
+          t('client_review_uploaded', {
+            type: t(type === 'Image' ? 'client_review_type_image' : 'client_review_type_file'),
+          })
+        );
       })
       .catch((error) => {
         console.log(error);
-        toast.error('Please Try Again');
+        toast.error(t('client_review_upload_retry'));
       })
       .finally(() => {
         setLoading(false);
@@ -213,7 +219,7 @@ export default function UpdateCreateBrand({
             <>
               <div className="flex items-center justify-between">
                 <Title as="h4" className="font-semibold">
-                  {initValues ? 'Update Review' : 'Add a new Review'}
+                  {initValues ? t('client_review_update') : t('client_review_add')}
                 </Title>
                 <ActionIcon size="sm" variant="text" onClick={closeModal}>
                   <PiXBold className="h-auto w-5" />
@@ -221,46 +227,46 @@ export default function UpdateCreateBrand({
               </div>
 
               <Input
-                label={'Title (EN)'}
-                placeholder={'TitleEN'}
+                label={t('client_review_title_en')}
+                placeholder={t('client_review_title_en')}
                 {...register('titleEN')}
                 error={errors.titleEN?.message}
               />
               <Input
-                label={'Title (AR)'}
-                placeholder={'Title (AR)'}
+                label={t('client_review_title_ar')}
+                placeholder={t('client_review_title_ar')}
                 {...register('titleAR')}
                 error={errors.titleAR?.message}
               />
 
               <Input
-                label={'Name (EN)'}
-                placeholder={'NameEN'}
+                label={t('client_review_name_en')}
+                placeholder={t('client_review_name_en')}
                 {...register('nameEN')}
                 error={errors.nameEN?.message}
               />
               <Input
-                label={'Name (AR)'}
-                placeholder={'Name (AR)'}
+                label={t('client_review_name_ar')}
+                placeholder={t('client_review_name_ar')}
                 {...register('nameAR')}
                 error={errors.nameAR?.message}
               />
 
               <Input
-                label={'Position (EN)'}
-                placeholder={'Position EN'}
+                label={t('client_review_position_en')}
+                placeholder={t('client_review_position_en')}
                 {...register('positionEN')}
                 error={errors.positionEN?.message}
               />
               <Input
-                label={'Position (AR)'}
-                placeholder={'PositionAR'}
+                label={t('client_review_position_ar')}
+                placeholder={t('client_review_position_ar')}
                 {...register('positionAR')}
                 error={errors.positionAR?.message}
               />
 
               <div>
-                <label className="text-sm text-gray-700">Rate</label>
+                <label className="text-sm text-gray-700">{t('client_review_rate')}</label>
                 <Controller
                   name="rate"
                   control={control}
@@ -273,7 +279,7 @@ export default function UpdateCreateBrand({
                         field.onChange(v ? parseInt(v, 10) : undefined);
                       }}
                     >
-                      <option value="">Select rating</option>
+                      <option value="">{t('client_review_rate_placeholder')}</option>
                       <option value="1">1</option>
                       <option value="2">2</option>
                       <option value="3">3</option>
@@ -289,20 +295,20 @@ export default function UpdateCreateBrand({
 
 
               <Textarea
-                label={'Text (EN)'}
-                placeholder={'TextEN'}
+                label={t('client_review_text_en')}
+                placeholder={t('client_review_text_en')}
                 {...register('textEN')}
                 error={errors.textEN?.message}
               />
               <Textarea
-                label={'Text (AR)'}
-                placeholder={'TextAR'}
+                label={t('client_review_text_ar')}
+                placeholder={t('client_review_text_ar')}
                 {...register('textAR')}
                 error={errors.textAR?.message}
               />
               
               <FormGroup
-                title="Image"
+                title={t('client_review_image')}
                 className="relative pt-7 @2xl:pt-9 @3xl:grid-cols-12 @3xl:pt-11"
               >
                 {isoading && (
@@ -311,7 +317,7 @@ export default function UpdateCreateBrand({
                   </div>
                 )}
                 <Upload
-                  title="image"
+                  title={t('client_review_image')}
                   accept="img"
                   onChange={(e) => {
                     setImageError(0);
@@ -321,7 +327,7 @@ export default function UpdateCreateBrand({
                 {imageError ? (
                   // "faried Error"
                   <p className="rizzui-input-error-text mt-0.5 text-xs text-red">
-                    Image Requerd
+                    {t('client_review_image_required')}
                   </p>
                 ) : (
                   ''
@@ -330,14 +336,14 @@ export default function UpdateCreateBrand({
                   <div className="relative flex justify-center items-center w-full mt-2">
                     <img
                       src={isImageData[0].thumbnail || isImageData[0].original}
-                      alt="Uploaded Preview"
+                      alt={t('client_review_preview_alt')}
                       className="w-48 h-auto rounded border border-gray-200 shadow-sm"
                     />
                     <button
                       type="button"
                       onClick={() => setImage(null)}
                       className="absolute -top-2 -right-2 bg-white border border-gray-300 rounded-full p-1 shadow hover:bg-red-50"
-                      title="Remove Image"
+                      title={t('client_review_remove_image')}
                     >
                       <PiXBold className="w-4 h-4 text-red-500" />
                     </button>
@@ -351,14 +357,14 @@ export default function UpdateCreateBrand({
                   onClick={closeModal}
                   className="w-full @xl:w-auto"
                 >
-                  {'Cancel'}
+                  {t('client_review_cancel')}
                 </Button>
                 <Button
                   type="submit"
                   isLoading={isLoading}
                   className="w-full @xl:w-auto"
                 >
-                  {initValues ? 'Update Review' : 'Create Review'}
+                  {initValues ? t('client_review_update') : t('client_review_create')}
                 </Button>
               </div>
             </>
