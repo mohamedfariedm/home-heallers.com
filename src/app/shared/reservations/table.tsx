@@ -11,6 +11,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { ActionIcon } from 'rizzui';
 import { PiCaretDownBold, PiCaretUpBold } from 'react-icons/pi';
 import { useDeleteReservation } from '@/framework/reservations';
+import { useModal } from '@/app/shared/modal-views/use-modal';
+import { Button } from '@/components/ui/button';
+import BulkPersonalCouponsForm from '@/app/shared/reservations/bulk-personal-coupons-panel';
 
 const FilterElement = dynamic(
   () => import('@/app/shared/reservations/filter-element'),
@@ -52,6 +55,7 @@ export default function ReservationsTable({
   canInviteDoctors = false,
   canSendPaymentWhatsapp = false,
   canSendInvoiceWhatsapp = false,
+  canPersonalCoupons = false,
 }: { 
   data: any[], 
   getSelectedColumns: React.Dispatch<React.SetStateAction<any[]>>, 
@@ -63,8 +67,10 @@ export default function ReservationsTable({
   canInviteDoctors?: boolean,
   canSendPaymentWhatsapp?: boolean,
   canSendInvoiceWhatsapp?: boolean,
+  canPersonalCoupons?: boolean,
 }) {
   const { mutate: deleteReservation } = useDeleteReservation();
+  const { openModal } = useModal();
   const searchParams = useSearchParams();
   const router = useRouter();
   const [pageSize, setPageSize] = useState(Number(searchParams.get('limit')) || 10);
@@ -163,6 +169,25 @@ export default function ReservationsTable({
     handleReset,
   } = useTable(data, pageSize, filterState);
 
+  const openPersonalCoupons = useCallback((row?: any) => {
+    const selected = data.filter((item) =>
+      selectedRowKeys.some((key) => String(key) === String(item?.id))
+    );
+    let reservations = selected;
+    if (selected.length > 1) {
+      if (row && !selected.some((item) => String(item?.id) === String(row?.id))) {
+        reservations = [row, ...selected];
+      }
+    } else if (row) {
+      reservations = [row];
+    }
+    const key = `${Date.now()}-${reservations.map((item) => item?.id).join('-')}`;
+    openModal({
+      view: <BulkPersonalCouponsForm key={key} reservations={reservations} />,
+      customSize: '820px',
+    });
+  }, [data, openModal, selectedRowKeys]);
+
   const columns = React.useMemo(
     () =>
       getColumns({
@@ -180,8 +205,10 @@ export default function ReservationsTable({
         canInviteDoctors,
         canSendPaymentWhatsapp,
         canSendInvoiceWhatsapp,
+        canPersonalCoupons,
+        onPersonalCoupon: canPersonalCoupons ? openPersonalCoupons : undefined,
       }),
-    [selectedRowKeys, onHeaderCellClick, sortConfig.key, sortConfig.direction, onDeleteItem, handleRowSelect, handleSelectAll, canView, canEdit, canDelete, canInviteDoctors, canSendPaymentWhatsapp, canSendInvoiceWhatsapp]
+    [selectedRowKeys, onHeaderCellClick, sortConfig.key, sortConfig.direction, onDeleteItem, handleRowSelect, handleSelectAll, canView, canEdit, canDelete, canInviteDoctors, canSendPaymentWhatsapp, canSendInvoiceWhatsapp, canPersonalCoupons, openPersonalCoupons]
   );
 
   const { visibleColumns, checkedColumns, setCheckedColumns } = useColumn(columns);
@@ -292,7 +319,19 @@ export default function ReservationsTable({
                 setSelectedRowKeys([]);
                 handleDelete(ids);
               }}
-            />
+            >
+              {canPersonalCoupons && selectedRowKeys.length > 1 ? (
+                <Button size="sm" onClick={() => openPersonalCoupons()}>
+                  Personal coupons ({selectedRowKeys.length})
+                </Button>
+              ) : null}
+            </TableFooter>
+          ) : canPersonalCoupons && selectedRowKeys.length > 1 ? (
+            <div className="sticky bottom-0 left-0 z-10 mt-2.5 flex w-full items-center justify-end rounded-md border border-gray-300 bg-gray-0 px-5 py-3.5 shadow-sm">
+              <Button size="sm" onClick={() => openPersonalCoupons()}>
+                Personal coupons ({selectedRowKeys.length})
+              </Button>
+            </div>
           ) : undefined
         }
         className="overflow-hidden rounded-md border border-gray-200 text-sm shadow-sm [&_.rc-table-placeholder_.rc-table-expanded-row-fixed>div]:h-60 [&_.rc-table-placeholder_.rc-table-expanded-row-fixed>div]:justify-center [&_.rc-table-row:last-child_td.rc-table-cell]:border-b-0 [&_thead.rc-table-thead]:border-t-0"

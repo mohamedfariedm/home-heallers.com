@@ -27,6 +27,7 @@ export default function AbandonedReservationsTablePage() {
   const searchParams = useSearchParams();
   const { permissions } = usePermissions();
   const reservationPermissions = resolveReservationsPermissions(permissions);
+  const canManageCoupons = permissions.includes('coupons');
 
   const queryParams = new URLSearchParams();
   searchParams.forEach((value, key) => {
@@ -94,6 +95,7 @@ export default function AbandonedReservationsTablePage() {
               canInviteDoctors={reservationPermissions.inviteDoctors}
               canSendPaymentWhatsapp={reservationPermissions.sendPaymentWhatsapp}
               canSendInvoiceWhatsapp={reservationPermissions.sendInvoiceWhatsapp}
+              canPersonalCoupons={canManageCoupons}
             />
           </>
         )}

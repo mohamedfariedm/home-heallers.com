@@ -7,6 +7,7 @@ import PationtsTable from '@/app/shared/patients/table';
 import ClientStatistics from '@/app/shared/patients/client-statistics';
 import { usePatients } from '@/framework/patients';
 import CreateOrUpdatePationts from '@/app/shared/patients/pationts-form';
+import { usePermissions } from '@/context/PermissionsContext';
 // export const metadata = {
 //   ...metaObject('Enhanced Table'),
 // };
@@ -26,6 +27,8 @@ const pageHeader = {
 
 export default function PatientsTablePage() {
   const searchParams = useSearchParams();
+  const { permissions } = usePermissions();
+  const canManageCoupons = permissions.includes('coupons');
   const queryParams = new URLSearchParams();
   searchParams.forEach((value, key) => {
     queryParams.set(key, value);
@@ -65,6 +68,7 @@ export default function PatientsTablePage() {
             getSelectedColumns={setSelectedColumns}
             getSelectedRowKeys={setSelectedRowKeys}
             totalItems={data?.meta?.total}
+            canPersonalCoupons={canManageCoupons}
           />
         </>
       )}

@@ -6,6 +6,10 @@ import { CreateBrandInput } from '@/utils/validators/create-brand.schema ';
 import { CreateToDoInput } from '@/utils/validators/create-todo.schema';
 import { BrandFormInput } from '@/utils/validators/Brand-form.schema copy';
 import type {
+    BulkPersonalCouponRequest,
+    BulkPersonalCouponSuccessResponse,
+} from '@/types/bulk-personal-coupon';
+import type {
     LaravelPaginator,
     SendWhatsAppMessageResult,
     WhatsAppChat,
@@ -423,6 +427,13 @@ class Client {
         delete: (input: { coupon_id: string | string[] }) => {
             const id = Array.isArray(input.coupon_id) ? input.coupon_id[0] : input.coupon_id;
             return HttpClient.delete(`${routes.coupons.index}/${id}`);
+        },
+        bulkPersonal: async (input: BulkPersonalCouponRequest) => {
+            const response = await HttpClient.post<BulkPersonalCouponSuccessResponse>(
+                `${routes.coupons.index}/bulk-personal`,
+                input
+            );
+            return response.data;
         },
     }
 
