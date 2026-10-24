@@ -50,8 +50,11 @@ export interface ReservationCalendarSession {
   time_period: string | null;
   status: SessionStatus;
   status_label: string;
+  /** Session doctor. Null until this session is assigned its own doctor. */
+  doctor_id: number | null;
   reservation: CalendarReservationSummary;
   patient: CalendarPatient | null;
+  /** Session doctor. The reservation doctor is used only when `doctor_id` is null. */
   doctor: CalendarDoctor | null;
   service: CalendarService | null;
 }

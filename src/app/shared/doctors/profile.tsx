@@ -29,8 +29,6 @@ import {
 } from 'react-icons/pi';
 import { resolveLocalizedNameOrFallback } from '@/utils/resolve-localized-name';
 import { routes } from '@/config/routes';
-import { usePermissions } from '@/context/PermissionsContext';
-import WalletTab from '@/app/shared/wallet/wallet-tab';
 
 type DoctorAttachment = {
   id?: string;
@@ -84,12 +82,10 @@ export default function DoctorProfileView({
   isHistoryLoading = false,
 }: DoctorProfileViewProps) {
   const name =
-    doctor?.name?.en ?? doctor?.name?.ar ?? doctor?.name ?? '???';
+    doctor?.name?.en ?? doctor?.name?.ar ?? doctor?.name ?? '—';
   const isFemale = doctor?.gender === 'female';
-  const { permissions } = usePermissions();
-  const canViewWallet = permissions.includes('wallet.view');
   const [activeTab, setActiveTab] = useState<
-    'overview' | 'history' | 'attachments' | 'wallet'
+    'overview' | 'history' | 'attachments'
   >('overview');
 
   const history: HistoryItem[] = Array.isArray(doctor?.history)
@@ -260,14 +256,6 @@ export default function DoctorProfileView({
           >
             Attachments
           </TabBtn>
-          {canViewWallet && (
-            <TabBtn
-              active={activeTab === 'wallet'}
-              onClick={() => setActiveTab('wallet')}
-            >
-              Wallet
-            </TabBtn>
-          )}
         </div>
       </div>
 
@@ -479,14 +467,6 @@ export default function DoctorProfileView({
             isPdf={isPdf}
           />
         </section>
-      )}
-
-      {activeTab === 'wallet' && canViewWallet && (
-        <WalletTab
-          owner="doctors"
-          ownerId={doctor?.id}
-          ownerName={name}
-        />
       )}
     </div>
   );

@@ -4,6 +4,19 @@ import toast from 'react-hot-toast';
 import { useModal } from '@/app/shared/modal-views/use-modal';
 import { routes } from '@/config/routes';
 
+export function isActiveDoctor(doctor: {
+  status?: boolean | number | string | null;
+}) {
+  const status = doctor?.status;
+  return (
+    status === true ||
+    status === 1 ||
+    status === '1' ||
+    status === 'true' ||
+    status === 'active'
+  );
+}
+
 export function useDoctors(param: string) {
   return useQuery<any, Error>({ queryKey: [routes.doctors.index, param], queryFn: () => client.doctors.all(param) });
 };
@@ -51,6 +64,24 @@ export const useUpdateDoctors = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [routes.doctors.index] })
       toast.success('Doctor updated successfully')
+      closeModal()
+    },
+    onError: (error) => {
+      toast.error(`Error ${error?.message}`)
+    }
+  })
+}
+
+export const useDoctorsBulkPrice = () => {
+  const queryClient = useQueryClient();
+  const { closeModal } = useModal();
+  return useMutation({
+    mutationFn: client.doctors.bulkPrice,
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: [routes.doctors.index] })
+      queryClient.invalidateQueries({ queryKey: [routes.settings.index] })
+      const count = response.data.data.doctors_updated
+      toast.success(`${count} ${count === 1 ? 'doctor' : 'doctors'} updated`)
       closeModal()
     },
     onError: (error) => {

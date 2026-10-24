@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import SelectBox from '@/components/ui/select';
@@ -9,10 +9,16 @@ import {
   PiXBold, 
   PiFunnelBold, 
   PiCaretDownBold, 
-  PiCaretUpBold 
+  PiCaretUpBold,
+  PiArrowCounterClockwiseBold,
 } from 'react-icons/pi';
 import cn from '@/utils/class-names';
 import { useCenters } from '@/framework/centers';
+import {
+  NOT_SPECIFIED_LABEL,
+  SOURCE_CAMPAIGN_NOT_SPECIFIED_VALUE,
+  SOURCE_CAMPAIGN_OPTIONS,
+} from '@/app/shared/source-campaign-options';
 
 export interface StatisticsFilters {
   date_from?: string;
@@ -22,12 +28,47 @@ export interface StatisticsFilters {
   center_id?: string;
   reservation_statuses?: number[];
   customer_support_types?: string[];
-  source_campaign?: string;
+  source_campaigns?: string[];
+}
+
+/** Query string shared by the aggregates, monthly and weekly statistics requests. */
+export function buildStatisticsQueryParams(filters: StatisticsFilters): URLSearchParams {
+  const params = new URLSearchParams();
+
+  if (filters.date_from) params.append('date_from', filters.date_from);
+  if (filters.date_to) params.append('date_to', filters.date_to);
+  if (filters.doctor_id) params.append('doctor_id', filters.doctor_id);
+  if (filters.client_id) params.append('client_id', filters.client_id);
+  if (filters.center_id) params.append('center_id', filters.center_id);
+  filters.reservation_statuses?.forEach((status) =>
+    params.append('reservation_statuses[]', status.toString())
+  );
+  filters.customer_support_types?.forEach((type) =>
+    params.append('customer_support_types[]', type)
+  );
+  filters.source_campaigns?.forEach((campaign) =>
+    params.append('source_campaigns[]', campaign)
+  );
+
+  return params;
 }
 
 interface StatisticsFiltersProps {
   onFilter: (filters: StatisticsFilters) => void;
   className?: string;
+}
+
+/** Last 10 days, today inclusive. Matches the dashboard's initial date range. */
+function getLast10DaysRange(): { date_from: string; date_to: string } {
+  const today = new Date();
+  const from = new Date(today);
+  from.setDate(today.getDate() - 9);
+  const fmt = (d: Date) => {
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${d.getFullYear()}-${month}-${day}`;
+  };
+  return { date_from: fmt(from), date_to: fmt(today) };
 }
 
 const reservationStatusOptions = [
@@ -46,6 +87,11 @@ const customerSupportTypeOptions = [
   { value: 'maintenance', label: 'Maintenance' },
   { value: 'consultation', label: 'Consultation' },
   { value: 'emergency', label: 'Emergency' },
+];
+
+const sourceCampaignFilterOptions = [
+  ...SOURCE_CAMPAIGN_OPTIONS,
+  { value: SOURCE_CAMPAIGN_NOT_SPECIFIED_VALUE, label: NOT_SPECIFIED_LABEL },
 ];
 
 function toSelectValue(value: unknown): string {
@@ -69,14 +115,15 @@ export default function StatisticsFiltersComponent({
   onFilter,
   className,
 }: StatisticsFiltersProps) {
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
+  const defaults = useMemo(() => getLast10DaysRange(), []);
+  const [dateFrom, setDateFrom] = useState(defaults.date_from);
+  const [dateTo, setDateTo] = useState(defaults.date_to);
   const [doctorId, setDoctorId] = useState('');
   const [clientId, setClientId] = useState('');
   const [centerId, setCenterId] = useState('');
-  const [sourceCampaign, setSourceCampaign] = useState('');
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [selectedSupportTypes, setSelectedSupportTypes] = useState<string[]>([]);
+  const [selectedSourceCampaigns, setSelectedSourceCampaigns] = useState<string[]>([]);
   
   // Doctors, Clients, and Centers lists
   const [doctors, setDoctors] = useState<Array<{ id: number; name: { en: string; ar: string } }>>([]);
@@ -190,29 +237,35 @@ export default function StatisticsFiltersComponent({
     if (normalizedDoctorId) filters.doctor_id = normalizedDoctorId;
     if (normalizedClientId) filters.client_id = normalizedClientId;
     if (normalizedCenterId) filters.center_id = normalizedCenterId;
-    if (sourceCampaign) filters.source_campaign = sourceCampaign;
     if (selectedStatuses.length > 0) {
       filters.reservation_statuses = selectedStatuses.map(s => parseInt(s));
     }
     if (selectedSupportTypes.length > 0) {
       filters.customer_support_types = selectedSupportTypes;
     }
+    if (selectedSourceCampaigns.length > 0) {
+      filters.source_campaigns = selectedSourceCampaigns;
+    }
 
     onFilter(filters);
   };
 
   const handleReset = () => {
-    setDateFrom('');
-    setDateTo('');
+    setDateFrom(defaults.date_from);
+    setDateTo(defaults.date_to);
     setDoctorId('');
     setClientId('');
     setCenterId('');
-    setSourceCampaign('');
     setSelectedStatuses([]);
     setSelectedSupportTypes([]);
-    onFilter({});
+    setSelectedSourceCampaigns([]);
+    onFilter({ date_from: defaults.date_from, date_to: defaults.date_to });
   };
 
+  const handleLast10Days = () => {
+    setDateFrom(defaults.date_from);
+    setDateTo(defaults.date_to);
+  };
   const toggleStatus = (status: string) => {
     setSelectedStatuses((prev) =>
       prev.includes(status)
@@ -224,6 +277,12 @@ export default function StatisticsFiltersComponent({
   const toggleSupportType = (type: string) => {
     setSelectedSupportTypes((prev) =>
       prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
+    );
+  };
+
+  const toggleSourceCampaign = (campaign: string) => {
+    setSelectedSourceCampaigns((prev) =>
+      prev.includes(campaign) ? prev.filter((c) => c !== campaign) : [...prev, campaign]
     );
   };
 
@@ -404,8 +463,41 @@ export default function StatisticsFiltersComponent({
         </div>
       </div>
 
+      {/* Source Campaigns */}
+      <div className="mt-6 space-y-3">
+        <label className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+          Source Campaign
+        </label>
+        <div className="flex flex-wrap gap-2">
+          {sourceCampaignFilterOptions.map((option) => (
+            <Button
+              key={option.value}
+              size="sm"
+              variant={selectedSourceCampaigns.includes(option.value) ? 'solid' : 'outline'}
+              onClick={() => toggleSourceCampaign(option.value)}
+              className={cn(
+                'rounded-full px-4 h-8 transition-all duration-200 border',
+                selectedSourceCampaigns.includes(option.value)
+                  ? 'bg-purple-600 border-purple-600 text-white shadow-sm hover:bg-purple-700'
+                  : 'bg-transparent border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700'
+              )}
+            >
+              {option.label}
+            </Button>
+          ))}
+        </div>
+      </div>
+
           {/* Action Buttons */}
           <div className="mt-8 flex items-center justify-end gap-3 border-t border-gray-100 pt-4 dark:border-gray-700">
+            <Button
+              variant="text"
+              onClick={handleLast10Days}
+              className="me-auto text-blue-600 hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-900/20"
+            >
+              <PiArrowCounterClockwiseBold className="me-1.5 h-4 w-4" />
+              Last 10 days
+            </Button>
             <Button
               variant="text"
               onClick={handleReset}

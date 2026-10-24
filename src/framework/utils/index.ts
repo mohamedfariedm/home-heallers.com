@@ -17,6 +17,7 @@ import type {
     WhatsAppQrResponse,
     WhatsAppSessionStatus,
 } from '@/types/whatsapp';
+import type { DoctorsBulkPricePayload, DoctorsBulkPriceResponse } from '@/types/doctors-bulk-price';
 import type {
     SendSupportMediaInput,
     SendSupportTextInput,
@@ -295,7 +296,9 @@ class Client {
         ) => HttpClient.get(`${routes.doctors.index}/${id}`, params),
         create: (input: any) => HttpClient.post(`${routes.doctors.index}`, input),
         update: (input: any) => HttpClient.patch(`${routes.doctors.index}/${input.doctor_id}`, input),
-        delete: (input: { doctor_id: number[] }) => HttpClient.delete(`${routes.doctors.index}/${input.doctor_id}`)
+        delete: (input: { doctor_id: number[] }) => HttpClient.delete(`${routes.doctors.index}/${input.doctor_id}`),
+        bulkPrice: (input: DoctorsBulkPricePayload) =>
+            HttpClient.post<DoctorsBulkPriceResponse>(`${routes.doctors.index}/bulk-price`, input),
     }
     doctorTargets = {
         all: (param: string) => HttpClient.get(`/doctor-targets?${param}`),

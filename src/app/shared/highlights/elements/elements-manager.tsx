@@ -17,7 +17,7 @@ import {
   useToggleHighlightElementActive,
 } from '@/framework/highlights';
 import { usePackages } from '@/framework/packages';
-import { useDoctors } from '@/framework/doctors';
+import { isActiveDoctor, useDoctors } from '@/framework/doctors';
 import { useCategories } from '@/framework/categories';
 import { useCoupons } from '@/framework/coupons';
 import {
@@ -49,6 +49,7 @@ type NamedEntity = {
   id: number | string;
   name?: { en?: string; ar?: string } | string | null;
   code?: string | null;
+  status?: boolean | number | string | null;
 };
 
 function entityLabel(item: NamedEntity) {
@@ -134,7 +135,9 @@ export default function ElementsManager({
       return toEntityOptions(packagesData?.data as NamedEntity[] | undefined);
     }
     if (ctaType === 'doctors') {
-      return toEntityOptions(doctorsData?.data as NamedEntity[] | undefined);
+      return toEntityOptions(
+        (doctorsData?.data as NamedEntity[] | undefined)?.filter(isActiveDoctor)
+      );
     }
     if (ctaType === 'categories') {
       return toEntityOptions(categoriesData?.data as NamedEntity[] | undefined);

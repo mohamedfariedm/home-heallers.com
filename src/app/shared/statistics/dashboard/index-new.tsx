@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import StatisticsFiltersComponent, { StatisticsFilters } from './filters';
+import StatisticsFiltersComponent, { StatisticsFilters, buildStatisticsQueryParams } from './filters';
 import StatCards from './stat-cards-new';
 import StatusBreakdown from './status-breakdown-new';
 import SupportTypeBreakdown from './support-type-breakdown-new';
@@ -74,24 +74,7 @@ export default function StatisticsDashboard() {
     
     try {
       // Build query parameters
-      const params = new URLSearchParams();
-      
-      if (filters.date_from) params.append('date_from', filters.date_from);
-      if (filters.date_to) params.append('date_to', filters.date_to);
-      if (filters.doctor_id) params.append('doctor_id', filters.doctor_id);
-      if (filters.client_id) params.append('client_id', filters.client_id);
-      
-      if (filters.reservation_statuses && filters.reservation_statuses.length > 0) {
-        filters.reservation_statuses.forEach(status => {
-          params.append('reservation_statuses[]', status.toString());
-        });
-      }
-      
-      if (filters.customer_support_types && filters.customer_support_types.length > 0) {
-        filters.customer_support_types.forEach(type => {
-          params.append('customer_support_types[]', type);
-        });
-      }
+      const params = buildStatisticsQueryParams(filters);
 
       // Fetch all data in parallel
       const [aggregatesRes, monthlyRes, weeklyRes] = await Promise.all([

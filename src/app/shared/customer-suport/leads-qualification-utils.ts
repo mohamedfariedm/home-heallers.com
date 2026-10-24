@@ -4,6 +4,12 @@ import {
   LeadsQualificationAnswer,
   LeadsQualificationFieldKey,
 } from './leads-qualification-constants';
+import { isDraftStatus } from './kanban-status-columns';
+
+/** Moving a lead into Draft never asks for Lead Qualification. */
+export function requiresQualificationForStatus(newStatus: string): boolean {
+  return !isDraftStatus(newStatus);
+}
 
 export function getAnswerForField(
   record: LeadsQualification | null | undefined,

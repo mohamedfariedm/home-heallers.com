@@ -71,4 +71,10 @@ export const leadFormSchema = z.object({
   updated_at: z.string().optional(),
 });
 
-export type LeadFormInput = z.infer<typeof leadFormSchema>;
+/** Leads in Draft status have no required fields. */
+export const draftLeadFormSchema = leadFormSchema.extend({
+  source_campaign: z.string().optional(),
+  communication_channel: z.string().optional(),
+});
+
+export type LeadFormInput = z.infer<typeof draftLeadFormSchema>;

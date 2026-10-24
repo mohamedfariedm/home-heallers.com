@@ -24,6 +24,7 @@ type TableLayoutProps = {
   canImport?: boolean;
   canCreate?: boolean;
   exportElement?: React.ReactNode;
+  headerActions?: React.ReactNode;
 } & PageHeaderTypes;
 
 export default function TableLayout({
@@ -43,6 +44,7 @@ export default function TableLayout({
   canImport = true,
   canCreate = true,
   exportElement,
+  headerActions,
   ...props
 }: React.PropsWithChildren<TableLayoutProps>) {
 
@@ -55,6 +57,7 @@ export default function TableLayout({
             (exportElement ?? (
               <ExportButton data={data} fileName={fileName} header={'excel'} type={type} role={role} />
             ))}
+          {headerActions}
           {canCreate && createName && createHref ? (
             <Link href={createHref} className="w-full @lg:w-auto">
               <Button

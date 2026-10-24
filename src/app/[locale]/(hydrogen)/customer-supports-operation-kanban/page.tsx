@@ -21,6 +21,10 @@ import { usePermissions } from '@/context/PermissionsContext';
 import { resolveCustomerSupportKanbanPermissions } from '@/app/shared/customer-suport/permissions';
 import { useKanbanStatusChange } from '@/app/shared/customer-suport/use-kanban-status-change';
 import { KANBAN_FILTERABLE_COLUMNS } from '@/app/shared/customer-suport/kanban-filter-columns';
+import {
+  STATUS_COLUMNS,
+  buildKanbanColumnData,
+} from '@/app/shared/customer-suport/kanban-status-columns';
 
 const pageHeader = {
   title: 'Inbound Customer Supports',
@@ -36,14 +40,6 @@ const pageHeader = {
 };
 
 const KANBAN_TYPE = 'operation' as const;
-
-const STATUS_COLUMNS = [
-  { id: 'new', label: 'New', status: 'new' },
-  { id: 'negotiation', label: 'Negotiation', status: 'negotiation' },
-  { id: 'success', label: 'Success', status: 'success' },
-  { id: 'possible', label: 'Possible', status: 'possible' },
-  { id: 'failed', label: 'Failed', status: 'failed' },
-];
 
 const parseSafePage = (value: string | null): number => {
   const parsed = Number(value);
@@ -158,80 +154,8 @@ export default function CustomerSupportsOperationKanbanPage() {
     }
   }, [allData.data?.meta?.last_page, page, searchParams, router]);
 
-  // Helper function to normalize status (handle case variations)
-  const normalizeStatus = (status: string | null | undefined): string => {
-    if (!status) return '';
-    const normalized = status.toLowerCase().trim();
-    const statusMap: Record<string, string> = {
-      new: 'new',
-      negotiation: 'negotiation',
-      success: 'success',
-      possible: 'possible',
-      failed: 'failed',
-    };
-    return statusMap[normalized] || normalized;
-  };
-
-  // Filter and group data by status on client side
-  const filterDataByStatus = (status: string) => {
-    const allItems = allData.data?.data || [];
-    return allItems.filter((item: any) => {
-      const itemStatus = normalizeStatus(item.status);
-      return itemStatus === status.toLowerCase();
-    });
-  };
-
   // Combine all column data - filter from single API response
-  const columnData: Record<
-    string,
-    { data: any; meta: any; isLoading: boolean }
-  > = {
-    new: {
-      data: {
-        data: filterDataByStatus('new'),
-        meta: allData.data?.meta,
-        statistics: allData.data?.statistics,
-      },
-      meta: allData.data?.meta,
-      isLoading: allData.isLoading,
-    },
-    failed: {
-      data: {
-        data: filterDataByStatus('failed'),
-        meta: allData.data?.meta,
-        statistics: allData.data?.statistics,
-      },
-      meta: allData.data?.meta,
-      isLoading: allData.isLoading,
-    },
-    success: {
-      data: {
-        data: filterDataByStatus('success'),
-        meta: allData.data?.meta,
-        statistics: allData.data?.statistics,
-      },
-      meta: allData.data?.meta,
-      isLoading: allData.isLoading,
-    },
-    possible: {
-      data: {
-        data: filterDataByStatus('possible'),
-        meta: allData.data?.meta,
-        statistics: allData.data?.statistics,
-      },
-      meta: allData.data?.meta,
-      isLoading: allData.isLoading,
-    },
-    negotiation: {
-      data: {
-        data: filterDataByStatus('negotiation'),
-        meta: allData.data?.meta,
-        statistics: allData.data?.statistics,
-      },
-      meta: allData.data?.meta,
-      isLoading: allData.isLoading,
-    },
-  };
+  const columnData = buildKanbanColumnData(allData.data, allData.isLoading);
 
   const { mutate: updateCustomerSupport } = useUpdateCustomerSupport();
   const allItems = allData.data?.data || [];

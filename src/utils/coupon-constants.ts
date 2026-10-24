@@ -27,6 +27,12 @@ export const FIRST_BOOKING_SCOPES: {
   { value: 'category', label: 'First booking in category' },
 ];
 
+export const COUPON_NAME_MAX = 16;
+export const COUPON_DESCRIPTION_MAX = 30;
+export const COUPON_CODE_MAX = 10;
+export const COUPON_PERCENT_MAX = 100;
+export const COUPON_FIXED_MAX = 9999;
+
 export const PATIENT_SEGMENT_OPTIONS = [
   { value: 'عادي', label: 'عادي' },
   { value: 'فضي', label: 'فضي' },

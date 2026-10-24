@@ -36,6 +36,9 @@ export type MarketCoupon = {
   first_booking_scope: FirstBookingScope;
   first_booking_category_id?: number | null;
   is_active: boolean;
+  /** Missing on older responses. Treat anything other than `true` as not global. */
+  global?: boolean;
+  client_id?: number | string | null;
   service_ids: number[];
   free_service_ids: number[];
   city_ids: number[];

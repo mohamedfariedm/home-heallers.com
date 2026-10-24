@@ -3,7 +3,7 @@ import { Banner } from '../types/settings';
 import { Plus, Trash2, Eye, BellRing } from 'lucide-react';
 import { FileUpload } from '@/app/[locale]/(hydrogen)/attachments/components/ui/FileUpload';
 import { usePackages } from '@/framework/packages';
-import { useDoctors } from '@/framework/doctors';
+import { isActiveDoctor, useDoctors } from '@/framework/doctors';
 import { useCategories } from '@/framework/categories';
 import {
   deepLinkPathForType,
@@ -56,7 +56,9 @@ const BannerSection: React.FC<BannerSectionProps> = ({ banners = [], onUpdate })
     useCategories(listQuery);
 
   const offers = Array.isArray(packagesData?.data) ? packagesData.data : [];
-  const doctors = Array.isArray(doctorsData?.data) ? doctorsData.data : [];
+  const doctors = (Array.isArray(doctorsData?.data) ? doctorsData.data : []).filter(
+    isActiveDoctor
+  );
   const categories = Array.isArray(categoriesData?.data) ? categoriesData.data : [];
 
   const pageOptions = [

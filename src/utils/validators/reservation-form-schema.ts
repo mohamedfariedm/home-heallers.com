@@ -71,6 +71,7 @@ export const reservationFormSchema = z
     dates: z
       .array(
         z.object({
+          id: z.number().optional(),
           date: z.string().optional(),
           time: z.string().optional(),
           // Stored data also has app/import values ("AM", "PM", "1h", "night") — keep them as-is.

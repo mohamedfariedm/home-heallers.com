@@ -15,6 +15,7 @@ import { Title } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
 import TopTenModal from './top-ten-modal';
 import cn from '@/utils/class-names';
+import { formatSourceCampaign } from '@/app/shared/source-campaign-options';
 import {
   formatRatePercent,
   getPerformanceColors,
@@ -22,7 +23,7 @@ import {
 } from './metric-thresholds';
 
 export interface ConversionRateItem {
-  source_campaign: string;
+  source_campaign: string | null;
   customer_support_count: number;
   reservations_count: number;
   conversion_rate: number;
@@ -44,10 +45,7 @@ export default function ConversionRateChart({
       const status = getRatePerformance(item.conversion_rate, 'conversion_rate');
       const colors = getPerformanceColors(status);
       return {
-        name:
-          item.source_campaign === 'unknown'
-            ? 'Unknown'
-            : item.source_campaign,
+        name: formatSourceCampaign(item.source_campaign),
         ratePercent: item.conversion_rate * 100,
         support: item.customer_support_count,
         reservations: item.reservations_count,

@@ -10,13 +10,14 @@ import {
 } from 'recharts';
 import { Title } from '@/components/ui/text';
 import cn from '@/utils/class-names';
+import { formatSourceCampaign } from '@/app/shared/source-campaign-options';
 
 interface ReservationCampaignsChartProps {
   data: Array<{
     status: number | string;
     label: string;
     count: number;
-    by_source_campaign?: Array<{ source_campaign: string; count: number }>;
+    by_source_campaign?: Array<{ source_campaign: string | null; count: number }>;
   }>;
   className?: string;
 }
@@ -28,11 +29,12 @@ export default function ReservationCampaignsChart({ data, className }: Reservati
   const aggregatedData = data.reduce((acc, curr) => {
     if (curr.by_source_campaign) {
       curr.by_source_campaign.forEach((campaign) => {
-        const existing = acc.find((item) => item.name === campaign.source_campaign);
+        const name = formatSourceCampaign(campaign.source_campaign);
+        const existing = acc.find((item) => item.name === name);
         if (existing) {
           existing.value += campaign.count;
         } else {
-          acc.push({ name: campaign.source_campaign, value: campaign.count });
+          acc.push({ name, value: campaign.count });
         }
       });
     }
@@ -43,10 +45,7 @@ export default function ReservationCampaignsChart({ data, className }: Reservati
   // Let's sort descending
   aggregatedData.sort((a, b) => b.value - a.value);
 
-  const chartData = aggregatedData.map((item) => ({
-    ...item,
-    name: item.name === 'unknown' ? 'Unknown' : item.name,
-  }));
+  const chartData = aggregatedData;
 
   return (
     <div

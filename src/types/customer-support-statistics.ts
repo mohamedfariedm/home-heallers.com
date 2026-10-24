@@ -8,7 +8,7 @@ export interface LeadsSummary {
 
 /** Customer supports — lead quality per campaign */
 export interface LeadQualityBySourceCampaign {
-  source_campaign: string;
+  source_campaign: string | null;
   total_leads: number;
   qualified_leads: number;
   lead_quality_rate: number;
@@ -36,7 +36,7 @@ export interface CustomerSupportStatistics {
   clients_with_mobile_and_reservation: number;
   clients_with_mobile_and_multiple_reservations?: number;
   by_source_campaign?: Array<{
-    source_campaign: string;
+    source_campaign: string | null;
     count: number;
     link: string;
   }>;
@@ -47,9 +47,9 @@ export interface CustomerSupportStatistics {
     count: number;
     link: string;
   }>;
-  by_offer?: Array<{ offer: string; count: number; link: string }>;
-  by_city?: Array<{ city: string; count: number; link: string }>;
-  by_state?: Array<{ state: string; count: number; link: string }>;
+  by_offer?: Array<{ offer: string | null; count: number; link: string }>;
+  by_city?: Array<{ city: string | null; count: number; link: string }>;
+  by_state?: Array<{ state: string | null; count: number; link: string }>;
   /** Grouped by rework count (all filtered leads) */
   by_rework?: Array<{ rework: number; count: number; link: string }>;
   /** Grouped by communication_times — booked leads only (has reservation) */

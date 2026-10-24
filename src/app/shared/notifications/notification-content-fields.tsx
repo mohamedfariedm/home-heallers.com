@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import SelectBox from '@/components/ui/select';
 import { usePackages } from '@/framework/packages';
-import { useDoctors } from '@/framework/doctors';
+import { isActiveDoctor, useDoctors } from '@/framework/doctors';
 import { useCategories } from '@/framework/categories';
 import { useCoupons } from '@/framework/coupons';
 import {
@@ -30,6 +30,7 @@ type NamedEntity = {
   id: number | string;
   name?: { en?: string; ar?: string } | string | null;
   code?: string | null;
+  status?: boolean | number | string | null;
 };
 
 function entityLabel(item: NamedEntity) {
@@ -90,7 +91,9 @@ export default function NotificationContentFields<T extends FieldValues>({
       return toEntityOptions(packagesData?.data as NamedEntity[] | undefined);
     }
     if (selectedType === 'doctors') {
-      return toEntityOptions(doctorsData?.data as NamedEntity[] | undefined);
+      return toEntityOptions(
+        (doctorsData?.data as NamedEntity[] | undefined)?.filter(isActiveDoctor)
+      );
     }
     if (selectedType === 'categories') {
       return toEntityOptions(categoriesData?.data as NamedEntity[] | undefined);
