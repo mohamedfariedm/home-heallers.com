@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { forwardRef, useMemo, useRef, useState } from 'react';
 import {
   PiPlusBold,
   PiTrashBold,
@@ -18,6 +18,7 @@ import {
   type Control,
   type FieldErrors,
   type UseFormRegister,
+  type UseFormSetError,
   type UseFormSetValue,
   type UseFormWatch,
 } from 'react-hook-form';
@@ -32,7 +33,7 @@ import { Tabs, TabList, Tab, TabPanels, TabPanel } from '@/components/ui/tabs';
 import { useModal } from '@/app/shared/modal-views/use-modal';
 import {
   couponFormValidationSchema,
-  CouponFormInput,
+  type CouponFormInput,
 } from '@/utils/validators/coupon-form.schema';
 import { Checkbox } from '@/components/ui/checkbox';
 import Spinner from '@/components/ui/spinner';
@@ -155,20 +156,17 @@ function CouponPortalSelect({
   );
 }
 
-function CountedInput({
-  label,
-  max,
-  value,
-  error,
-  ...inputProps
-}: {
-  label: string;
-  max: number;
-  value?: string;
-  error?: string;
-} & Omit<React.ComponentProps<typeof Input>, 'label' | 'error'>) {
-  const length = value?.length ?? 0;
-  const over = length > max;
+const CountedInput = forwardRef<
+  HTMLInputElement,
+  {
+    label: string;
+    max: number;
+    value?: string;
+    error?: string;
+  } & Omit<React.ComponentProps<typeof Input>, 'label' | 'error' | 'value'>
+>(function CountedInput({ label, max, value, error, ...inputProps }, ref) {
+  const text = value ?? '';
+  const over = text.length > max;
 
   return (
     <div>
@@ -180,17 +178,19 @@ function CountedInput({
             over ? 'font-medium text-red-500' : 'text-gray-400'
           )}
         >
-          {length}/{max}
+          {text.length}/{max}
         </span>
       </div>
       <Input
         {...inputProps}
+        ref={ref}
+        value={text}
         error={error}
         helperText={`Up to ${max} characters, including spaces`}
       />
     </div>
   );
-}
+});
 
 function toSelectOptions(
   items: any[] | undefined,
@@ -218,7 +218,8 @@ function tabHasErrors(
         errors.value ||
         errors.max_discount ||
         errors.free_service_ids ||
-        errors.description
+        errors.description ||
+        errors.global
       );
     case 'schedule':
       return !!(
@@ -283,7 +284,15 @@ type FormFieldsProps = {
     React.SetStateAction<CouponInsuranceFilter[]>
   >;
   linkedClient: boolean;
+  originalCode?: string;
 };
+
+function fieldMessage(
+  fieldError?: { message?: string },
+  parentMessage?: string
+) {
+  return fieldError?.message || parentMessage;
+}
 
 function GeneralTab({
   register,
@@ -294,12 +303,12 @@ function GeneralTab({
   serviceOptions,
   isServicesLoading,
   linkedClient,
+  originalCode = '',
 }: FormFieldsProps) {
   const watchType = watch('type');
-  const nameEn = watch('name.en') ?? '';
-  const nameAr = watch('name.ar') ?? '';
-  const descriptionEn = watch('description.en') ?? '';
-  const descriptionAr = watch('description.ar') ?? '';
+  const codeValue = watch('code') ?? '';
+  const savedCode = originalCode.trim();
+  const keepingSavedCode = Boolean(savedCode) && codeValue.trim() === savedCode;
   const isGlobal = watch('global');
 
   return (
@@ -308,28 +317,52 @@ function GeneralTab({
         title="Coupon identity"
         description="Names and code shown on the coupon card"
       >
-        <CountedInput
-          label="Coupon Name (English)"
-          max={COUPON_NAME_MAX}
-          value={nameEn}
-          {...register('name.en')}
-          error={errors.name?.en?.message}
+        <Controller
+          control={control}
+          name="name.en"
+          render={({ field }) => (
+            <CountedInput
+              label="Coupon Name (English)"
+              max={COUPON_NAME_MAX}
+              name={field.name}
+              value={field.value ?? ''}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+              ref={field.ref}
+              error={fieldMessage(errors.name?.en, errors.name?.message)}
+            />
+          )}
         />
-        <CountedInput
-          label="Coupon Name (Arabic)"
-          max={COUPON_NAME_MAX}
-          value={nameAr}
-          {...register('name.ar')}
-          error={errors.name?.ar?.message}
+        <Controller
+          control={control}
+          name="name.ar"
+          render={({ field }) => (
+            <CountedInput
+              label="Coupon Name (Arabic)"
+              max={COUPON_NAME_MAX}
+              name={field.name}
+              value={field.value ?? ''}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+              ref={field.ref}
+              error={fieldMessage(errors.name?.ar, errors.name?.message)}
+            />
+          )}
         />
         <Input
           label="Coupon Code"
           {...register('code')}
           error={errors.code?.message}
           placeholder="SAVE20"
-          maxLength={COUPON_CODE_MAX}
+          {...(codeValue.length <= COUPON_CODE_MAX
+            ? { maxLength: COUPON_CODE_MAX }
+            : {})}
           className="font-mono uppercase"
-          helperText={`1–${COUPON_CODE_MAX} characters: A–Z and 0–9 only`}
+          helperText={
+            keepingSavedCode
+              ? 'Saved code stays as-is until you change it. A new code must be 1–10 letters or digits.'
+              : `1–${COUPON_CODE_MAX} characters: A–Z and 0–9 only`
+          }
         />
         <div className="space-y-3 sm:col-span-2">
           <Checkbox
@@ -348,6 +381,9 @@ function GeneralTab({
             linked to one client stays with that client. Dates, usage limits,
             minimum order, services, and first-booking rules still apply.
           </Text>
+          {errors.global?.message && (
+            <Text className="text-xs text-red-500">{errors.global.message}</Text>
+          )}
           {linkedClient && isGlobal && (
             <Text className="text-xs leading-5 text-amber-700">
               This coupon is linked to a client, so turning Global on will not
@@ -361,19 +397,43 @@ function GeneralTab({
         title="Description"
         description="Optional line on the coupon card"
       >
-        <CountedInput
-          label="Description (English)"
-          max={COUPON_DESCRIPTION_MAX}
-          value={descriptionEn}
-          {...register('description.en')}
-          error={errors.description?.en?.message}
+        <Controller
+          control={control}
+          name="description.en"
+          render={({ field }) => (
+            <CountedInput
+              label="Description (English)"
+              max={COUPON_DESCRIPTION_MAX}
+              name={field.name}
+              value={field.value ?? ''}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+              ref={field.ref}
+              error={fieldMessage(
+                errors.description?.en,
+                errors.description?.message
+              )}
+            />
+          )}
         />
-        <CountedInput
-          label="Description (Arabic)"
-          max={COUPON_DESCRIPTION_MAX}
-          value={descriptionAr}
-          {...register('description.ar')}
-          error={errors.description?.ar?.message}
+        <Controller
+          control={control}
+          name="description.ar"
+          render={({ field }) => (
+            <CountedInput
+              label="Description (Arabic)"
+              max={COUPON_DESCRIPTION_MAX}
+              name={field.name}
+              value={field.value ?? ''}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+              ref={field.ref}
+              error={fieldMessage(
+                errors.description?.ar,
+                errors.description?.message
+              )}
+            />
+          )}
         />
       </TabPanelCard>
 
@@ -421,10 +481,15 @@ function GeneralTab({
           />
         )}
         {watchType === 'free_delivery' && (
-          <Text className="col-span-full rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-            Free delivery applies to delivery fees. Full integration is pending
-            Phase 2.
-          </Text>
+          <div className="col-span-full space-y-2">
+            <Text className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+              Free delivery applies to delivery fees. Full integration is pending
+              Phase 2. This coupon can keep a value of 0.
+            </Text>
+            {errors.value?.message && (
+              <p className="text-sm text-red-500">{errors.value.message}</p>
+            )}
+          </div>
         )}
         {watchType === 'free_service' && (
           <div className="col-span-full">
@@ -457,6 +522,12 @@ function GeneralTab({
                 {errors.free_service_ids.message}
               </p>
             )}
+            {errors.value?.message && (
+              <p className="mt-1 text-sm text-red-500">{errors.value.message}</p>
+            )}
+            <Text className="mt-2 text-xs text-gray-500">
+              A free-service coupon can keep a value of 0.
+            </Text>
           </div>
         )}
       </TabPanelCard>
@@ -907,6 +978,15 @@ export default function CreateOrUpdateCoupon({
     [categoriesData?.data, lang]
   );
 
+  const formMethodsRef = useRef<{
+    setError: UseFormSetError<CouponFormInput>;
+  } | null>(null);
+
+  const onInvalid = (formErrors: FieldErrors<CouponFormInput>) => {
+    const index = TABS.findIndex((tab) => tabHasErrors(tab.id, formErrors));
+    if (index >= 0) setActiveTab(index);
+  };
+
   const onSubmit: SubmitHandler<CouponFormInput> = (data) => {
     const payload = buildCouponPayload(
       {
@@ -916,14 +996,47 @@ export default function CreateOrUpdateCoupon({
       insuranceTypes
     );
 
+    const showServerErrors = (error: unknown) => {
+      const setError = formMethodsRef.current?.setError;
+      const serverErrors = (
+        error as { response?: { data?: { errors?: Record<string, unknown> } } }
+      )?.response?.data?.errors;
+      if (!setError || !serverErrors || typeof serverErrors !== 'object') return;
+
+      let firstKey = '';
+      Object.entries(serverErrors).forEach(([key, messages]) => {
+        const message = Array.isArray(messages)
+          ? messages.find((item) => typeof item === 'string')
+          : messages;
+        if (typeof message !== 'string' || !message) return;
+        if (!firstKey) firstKey = key;
+        setError(key as never, { type: 'server', message });
+      });
+
+      if (!firstKey) return;
+      const root = firstKey.split('.')[0] as keyof CouponFormInput;
+      const index = TABS.findIndex((tab) =>
+        tabHasErrors(tab.id, { [root]: { message: 'server' } } as FieldErrors<CouponFormInput>)
+      );
+      if (index >= 0) setActiveTab(index);
+    };
+
     if (initValues?.id) {
       const previousGlobal = initValues.global === true;
       if (payload.global === previousGlobal) {
         delete payload.global;
       }
-      updateCoupon({ coupon_id: initValues.id, ...payload });
+      const originalCode =
+        initValues.code == null ? '' : String(initValues.code).trim();
+      if (originalCode && String(data.code).trim() === originalCode) {
+        delete payload.code;
+      }
+      updateCoupon(
+        { coupon_id: initValues.id, ...payload },
+        { onError: showServerErrors }
+      );
     } else {
-      createCoupon(payload);
+      createCoupon(payload, { onError: showServerErrors });
     }
   };
 
@@ -948,8 +1061,10 @@ export default function CreateOrUpdateCoupon({
   return (
     <Form<CouponFormInput>
       onSubmit={onSubmit}
-      validationSchema={couponFormValidationSchema}
+      onInvalid={onInvalid}
+      validationSchema={couponFormValidationSchema(initValues?.code)}
       useFormProps={{
+        shouldUnregister: false,
         defaultValues: {
           name: {
             en: initValues?.name?.en || '',
@@ -999,7 +1114,8 @@ export default function CreateOrUpdateCoupon({
       }}
       className="flex h-[85vh] max-h-[85vh] flex-col overflow-hidden"
     >
-      {({ register, control, watch, setValue, formState: { errors } }) => {
+      {({ register, control, watch, setValue, setError, formState: { errors } }) => {
+        formMethodsRef.current = { setError };
         const fieldProps: FormFieldsProps = {
           register,
           control,
@@ -1017,6 +1133,8 @@ export default function CreateOrUpdateCoupon({
           insuranceTypes,
           setInsuranceTypes,
           linkedClient: Boolean(initValues?.client_id),
+          originalCode:
+            initValues?.code == null ? '' : String(initValues.code),
         };
 
         const isActive = watch('is_active');
@@ -1089,16 +1207,16 @@ export default function CreateOrUpdateCoupon({
 
               <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
                 <TabPanels>
-                  <TabPanel className="outline-none">
+                  <TabPanel unmount={false} className="outline-none">
                     <GeneralTab {...fieldProps} />
                   </TabPanel>
-                  <TabPanel className="outline-none">
+                  <TabPanel unmount={false} className="outline-none">
                     <ScheduleTab {...fieldProps} />
                   </TabPanel>
-                  <TabPanel className="outline-none">
+                  <TabPanel unmount={false} className="outline-none">
                     <AudienceTab {...fieldProps} />
                   </TabPanel>
-                  <TabPanel className="outline-none">
+                  <TabPanel unmount={false} className="outline-none">
                     <TargetingTab {...fieldProps} />
                   </TabPanel>
                 </TabPanels>

@@ -27,7 +27,7 @@ export function buildCouponPayload(
   insuranceTypes: CouponInsuranceFilter[]
 ) {
   const payload: Record<string, unknown> = {
-    code: data.code.trim().toUpperCase(),
+    code: data.code.trim(),
     name: {
       en: String(data.name.en),
       ar: String(data.name.ar),
