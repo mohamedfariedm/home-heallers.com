@@ -1,36 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { PiTrashDuotone } from 'react-icons/pi';
-import DateFiled from '@/components/controlled-table/date-field';
 import StatusField from '@/components/controlled-table/status-field';
 import { Button } from '@/components/ui/button';
-import { formatDate } from '@/utils/format-date';
 import { useMedia } from '@/hooks/use-media';
-import { Title, Text } from '@/components/ui/text';
-
-
-const statusOptions = [
-  {
-    value: 'active',
-    name: 'active',
-    label: (
-      <div className="flex items-center">
-        <Text className="ms-2 font-medium ">ACTIVE</Text>
-      </div>
-    ),
-  },
-  {
-    value: 'inactive',
-    name: 'inactive',
-    label: (
-      <div className="flex items-center">
-        <Text className="ms-2 font-medium ">IN ACTIVE</Text>
-      </div>
-    ),
-  },
-
-];
+import { Text } from '@/components/ui/text';
+import { useTranslation } from 'react-i18next';
 
 type FilterElementProps = {
   isFiltered: boolean;
@@ -40,14 +16,34 @@ type FilterElementProps = {
 };
 
 export default function FilterElement({
-  isFiltered,
   filters,
   updateFilter,
 }: FilterElementProps) {
+  const { t } = useTranslation('blogs');
   const isMediumScreen = useMedia('(max-width: 1860px)', false);
   const handleReset = () => {
     Object.keys(filters).forEach((filter: string) => updateFilter(filter, ''))
   }
+  const statusOptions = [
+    {
+      value: 'active',
+      name: 'active',
+      label: (
+        <div className="flex items-center">
+          <Text className="ms-2 font-medium ">{t('blogs_filter_active')}</Text>
+        </div>
+      ),
+    },
+    {
+      value: 'inactive',
+      name: 'inactive',
+      label: (
+        <div className="flex items-center">
+          <Text className="ms-2 font-medium ">{t('blogs_filter_inactive')}</Text>
+        </div>
+      ),
+    },
+  ];
   return (
     <>
             <StatusField
@@ -62,8 +58,8 @@ export default function FilterElement({
           selected
         }
         {...(isMediumScreen && {
-          placeholder:"Activation",
-          label: 'Activation',
+          placeholder: t('blogs_filter_activation'),
+          label: t('blogs_filter_activation'),
           labelClassName: 'font-medium text-gray-700',
         })}
       />
@@ -75,7 +71,7 @@ export default function FilterElement({
           className="h-8 bg-gray-200/70"
           variant="flat"
         >
-          <PiTrashDuotone className="me-1.5 h-[17px] w-[17px]" /> Clear
+          <PiTrashDuotone className="me-1.5 h-[17px] w-[17px]" /> {t('blogs_filter_clear')}
         </Button>
       
     </>

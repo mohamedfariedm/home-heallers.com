@@ -11,6 +11,7 @@ import Cookies from 'js-cookie';
 import { usePermissions } from '@/context/PermissionsContext';
 import { signIn, signOut } from 'next-auth/react';
 import { revokePushTokenBeforeLogout } from '@/lib/firebase/push-token-lifecycle';
+import { getLocaleFromPathname } from '@/lib/locale';
 
 export function useLogin() {
   const { setPermissions } = usePermissions();
@@ -54,7 +55,8 @@ export function useLogin() {
 
         toast.success('Login successful');
 
-        window.location.replace('/');
+        const locale = getLocaleFromPathname(window.location.pathname);
+        window.location.replace(`/${locale}`);
 
         setTimeout(() => {
           if (userId) {
@@ -92,7 +94,8 @@ export function useLogout() {
       localStorage.removeItem('permissions');
       clearStoredRoles();
       Cookies.remove('userId');
-      signOut({ callbackUrl: '/en/auth/login' });
+      const locale = getLocaleFromPathname(window.location.pathname);
+      signOut({ callbackUrl: `/${locale}/auth/login` });
     },
     onError: (error) => {
       console.error('useLogout - Error:', error);

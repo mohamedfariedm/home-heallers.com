@@ -9,11 +9,12 @@ import { getColumns } from '@/app/shared/blogs/columns';
 import { Text } from '@/components/ui/text';
 import toast from 'react-hot-toast';
 import { useSearchParams } from 'next/navigation';
+import { useTranslation } from 'react-i18next';
 import { ActionIcon } from 'rizzui';
 import { PiCaretDownBold, PiCaretUpBold } from 'react-icons/pi';
 import { useDeleteBlog } from '@/framework/blog';
 const FilterElement = dynamic(
-  () => import('@/app/shared/regions/filter-element'),
+  () => import('@/app/shared/blogs/filter-element'),
   { ssr: false }
 );
 const TableFooter = dynamic(() => import('@/app/shared/table-footer'), {
@@ -43,6 +44,8 @@ function CustomExpandIcon(props: any) {
 
 
 export default function BlogTable({ data = [], getSelectedColumns, getSelectedRowKeys, totalItems }: { data: any[], getSelectedColumns: React.Dispatch<React.SetStateAction<any[]>>, getSelectedRowKeys: React.Dispatch<React.SetStateAction<any[]>>, totalItems: number }) {
+  const { t, i18n } = useTranslation('blogs');
+  const lang = i18n.language === 'ar' ? 'ar' : 'en';
   const { mutate: deleteRegion } = useDeleteBlog();
   const searchParams = useSearchParams()
   const params = new URLSearchParams(searchParams)
@@ -63,7 +66,7 @@ export default function BlogTable({ data = [], getSelectedColumns, getSelectedRo
       onSuccess: () => {
         toast.success(
           <Text>
-            Blog deleted successfully
+            {t('blogs_deleted')}
           </Text>
         );
       }
@@ -72,7 +75,7 @@ export default function BlogTable({ data = [], getSelectedColumns, getSelectedRo
   const onDeleteItem = useCallback((id: string[]) => {
     handleDelete(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [t]);
 
   const {
     isLoading,
@@ -105,6 +108,8 @@ export default function BlogTable({ data = [], getSelectedColumns, getSelectedRo
         onDeleteItem,
         onChecked: handleRowSelect,
         handleSelectAll,
+        t,
+        lang,
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
@@ -115,6 +120,8 @@ export default function BlogTable({ data = [], getSelectedColumns, getSelectedRo
       onDeleteItem,
       handleRowSelect,
       handleSelectAll,
+      t,
+      lang,
     ]
   );
 

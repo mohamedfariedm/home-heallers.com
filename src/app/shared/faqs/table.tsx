@@ -10,6 +10,7 @@ import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
 import React, { useCallback, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 const TableFooter = dynamic(() => import('@/app/shared/table-footer'), {
   ssr: false,
@@ -28,6 +29,8 @@ export default function FaqTable({
   getSelectedRowKeys: React.Dispatch<React.SetStateAction<any[]>>;
   totalItems: number;
 }) {
+  const { t, i18n } = useTranslation('faqs');
+  const lang = i18n.language === 'ar' ? 'ar' : 'en';
   const searchParams = useSearchParams();
   const params = new URLSearchParams(searchParams);
   const [pageSize, setPageSize] = useState(Number(params.get('limit')));
@@ -48,9 +51,9 @@ export default function FaqTable({
         onSuccess: () => {
           toast.success(
             <Text>
-              Faq deleted successfully
+              {t('faqs_deleted')}
               <Text as="b" className="font-semibold">
-                Success
+                {t('faqs_success')}
               </Text>
             </Text>
           );
@@ -61,7 +64,7 @@ export default function FaqTable({
   const onDeleteItem = useCallback((id: string[]) => {
     handleDelete(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [t]);
 
   const {
     isLoading,
@@ -94,6 +97,8 @@ export default function FaqTable({
         onDeleteItem,
         onChecked: handleRowSelect,
         handleSelectAll,
+        t,
+        lang,
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
@@ -104,6 +109,8 @@ export default function FaqTable({
       onDeleteItem,
       handleRowSelect,
       handleSelectAll,
+      t,
+      lang,
     ]
   );
 

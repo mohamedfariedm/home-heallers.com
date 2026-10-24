@@ -30,6 +30,7 @@ import type {
   BulkPersonalNotificationChannel,
 } from '@/types/bulk-personal-coupon';
 import { setAuthCredentials } from '@/utils/auth-utils';
+import { getLocaleFromPathname } from '@/lib/locale';
 import {
   getReservationPatientName,
   resolveLocalizedName,
@@ -332,7 +333,7 @@ async function redirectToLogin() {
   setAuthCredentials('');
   localStorage.removeItem('permissions');
   await signOut({ redirect: false });
-  window.location.assign('/auth/login');
+  window.location.assign(`/${getLocaleFromPathname(window.location.pathname)}/auth/login`);
 }
 
 function seedCustomers(reservations: any[], clients: any[], locale: 'en' | 'ar') {

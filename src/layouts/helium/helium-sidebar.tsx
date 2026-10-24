@@ -13,10 +13,13 @@ import { menuItemsHaydrogen } from '@/layouts/hydrogen/menu-items';
 import Image from 'next/image';
 import { siteConfig } from '@/config/site.config';
 import { useTranslation } from 'react-i18next';
+import { getLocaleFromPathname, withLocalePrefix } from '@/lib/locale';
 
 export default function HeliumSidebar({ className }: { className?: string }) {
   const pathname = usePathname();
   const { t } = useTranslation('menu');
+  const locale = getLocaleFromPathname(pathname);
+  const localizedHref = (href: string) => withLocalePrefix(href, locale);
   return (
     <aside
       className={cn(
@@ -26,7 +29,7 @@ export default function HeliumSidebar({ className }: { className?: string }) {
     >
       <div className="h-full bg-gray-900 p-1.5 pl-0  pr-1.5 dark:bg-gray-100/70 xl:rounded-2xl">
         <div className="sticky top-0 z-40 flex justify-center px-6 pb-5 pt-5 2xl:px-8 2xl:pt-6">
-          <Link href={'/'} aria-label="Site Logo">
+          <Link href={localizedHref('/')} aria-label="Site Logo">
             <Image
               src="/Vertical Transperent-05.png"
               alt={siteConfig.title}
@@ -41,7 +44,8 @@ export default function HeliumSidebar({ className }: { className?: string }) {
         <SimpleBar className="h-[calc(100%-80px)] pb-8">
           <div className="mt-4 pb-3 3xl:mt-6">
             {menuItemsHaydrogen.map((item, index) => {
-              const isActive = pathname === (item?.href as string);
+              const itemHref = item?.href ? localizedHref(item.href) : '';
+              const isActive = pathname === itemHref;
               // const pathnameExistInDropdowns: any = item?.dropdownItems?.filter(
               //   (dropdownItem) => dropdownItem.href === pathname
               // );
@@ -120,7 +124,7 @@ export default function HeliumSidebar({ className }: { className?: string }) {
                         </Collapse>
                       ) : ( */}
                         <Link
-                          href={item?.href}
+                          href={itemHref}
                           className={cn(
                             'group relative mx-3 my-0.5 flex items-center rounded-md px-3 py-2 font-medium capitalize lg:my-1 2xl:mx-5 2xl:my-2',
                             isActive

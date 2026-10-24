@@ -20,7 +20,15 @@ type Columns = {
   onDeleteItem: (id: string[]) => void;
   onHeaderCellClick: (value: string) => void;
   onChecked?: (id: string) => void;
+  t: (key: string, options?: any) => string;
+  lang: 'en' | 'ar';
 };
+
+function localizedText(value: any, lang: 'en' | 'ar') {
+  if (!value) return '';
+  if (typeof value === 'string') return value;
+  return value[lang] || value.en || value.ar || '';
+}
 
 export const getColumns = ({
   data,
@@ -30,12 +38,14 @@ export const getColumns = ({
   onHeaderCellClick,
   handleSelectAll,
   onChecked,
+  t,
+  lang,
 }: Columns) => [
   {
     title: (
       <div className="ps-2">
         <Checkbox
-          title={'Select All'}
+          title={t('faqs_select_all')}
           onChange={handleSelectAll}
           checked={checkedItems.length === data.length}
           className="cursor-pointer"
@@ -65,7 +75,7 @@ export const getColumns = ({
       <div className="flex items-center gap-3">
         <Tooltip
           size="sm"
-          content={() => 'Edit Invoice'}
+          content={() => t('faqs_edit')}
           placement="top"
           color="invert"
         >
@@ -86,14 +96,14 @@ export const getColumns = ({
           />
         </Tooltip>
         <DeletePopover
-          title={`Delete Faq`}
-          description={`Are you sure you want to delete this #${row.id} Faq?`}
+          title={t('faqs_delete_title')}
+          description={t('faqs_delete_confirm', { id: row.id })}
           onDelete={() => onDeleteItem([row.id])}
         >
           <ActionIcon
             size="sm"
             variant="outline"
-            aria-label={'Delete Item'}
+            aria-label={t('faqs_delete_item')}
             className="cursor-pointer hover:!border-gray-900 hover:text-gray-700"
           >
             <TrashIcon className="h-4 w-4" />
@@ -103,57 +113,64 @@ export const getColumns = ({
     ),
   },
   {
-    title: <HeaderCell title="Question" align="center" />,
+    title: <HeaderCell title={t('faqs_col_question')} align="center" />,
     dataIndex: 'title_question',
     key: 'title_question',
     width: 300,
     hidden: 'title_question',
 
-    render: (_: string, row: any) => (
+    render: (_: string, row: any) => {
+      const question = localizedText(row?.title_question, lang);
+      return (
       <Tooltip
         showArrow
         className=" "
         content={() => (
           <div className="  max-w-[400px] ">
-            {row?.title_question?.en}
+            {question}
           </div>
         )}
       >
         <div className="mx-auto line-clamp-2 max-w-[400px] text-center">
-          {row?.title_question?.en}
+          {question}
         </div>
       </Tooltip>
-    ),
+      );
+    },
   },
   {
-    title: <HeaderCell title="Answer" align="center" />,
+    title: <HeaderCell title={t('faqs_col_answer')} align="center" />,
     dataIndex: 'answer',
     key: 'answer',
     width: 300,
     hidden: 'answer',
 
-    render: (_: string, row: any) => (
+    render: (_: string, row: any) => {
+      const answer = localizedText(row?.answer, lang);
+      const parsed = parse(DOMPurify.sanitize(answer));
+      return (
       <Tooltip
         showArrow
         className=" "
         content={() => (
           <div className="  max-w-[400px] ">
             {' '}
-            {parse(DOMPurify.sanitize(row?.answer?.en))}
+            {parsed}
           </div>
         )}
       >
         <div className="mx-auto line-clamp-2 max-w-[400px] text-center">
-          {parse(DOMPurify.sanitize(row?.answer?.en))}
+          {parsed}
         </div>
       </Tooltip>
-    ),
+      );
+    },
   },
 
   {
     title: (
       <HeaderCell
-        title={'Created At'}
+        title={t('faqs_col_created')}
         sortable
         ascending={
           sortConfig?.direction === 'asc' && sortConfig?.key === 'created_at'

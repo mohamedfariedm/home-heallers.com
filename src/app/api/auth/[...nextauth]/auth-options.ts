@@ -76,8 +76,8 @@ export const authOptions = {
     },
   },
   pages: {
-    signIn: '/en/auth/login',
-    signOut: '/en/auth/login',
+    signIn: '/auth/login',
+    signOut: '/auth/login',
   },
   secret: process.env.NEXTAUTH_SECRET, // Ensure this is set in .env
 };

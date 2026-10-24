@@ -26,6 +26,7 @@ import DOMPurify from 'isomorphic-dompurify';
 import QuillLoader from '@/components/loader/quill-loader';
 import dynamic from 'next/dynamic';
 import FormGroup from '../form-group';
+import { useTranslation } from 'react-i18next';
 
 const QuillEditor = dynamic(() => import('@/components/ui/quill-editor'), {
   ssr: false,
@@ -37,6 +38,7 @@ export default function UpdateCreateBrand({
 }: {
   initValues?: any;
 }) {
+  const { t } = useTranslation('faqs');
   const { closeModal } = useModal();
   const [reset, setReset] = useState({});
   const { mutate: update } = useUpdateFaqs();
@@ -62,11 +64,15 @@ export default function UpdateCreateBrand({
         if (type === 'Image') {
           setImage(response.data.data);
         }
-        toast.success(`${type} Uploaded successfully`);
+        toast.success(
+          t('faqs_uploaded', {
+            type: t(type === 'Image' ? 'faqs_type_image' : 'faqs_type_file'),
+          })
+        );
       })
       .catch((error) => {
         console.log(error);
-        toast.error('Please Try Again');
+        toast.error(t('faqs_upload_retry'));
       })
       .finally(() => {
         setLoading(false);
@@ -114,7 +120,7 @@ export default function UpdateCreateBrand({
             <>
               <div className="flex items-center justify-between">
                 <Title as="h4" className="font-semibold">
-                  {initValues ? 'Update Faq' : 'Add a new Faq'}
+                  {initValues ? t('faqs_update') : t('faqs_add')}
                 </Title>
                 <ActionIcon size="sm" variant="text" onClick={closeModal}>
                   <PiXBold className="h-auto w-5" />
@@ -122,14 +128,14 @@ export default function UpdateCreateBrand({
               </div>
 
               <Input
-                label={'Question EN'}
-                placeholder={'Question EN'}
+                label={t('faqs_question_en')}
+                placeholder={t('faqs_question_en')}
                 {...register('title_question.en')}
                 error={errors.title_question?.en?.message}
               />
               <Input
-                label={'Question AR'}
-                placeholder={'Question AR'}
+                label={t('faqs_question_ar')}
+                placeholder={t('faqs_question_ar')}
                 {...register('title_question.ar')}
                 error={errors.title_question?.ar?.message}
               />
@@ -138,7 +144,7 @@ export default function UpdateCreateBrand({
                     name="answer.en"
                     error={errors.answer?.en?.message}
                     control={control}
-                    label="Answer EN"
+                    label={t('faqs_answer_en')}
                     className="col-span-full [&_.ql-editor]:min-h-[100px]"
                     labelClassName="font-medium text-gray-700 dark:text-gray-600 mb-1.5"
                   />
@@ -147,14 +153,14 @@ export default function UpdateCreateBrand({
                     error={errors.answer?.ar?.message }
                     control={control}
                     name="answer.ar"
-                    label="Answer"
+                    label={t('faqs_answer_ar')}
                     className="col-span-full [&_.ql-editor]:min-h-[100px]"
                     labelClassName="font-medium text-gray-700 dark:text-gray-600 mb-1.5"
                   />
               
 
               <FormGroup
-                title="Image"
+                title={t('faqs_image')}
                 className="relative pt-7 @2xl:pt-9 @3xl:grid-cols-12 @3xl:pt-11"
               >
                 {isoading && (
@@ -163,7 +169,7 @@ export default function UpdateCreateBrand({
                   </div>
                 )}
                 <Upload
-                  title="image"
+                  title={t('faqs_image')}
                   accept="img"
                   onChange={(e) => {
                     setImageError(0);
@@ -173,7 +179,7 @@ export default function UpdateCreateBrand({
                 {imageError ? (
                   // "faried Error"
                   <p className="rizzui-input-error-text mt-0.5 text-xs text-red">
-                    Image Requerd
+                    {t('faqs_image_required')}
                   </p>
                 ) : (
                   ''
@@ -186,14 +192,14 @@ export default function UpdateCreateBrand({
                   onClick={closeModal}
                   className="w-full @xl:w-auto"
                 >
-                  {'Cancel'}
+                  {t('faqs_cancel')}
                 </Button>
                 <Button
                   type="submit"
                   isLoading={isLoading}
                   className="w-full @xl:w-auto"
                 >
-                  {initValues ? 'Update Faq' : 'Create Faq'}
+                  {initValues ? t('faqs_update') : t('faqs_create')}
                 </Button>
               </div>
             </>

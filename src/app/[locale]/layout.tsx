@@ -57,7 +57,7 @@ export default async function RootLayout({
         dir={language === 'ar' ? 'rtl' : 'ltr'}
       >
         
-        <Provider>
+        <Provider locale={language}>
           <AuthProvider session={session}>
             <ThemeProvider>
               <PermissionsProvider>
