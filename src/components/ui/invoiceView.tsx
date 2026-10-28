@@ -443,64 +443,68 @@ export default function InvoiceView({ invoiceData }: InvoiceViewProps) {
       </div>
 
       <Card ref={invoiceRef} data-invoice-ref className="p-8 shadow-lg">
-        {/* Header */}
-        <div className="flex justify-between items-start mb-8">
+        {/* Header: seller info (right) + invoice meta (left) — no empty middle gap */}
+        <div className="flex items-center justify-between gap-3 mb-3 w-full">
+              <h1 className="text-2xl font-bold">فاتورة ضريبية مبسطة</h1>
+              <img
+                src="data:image/png;base64,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"
+                alt="Company Logo"
+                className="h-14 w-auto shrink-0"
+              />
+            </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6 items-start">
           <div className="text-right">
-            <h1 className="text-2xl font-bold mb-2">فاتورة ضريبية مبسطة</h1>
-            <p className="text-sm text-muted-foreground">مؤسسة هوم هيلرز</p>
-          </div>
-          <div className="flex items-center">
-            <img
-              src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIYAAABICAYAAAAzm41VAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAA5wSURBVHgB7V1NctvIFX4NUqNJNkOP5arsTJ/A0AkGqhxg5BOI2mUneZMajZMSWYmlqdnYPoGoE0g+QErQCQTvsjO9S9VYM5hVIotE5z10g2w0ARA/DRKW9blgkGDjR92v338/MFgCNux/OADtQw5gM4AO7kd42J0ADHzvYAT3aBwY1IxH9vEJEkIvo0n/o3cwgHs0Ci2oERv2T69w95cFzZw//OnP7/77n3/9G+7RGNTGMaT4uMjZ3B/DzRPf6/twj0bAgprAYW0n4fBb3NyE450WrG3DPRqD2giDAbfV76hnIDcIPDz+AZIfxIZ75EbHPu527H4HakIbakIA/NQC/nZ2hCFRgMOBjziwIYPgQ7w98+AeuYEDdwKw7jy0j33sV+w75gcQXFow8ca4VRXLtRGGBewbJIDHyqFRANY3DCY+D4nA0jgE/2IJg2Z+G1poyltd+o4D7FtgjX7xXmT1ScgtmNg7xJOxz7dpSOkfEsyIYT8TsbSAuwuuNYc2saQ1CJzoAIcAL2j5RS+kA0XHAxYzUxn6L7hNj4+cpJvQ/i0YAnY0/k1r1GEh8d3C7Xmdiq1QtNe+x7+vIzhh4H70/u4uOk8QxPoe/u37IPw7IRj1EO7F4MJwDHCa4O/JFL14Xhd7tUvEghMxvBYedhmMT/M8G0M/Q4+HbCkO0gmIRaFIeFuG4jbsYwd3uawScnhdewdPoCSogy34qock9x0OjiNnkYot9JW4YBgd+2e7BZMzMQg62PkY/rebRpA0IdFXcJF87jzw+dns3D4q6+t9vMdj1NkKK+3CwRgMrr0Xw7Q2qcpnxKKQ4l7hLL9Cinv/0H7Zg5yggcAHeJOvdVDKwUUzFQnwAmfdb/Sc+CdvJxBFLXhoH+20YXKVPrB8G5/rLOmXokShg4gNJxJyGR7jsjSZcRsihziX3uVE0H2RK53gmJ6kKbC5rRLlYrkJhB4+iziEpcKfZ1FuEogg6Dmkn8SBJYM4BcrvYY6mTlJftYAdqkQhB/QNHtulDbn0cwgVymxg2x3lGiMMMWxin+9eez88w89bWcQhz++14auLJOKwUKfoQgGoBEKUv6i9oGx6yJCKfXmNEXUE/SEfvR9fQ07Q/YhDEEGUnW1VIWb7JMYJaABoQPHjlhzUKbCvdvTzkf331HPlgO7/4h0MafsV+4Tl4LY8pmcEsbgTfZbPpGIL5vxIzG7D14dau/JWCQ0MnvweB2phrEPKdxcqgFg37oiIliIq0iBmu6o8c28Cn7auZ7qEu2G/xGe0os52Opv/fOxf/S00z61QJ5g5nGlmlw0kqmITCXCk/45K60gd4DGbvMfn2MJJ3cOvr2bn833kGgNVHzLh4OrLmEhtQOI7ZKHvY7VEgcS5rc/2MbBnuoI5htsYF2xxazP6zOLWhFsluhxxYPF5nvO3NDEbESdypyHunsfbxj3PhjyffH/DPrqqwxNHRIG7PjQA196P57ibckdi1UkDS4SiDhr2T1q//A4VwBQ9BCfOnvqbHAtVRLjq70Qc6jPqohl1DBY7UB4MTbd1o5zDFFEQCwVDQLHYRxZNpvWgnAnM1MF4CpUQXCrXtcnKoE+kx5BSGVdwg1P9bCtGvHO/mQNpuabEyrf2TzQD+tBAEJcgAslqkyb2LGWW44xFZfpoH0qCRJZqeVD/k1GAIuSKCEW5z0i3/Ih4eIxLsBiR1OASD8XKhyLWhg56aFTSSp9fF8RMJJYdeYqpM5nHYfIOPZ6jyKPYsV/GvJKqYngLN+fEWWeEw14hZ/wmxbu58JGQ46MFM+srXSRIq2cr/nf0O2soZnjsUvFYFUOFCpU6lhQirwL0mgZbZdzq0qt3ZdIcRVHSjRSvshBWEQ3CQgUYHXvMVz2SY7h5oCqo3yKXEA65OJgy+wO8jwllO/JgR5yF+jVKsVTazHmeLRYPdJlCBwNmZ2WU0RZ8/WpVPoo0CN9DbqvI0dzUc5FO6aeYk/lcDFq4mbLAIg82iRkZu3I0ovB1jkKoMR+D/BzJLuE0kF6hmoNNAfku1O9yZrtsgWdRtFUVxBnQkdUDxcIxgciDynM8lwQlZG8miTAmPIm1upVzJfvK+MFVHb6KKqJERkB/Uw4NVMVTcMU/4rOPu9idNBufqqyaLJgs3UHqU9soWr4HRXzooiSJCLnwIOPG3+H5HoqsKXeiICb+ti0tn+m1JPFc4vfzLKtqGYRByIxu1qFXqKhCGGruKi8QBaZ4CgbZOmWjunrUW42uLgOVREkBlnWWFVchX/0ioihwL6Ng0O7OPud/Bt/7q1cl1D+JO8V8WDIq6hj8ec4B67QTcj4Iwl/BM215uodlWB43HWjiqs6vESwZRBilZTpq6r4M7+ahaEd35shIYz/rpCQ7fJnAaGmq27gOUPYZOQm1mExhs78q2kxJKSsDUqzQLh+wBLt8HuwQieE8UsZkssoCwqRw8osRylxYBZClY4TSrHjH6Gtfib4mID4iFgQ5E57MwYi5+qvwcro5mk5FipgVC/WKYdEkHvOwlAhm/RxDB+VlVM2/LQNjfozxfFJIGhwR7OELYwSTRugVNzExSbkVsCQIojgoHUupAmOEQeIhb44ny17kHKERK+H1EHqbt3KZq1ngInbiJm2U6Yb7Afk/VkUUBKNBtAnc9NEfsVPVSSUVziE0BJZwCkkHUbFUyCTIRJkhNBhGXeI0u5gBRYmVizTWBnWVHFuBnrEKGA+7U44Aco29slyjadyCMIHJoA1WSPDjhNzKoqAUQUs6sEis1LHmpSqMEwZxDTTH3mSbY5lwm1ZlxzdsFVAaHuoSDn3mYhK40DDUsna1CtdohiUyDxHPaTkTaHtfQnmoWsLuZXUNmj1N7HQR+V1/j3GTM7lkwoE7jtryMWQ+YqHgT1O5RRuCnsb9VmZGLgsWrylyV5RrNJVbEAItUZbyO+GOgzhGbSHdIlwjKdWtKSCXv1xbOsKv7i1Yr+GOo7bCKYQCForXRJNNhVyDe+dFSIRaCYOQx0LhK4ge3hXQUoU1sM5EXkxYQeeDiXJLbQ78AzMcVlaxiGskLYZJAmU0WTU+5+cKVIw7XJRowo07oo+m5Zai+lweh9tLdNS5eYmldo5ByOYa+YqmCE/h6ghD5H4KJM1GsRiJEoIF8pQzyoNF1w2gZaeZltHSAQirDLX3iVg27CMkFMsdA3+TpexbDHjqj6aQZaFM8CGh4RD5qu2LaGvDuq23IZM2+h0H4QQMIc91WaHUP1q6yPeFP+boKq0IjqWbYkXA01dxzyHJQmmyifq5gCwmDM8/4VqFH7kCbZR9NrPTiuBYrQqEAQUII4lrFHFooRytFMq/y9Cr9JDpP4Ebyud4Qnkdi1wBFDGmNEuVOKxbCEoHiIpW89W4RqFgGatSMoCPK9WhaDpa8SrM/i3c7Ec6EPUxrXrTuLULWuBuRhxiWSmO7e0ISgJn8XdF2qtcI6leQ/a9ypeUvuvF67Xy3Clm6qzCH1mC6DfaQlXgGY+XUUBFdy301VhisEqvW7CL5kCOwRrmNVEjkEVQNr+DwWoWKi0Tmp6Y2E/q4nULgpCDUoUgfflHVEzOEhfml1ASbc7yJgGHSKkmlwkOa3tQEvwLIAyN+G09+it1h+mxQFmnIsZjpvtFmfCW/FIhEcXay1PWUUUR9zd59spUv42Af/Q7uOOYwCc3XqgNTqIxiYrNxtvHXQQ8ocC/5BhhZnJZpC4/rAqRHGMVKqWgI1jBKq66wFPEhNQppjpbpEhSDTNZQaCrNE/Ivmdz17XEhcPU/yoKmiMLqRnFmihJ1IUKaJoDTda+miqL+PdtZ3PcmILfSUsSogx9XZHEXV+vnKPXDpP3VscunEiqS5worrQsh7De5zGYevEdrVTj1YuorCQNj4sBvEj4pZNQLadDsxrbewnXIQLSZzNxAle/Lgvf7pA9ieg1FVTmqSXX43JoPaU+jhOP0Dfas5OAxEkVwiBQMdjOR++H51ASIjZAook7UBErjNrKGIWO5HAlS2mfERly9Jb51h+HBVrC11TI77F7qNbiNP4iFUID8pjvF31TAYH0iUgmgqFCLk2Ow8jKNrnFdxlRX/AcV60qEAvM0euqwACYUoieWNcjrbyhCvlqiUNKtgVNJlZBU+MwUZ0sqn1FG34+TRtAedzFbYtc3Lgf8OzXTZCuOKRC91Qp8No7eIDfd+U9RlnXJ4eX2l+xsHsAn4ZMhMe7YACCQOh9J0zJDZg+VkdWJe7ItkaxysRiGqDbxJoeN36CV7JH/wlX9HpsUiQQdp+2nG1DqMsh9fOyJk47fvG+jwNIHWrc/JyXo3WmB61+QXTR+0uCycX6i7Qte95cjoekMBc+U/DwjQA3r8Eg1EQZAjrN/Pn7th7PPi+/ZpZpJGZwUa2LKq9mWiUm0HpmMmgm2G9LrRY09yJBkd1ltjRS9J43tDf8iXzZn7iP5VC8qW6OmEgYdNOO/fOzFkxylEJqFAZULQ8M4JF9TCkCT3VfAhdmfeiqR6/snohssphybWIphKiQTMTGcJDWdx7aR2h6s9ALjIOGYYh+ra88T12JJju4tD9i2aDqM4veCFAESADkcXR0z+FMqbV8UQAmThRkFZhYCmEpfhyhxMdC652k9EKTyFyiKF92sgsNB81Q09VnqNpu/DsRBYkpwcJTwgjoC7gxMpkmwNWI5+kY1qbvlJOubRdqxMK1q0QcY2htNjV8LYmiB4ah6Am0H+CAb+piSvoNQl8Aell3hS/ADHunXE7qd9qIE9K9ye9B3+lZoGbkthirviu0JgxMio97zFDYlUBvTcRZUrpijglw+TrLpi9r/JxRysckuQe5r3dgiZAp8W/uuUT9qOR8lJHQHg7YTr0ihtMyu7fkuLrrib1NgTGvtPZ+DAeqw8Xtkvb3ImP5qC1cIQiFEki4zcF6TOljLL5AiT5PzS/c/Y7tR/oLWe6xGvwfwkO863dAr5EAAAAASUVORK5CYII=" 
-              alt="Company Logo"
-              className=" ml-4"
-            />
-          </div>
-        </div>
-
-        {/* Invoice meta + buyer */}
-        <div className="grid grid-cols-2 gap-8 mb-8">
-          <div className="text-right">
-            <h3 className="font-bold mb-4">المبيعات</h3>
             
-
-            {invoiceData.notes && (
-              <div className="mt-4">
-                <h4 className="font-semibold mb-1">الملاحظات</h4>
-                <p className="text-sm whitespace-normal w-[300px]">{invoiceData.notes}</p>
-              </div>
-            )}
+            <div className="text-sm text-muted-foreground leading-snug space-y-0.5">
+              <p>مؤسسة هوم هيلرز</p>
+              <p>الرقم الضريبي (310796025900003)</p>
+              <p>السجل التجاري رقم (4031281879)</p>
+              <p>العنوان المختصر : R L D A  4 4 4 1</p>
+              <p>رقم المبنى : 4441</p>
+              <p>الشارع : البقاع</p>
+              <p>الرقم الفرعي : 7020</p>
+              <p>الحي : حى الشفا</p>
+              <p>الرمز البريدي : 14712</p>
+              <p>المدينة : الرياض</p>
+            </div>
           </div>
 
-          <div className="space-y-3">
-            <div className="flex justify-between">
+          <div className="space-y-2 mt-5">
+            <div className="flex justify-between gap-4">
               <span className="font-medium">الحالة:</span>
               <span>{invoiceData.status}</span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between gap-4">
               <span className="font-medium">حالة الدفع:</span>
               <span className={`font-semibold ${invoiceData.is_paid ? 'text-green-600' : 'text-red-600'}`}>
                 {invoiceData.is_paid ? 'مدفوعة' : 'غير مدفوعة'}
               </span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between gap-4">
               <span className="font-medium">رقم الفاتورة:</span>
               <span>{invoiceData.invoice_number}</span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between gap-4">
               <span className="font-medium">تاريخ الفاتورة:</span>
               <span>{invoiceData.invoice_date}</span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between gap-4">
               <span className="font-medium">الفئات:</span>
               <span>{resolveInvoiceCategories(invoiceData, 'ar') || '—'}</span>
             </div>
-            <div className="flex justify-between bg-gray-100 px-3 py-2 rounded">
+            <div className="flex justify-between gap-4 bg-gray-100 px-3 py-2 rounded">
               <span className="font-medium">الرصيد:</span>
               <span className="font-bold">{fmt(balanceDue)} ر.س</span>
             </div>
           </div>
         </div>
+
+        {invoiceData.notes && (
+          <div className="mb-6 text-right">
+            <h4 className="font-semibold mb-1">الملاحظات</h4>
+            <p className="text-sm whitespace-normal">{invoiceData.notes}</p>
+          </div>
+        )}
 
            <div className="mb-8 overflow-x-auto">
         <table className="w-full border-collapse">
@@ -559,7 +563,6 @@ export default function InvoiceView({ invoiceData }: InvoiceViewProps) {
               </div>
             ) : (
               <p className="max-w-[12rem] text-center text-sm text-gray-600">
-                لم يتم إرسال الفاتورة إلى هيئة الزكاة بعد
               </p>
             )}
             <a
