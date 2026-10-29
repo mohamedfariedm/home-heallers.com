@@ -48,7 +48,7 @@ export default function DoctorsTablePage() {
           ),
         rows: selectedRowKeys,
       }}
-      fileName="Doctors/index"
+      fileName="doctors"
       header="Doctor,Created At"
       createName="Create Doctor"
       createElementButton={<CreateOrUpdateDoctors />}

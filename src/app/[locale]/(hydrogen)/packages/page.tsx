@@ -49,7 +49,7 @@ export default function CountriesTablePage() {
           ),
         rows: selectedRowKeys,
       }}
-      fileName="packages/index"
+      fileName="packages"
       header="User,Created At"
       createName="Create packages"
       createElementButton={<CreateOrUpdatePackages />}

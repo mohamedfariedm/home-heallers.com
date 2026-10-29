@@ -51,7 +51,7 @@ export default function PatientsTablePage() {
           ),
         rows: selectedRowKeys,
       }}
-      fileName="Patients/index"
+      fileName="clients"
       header="User,Created At"
       createName="Create Patients"
       createElementButton={<CreateOrUpdatePationts />}
