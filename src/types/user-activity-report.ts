@@ -74,6 +74,13 @@ export interface UserActivityStatistics {
   by_log_name: LogNameBucket[];
   most_modified_models: ModelBucket[];
   top_users: Array<{ id: number; name: string; count: number; link: string }>;
+  /** Additive operational KPIs — hide card if key missing */
+  actions_per_active_user?: number;
+  percent_create?: number;
+  percent_update?: number;
+  percent_delete?: number;
+  risk_actions_count?: number;
+  risk_action_rate?: number;
 }
 
 export interface PaginationLinks {

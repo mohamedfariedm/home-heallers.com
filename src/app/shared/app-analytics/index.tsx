@@ -122,11 +122,11 @@ export default function AppAnalyticsDashboard() {
     : activeUsersResponse?.data ?? overview.active_users;
 
   return (
-    <div className="@container space-y-8">
-      <AppAnalyticsFiltersComponent onFilter={handleFilter} className="mb-2" />
+    <div className="@container space-y-6">
+      <AppAnalyticsFiltersComponent onFilter={handleFilter} />
 
       {usingMockData && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-900/20 dark:text-amber-200">
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-900/20 dark:text-amber-200">
           {t(
             'analytics_mock_banner',
             'Waiting for app data — live analytics counts are still zero. Showing sample data so you can review the dashboard layout.'
@@ -135,7 +135,7 @@ export default function AppAnalyticsDashboard() {
       )}
 
       {!usingMockData && isActiveUsersError && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-200">
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-200">
           {activeUsersError?.message ||
             t(
               'analytics_invalid_date',

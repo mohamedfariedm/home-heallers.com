@@ -16,25 +16,25 @@ export type ExtractProps<T> = T extends React.ComponentType<infer P> ? P : T;
 
 const classes = {
   table:
-    '[&_.rc-table-content]:overflow-x-auto [&_table]:w-full [&_.rc-table-row:hover]:bg-gray-50 [&_.rc-table-row-expand-icon-cell]:w-14',
+    '[&_.rc-table-content]:overflow-x-auto [&_table]:w-full [&_.rc-table-row:hover]:bg-gray-50/80 [&_.rc-table-row-expand-icon-cell]:w-14',
   thead:
     '[&_thead]:text-left [&_thead]:rtl:text-right [&_th.rc-table-cell]:uppercase [&_th.rc-table-cell]:text-xs [&_th.rc-table-cell]:font-semibold [&_th.rc-table-cell]:tracking-wider [&_th.rc-table-cell]:text-gray-500',
   tCell:
     '[&_.rc-table-cell]:px-3 [&_th.rc-table-cell]:py-3 [&_td.rc-table-cell]:py-4',
   variants: {
     classic:
-      '[&_thead]:bg-gray-100 [&_.rc-table-container]:border-x [&_.rc-table-container]:border-gray-200/70 [&_td.rc-table-cell]:border-b [&_td.rc-table-cell]:border-gray-200/70 [&_thead]:border-y [&_thead]:border-gray-200/70',
+      '[&_thead]:bg-gray-50 [&_.rc-table-container]:border-x [&_.rc-table-container]:border-gray-200/60 [&_td.rc-table-cell]:border-b [&_td.rc-table-cell]:border-gray-200/60 [&_thead]:border-y [&_thead]:border-gray-200/60',
     modern:
-      '[&_thead_th]:bg-gray-100 [&_td.rc-table-cell]:border-b [&_td.rc-table-cell]:border-gray-200/70 [&_thead_.rc-table-row-expand-icon-cell]:bg-gray-100',
+      '[&_thead_th]:bg-gray-50 [&_td.rc-table-cell]:border-b [&_td.rc-table-cell]:border-gray-200/60 [&_thead_.rc-table-row-expand-icon-cell]:bg-gray-50',
     minimal:
-      '[&_thead_th]:bg-gray-100 [&_thead_th:first-child]:rounded-ss-lg [&_thead_th:first-child]:rounded-es-lg [&_thead_th:last-child]:rounded-se-lg [&_thead_th:last-child]:rounded-ee-lg [&_thead_.rc-table-row-expand-icon-cell]:bg-gray-100',
+      '[&_thead_th]:bg-gray-50 [&_thead_th:first-child]:rounded-ss-lg [&_thead_th:first-child]:rounded-es-lg [&_thead_th:last-child]:rounded-se-lg [&_thead_th:last-child]:rounded-ee-lg [&_thead_.rc-table-row-expand-icon-cell]:bg-gray-50',
     elegant:
-      '[&_thead]:border-y [&_thead]:border-gray-200/70 [&_td.rc-table-cell]:border-b [&_td.rc-table-cell]:border-gray-200/70',
+      '[&_thead]:border-y [&_thead]:border-gray-200/60 [&_td.rc-table-cell]:border-b [&_td.rc-table-cell]:border-gray-200/60',
     retro:
-      '[&_thead]:border-y [&_thead]:border-gray-200/70 [&_tbody_tr:last-child_td.rc-table-cell]:border-b [&_tbody_tr:last-child_td.rc-table-cell]:border-gray-200/70',
+      '[&_thead]:border-y [&_thead]:border-gray-200/60 [&_tbody_tr:last-child_td.rc-table-cell]:border-b [&_tbody_tr:last-child_td.rc-table-cell]:border-gray-200/60',
   },
   striped:
-    '[&_.rc-table-row:nth-child(2n)_.rc-table-cell]:bg-gray-100/50 [&_.rc-table-row:hover]:bg-transparent',
+    '[&_.rc-table-row:nth-child(2n)_.rc-table-cell]:bg-gray-50/60 [&_.rc-table-row:hover]:bg-transparent',
 };
 
 type RCTableProps = ExtractProps<typeof RcTable>;

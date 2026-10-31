@@ -183,8 +183,8 @@ useEffect(()=>{
 },[])
 
   return (
-    <div className="table-filter mb-4 flex items-center justify-between">
-      <div className="flex flex-wrap items-center gap-4">
+    <div className="table-filter mb-4 flex items-center justify-between gap-3 rounded-xl border border-gray-200/80 bg-white/80 px-3 py-2.5 shadow-sm dark:border-gray-200/60 dark:bg-gray-50/80">
+      <div className="flex flex-wrap items-center gap-3">
         {!showSearchOnTheRight ? <>
           <Input
             type="search"

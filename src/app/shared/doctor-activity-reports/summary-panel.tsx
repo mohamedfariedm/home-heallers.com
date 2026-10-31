@@ -70,7 +70,7 @@ export default function DoctorActivitySummaryPanel({
         </div>
       </WidgetCard>
 
-      <div className="flex w-full flex-wrap gap-5">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <KpiStatCard
           title="Reservations"
           value={summary.reservations_count}

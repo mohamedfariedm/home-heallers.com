@@ -296,39 +296,78 @@ export default function StatisticsFiltersComponent({
     setDateFrom(defaults.date_from);
     setDateTo(defaults.date_to);
   };
-  const toggleStatus = (status: string) => {
-    setSelectedStatuses((prev) =>
-      prev.includes(status)
-        ? prev.filter((s) => s !== status)
-        : [...prev, status]
-    );
+
+  const reservationStatusSelectOptions = useMemo(
+    () =>
+      reservationStatusOptions.map((option) => ({
+        value: option.value,
+        name: t(option.labelKey, option.label),
+        label: t(option.labelKey, option.label),
+      })),
+    [t]
+  );
+
+  const customerSupportTypeSelectOptions = useMemo(
+    () =>
+      customerSupportTypeOptions.map((option) => ({
+        value: option.value,
+        name: t(option.labelKey, option.label),
+        label: t(option.labelKey, option.label),
+      })),
+    [t]
+  );
+
+  const sourceCampaignSelectOptions = useMemo(
+    () =>
+      sourceCampaignFilterOptions.map((option) => {
+        const label = t(
+          option.value === SOURCE_CAMPAIGN_NOT_SPECIFIED_VALUE
+            ? 'campaign_not_specified'
+            : `campaign_${option.value}`,
+          option.label
+        );
+        return { value: option.value, name: label, label };
+      }),
+    [t]
+  );
+
+  const toMultiSelectValues = (
+    opts: Array<{ value: string | number }> | { value: string | number } | null | undefined
+  ): string[] => {
+    if (!opts) return [];
+    if (Array.isArray(opts)) return opts.map((o) => String(o.value));
+    return [String(opts.value)];
   };
 
-  const toggleSupportType = (type: string) => {
-    setSelectedSupportTypes((prev) =>
-      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
-    );
-  };
-
-  const toggleSourceCampaign = (campaign: string) => {
-    setSelectedSourceCampaigns((prev) =>
-      prev.includes(campaign) ? prev.filter((c) => c !== campaign) : [...prev, campaign]
-    );
+  const multiSelectDisplayValue = (val: unknown) => {
+    if (Array.isArray(val)) {
+      if (val.length === 0) return '';
+      return val
+        .map((o: { label?: string; name?: string; value?: string | number }) =>
+          o?.label ?? o?.name ?? String(o?.value ?? '')
+        )
+        .join(', ');
+    }
+    if (val && typeof val === 'object') {
+      const option = val as { label?: string; name?: string; value?: string | number };
+      return option.label ?? option.name ?? String(option.value ?? '');
+    }
+    return val != null ? String(val) : '';
   };
 
   return (
-    <div className={cn('rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800', className)}>
+    <div className={cn('rounded-xl border border-gray-200/80 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800', className)}>
       <div
         className={cn(
-          'flex items-center justify-between p-5',
+          'flex items-center justify-between p-4 sm:p-5',
           isOpen && 'border-b border-gray-100 dark:border-gray-700'
         )}
       >
         <div className="flex items-center gap-2">
-          <div className="flex bg-blue-50 p-2 text-blue-600 rounded-lg dark:bg-blue-900/20 dark:text-blue-400">
+          <div className="flex rounded-lg bg-primary-lighter/60 p-2 text-primary dark:bg-primary-lighter/20 dark:text-primary-light">
               <PiFunnelBold className="h-5 w-5" />
           </div>
-          <h3 className="text-base font-bold text-gray-900 dark:text-gray-100">
+          <h3 className="text-base font-semibold tracking-tight text-gray-900 dark:text-gray-100">
             {t('shared_filters', 'Filters')}
           </h3>
         </div>
@@ -436,87 +475,68 @@ export default function StatisticsFiltersComponent({
 
       </div>
 
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {/* Reservation Statuses */}
-        <div className="space-y-3">
+        <div className="space-y-1.5">
           <label className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
             {t('stats_reservation_status', 'Reservation Status')}
           </label>
-          <div className="flex flex-wrap gap-2">
-            {reservationStatusOptions.map((option) => (
-              <Button
-                key={option.value}
-                size="sm"
-                variant={selectedStatuses.includes(option.value) ? 'solid' : 'outline'}
-                onClick={() => toggleStatus(option.value)}
-                className={cn(
-                  'rounded-full px-4 h-8 transition-all duration-200 border',
-                  selectedStatuses.includes(option.value)
-                    ? 'bg-blue-600 border-blue-600 text-white shadow-sm hover:bg-blue-700'
-                    : 'bg-transparent border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700'
-                )}
-              >
-                {t(option.labelKey, option.label)}
-              </Button>
-            ))}
-          </div>
+          <SelectBox
+            multiple
+            clearable
+            options={reservationStatusSelectOptions}
+            value={reservationStatusSelectOptions.filter((opt) =>
+              selectedStatuses.includes(String(opt.value))
+            )}
+            onChange={(opts) => setSelectedStatuses(toMultiSelectValues(opts))}
+            onClear={() => setSelectedStatuses([])}
+            displayValue={multiSelectDisplayValue}
+            placeholder={t('stats_select_reservation_status', 'Select Reservation Status')}
+            className="w-full"
+            selectClassName="border-gray-200 dark:border-gray-700 focus:ring-blue-500 rounded-lg min-h-[38px]"
+          />
         </div>
 
         {/* Customer Support Types */}
-        <div className="space-y-3">
+        <div className="space-y-1.5">
           <label className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
             {t('stats_support_type', 'Customer Support Type')}
           </label>
-          <div className="flex flex-wrap gap-2">
-            {customerSupportTypeOptions.map((option) => {
-              return (
-                <Button
-                  key={option.value}
-                  size="sm"
-                  variant={selectedSupportTypes.includes(option.value) ? 'solid' : 'outline'}
-                  onClick={() => toggleSupportType(option.value)}
-                  className={cn(
-                    'rounded-full px-4 h-8 transition-all duration-200 border',
-                    selectedSupportTypes.includes(option.value)
-                      ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm hover:bg-indigo-700'
-                      : 'bg-transparent border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700'
-                  )}
-                >
-                  {t(option.labelKey, option.label)}
-                </Button>
-              );
-            })}
-          </div>
+          <SelectBox
+            multiple
+            clearable
+            options={customerSupportTypeSelectOptions}
+            value={customerSupportTypeSelectOptions.filter((opt) =>
+              selectedSupportTypes.includes(String(opt.value))
+            )}
+            onChange={(opts) => setSelectedSupportTypes(toMultiSelectValues(opts))}
+            onClear={() => setSelectedSupportTypes([])}
+            displayValue={multiSelectDisplayValue}
+            placeholder={t('stats_select_support_type', 'Select Customer Support Type')}
+            className="w-full"
+            selectClassName="border-gray-200 dark:border-gray-700 focus:ring-blue-500 rounded-lg min-h-[38px]"
+          />
         </div>
-      </div>
 
-      {/* Source Campaigns */}
-      <div className="mt-6 space-y-3">
-        <label className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-          {t('stats_source_campaign', 'Source Campaign')}
-        </label>
-        <div className="flex flex-wrap gap-2">
-          {sourceCampaignFilterOptions.map((option) => (
-            <Button
-              key={option.value}
-              size="sm"
-              variant={selectedSourceCampaigns.includes(option.value) ? 'solid' : 'outline'}
-              onClick={() => toggleSourceCampaign(option.value)}
-              className={cn(
-                'rounded-full px-4 h-8 transition-all duration-200 border',
-                selectedSourceCampaigns.includes(option.value)
-                  ? 'bg-purple-600 border-purple-600 text-white shadow-sm hover:bg-purple-700'
-                  : 'bg-transparent border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700'
-              )}
-            >
-              {t(
-                option.value === SOURCE_CAMPAIGN_NOT_SPECIFIED_VALUE
-                  ? 'campaign_not_specified'
-                  : `campaign_${option.value}`,
-                option.label
-              )}
-            </Button>
-          ))}
+        {/* Source Campaigns */}
+        <div className="space-y-1.5">
+          <label className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+            {t('stats_source_campaign', 'Source Campaign')}
+          </label>
+          <SelectBox
+            multiple
+            clearable
+            options={sourceCampaignSelectOptions}
+            value={sourceCampaignSelectOptions.filter((opt) =>
+              selectedSourceCampaigns.includes(String(opt.value))
+            )}
+            onChange={(opts) => setSelectedSourceCampaigns(toMultiSelectValues(opts))}
+            onClear={() => setSelectedSourceCampaigns([])}
+            displayValue={multiSelectDisplayValue}
+            placeholder={t('stats_select_source_campaign', 'Select Source Campaign')}
+            className="w-full"
+            selectClassName="border-gray-200 dark:border-gray-700 focus:ring-blue-500 rounded-lg min-h-[38px]"
+          />
         </div>
       </div>
 

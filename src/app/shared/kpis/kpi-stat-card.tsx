@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import type { IconType } from 'react-icons';
 import Link from 'next/link';
 import cn from '@/utils/class-names';
@@ -13,19 +14,36 @@ export type KpiStatCardColor =
   | 'orange'
   | 'emerald'
   | 'cyan'
-  | 'sky';
+  | 'sky'
+  | 'red'
+  | 'pink'
+  | 'yellow'
+  | 'slate'
+  | 'violet'
+  | 'teal'
+  | 'lime'
+  | 'fuchsia';
 
-const colorStyles: Record<
-  KpiStatCardColor,
-  {
-    bgColor: string;
-    textColor: string;
-    darkBgColor: string;
-    darkTextColor: string;
-    blurColor: string;
-    darkBlurColor: string;
-  }
-> = {
+export type KpiStatCardTone = {
+  bgColor: string;
+  textColor: string;
+  darkBgColor: string;
+  darkTextColor: string;
+  blurColor: string;
+  darkBlurColor: string;
+};
+
+/** Consistent equal-width card grid used across dashboard pages. */
+export const KPI_STAT_GRID_CLASS =
+  'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4';
+
+export const KPI_STAT_GRID_3_CLASS =
+  'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3';
+
+export const KPI_STAT_GRID_5_CLASS =
+  'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5';
+
+const colorStyles: Record<KpiStatCardColor, KpiStatCardTone> = {
   purple: {
     bgColor: 'bg-purple-50',
     textColor: 'text-purple-600',
@@ -98,6 +116,70 @@ const colorStyles: Record<
     blurColor: 'bg-sky-50/50',
     darkBlurColor: 'dark:bg-sky-900/10',
   },
+  red: {
+    bgColor: 'bg-red-50',
+    textColor: 'text-red-600',
+    darkBgColor: 'dark:bg-red-900/20',
+    darkTextColor: 'dark:text-red-400',
+    blurColor: 'bg-red-50/50',
+    darkBlurColor: 'dark:bg-red-900/10',
+  },
+  pink: {
+    bgColor: 'bg-pink-50',
+    textColor: 'text-pink-600',
+    darkBgColor: 'dark:bg-pink-900/20',
+    darkTextColor: 'dark:text-pink-400',
+    blurColor: 'bg-pink-50/50',
+    darkBlurColor: 'dark:bg-pink-900/10',
+  },
+  yellow: {
+    bgColor: 'bg-yellow-50',
+    textColor: 'text-yellow-600',
+    darkBgColor: 'dark:bg-yellow-900/20',
+    darkTextColor: 'dark:text-yellow-400',
+    blurColor: 'bg-yellow-50/50',
+    darkBlurColor: 'dark:bg-yellow-900/10',
+  },
+  slate: {
+    bgColor: 'bg-slate-50',
+    textColor: 'text-slate-600',
+    darkBgColor: 'dark:bg-slate-900/20',
+    darkTextColor: 'dark:text-slate-400',
+    blurColor: 'bg-slate-50/50',
+    darkBlurColor: 'dark:bg-slate-900/10',
+  },
+  violet: {
+    bgColor: 'bg-violet-50',
+    textColor: 'text-violet-600',
+    darkBgColor: 'dark:bg-violet-900/20',
+    darkTextColor: 'dark:text-violet-400',
+    blurColor: 'bg-violet-50/50',
+    darkBlurColor: 'dark:bg-violet-900/10',
+  },
+  teal: {
+    bgColor: 'bg-teal-50',
+    textColor: 'text-teal-600',
+    darkBgColor: 'dark:bg-teal-900/20',
+    darkTextColor: 'dark:text-teal-400',
+    blurColor: 'bg-teal-50/50',
+    darkBlurColor: 'dark:bg-teal-900/10',
+  },
+  lime: {
+    bgColor: 'bg-lime-50',
+    textColor: 'text-lime-600',
+    darkBgColor: 'dark:bg-lime-900/20',
+    darkTextColor: 'dark:text-lime-400',
+    blurColor: 'bg-lime-50/50',
+    darkBlurColor: 'dark:bg-lime-900/10',
+  },
+  fuchsia: {
+    bgColor: 'bg-fuchsia-50',
+    textColor: 'text-fuchsia-600',
+    darkBgColor: 'dark:bg-fuchsia-900/20',
+    darkTextColor: 'dark:text-fuchsia-400',
+    blurColor: 'bg-fuchsia-50/50',
+    darkBlurColor: 'dark:bg-fuchsia-900/10',
+  },
 };
 
 interface KpiStatCardProps {
@@ -105,10 +187,19 @@ interface KpiStatCardProps {
   value: React.ReactNode;
   icon: IconType;
   color?: KpiStatCardColor;
+  /** Override named color with explicit Tailwind tone classes. */
+  tone?: KpiStatCardTone;
   subtitle?: React.ReactNode;
   href?: string;
+  onClick?: () => void;
   selected?: boolean;
   className?: string;
+  badge?: React.ReactNode;
+  footer?: React.ReactNode;
+  checkbox?: {
+    checked: boolean;
+    onChange: (checked: boolean) => void;
+  };
 }
 
 export default function KpiStatCard({
@@ -116,53 +207,106 @@ export default function KpiStatCard({
   value,
   icon: Icon,
   color = 'blue',
+  tone,
   subtitle,
   href,
+  onClick,
   selected,
   className,
+  badge,
+  footer,
+  checkbox,
 }: KpiStatCardProps) {
-  const colors = colorStyles[color];
+  const colors = tone ?? colorStyles[color];
+  const [isHoveringCheckbox, setIsHoveringCheckbox] = useState(false);
+  const interactive = Boolean(href || onClick);
+
+  const handleClick = (event: React.MouseEvent) => {
+    if (
+      checkbox &&
+      ((event.target as HTMLElement).closest('input[type="checkbox"]') ||
+        (event.target as HTMLElement).closest('.checkbox-area'))
+    ) {
+      return;
+    }
+    if (isHoveringCheckbox) return;
+    onClick?.();
+  };
 
   const card = (
     <div
+      role={onClick && !href ? 'button' : undefined}
+      tabIndex={onClick && !href ? 0 : undefined}
+      onClick={onClick && !href ? handleClick : undefined}
+      onKeyDown={
+        onClick && !href
+          ? (event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                onClick();
+              }
+            }
+          : undefined
+      }
+      onMouseLeave={() => setIsHoveringCheckbox(false)}
       className={cn(
-        'relative min-w-[180px] flex-1 basis-[calc(20%-16px)] overflow-hidden rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-shadow dark:border-gray-700 dark:bg-gray-800',
-        href && 'hover:shadow-md',
+        'group relative flex h-full min-h-[158px] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition-all duration-200 dark:border-gray-700 dark:bg-gray-800',
+        'hover:-translate-y-0.5 hover:border-gray-300 hover:shadow-md dark:hover:border-gray-600',
+        interactive && !isHoveringCheckbox && 'cursor-pointer',
         selected && 'border-blue-500 ring-2 ring-blue-500/20',
         className
       )}
     >
-      <div className="flex items-center justify-between">
+      {checkbox ? (
+        <div
+          className="checkbox-area absolute end-3 top-3 z-20 cursor-default p-1"
+          onMouseEnter={() => setIsHoveringCheckbox(true)}
+          onMouseLeave={() => setIsHoveringCheckbox(false)}
+        >
+          <input
+            type="checkbox"
+            checked={checkbox.checked}
+            onChange={(event) => {
+              event.stopPropagation();
+              checkbox.onChange(event.target.checked);
+            }}
+            onClick={(event) => event.stopPropagation()}
+            className="h-4 w-4 cursor-pointer rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
+          />
+        </div>
+      ) : null}
+
+      <div className="relative z-10 flex items-start justify-between gap-3">
         <div
           className={cn(
-            'flex h-12 w-12 items-center justify-center rounded-lg',
+            'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-transform duration-200 group-hover:scale-105',
             colors.bgColor,
             colors.textColor,
             colors.darkBgColor,
             colors.darkTextColor
           )}
         >
-          <Icon className="h-6 w-6" />
+          <Icon className="h-5 w-5" />
         </div>
+        {badge ? <div className="shrink-0 pe-5">{badge}</div> : null}
       </div>
 
-      <div className="mt-4">
-        <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+      <div className="relative z-10 mt-4 flex min-h-0 flex-1 flex-col">
+        <p className="line-clamp-2 text-sm font-medium leading-5 text-gray-500 dark:text-gray-400">
           {title}
         </p>
-        <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-white">
-          {value}
+        <p className="mt-1.5 text-2xl font-bold tracking-tight text-gray-900 dark:text-white xl:text-3xl">
+          {typeof value === 'number' ? value.toLocaleString() : value}
         </p>
-        {subtitle && (
-          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            {subtitle}
-          </p>
-        )}
+        <p className="mt-auto line-clamp-2 min-h-[2rem] pt-2 text-xs leading-4 text-gray-500 dark:text-gray-400">
+          {subtitle || '\u00A0'}
+        </p>
+        {footer ? <div className="mt-3 border-t border-gray-100 pt-3 dark:border-gray-700">{footer}</div> : null}
       </div>
 
       <div
         className={cn(
-          'absolute -right-4 -top-4 -z-10 h-24 w-24 rounded-full blur-2xl',
+          'pointer-events-none absolute -right-6 -top-6 h-28 w-28 rounded-full blur-2xl transition-opacity duration-200 group-hover:opacity-80',
           colors.blurColor,
           colors.darkBlurColor
         )}
@@ -172,7 +316,7 @@ export default function KpiStatCard({
 
   if (href) {
     return (
-      <Link href={href} className="block min-w-[180px] flex-1 basis-[calc(20%-16px)]">
+      <Link href={href} className="block h-full min-h-[158px]">
         {card}
       </Link>
     );

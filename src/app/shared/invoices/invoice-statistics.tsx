@@ -1,10 +1,12 @@
 'use client';
 
-import {
-  PiCheckCircleBold,
-} from 'react-icons/pi';
+import { PiCheckCircleBold } from 'react-icons/pi';
 import cn from '@/utils/class-names';
 import { useRouter, usePathname } from 'next/navigation';
+import KpiStatCard, {
+  KPI_STAT_GRID_CLASS,
+  type KpiStatCardTone,
+} from '@/app/shared/kpis/kpi-stat-card';
 
 interface TaxPercentageBreakdown {
   maafah?: {
@@ -37,87 +39,79 @@ interface InvoiceStatisticsProps {
   className?: string;
 }
 
-// Color schemes for different statuses
-const statusColors: Record<string, { bg: string; text: string; darkBg: string; darkText: string; blur: string; darkBlur: string }> = {
+const statusColors: Record<string, KpiStatCardTone> = {
   'قيد الانتظار': {
-    bg: 'bg-yellow-50',
-    text: 'text-yellow-600',
-    darkBg: 'dark:bg-yellow-900/20',
-    darkText: 'dark:text-yellow-400',
-    blur: 'bg-yellow-50/50',
-    darkBlur: 'dark:bg-yellow-900/10',
+    bgColor: 'bg-yellow-50',
+    textColor: 'text-yellow-600',
+    darkBgColor: 'dark:bg-yellow-900/20',
+    darkTextColor: 'dark:text-yellow-400',
+    blurColor: 'bg-yellow-50/50',
+    darkBlurColor: 'dark:bg-yellow-900/10',
   },
   'موافق عليه': {
-    bg: 'bg-green-50',
-    text: 'text-green-600',
-    darkBg: 'dark:bg-green-900/20',
-    darkText: 'dark:text-green-400',
-    blur: 'bg-green-50/50',
-    darkBlur: 'dark:bg-green-900/10',
+    bgColor: 'bg-green-50',
+    textColor: 'text-green-600',
+    darkBgColor: 'dark:bg-green-900/20',
+    darkTextColor: 'dark:text-green-400',
+    blurColor: 'bg-green-50/50',
+    darkBlurColor: 'dark:bg-green-900/10',
   },
-  'ملغاة': {
-    bg: 'bg-red-50',
-    text: 'text-red-600',
-    darkBg: 'dark:bg-red-900/20',
-    darkText: 'dark:text-red-400',
-    blur: 'bg-red-50/50',
-    darkBlur: 'dark:bg-red-900/10',
+  ملغاة: {
+    bgColor: 'bg-red-50',
+    textColor: 'text-red-600',
+    darkBgColor: 'dark:bg-red-900/20',
+    darkTextColor: 'dark:text-red-400',
+    blurColor: 'bg-red-50/50',
+    darkBlurColor: 'dark:bg-red-900/10',
   },
 };
 
-// Default color scheme for unknown statuses
-const defaultColors = {
-  bg: 'bg-slate-50',
-  text: 'text-slate-600',
-  darkBg: 'dark:bg-slate-900/20',
-  darkText: 'dark:text-slate-400',
-  blur: 'bg-slate-50/50',
-  darkBlur: 'dark:bg-slate-900/10',
+const defaultColors: KpiStatCardTone = {
+  bgColor: 'bg-slate-50',
+  textColor: 'text-slate-600',
+  darkBgColor: 'dark:bg-slate-900/20',
+  darkTextColor: 'dark:text-slate-400',
+  blurColor: 'bg-slate-50/50',
+  darkBlurColor: 'dark:bg-slate-900/10',
 };
 
-// Tax percentage colors
-const taxPercentageColors: Record<string, { bg: string; text: string; darkBg: string; darkText: string; blur: string; darkBlur: string }> = {
+const taxPercentageColors: Record<string, KpiStatCardTone> = {
   maafah: {
-    bg: 'bg-blue-50',
-    text: 'text-blue-600',
-    darkBg: 'dark:bg-blue-900/20',
-    darkText: 'dark:text-blue-400',
-    blur: 'bg-blue-50/50',
-    darkBlur: 'dark:bg-blue-900/10',
+    bgColor: 'bg-blue-50',
+    textColor: 'text-blue-600',
+    darkBgColor: 'dark:bg-blue-900/20',
+    darkTextColor: 'dark:text-blue-400',
+    blurColor: 'bg-blue-50/50',
+    darkBlurColor: 'dark:bg-blue-900/10',
   },
   zero: {
-    bg: 'bg-gray-50',
-    text: 'text-gray-600',
-    darkBg: 'dark:bg-gray-900/20',
-    darkText: 'dark:text-gray-400',
-    blur: 'bg-gray-50/50',
-    darkBlur: 'dark:bg-gray-900/10',
+    bgColor: 'bg-gray-50',
+    textColor: 'text-gray-600',
+    darkBgColor: 'dark:bg-gray-900/20',
+    darkTextColor: 'dark:text-gray-400',
+    blurColor: 'bg-gray-50/50',
+    darkBlurColor: 'dark:bg-gray-900/10',
   },
   fifteen_percent: {
-    bg: 'bg-purple-50',
-    text: 'text-purple-600',
-    darkBg: 'dark:bg-purple-900/20',
-    darkText: 'dark:text-purple-400',
-    blur: 'bg-purple-50/50',
-    darkBlur: 'dark:bg-purple-900/10',
+    bgColor: 'bg-purple-50',
+    textColor: 'text-purple-600',
+    darkBgColor: 'dark:bg-purple-900/20',
+    darkTextColor: 'dark:text-purple-400',
+    blurColor: 'bg-purple-50/50',
+    darkBlurColor: 'dark:bg-purple-900/10',
   },
 };
 
-// Helper function to convert API link to frontend query params
 const convertApiLinkToQueryParams = (apiLink: string | undefined): string => {
   if (!apiLink) return '';
-  
+
   try {
     const url = new URL(apiLink);
     const params = new URLSearchParams(url.search);
-    
-    // Convert API query params to frontend format
     const frontendParams = new URLSearchParams();
-    
     params.forEach((value, key) => {
       frontendParams.set(key, value);
     });
-    
     return frontendParams.toString();
   } catch (error) {
     console.error('Error converting API link:', error);
@@ -125,204 +119,126 @@ const convertApiLinkToQueryParams = (apiLink: string | undefined): string => {
   }
 };
 
-// Status Card with Tax Breakdown component
-const StatusCardWithBreakdown = ({ 
-  title, 
-  value, 
-  icon: Icon, 
-  bgColor, 
-  textColor, 
-  darkBgColor, 
-  darkTextColor, 
-  blurColor, 
-  darkBlurColor,
-  link,
-  taxBreakdown
+function TaxRow({
+  label,
+  count,
+  colors,
+  onClick,
 }: {
-  title: string;
-  value: number | string;
-  icon: any;
-  bgColor: string;
-  textColor: string;
-  darkBgColor: string;
-  darkTextColor: string;
-  blurColor: string;
-  darkBlurColor: string;
-  link?: string;
-  taxBreakdown?: TaxPercentageBreakdown;
-}) => {
+  label: string;
+  count: number;
+  colors: KpiStatCardTone;
+  onClick?: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={(event) => {
+        event.stopPropagation();
+        onClick?.();
+      }}
+      className={cn(
+        'flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-xs transition',
+        colors.bgColor,
+        colors.darkBgColor,
+        onClick && 'hover:opacity-90'
+      )}
+    >
+      <span className={cn('font-medium', colors.textColor, colors.darkTextColor)}>
+        {label}
+      </span>
+      <span className={cn('font-bold', colors.textColor, colors.darkTextColor)}>
+        {count.toLocaleString()}
+      </span>
+    </button>
+  );
+}
+
+export default function InvoiceStatistics({
+  statistics,
+  className,
+}: InvoiceStatisticsProps) {
   const router = useRouter();
   const pathname = usePathname();
-  
-  const handleClick = () => {
-    if (link) {
-      const queryParams = convertApiLinkToQueryParams(link);
-      const url = queryParams ? `${pathname}?${queryParams}` : pathname;
-      router.push(url);
-    }
+
+  if (!statistics || !statistics.by_status || statistics.by_status.length === 0) {
+    return null;
+  }
+
+  const navigate = (link?: string) => {
+    if (!link) return;
+    const queryParams = convertApiLinkToQueryParams(link);
+    router.push(queryParams ? `${pathname}?${queryParams}` : pathname);
   };
 
-  const handleTaxClick = (e: React.MouseEvent, taxLink?: string) => {
-    e.stopPropagation(); // Prevent card click
-    if (taxLink) {
-      const queryParams = convertApiLinkToQueryParams(taxLink);
-      const url = queryParams ? `${pathname}?${queryParams}` : pathname;
-      router.push(url);
-    }
-  };
-  
-  return (
-    <div 
-      className={cn(
-        "relative overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all dark:border-gray-700 dark:bg-gray-800",
-        "min-w-[200px] flex-1 p-5",
-        link && "cursor-pointer hover:shadow-lg hover:scale-[1.02]"
-      )}
-      onClick={handleClick}
-    >
-      {/* Header with icon and title */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <div
-            className={cn(
-              'flex items-center justify-center rounded-lg h-10 w-10',
-              bgColor,
-              textColor,
-              darkBgColor,
-              darkTextColor
-            )}
-          >
-            <Icon className="h-5 w-5" />
-          </div>
-          <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-            {title}
-          </p>
-        </div>
-      </div>
-
-      {/* Total count */}
-      <div className="mb-4">
-        <p className="text-2xl font-bold text-gray-900 dark:text-white">
-          {typeof value === 'number' ? value.toLocaleString() : value}
-        </p>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Total</p>
-      </div>
-
-      {/* Tax Breakdown */}
-      {taxBreakdown && (
-        <div className="space-y-2 pt-3 border-t border-gray-200 dark:border-gray-700">
-          <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">Tax Breakdown:</p>
-          
-          {taxBreakdown.maafah && taxBreakdown.maafah.count !== undefined && (
-            <div 
-              className={cn(
-                "flex items-center justify-between p-2 rounded-lg text-xs",
-                taxBreakdown.maafah.link && "cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50",
-                taxPercentageColors.maafah.bg,
-                taxPercentageColors.maafah.darkBg
-              )}
-              onClick={(e) => handleTaxClick(e, taxBreakdown.maafah?.link)}
-            >
-              <span className={cn("font-medium", taxPercentageColors.maafah.text, taxPercentageColors.maafah.darkText)}>
-                معافاة
-              </span>
-              <span className={cn("font-bold", taxPercentageColors.maafah.text, taxPercentageColors.maafah.darkText)}>
-                {taxBreakdown.maafah.count.toLocaleString()}
-              </span>
-            </div>
-          )}
-          
-          {taxBreakdown.zero && taxBreakdown.zero.count !== undefined && (
-            <div 
-              className={cn(
-                "flex items-center justify-between p-2 rounded-lg text-xs",
-                taxBreakdown.zero.link && "cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50",
-                taxPercentageColors.zero.bg,
-                taxPercentageColors.zero.darkBg
-              )}
-              onClick={(e) => handleTaxClick(e, taxBreakdown.zero?.link)}
-            >
-              <span className={cn("font-medium", taxPercentageColors.zero.text, taxPercentageColors.zero.darkText)}>
-                0%
-              </span>
-              <span className={cn("font-bold", taxPercentageColors.zero.text, taxPercentageColors.zero.darkText)}>
-                {taxBreakdown.zero.count.toLocaleString()}
-              </span>
-            </div>
-          )}
-          
-          {taxBreakdown.fifteen_percent && taxBreakdown.fifteen_percent.count !== undefined && (
-            <div 
-              className={cn(
-                "flex items-center justify-between p-2 rounded-lg text-xs",
-                taxBreakdown.fifteen_percent.link && "cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50",
-                taxPercentageColors.fifteen_percent.bg,
-                taxPercentageColors.fifteen_percent.darkBg
-              )}
-              onClick={(e) => handleTaxClick(e, taxBreakdown.fifteen_percent?.link)}
-            >
-              <span className={cn("font-medium", taxPercentageColors.fifteen_percent.text, taxPercentageColors.fifteen_percent.darkText)}>
-                15%
-              </span>
-              <span className={cn("font-bold", taxPercentageColors.fifteen_percent.text, taxPercentageColors.fifteen_percent.darkText)}>
-                {taxBreakdown.fifteen_percent.count.toLocaleString()}
-              </span>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Blur effect */}
-      <div
-        className={cn(
-          'absolute -right-4 -top-4 -z-10 rounded-full blur-2xl h-24 w-24',
-          blurColor,
-          darkBlurColor
-        )}
-      />
-    </div>
-  );
-};
-
-export default function InvoiceStatistics({ 
-  statistics, 
-  className 
-}: InvoiceStatisticsProps) {
-  if (!statistics || !statistics.by_status || statistics.by_status.length === 0) return null;
-
-  // Status Statistics with Tax Breakdown
   const statusCards = statistics.by_status
-    .sort((a, b) => (b.total_count || 0) - (a.total_count || 0)) // Sort by total_count descending
+    .sort((a, b) => (b.total_count || 0) - (a.total_count || 0))
     .map((item) => {
       const statusKey = item.status || 'unknown';
       const colors = statusColors[statusKey] || defaultColors;
+      const tax = item.tax_percentage_breakdown;
+
       return {
         title: statusKey,
         value: item.total_count || 0,
-        icon: PiCheckCircleBold,
-        bgColor: colors.bg,
-        textColor: colors.text,
-        darkBgColor: colors.darkBg,
-        darkTextColor: colors.darkText,
-        blurColor: colors.blur,
-        darkBlurColor: colors.darkBlur,
+        tone: colors,
         link: item.link,
-        taxBreakdown: item.tax_percentage_breakdown,
+        footer: tax ? (
+          <div className="space-y-2">
+            <p className="text-[11px] font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+              Tax Breakdown
+            </p>
+            {tax.maafah?.count !== undefined && (
+              <TaxRow
+                label="معافاة"
+                count={tax.maafah.count}
+                colors={taxPercentageColors.maafah}
+                onClick={tax.maafah.link ? () => navigate(tax.maafah?.link) : undefined}
+              />
+            )}
+            {tax.zero?.count !== undefined && (
+              <TaxRow
+                label="0%"
+                count={tax.zero.count}
+                colors={taxPercentageColors.zero}
+                onClick={tax.zero.link ? () => navigate(tax.zero?.link) : undefined}
+              />
+            )}
+            {tax.fifteen_percent?.count !== undefined && (
+              <TaxRow
+                label="15%"
+                count={tax.fifteen_percent.count}
+                colors={taxPercentageColors.fifteen_percent}
+                onClick={
+                  tax.fifteen_percent.link
+                    ? () => navigate(tax.fifteen_percent?.link)
+                    : undefined
+                }
+              />
+            )}
+          </div>
+        ) : undefined,
       };
     });
 
   return (
-    <div className={cn('w-full', className)}>
-      {/* Invoice Status Statistics */}
-      <div className="space-y-3">
-        <h4 className="text-base font-semibold text-gray-800 dark:text-gray-200">
-          Invoice Status Statistics
-        </h4>
-        <div className="flex flex-wrap w-full gap-3">
-          {statusCards.map((card: any, cardIndex: number) => (
-            <StatusCardWithBreakdown key={cardIndex} {...card} />
-          ))}
-        </div>
+    <div className={cn('w-full space-y-4', className)}>
+      <h4 className="text-base font-semibold text-gray-900 dark:text-white">
+        Invoice Status Statistics
+      </h4>
+      <div className={KPI_STAT_GRID_CLASS}>
+        {statusCards.map((card) => (
+          <KpiStatCard
+            key={card.title}
+            title={card.title}
+            value={card.value}
+            subtitle="Total"
+            icon={PiCheckCircleBold}
+            tone={card.tone}
+            footer={card.footer}
+            onClick={card.link ? () => navigate(card.link) : undefined}
+          />
+        ))}
       </div>
     </div>
   );

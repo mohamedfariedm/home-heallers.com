@@ -510,7 +510,12 @@ export default function StatCards({
 
   return (
     <>
-    <div className={cn('flex w-full flex-wrap gap-5 pb-4', className)}>
+    <div
+      className={cn(
+        'grid grid-cols-1 gap-4 pb-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4',
+        className
+      )}
+    >
       {visibleRateCards.map((card) => {
         const status = getRatePerformance(card.rate, card.metric);
         const colors = getPerformanceColors(status);
@@ -539,14 +544,14 @@ export default function StatCards({
                 : undefined
             }
             className={cn(
-              'relative min-w-[180px] flex-1 basis-[calc(20%-16px)] overflow-hidden rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800',
+              'group relative flex h-full min-h-[158px] flex-col overflow-hidden rounded-xl border border-gray-200/80 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-gray-300/80 hover:shadow dark:border-gray-700 dark:bg-gray-800 dark:hover:border-gray-600',
               canEditRateColors && 'cursor-pointer'
             )}
           >
-            <div className="flex items-center justify-between">
+            <div className="relative z-10 flex items-start justify-between gap-3">
               <div
                 className={cn(
-                  'flex h-12 w-12 items-center justify-center rounded-lg',
+                  'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl',
                   customColor ? '' : colors.bgColor,
                   customColor ? '' : colors.textColor,
                   customColor ? '' : colors.darkBgColor,
@@ -561,11 +566,11 @@ export default function StatCards({
                     : undefined
                 }
               >
-                <card.icon className="h-6 w-6" />
+                <card.icon className="h-5 w-5" />
               </div>
               <span
                 className={cn(
-                  'rounded-full px-2 py-0.5 text-xs font-medium',
+                  'shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium',
                   customColor ? '' : colors.badgeClass
                 )}
                 style={
@@ -581,13 +586,13 @@ export default function StatCards({
               </span>
             </div>
 
-            <div className="mt-4">
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+            <div className="relative z-10 mt-4 flex min-h-0 flex-1 flex-col">
+              <p className="line-clamp-2 text-sm font-medium leading-5 text-gray-500 dark:text-gray-400">
                 {t(card.titleKey, card.title)}
               </p>
               <p
                 className={cn(
-                  'mt-1 text-3xl font-bold',
+                  'mt-1.5 text-2xl font-semibold tracking-tight xl:text-3xl',
                   customColor ? '' : colors.textColor,
                   customColor ? '' : colors.darkTextColor
                 )}
@@ -595,23 +600,21 @@ export default function StatCards({
               >
                 {card.value}
               </p>
-              {card.subtitle && (
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                  {card.subtitle}
-                </p>
-              )}
+              <p className="mt-auto line-clamp-2 min-h-[2rem] pt-2 text-xs leading-4 text-gray-500 dark:text-gray-400">
+                {card.subtitle || '\u00A0'}
+              </p>
             </div>
 
             <div
               className={cn(
-                'absolute -right-4 -top-4 -z-10 h-24 w-24 rounded-full blur-2xl',
+                'pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full opacity-40 blur-3xl transition-opacity duration-200 group-hover:opacity-55',
                 customColor ? '' : colors.blurColor,
                 customColor ? '' : colors.darkBlurColor
               )}
               style={
                 customColor
                   ? {
-                      backgroundColor: withHexAlpha(customColor, '33'),
+                      backgroundColor: withHexAlpha(customColor, '22'),
                     }
                   : undefined
               }
@@ -623,34 +626,37 @@ export default function StatCards({
       {visibleStaticCards.map((card) => (
         <div
           key={card.title}
-          className="relative min-w-[180px] flex-1 basis-[calc(20%-16px)] overflow-hidden rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
+          className="group relative flex h-full min-h-[158px] flex-col overflow-hidden rounded-xl border border-gray-200/80 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-gray-300/80 hover:shadow dark:border-gray-700 dark:bg-gray-800 dark:hover:border-gray-600"
         >
-          <div className="flex items-center justify-between">
+          <div className="relative z-10 flex items-start justify-between gap-3">
             <div
               className={cn(
-                'flex h-12 w-12 items-center justify-center rounded-lg',
+                'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl',
                 card.bgColor,
                 card.textColor,
                 card.darkBgColor,
                 card.darkTextColor
               )}
             >
-              <card.icon className="h-6 w-6" />
+              <card.icon className="h-5 w-5" />
             </div>
           </div>
 
-          <div className="mt-4">
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+          <div className="relative z-10 mt-4 flex min-h-0 flex-1 flex-col">
+            <p className="line-clamp-2 text-sm font-medium leading-5 text-gray-500 dark:text-gray-400">
               {t(card.titleKey, card.title)}
             </p>
-            <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-white">
+            <p className="mt-1.5 text-2xl font-semibold tracking-tight text-gray-900 dark:text-white xl:text-3xl">
               {card.value}
+            </p>
+            <p className="mt-auto min-h-[2rem] pt-2 text-xs leading-4 text-gray-500 dark:text-gray-400">
+              &nbsp;
             </p>
           </div>
 
           <div
             className={cn(
-              'absolute -right-4 -top-4 -z-10 h-24 w-24 rounded-full blur-2xl',
+              'pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full opacity-40 blur-3xl transition-opacity duration-200 group-hover:opacity-55',
               card.blurColor,
               card.darkBlurColor
             )}

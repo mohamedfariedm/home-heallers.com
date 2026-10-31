@@ -246,7 +246,9 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
     const fetchPackages = async () => {
       try {
         setPackagesLoading(true);
-        const res = await axios.get('https://development.home-healers.com/api/admin/packages', {
+        const res = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_ENDPOINT}/packages`,
+          {
           headers: {
             Accept: 'application/json',
             Authorization: `Bearer ${Cookies.get('auth_token')}`,

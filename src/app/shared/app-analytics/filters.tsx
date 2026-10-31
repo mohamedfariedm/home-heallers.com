@@ -60,11 +60,16 @@ export default function AppAnalyticsFiltersComponent({
   return (
     <div
       className={cn(
-        'rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800',
+        'rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800',
         className
       )}
     >
-      <div className="flex items-center justify-between border-b border-gray-100 p-5 dark:border-gray-700">
+      <div
+        className={cn(
+          'flex items-center justify-between p-5',
+          isOpen && 'border-b border-gray-100 dark:border-gray-700'
+        )}
+      >
         <div className="flex items-center gap-2">
           <div className="flex rounded-lg bg-blue-50 p-2 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400">
             <PiFunnelBold className="h-5 w-5" />
@@ -89,88 +94,88 @@ export default function AppAnalyticsFiltersComponent({
 
       <div
         className={cn(
-          'grid transition-all duration-300 ease-in-out',
-          isOpen
-            ? 'grid-rows-[1fr] opacity-100 p-5'
-            : 'grid-rows-[0fr] overflow-hidden p-0 opacity-0'
+          'grid transition-[grid-template-rows] duration-300 ease-in-out',
+          isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
         )}
       >
-        <div className="overflow-hidden">
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                {t('analytics_date_from', 'Date From')}
-              </label>
-              <DatePicker
-                selected={from}
-                onChange={(value: Date | null) => {
-                  setFrom(value);
-                  if (value && to && value > to) setTo(null);
-                }}
-                dateFormat={DATE_DISPLAY_FORMAT}
-                placeholderText="dd/mm/yyyy"
-                maxDate={to ?? undefined}
-                inputProps={{
-                  className: 'w-full',
-                  inputClassName:
-                    'border-gray-200 dark:border-gray-700 focus:ring-blue-500 rounded-lg',
-                }}
-              />
+        <div className="min-h-0 overflow-hidden">
+          <div className="p-5">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                  {t('analytics_date_from', 'Date From')}
+                </label>
+                <DatePicker
+                  selected={from}
+                  onChange={(value: Date | null) => {
+                    setFrom(value);
+                    if (value && to && value > to) setTo(null);
+                  }}
+                  dateFormat={DATE_DISPLAY_FORMAT}
+                  placeholderText="dd/mm/yyyy"
+                  maxDate={to ?? undefined}
+                  inputProps={{
+                    className: 'w-full',
+                    inputClassName:
+                      'border-gray-200 dark:border-gray-700 focus:ring-blue-500 rounded-lg',
+                  }}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                  {t('analytics_date_to', 'Date To')}
+                </label>
+                <DatePicker
+                  selected={to}
+                  onChange={(value: Date | null) => setTo(value)}
+                  dateFormat={DATE_DISPLAY_FORMAT}
+                  placeholderText="dd/mm/yyyy"
+                  minDate={from ?? undefined}
+                  inputProps={{
+                    className: 'w-full',
+                    inputClassName:
+                      'border-gray-200 dark:border-gray-700 focus:ring-blue-500 rounded-lg',
+                  }}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                  {t('analytics_active_users_date', 'Active Users Date')}
+                </label>
+                <DatePicker
+                  selected={date}
+                  onChange={(value: Date | null) => setDate(value)}
+                  dateFormat={DATE_DISPLAY_FORMAT}
+                  placeholderText="dd/mm/yyyy"
+                  inputProps={{
+                    className: 'w-full',
+                    inputClassName:
+                      'border-gray-200 dark:border-gray-700 focus:ring-blue-500 rounded-lg',
+                  }}
+                />
+              </div>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                {t('analytics_date_to', 'Date To')}
-              </label>
-              <DatePicker
-                selected={to}
-                onChange={(value: Date | null) => setTo(value)}
-                dateFormat={DATE_DISPLAY_FORMAT}
-                placeholderText="dd/mm/yyyy"
-                minDate={from ?? undefined}
-                inputProps={{
-                  className: 'w-full',
-                  inputClassName:
-                    'border-gray-200 dark:border-gray-700 focus:ring-blue-500 rounded-lg',
-                }}
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                {t('analytics_active_users_date', 'Active Users Date')}
-              </label>
-              <DatePicker
-                selected={date}
-                onChange={(value: Date | null) => setDate(value)}
-                dateFormat={DATE_DISPLAY_FORMAT}
-                placeholderText="dd/mm/yyyy"
-                inputProps={{
-                  className: 'w-full',
-                  inputClassName:
-                    'border-gray-200 dark:border-gray-700 focus:ring-blue-500 rounded-lg',
-                }}
-              />
+            <div className="mt-8 flex items-center justify-end gap-3 border-t border-gray-100 pt-4 dark:border-gray-700">
+              <Button
+                variant="text"
+                onClick={handleReset}
+                className="text-red-500 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-900/20"
+              >
+                <PiXBold className="me-1.5 h-4 w-4" />
+                {t('shared_reset_filters', 'Reset Filters')}
+              </Button>
+              <Button
+                onClick={handleApplyFilters}
+                className="bg-gray-900 px-8 text-white hover:bg-gray-800 dark:bg-gray-100 dark:text-gray-900"
+              >
+                <PiMagnifyingGlassBold className="me-1.5 h-4 w-4" />
+                {t('shared_apply_filters', 'Apply Filters')}
+              </Button>
             </div>
           </div>
-        </div>
-
-        <div className="mt-8 flex items-center justify-end gap-3 border-t border-gray-100 pt-4 dark:border-gray-700">
-          <Button
-            variant="text"
-            onClick={handleReset}
-            className="text-red-500 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-900/20"
-          >
-            <PiXBold className="me-1.5 h-4 w-4" />
-            {t('shared_reset_filters', 'Reset Filters')}
-          </Button>
-          <Button
-            onClick={handleApplyFilters}
-            className="bg-gray-900 px-8 text-white hover:bg-gray-800 dark:bg-gray-100 dark:text-gray-900"
-          >
-            <PiMagnifyingGlassBold className="me-1.5 h-4 w-4" />
-            {t('shared_apply_filters', 'Apply Filters')}
-          </Button>
         </div>
       </div>
     </div>

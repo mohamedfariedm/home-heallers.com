@@ -32,8 +32,10 @@ export default function Header() {
   return (
     <header
       className={cn(
-        'sticky top-0 z-50 flex items-center bg-gray-0/80 px-4 py-4 backdrop-blur-xl dark:bg-gray-50/50 md:px-5 lg:px-6 2xl:py-5 3xl:px-8 4xl:px-10',
-        ((isMounted && windowScroll.y) as number) > 2 ? 'card-shadow' : ''
+        'sticky top-0 z-50 flex items-center bg-gray-0/80 px-4 py-3.5 backdrop-blur-xl dark:bg-gray-50/50 md:px-5 lg:px-6 2xl:py-4 3xl:px-8 4xl:px-10',
+        ((isMounted && windowScroll.y) as number) > 2
+          ? 'border-b border-gray-200/70'
+          : 'border-b border-transparent'
       )}
     >
       <div className="flex w-full max-w-2xl items-center">
