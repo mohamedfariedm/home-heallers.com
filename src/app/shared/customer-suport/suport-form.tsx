@@ -14,6 +14,7 @@ import {
 import { isDraftStatus } from '@/app/shared/customer-suport/kanban-status-columns';
 import { CC_OPTIONS } from '@/app/shared/cc-options';
 import { SOURCE_CAMPAIGN_OPTIONS } from '@/app/shared/source-campaign-options';
+import { LEAD_STATUS_REASONS } from '@/config/dashboard-enums';
 import {
   kanbanCommunicationChannelOptions,
   kanbanOperationCommunicationChannelOptions,
@@ -296,6 +297,7 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
         agent_name: data.agent_name || '',
         status: initValues?.id ? (initValues?.status || data.status) : 'new',
         reason: data.reason || '',
+        status_reason: data.status_reason || '',
         age: data.age || '',
         gender: data.gender || '',
         lead_source: data.lead_source || '',
@@ -386,6 +388,7 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
           agent_name: initValues?.agent_name || '',
           status: initValues?.status || 'new', // Default to 'new' when creating
           reason: initValues?.reason || '',
+          status_reason: initValues?.status_reason || '',
           age: initValues?.age || '',
           gender: initValues?.gender || '',
           lead_source: initValues?.lead_source || '',
@@ -519,6 +522,29 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
 
           <input type="hidden" {...register('status')} />
           <Input label="Chief Comment" {...register('reason')} error={errors.reason?.message} />
+
+          {(String(initValues?.status || '').toLowerCase() === 'failed' ||
+            String(initValues?.status || '').toLowerCase() === 'closed') && (
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-900">
+                Status Reason <span className="text-red-500">*</span>
+              </label>
+              <select
+                {...register('status_reason')}
+                className="h-10 w-full rounded-md border border-gray-300 bg-white p-2 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select reason</option>
+                {LEAD_STATUS_REASONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              {errors.status_reason && (
+                <p className="mt-1 text-sm text-red-500">{errors.status_reason.message}</p>
+              )}
+            </div>
+          )}
 
           <div className="grid grid-cols-1 gap-4">
             <div>

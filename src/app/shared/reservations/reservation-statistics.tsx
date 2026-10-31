@@ -11,7 +11,6 @@ import {
   PiHourglassBold,
   PiCheckBold,
   PiWarningBold,
-  PiPencilSimpleBold,
   PiCurrencyDollarBold,
   PiMoneyBold,
   PiCreditCardBold,
@@ -22,9 +21,22 @@ import {
   PiArrowRightBold,
   PiCaretDownBold,
   PiCaretUpBold,
+  PiUserMinusBold,
+  PiCalendarBlankBold,
 } from 'react-icons/pi';
 import cn from '@/utils/class-names';
 import { useRouter, usePathname } from 'next/navigation';
+import {
+  formatPercent,
+  sumUnknownSourceCount,
+  toPercent,
+  toneColors,
+  toneForCancellationRate,
+  toneForCollectionRate,
+  toneForConfirmationRate,
+  toneForUnknownSource,
+} from '@/utils/dashboard-metric-helpers';
+import { formatStatusReasonLabel } from '@/config/dashboard-enums';
 import { formatSourceCampaign } from '@/app/shared/source-campaign-options';
 
 interface StatusCount {
@@ -41,7 +53,6 @@ interface ReservationStatistics {
     canceled?: StatusCount | number;
     completed?: StatusCount | number;
     failed?: StatusCount | number;
-    draft?: StatusCount | number;
   };
   seen_count?: number;
   unseen_count?: number;
@@ -100,6 +111,24 @@ interface ReservationStatistics {
       clients_link?: string;
     };
   };
+  by_cancellation_reason?: Array<{
+    status_reason: string;
+    count: number;
+    canceled_count: number;
+    failed_count: number;
+    link: string;
+  }>;
+  unassigned_count?: number;
+  unassigned_link?: string;
+  same_day_count?: number;
+  same_day_link?: string;
+  upcoming_sessions?: {
+    count: number;
+    reservations_count: number;
+    link: string;
+  };
+  unscheduled_sessions_count?: number;
+  unscheduled_sessions_link?: string;
 }
 
 interface ReservationStatisticsProps {
@@ -108,11 +137,6 @@ interface ReservationStatisticsProps {
 }
 
 // Helper function to get count from status (handles both old and new format)
-const hasPositiveCount = (value: number | string | undefined): boolean => {
-  const count = typeof value === 'number' ? value : Number(value);
-  return Number.isFinite(count) && count !== 0;
-};
-
 const getStatusCount = (status: StatusCount | number | undefined): number => {
   if (!status) return 0;
   if (typeof status === 'number') return status;
@@ -344,14 +368,149 @@ export default function ReservationStatistics({
     getStatusSessionsCount(stats.by_status?.confirmed) +
     getStatusSessionsCount(stats.by_status?.completed) +
     getStatusSessionsCount(stats.by_status?.canceled) +
-    getStatusSessionsCount(stats.by_status?.failed) +
-    getStatusSessionsCount(stats.by_status?.draft);
+    getStatusSessionsCount(stats.by_status?.failed);
+
+  const totalReservations = stats.total_count || 0;
+  const confirmedCount = getStatusCount(stats.by_status?.confirmed);
+  const canceledCount = getStatusCount(stats.by_status?.canceled);
+  const confirmationRate = toPercent(confirmedCount, totalReservations);
+  const cancellationRate = toPercent(canceledCount, totalReservations);
+  const paidAmount = Number(stats.paid_statistics?.total_amount || 0);
+  const unpaidAmount = Number(stats.unpaid_statistics?.total_amount || 0);
+  const collectionRate = toPercent(paidAmount, paidAmount + unpaidAmount);
+  const { unknownCount, totalCount: sourceTotal } = sumUnknownSourceCount(
+    stats.by_source_campaign || []
+  );
+  const unknownSourceRate = toPercent(unknownCount, sourceTotal || totalReservations);
+  const showUnknownSourceAlert = unknownSourceRate > 20;
+
+  const confirmationTone = toneColors(toneForConfirmationRate(confirmationRate));
+  const cancellationTone = toneColors(toneForCancellationRate(cancellationRate));
+  const collectionTone = toneColors(toneForCollectionRate(collectionRate));
+  const unknownTone = toneColors(toneForUnknownSource(unknownSourceRate));
+
+  const topKpiCards = [
+    {
+      title: 'Total Reservations',
+      value: totalReservations,
+      icon: PiCalendarCheckBold,
+      bgColor: 'bg-blue-50',
+      textColor: 'text-blue-600',
+      darkBgColor: 'dark:bg-blue-900/20',
+      darkTextColor: 'dark:text-blue-400',
+      blurColor: 'bg-blue-50/50',
+      darkBlurColor: 'dark:bg-blue-900/10',
+      compact: true,
+    },
+    {
+      title: 'Total Sessions',
+      value: totalSessions,
+      icon: PiCalendarCheckBold,
+      bgColor: 'bg-sky-50',
+      textColor: 'text-sky-600',
+      darkBgColor: 'dark:bg-sky-900/20',
+      darkTextColor: 'dark:text-sky-400',
+      blurColor: 'bg-sky-50/50',
+      darkBlurColor: 'dark:bg-sky-900/10',
+      compact: true,
+    },
+    {
+      title: 'Confirmation Rate',
+      value: formatPercent(confirmationRate),
+      subtitle: `${confirmedCount} confirmed`,
+      icon: PiCheckCircleBold,
+      ...confirmationTone,
+      compact: true,
+    },
+    {
+      title: 'Cancellation Rate',
+      value: formatPercent(cancellationRate),
+      subtitle: `${canceledCount} canceled`,
+      icon: PiXCircleBold,
+      ...cancellationTone,
+      compact: true,
+    },
+    ...(hasPermission('dashboard.total_revenue')
+      ? [
+          {
+            title: 'Collection Rate',
+            value: formatPercent(collectionRate),
+            subtitle: `${paidAmount.toLocaleString()} / ${(paidAmount + unpaidAmount).toLocaleString()} SAR`,
+            icon: PiMoneyBold,
+            ...collectionTone,
+            compact: true,
+          },
+        ]
+      : []),
+    {
+      title: '% Unknown Source',
+      value: formatPercent(unknownSourceRate),
+      subtitle: `${unknownCount} of ${sourceTotal || totalReservations}`,
+      icon: PiTagBold,
+      ...unknownTone,
+      compact: true,
+    },
+    {
+      title: 'Unassigned',
+      value: stats.unassigned_count ?? 0,
+      subtitle: 'Open without doctor',
+      icon: PiUserMinusBold,
+      bgColor: 'bg-red-50',
+      textColor: 'text-red-600',
+      darkBgColor: 'dark:bg-red-900/20',
+      darkTextColor: 'dark:text-red-400',
+      blurColor: 'bg-red-50/50',
+      darkBlurColor: 'dark:bg-red-900/10',
+      link: stats.unassigned_link,
+      compact: true,
+    },
+    {
+      title: 'Same-day',
+      value: stats.same_day_count ?? 0,
+      icon: PiCalendarBlankBold,
+      bgColor: 'bg-violet-50',
+      textColor: 'text-violet-600',
+      darkBgColor: 'dark:bg-violet-900/20',
+      darkTextColor: 'dark:text-violet-400',
+      blurColor: 'bg-violet-50/50',
+      darkBlurColor: 'dark:bg-violet-900/10',
+      link: stats.same_day_link,
+      compact: true,
+    },
+    {
+      title: 'Upcoming Sessions',
+      value: stats.upcoming_sessions?.count ?? 0,
+      subtitle: `${stats.upcoming_sessions?.reservations_count ?? 0} reservations (next 7 days)`,
+      icon: PiCalendarCheckBold,
+      bgColor: 'bg-sky-50',
+      textColor: 'text-sky-600',
+      darkBgColor: 'dark:bg-sky-900/20',
+      darkTextColor: 'dark:text-sky-400',
+      blurColor: 'bg-sky-50/50',
+      darkBlurColor: 'dark:bg-sky-900/10',
+      link: stats.upcoming_sessions?.link,
+      compact: true,
+    },
+    {
+      title: 'Unscheduled Sessions',
+      value: stats.unscheduled_sessions_count ?? 0,
+      icon: PiHourglassBold,
+      bgColor: 'bg-amber-50',
+      textColor: 'text-amber-600',
+      darkBgColor: 'dark:bg-amber-900/20',
+      darkTextColor: 'dark:text-amber-400',
+      blurColor: 'bg-amber-50/50',
+      darkBlurColor: 'dark:bg-amber-900/10',
+      link: stats.unscheduled_sessions_link,
+      compact: true,
+    },
+  ];
 
   // Row 1: Reservation by Status (with Reviewing and Total Sessions)
   const reservationByStatusCards = [
     {
       title: 'Total Reservations',
-      value: stats.total_count || 0,
+      value: totalReservations,
       icon: PiCalendarCheckBold,
       bgColor: 'bg-blue-50',
       textColor: 'text-blue-600',
@@ -458,20 +617,7 @@ export default function ReservationStatistics({
       link: getStatusLink(stats.by_status?.failed),
       compact: true,
     },
-    {
-      title: 'Draft',
-      value: getStatusCount(stats.by_status?.draft),
-      subtitle: `${getStatusSessionsCount(stats.by_status?.draft)} sessions`,
-      icon: PiPencilSimpleBold,
-      bgColor: 'bg-slate-50',
-      textColor: 'text-slate-600',
-      darkBgColor: 'dark:bg-slate-900/20',
-      darkTextColor: 'dark:text-slate-400',
-      blurColor: 'bg-slate-50/50',
-      darkBlurColor: 'dark:bg-slate-900/10',
-      link: getStatusLink(stats.by_status?.draft),
-      compact: true,
-    },
+    
   ];
 
   // Row 2: Review (Paid, Unpaid, Seen, Unseen, Remaining Payment)
@@ -565,15 +711,13 @@ export default function ReservationStatistics({
   // Initialize checked state for all campaigns on first render
   useEffect(() => {
     if (checkedSourceCampaigns.size === 0 && allSourceCampaigns.length > 0) {
-      const initialChecked = new Set(allSourceCampaigns.map(c => formatSourceCampaign(c.source_campaign)));
+      const initialChecked = new Set(allSourceCampaigns.map(c => c.source_campaign || ''));
       setCheckedSourceCampaigns(initialChecked);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allSourceCampaigns.length]);
 
-  const sourceCampaignCards = allSourceCampaigns
-    .filter((campaign) => (campaign.reservations_count || 0) !== 0)
-    .map((campaign) => {
+  const sourceCampaignCards = allSourceCampaigns.map((campaign) => {
     const campaignKey = formatSourceCampaign(campaign.source_campaign);
     const isChecked = checkedSourceCampaigns.has(campaignKey);
     
@@ -635,9 +779,7 @@ export default function ReservationStatistics({
     return bSessions - aSessions; // Descending order
   });
   
-  const allServiceCards = sortedServices
-    .filter((service) => (service.reservations_count || 0) !== 0)
-    .map((service) => ({
+  const allServiceCards = sortedServices.map((service) => ({
     title: service.service_name_ar || `Service ${service.service_id}`,
     value: `${service.reservations_count || 0}`,
     subtitle: `${service.sessions_count || 0} sessions`,
@@ -665,9 +807,7 @@ export default function ReservationStatistics({
     return bSessions - aSessions;
   });
 
-  const allCategoryCards = sortedCategories
-    .filter((category) => (category.reservations_count || 0) !== 0)
-    .map((category) => ({
+  const allCategoryCards = sortedCategories.map((category) => ({
     title:
       category.category_name_ar ||
       category.category_name_en ||
@@ -724,15 +864,35 @@ export default function ReservationStatistics({
   ];
 
   const rows = [
-    { title: 'Reservation by Status', cards: reservationByStatusCards.filter((card) => hasPositiveCount(card.value)) },
-    ...(hasPermission('dashboard.total_revenue')
-      ? [{ title: 'Revenue', cards: reviewCards.filter((card) => hasPositiveCount(card.value)) }]
+    { title: 'Top KPIs', cards: topKpiCards },
+    { title: 'Reservation by Status', cards: reservationByStatusCards },
+    ...((stats.by_cancellation_reason || []).length > 0
+      ? [
+          {
+            title: 'Cancellation / Failure Reasons',
+            cards: (stats.by_cancellation_reason || []).map((r) => ({
+              title: formatStatusReasonLabel(r.status_reason),
+              value: r.count,
+              subtitle: `${r.canceled_count} canceled · ${r.failed_count} failed`,
+              icon: PiWarningBold,
+              bgColor: 'bg-rose-50',
+              textColor: 'text-rose-600',
+              darkBgColor: 'dark:bg-rose-900/20',
+              darkTextColor: 'dark:text-rose-400',
+              blurColor: 'bg-rose-50/50',
+              darkBlurColor: 'dark:bg-rose-900/10',
+              link: r.link,
+              compact: true,
+            })),
+          },
+        ]
       : []),
+    ...(hasPermission('dashboard.total_revenue') ? [{ title: 'Revenue & Collection', cards: reviewCards }] : []),
     { title: 'Source Campaigns', cards: sourceCampaignCards },
     { title: 'Services', cards: serviceCards },
     { title: 'Categories', cards: categoryCards },
-    { title: 'Clients', cards: clientCards.filter((card) => hasPositiveCount(card.value)) },
-  ].filter((row) => row.cards.length > 0);
+    { title: 'Clients & Multiple Bookings', cards: clientCards },
+  ];
 
   const router = useRouter();
   const pathname = usePathname();
@@ -751,6 +911,23 @@ export default function ReservationStatistics({
 
   return (
     <div className={cn('w-full space-y-6', className)}>
+      {showUnknownSourceAlert || (stats.unassigned_count ?? 0) > 0 ? (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200">
+          <p className="font-semibold">Red Flags</p>
+          <ul className="mt-1 list-disc space-y-0.5 ps-5">
+            {showUnknownSourceAlert && (
+              <li>
+                Unknown Source is {formatPercent(unknownSourceRate)} ({unknownCount} reservations) — above 20% threshold.
+              </li>
+            )}
+            {(stats.unassigned_count ?? 0) > 0 && (
+              <li>
+                {stats.unassigned_count} unassigned open reservation(s) without a doctor.
+              </li>
+            )}
+          </ul>
+        </div>
+      ) : null}
       {rows.map((row, rowIndex) => {
         const isServicesRow = row.title === 'Services';
         const hasMoreServices = isServicesRow && allServiceCards.length > SERVICES_PER_ROW;
@@ -802,7 +979,7 @@ export default function ReservationStatistics({
               )}
             </div>
             <div className="flex flex-wrap w-full gap-3">
-              {row.title === 'Source Campaigns' && hasPositiveCount(totalSourceCampaigns) && (
+              {row.title === 'Source Campaigns' && (
                 <StatCard key="total-source-campaigns" {...totalSourceCampaignCard} />
               )}
               {row.cards.map((card: any, cardIndex: number) => (

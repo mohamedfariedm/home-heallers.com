@@ -29,7 +29,11 @@ export const useCreatePatients = () => {
         toast.success('patients created successfully')
         closeModal()
       },
-      onError: (error) => {
+      onError: (error: any) => {
+        if (error?.response?.data?.existing_patient_id) {
+          // Form surfaces "use existing patient" — avoid a second generic toast
+          return;
+        }
         toast.error(`Error ${error?.message}`)
       }
     })
@@ -47,7 +51,11 @@ export const useCreatePatients = () => {
         toast.success('patients updated successfully')
         closeModal()
       },
-      onError: (error) => {
+      onError: (error: any) => {
+        if (error?.response?.data?.existing_patient_id) {
+          // Form surfaces "use existing patient" — avoid a second generic toast
+          return;
+        }
         toast.error(`Error ${error?.message}`)
       }
     })

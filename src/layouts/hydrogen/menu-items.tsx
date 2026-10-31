@@ -41,11 +41,9 @@ import {
   PiShieldCheckDuotone,
   PiLockKeyDuotone,
   PiChatCenteredDotsDuotone,
-  PiLifebuoyDuotone,
   PiMagicWandDuotone,
   PiCalendarPlusDuotone,
   PiListChecks,
-  PiMapTrifoldDuotone,
   PiBuildingsFill,
   PiShoppingCartSimple,
   PiStorefront,
@@ -64,6 +62,8 @@ import {
   PiReceipt,
   PiTarget,
   PiWallet,
+  PiMapTrifoldDuotone,
+  PiLifebuoyDuotone,
 } from 'react-icons/pi';
 import {
   IoWarningOutline,
@@ -206,8 +206,8 @@ export const menuItemsHaydrogen = [
     permissions: 'highlights',
   },
   {
-    name: 'Tutorial',
-    nameAr: 'شروحات توضيحية',
+    name: 'Onboarding Screens',
+    nameAr: 'شاشات البداية',
     href: routes.onboardingScreens.index,
     icon: <PiDeviceMobileDuotone />,
     permissions: 'onboarding_screens',
@@ -229,55 +229,19 @@ export const menuItemsHaydrogen = [
     permissions: 'clients',
   },
 
-  { name: 'User Mangement ' },
-  {
-    name: 'Permissions',
-    href: routes.permissions.index,
-    permissions: 'permissions',
-    icon: <PiUserGearDuotone />,
-  },
-  {
-    name: 'Roles',
-    href: routes.roles.index,
-    icon: <PiPackageDuotone />,
-    permissions: 'roles',
-  },
-  {
-    name: 'Users',
-    href: routes.users.index,
-    icon: <FaUserShield />,
-    permissions: 'users',
-  },
-  {
-    name: 'Activity Logs',
-    href: routes.activityLogs.index,
-    icon: <PiHourglassSimpleDuotone />,
-    permissions: 'activity-logs',
-  },
-  {
-    name: 'OTP Codes',
-    href: routes.otpCodes.index,
-    icon: <PiLockKeyDuotone />,
-  },
-  {
-    name: 'KPIs',
-    href: routes.kpis.index,
-    icon: <PiChartLineUpDuotone />,
-    permissions: 'user_reports,doctor_reports',
-  },
-
+  // Journey order: Contact Center → Reservations → Patients → Doctors → Finance → KPIs → Master Data
   { name: 'Contact Center' },
-  {
-    name: 'Outbound',
-    href: '/customer-supports-marketing-kanban',
-    icon: <PiPhoneCall />,
-    permissions: 'customer_supports_outbound',
-  },
   {
     name: 'Inbound',
     href: '/customer-supports-operation-kanban',
     icon: <PiHeadsetDuotone />,
     permissions: 'customer_supports_inbound',
+  },
+  {
+    name: 'Outbound',
+    href: '/customer-supports-marketing-kanban',
+    icon: <PiPhoneCall />,
+    permissions: 'customer_supports_outbound',
   },
   {
     name: 'SEO Leads',
@@ -302,6 +266,144 @@ export const menuItemsHaydrogen = [
     href: routes.notifications.index,
     icon: <IoNotificationsSharp />,
     permissions: 'notifications',
+  },
+
+  { name: 'Reservations Operations' },
+  {
+    name: 'Abandoned Reservations',
+    href: routes.abandonedReservations.index,
+    icon: <IoWarningOutline />,
+    permissions: 'reservations',
+  },
+  {
+    name: 'reservations',
+    href: routes.reservations.index,
+    icon: <PiGlobe />,
+    permissions: 'reservations',
+  },
+  {
+    name: 'Reservation Reviews',
+    href: routes.reservationReviews.index,
+    icon: <IoStarOutline />,
+    permissions: 'reservations',
+  },
+  {
+    name: 'Offers',
+    href: routes.offers.index,
+    icon: <PiTagDuotone />,
+    permissions: 'packages',
+  },
+  {
+    name: 'Services',
+    href: routes.services.index,
+    icon: <PiRoadHorizon />,
+    permissions: 'services',
+  },
+  {
+    name: 'categories',
+    href: routes.mainCategories.index,
+    icon: <PiListChecks />,
+    permissions: 'categories',
+  },
+  {
+    name: 'Centers',
+    href: routes.centers.index,
+    icon: <PiBuildingsFill />,
+    permissions: 'centers',
+  },
+
+  { name: 'Patients Management' },
+  {
+    name: 'Patients',
+    href: routes.patients.index,
+    icon: <PiCircleDashedBold />,
+    permissions: 'patients',
+  },
+
+  { name: 'Doctors & Capacity' },
+  {
+    name: 'Doctors',
+    href: routes.doctors.index,
+    icon: <PiUserCircle />,
+    permissions: 'doctors',
+  },
+  {
+    name: 'Doctors Groups',
+    href: routes.groups.index,
+    icon: <PiStackDuotone />,
+    permissions: 'doctors-groups',
+  },
+  {
+    name: 'Doctor Targets',
+    href: routes.doctorTargets.index,
+    icon: <PiTarget />,
+    permissions:
+      'doctor_targets.edit,doctor_targets.create,doctor_targets.approve,doctor_targets.reports,dashboard.doctor_targets',
+  },
+  {
+    name: 'Withdrawals',
+    href: routes.withdrawals.index,
+    icon: <PiWallet />,
+    permissions: 'withdrawals.approve',
+  },
+
+  { name: 'Finance & Collections' },
+  {
+    name: 'Invoices',
+    href: routes.invoices.index,
+    icon: <PiReceipt />,
+    permissions: 'invoices',
+  },
+  {
+    name: 'contracts',
+    href: routes.contracts.index,
+    icon: <PiFileText />,
+    permissions: 'Contracts',
+  },
+  {
+    name: 'coupons',
+    href: routes.coupons.index,
+    icon: <PiListChecks />,
+    permissions: 'coupons',
+  },
+
+  { name: 'KPIs & Audit' },
+  {
+    name: 'KPIs',
+    href: routes.kpis.index,
+    icon: <PiChartLineUpDuotone />,
+    permissions: 'user_reports,doctor_reports',
+  },
+  {
+    name: 'Activity Logs',
+    href: routes.activityLogs.index,
+    icon: <PiHourglassSimpleDuotone />,
+    permissions: 'activity-logs',
+  },
+
+  { name: 'User Mangement ' },
+  {
+    name: 'Permissions',
+    href: routes.permissions.index,
+    permissions: 'permissions',
+    icon: <PiUserGearDuotone />,
+  },
+  {
+    name: 'Roles',
+    href: routes.roles.index,
+    icon: <PiPackageDuotone />,
+    permissions: 'roles',
+  },
+  {
+    name: 'Users',
+    href: routes.users.index,
+    icon: <FaUserShield />,
+    permissions: 'users',
+  },
+  {
+    name: 'OTP Codes',
+    href: routes.otpCodes.index,
+    icon: <PiLockKeyDuotone />,
   },
 
   { name: 'master Mangement ' },
@@ -330,79 +432,16 @@ export const menuItemsHaydrogen = [
     permissions: 'state',
   },
   {
-    name: 'coupons',
-    href: routes.coupons.index,
-    icon: <PiListChecks />,
-    permissions: 'coupons',
-  },
-  {
     name: 'Geo Regions',
     href: routes.geoRegions.index,
     icon: <PiMapTrifoldDuotone />,
     permissions: 'geo_regions',
   },
-  // {
-  //   name: 'packages',
-  //   href: routes.packages.index,
-  //   icon: <PiCreditCardDuotone />,
-  //   permissions: 'packages',
-  // },
   {
-    name: 'Offers',
-    href: routes.offers.index,
-    icon: <PiTagDuotone />,
-    permissions: 'packages',
-  },
-  // {
-  //   name: 'Operation customer supports',
-  //   href: '/customer-supports-operation',
-  //   icon: <PiPhoneCall />,
-  //   permissions: 'customer_supports_operation',
-  // },
-  // {
-  //   name: ' Marketing customer  supports',
-  //   href: '/customer-supports-marketing',
-  //   icon: <PiPhoneCall />,
-  //   permissions: 'customer_supports_marketing',
-  // },
-
-  {
-    name: 'Patients',
-    href: routes.patients.index,
-    icon: <PiCircleDashedBold />,
-    permissions: 'patients',
-  },
-  {
-    name: 'Doctors Groups',
-    href: routes.groups.index,
-    icon: <PiStackDuotone />,
-    permissions: 'doctors-groups',
-  },
-  {
-    name: 'Doctors',
-    href: routes.doctors.index,
-    icon: <PiUserCircle />,
-    permissions: 'doctors',
-  },
-  {
-    name: 'Doctor Targets',
-    href: routes.doctorTargets.index,
-    icon: <PiTarget />,
-    permissions:
-      'doctor_targets.edit,doctor_targets.create,doctor_targets.approve,doctor_targets.reports,dashboard.doctor_targets',
-  },
-  {
-    name: 'Withdrawals',
-    href: routes.withdrawals.index,
-    icon: <PiWallet />,
-    permissions: 'withdrawals.approve',
-  },
-
-  {
-    name: 'categories',
-    href: routes.mainCategories.index,
-    icon: <PiListChecks />,
-    permissions: 'categories',
+    name: 'Nationalities',
+    href: routes.nationalities.index,
+    icon: <PiHammerDuotone />,
+    permissions: 'nationalities',
   },
   {
     name: 'Exercises',
@@ -415,54 +454,6 @@ export const menuItemsHaydrogen = [
     href: routes.exercisePrograms.index,
     icon: <PiFileText />,
     permissions: 'exercises',
-  },
-  {
-    name: 'Services',
-    href: routes.services.index,
-    icon: <PiRoadHorizon />,
-    permissions: 'services',
-  },
-  {
-    name: 'Nationalities',
-    href: routes.nationalities.index,
-    icon: <PiHammerDuotone />,
-    permissions: 'nationalities',
-  },
-  {
-    name: 'Invoices',
-    href: routes.invoices.index,
-    icon: <PiReceipt />,
-    permissions: 'invoices',
-  },
-  {
-    name: 'Abandoned Reservations',
-    href: routes.abandonedReservations.index,
-    icon: <IoWarningOutline />,
-    permissions: 'reservations',
-  },
-  {
-    name: 'reservations',
-    href: routes.reservations.index,
-    icon: <PiGlobe />,
-    permissions: 'reservations',
-  },
-  {
-    name: 'Centers',
-    href: routes.centers.index,
-    icon: <PiBuildingsFill />,
-    permissions: 'centers',
-  },
-  {
-    name: 'Reservation Reviews',
-    href: routes.reservationReviews.index,
-    icon: <IoStarOutline />,
-    permissions: 'reservations',
-  },
-  {
-    name: 'contracts',
-    href: routes.contracts.index,
-    icon: <PiFileText />,
-    permissions: 'Contracts',
   },
 
   // { name: 'Work Management' },

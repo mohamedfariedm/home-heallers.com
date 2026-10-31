@@ -9,7 +9,9 @@ import {
   requiresQualificationForStatus,
 } from '@/app/shared/customer-suport/leads-qualification-utils';
 import LeadsQualificationModal from '@/app/shared/customer-suport/leads-qualification-modal';
+import StatusReasonModal from '@/app/shared/customer-suport/status-reason-modal';
 import { LeadsQualification } from '@/app/shared/customer-suport/leads-qualification-constants';
+import { isTerminalLeadStatus } from '@/config/dashboard-enums';
 import toast from 'react-hot-toast';
 
 interface UseKanbanStatusChangeOptions {
@@ -25,6 +27,48 @@ export function useKanbanStatusChange({
 }: UseKanbanStatusChangeOptions) {
   const { openModal, closeModal } = useModal();
 
+  const applyStatusChange = useCallback(
+    (
+      item: any,
+      itemId: number,
+      newStatus: string,
+      extra?: { status_reason?: string; notes?: string }
+    ) => {
+      updateCustomerSupport({
+        lead_id: itemId,
+        ...item,
+        status: newStatus,
+        ...(extra?.status_reason ? { status_reason: extra.status_reason } : {}),
+        ...(extra?.notes ? { notes: extra.notes } : {}),
+      });
+    },
+    [updateCustomerSupport]
+  );
+
+  const promptStatusReasonThenApply = useCallback(
+    (item: any, itemId: number, newStatus: 'failed' | 'closed') =>
+      new Promise<boolean>((resolve) => {
+        openModal({
+          view: (
+            <StatusReasonModal
+              itemName={item.name}
+              targetStatus={newStatus}
+              onConfirm={(payload) => {
+                applyStatusChange(item, itemId, newStatus, payload);
+                resolve(true);
+              }}
+              onCancel={() => {
+                toast.error('Status was not changed. A reason is required.');
+                resolve(false);
+              }}
+            />
+          ),
+          customSize: '520px',
+        });
+      }),
+    [applyStatusChange, openModal]
+  );
+
   const handleStatusChange = useCallback(
     async (
       itemId: number,
@@ -37,13 +81,23 @@ export function useKanbanStatusChange({
       const item = allItems.find((entry: any) => entry.id === itemId);
       if (!item) return false;
 
-      if (!requiresQualificationForStatus(newStatus)) {
-        updateCustomerSupport({
-          lead_id: itemId,
-          ...item,
-          status: newStatus,
-        });
+      const normalizedStatus = newStatus.toLowerCase();
+
+      const afterQualification = async () => {
+        if (isTerminalLeadStatus(normalizedStatus)) {
+          return promptStatusReasonThenApply(
+            item,
+            itemId,
+            normalizedStatus as 'failed' | 'closed'
+          );
+        }
+        applyStatusChange(item, itemId, normalizedStatus);
         return true;
+      };
+
+      // Draft does not require qualification (HOME-140).
+      if (!requiresQualificationForStatus(normalizedStatus)) {
+        return afterQualification();
       }
 
       let qualification = null;
@@ -62,12 +116,7 @@ export function useKanbanStatusChange({
       }
 
       if (isQualificationComplete(qualification)) {
-        updateCustomerSupport({
-          lead_id: itemId,
-          ...item,
-          status: newStatus,
-        });
-        return true;
+        return afterQualification();
       }
 
       return new Promise<boolean>((resolve) => {
@@ -77,14 +126,10 @@ export function useKanbanStatusChange({
               customerSupportId={itemId}
               itemName={item.name}
               requireAllAnswers
-              onSaved={() => {
+              onSaved={async () => {
                 closeModal();
-                updateCustomerSupport({
-                  lead_id: itemId,
-                  ...item,
-                  status: newStatus,
-                });
-                resolve(true);
+                const ok = await afterQualification();
+                resolve(ok);
               }}
               onCancel={() => {
                 closeModal();
@@ -99,7 +144,14 @@ export function useKanbanStatusChange({
         });
       });
     },
-    [allItems, canMoveStatus, closeModal, openModal, updateCustomerSupport]
+    [
+      allItems,
+      applyStatusChange,
+      canMoveStatus,
+      closeModal,
+      openModal,
+      promptStatusReasonThenApply,
+    ]
   );
 
   return { handleStatusChange };
