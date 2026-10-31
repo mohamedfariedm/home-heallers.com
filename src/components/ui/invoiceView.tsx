@@ -297,16 +297,41 @@ export default function InvoiceView({ invoiceData }: InvoiceViewProps) {
           windowHeight: targetElement.scrollHeight,
         }),
         onclone: (clonedDoc) => {
-          // Ensure all fonts are applied in the cloned document
+          // Keep RTL + fonts so Arabic layout matches the screen in the PDF
           const clonedElement = clonedDoc.querySelector('[data-invoice-ref]') || clonedDoc.body;
           if (clonedElement && clonedElement instanceof HTMLElement) {
+            clonedElement.setAttribute('dir', 'rtl');
+            clonedElement.style.direction = 'rtl';
+            clonedElement.style.textAlign = 'right';
             clonedElement.style.fontFamily = 'Arial, sans-serif';
+            clonedElement.style.boxSizing = 'border-box';
+            clonedElement.style.overflow = 'visible';
+            // Avoid double left border in PDF (Card border/shadow + page frame)
+            clonedElement.style.boxShadow = 'none';
+            clonedElement.style.border = 'none';
+            clonedElement.style.outline = 'none';
             if (isMobile) {
               clonedElement.style.width = '800px';
               clonedElement.style.maxWidth = '800px';
               clonedElement.style.minWidth = '800px';
             }
           }
+          clonedDoc.querySelectorAll('[dir], .text-right, ul, ol, li, p, h1, h2, h3, h4').forEach((node) => {
+            if (node instanceof HTMLElement) {
+              node.style.direction = 'rtl';
+            }
+          });
+          // Hide screen-only page label; PDF stamps real page numbers
+          clonedDoc.querySelectorAll('[data-pdf-hide]').forEach((node) => {
+            if (node instanceof HTMLElement) node.style.display = 'none';
+          });
+          // Keep table borders crisp and avoid cut-off cells looking broken
+          clonedDoc.querySelectorAll('table, th, td').forEach((node) => {
+            if (node instanceof HTMLElement) {
+              node.style.borderCollapse = 'collapse';
+              node.style.boxSizing = 'border-box';
+            }
+          });
         },
       });
 
@@ -367,23 +392,129 @@ export default function InvoiceView({ invoiceData }: InvoiceViewProps) {
 
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = pdfWidth - 20; // 10mm margin on each side
-      const imgHeight = (finalCanvas.height * imgWidth) / finalCanvas.width;
+      const margin = 14;
+      const contentWidth = pdfWidth - margin * 2;
+      const contentHeight = pdfHeight - margin * 2 - 8; // leave room for page number
+      const pageSlicePx = Math.floor((contentHeight * finalCanvas.width) / contentWidth);
 
-      let heightLeft = imgHeight;
-      let position = 10;
+      const isRowMostlyWhite = (y: number) => {
+        const probe = document.createElement('canvas');
+        probe.width = finalCanvas.width;
+        probe.height = 1;
+        const probeCtx = probe.getContext('2d', { willReadFrequently: true });
+        if (!probeCtx) return false;
+        probeCtx.drawImage(finalCanvas, 0, y, finalCanvas.width, 1, 0, 0, finalCanvas.width, 1);
+        const row = probeCtx.getImageData(0, 0, finalCanvas.width, 1).data;
+        let darkPixels = 0;
+        for (let x = 0; x < finalCanvas.width; x += 6) {
+          const i = x * 4;
+          if (row[i] < 245 || row[i + 1] < 245 || row[i + 2] < 245) darkPixels += 1;
+        }
+        return darkPixels < Math.max(4, finalCanvas.width / 200);
+      };
 
-      // Add first page
+      // Drop trailing whitespace so it does not create an empty second page
+      let contentBottom = finalCanvas.height - 1;
+      while (contentBottom > 0 && isRowMostlyWhite(contentBottom)) {
+        contentBottom -= 1;
+      }
+      contentBottom = Math.min(finalCanvas.height, contentBottom + 8); // small padding
+
+      const findSafeBreakY = (idealY: number, searchRange: number) => {
+        const clampedIdeal = Math.min(Math.max(idealY, 1), contentBottom - 1);
+        const minY = Math.max(1, clampedIdeal - searchRange);
+        for (let y = clampedIdeal; y >= minY; y -= 2) {
+          if (isRowMostlyWhite(y)) return y;
+        }
+        return clampedIdeal;
+      };
+
+      const pageBreaks: number[] = [0];
+      // Fits on one page after trimming empty bottom → never add a second page
+      if (contentBottom <= pageSlicePx) {
+        pageBreaks.push(contentBottom);
+      } else {
+        let cursor = 0;
+        while (cursor < contentBottom - 2) {
+          const remaining = contentBottom - cursor;
+          if (remaining <= pageSlicePx) {
+            pageBreaks.push(contentBottom);
+            break;
+          }
+          const idealEnd = cursor + pageSlicePx;
+          const safeEnd = findSafeBreakY(idealEnd, Math.floor(pageSlicePx * 0.22));
+          const nextY = Math.max(cursor + Math.floor(pageSlicePx * 0.55), safeEnd);
+          pageBreaks.push(Math.min(nextY, contentBottom));
+          cursor = pageBreaks[pageBreaks.length - 1];
+        }
+      }
+
+      // Drop empty/near-empty trailing slices
+      while (pageBreaks.length > 2) {
+        const start = pageBreaks[pageBreaks.length - 2];
+        const end = pageBreaks[pageBreaks.length - 1];
+        if (end - start < 24) {
+          pageBreaks.pop();
+          continue;
+        }
+        let hasContent = false;
+        for (let y = start; y < end; y += 8) {
+          if (!isRowMostlyWhite(y)) {
+            hasContent = true;
+            break;
+          }
+        }
+        if (!hasContent) {
+          pageBreaks.pop();
+          continue;
+        }
+        break;
+      }
+
+      const totalPages = Math.max(1, pageBreaks.length - 1);
+
       try {
-        pdf.addImage(imgData, imageFormat, 10, position, imgWidth, imgHeight);
-        heightLeft -= pdfHeight;
+        for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
+          if (pageIndex > 0) pdf.addPage();
 
-        // Add additional pages if needed
-        while (heightLeft >= 0) {
-          position = heightLeft - imgHeight + 10;
-          pdf.addPage();
-          pdf.addImage(imgData, imageFormat, 10, position, imgWidth, imgHeight);
-          heightLeft -= pdfHeight;
+          const sourceY = pageBreaks[pageIndex];
+          const sourceHeight = Math.max(1, pageBreaks[pageIndex + 1] - sourceY);
+
+          const pageCanvas = document.createElement('canvas');
+          pageCanvas.width = finalCanvas.width;
+          pageCanvas.height = sourceHeight;
+          const pageCtx = pageCanvas.getContext('2d');
+          if (!pageCtx) throw new Error('Failed to create page canvas');
+
+          pageCtx.fillStyle = '#ffffff';
+          pageCtx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+          pageCtx.drawImage(
+            finalCanvas,
+            0,
+            sourceY,
+            finalCanvas.width,
+            sourceHeight,
+            0,
+            0,
+            finalCanvas.width,
+            sourceHeight
+          );
+
+          const pageImgData = pageCanvas.toDataURL(
+            imageFormat === 'JPEG' ? 'image/jpeg' : 'image/png',
+            0.92
+          );
+          const pageImgHeight = (sourceHeight * contentWidth) / finalCanvas.width;
+          pdf.addImage(pageImgData, imageFormat, margin, margin, contentWidth, pageImgHeight);
+
+          pdf.setFontSize(9);
+          pdf.setTextColor(120);
+          pdf.text(
+            `Page ${pageIndex + 1} of ${totalPages}  |  Invoice #${invoiceData.invoice_number}`,
+            pdfWidth / 2,
+            pdfHeight - 8,
+            { align: 'center' }
+          );
         }
       } catch (imgError) {
         console.error('Error adding image to PDF:', imgError);
@@ -442,7 +573,7 @@ export default function InvoiceView({ invoiceData }: InvoiceViewProps) {
         </Button>
       </div>
 
-      <Card ref={invoiceRef} data-invoice-ref className="p-8 shadow-lg">
+      <Card ref={invoiceRef} data-invoice-ref className="p-8 shadow-lg" dir="rtl">
         {/* Header: seller info (right) + invoice meta (left) — no empty middle gap */}
         <div className="flex items-center justify-between gap-3 mb-3 w-full">
               <h1 className="text-2xl font-bold">فاتورة ضريبية مبسطة</h1>
@@ -604,18 +735,51 @@ export default function InvoiceView({ invoiceData }: InvoiceViewProps) {
 
         {/* Footer */}
         <div className="border-t pt-6">
-          <div className="text-center">
-            <h4 className="font-bold mb-2">التوقيع</h4>
-            <div className="text-center mb-4">الإلكترونية سجدة</div>
-            <p className="text-sm text-muted-foreground">
-              مدة صلاحية الجلسات 6 أشهر من تاريخ الشراء - لا يحق للمراجع استرداد المبلغ بعد البدء بالجلسات
-            </p>
+          <div className="text-right text-xs leading-snug text-muted-foreground mb-4" dir="rtl">
+            <h4 className="font-bold text-foreground text-sm mb-2">سياسة الإلغاء والاسترداد</h4>
+
+            <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+              <div>
+                <p className="font-semibold text-foreground">الإلغاء المبكر (قبل الموعد بـ 12 ساعة أو أكثر):</p>
+                <div className="mt-0.5 space-y-0">
+                  <p>• يحق للعميل استرجاع المبلغ كاملاً.</p>
+                  <p>• تتم عملية الاسترداد خلال 30 يوم عمل.</p>
+                </div>
+              </div>
+
+              <div>
+                <p className="font-semibold text-foreground">الإلغاء المتأخر أو عدم الحضور (أقل من 12 ساعة / تعذر الجلسة بسبب العميل):</p>
+                <div className="mt-0.5 space-y-0">
+                  <p>• يُخصم كامل المبلغ ولا يحق للعميل المطالبة بالاسترجاع.</p>
+                </div>
+              </div>
+
+              <div>
+                <p className="font-semibold text-foreground">سياسة باقات الجلسات:</p>
+                <div className="mt-0.5 space-y-0">
+                  <p>• مبالغ الباقات غير مستردة نهائياً بعد بدء الجلسات.</p>
+                  <p>• مدة صلاحية استخدام الباقة هي 6 أشهر من تاريخ الشراء.</p>
+                </div>
+              </div>
+
+              <div>
+                <p className="font-semibold text-foreground">اعتذار المركز أو الأخصائي:</p>
+                <div className="mt-0.5 space-y-0">
+                  <p>• يلتزم المركز بتوفير موعد بديل مجاني بالكامل في حال اعتذار الأخصائي عن الحضور.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="text-center border-t pt-4">
+            <h4 className="font-bold mb-1 text-sm">التوقيع</h4>
+            <div className="text-center text-sm">الإلكترونية سجدة</div>
           </div>
         </div>
 
-        {/* Page Number */}
-        <div className="mt-8 text-center text-sm text-muted-foreground">
-          Page 1 of 1 for Invoice #{invoiceData.invoice_number}
+        {/* Screen-only page label (hidden in PDF capture) */}
+        <div data-pdf-hide className="mt-8 text-center text-sm text-muted-foreground">
+          Invoice #{invoiceData.invoice_number}
         </div>
       </Card>
     </div>
