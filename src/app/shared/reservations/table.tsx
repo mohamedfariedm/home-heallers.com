@@ -156,6 +156,9 @@ export default function ReservationsTable({
     if (dateFilters.date_to) {
       params.set('date_to', dateFilters.date_to);
     }
+    if (dateFilters.date_from || dateFilters.date_to) {
+      params.delete('all_dates');
+    }
 
     params.set('page', '1');
     router.push(`?${params.toString()}`);
@@ -257,17 +260,15 @@ export default function ReservationsTable({
 
   const { visibleColumns, checkedColumns, setCheckedColumns } = useColumn(columns);
   
-  // Clear all filters — restore month-to-date default range (not all-time)
+  // Clear all filters including dates (all-time)
   const clearAllFilters = () => {
     const currentLimit = searchParams.get('limit') || '10';
     const params = buildClearedFiltersParams({
-      mode: 'monthToDate',
       limit: currentLimit,
     });
-    const range = getMonthToDateRange();
 
     setColumnFilters({});
-    setDateFilters({ date_from: range.from, date_to: range.to });
+    setDateFilters({ date_from: undefined, date_to: undefined });
 
     handleReset();
     handleSearch('');

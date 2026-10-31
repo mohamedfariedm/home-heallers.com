@@ -97,7 +97,6 @@ export default function ZatcaInvoicesTable({
   const handleReset = () => {
     resetTable();
     const params = buildClearedFiltersParams({
-      mode: 'last10Days',
       page: '1',
       extra: { tab: 'zatca', per_page: String(pageSize) },
     });

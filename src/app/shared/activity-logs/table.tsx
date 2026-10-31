@@ -147,9 +147,6 @@ export default function ActivityLogsTable({
     setSearchInput('');
     setPageSize(10);
     const params = buildClearedFiltersParams({
-      mode: 'last10Days',
-      fromKey: 'created_from',
-      toKey: 'created_to',
       page: '1',
     });
     params.set('per_page', '10');

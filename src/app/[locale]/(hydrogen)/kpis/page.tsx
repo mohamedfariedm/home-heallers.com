@@ -68,6 +68,7 @@ function cleanParamsForTab(view: KpiView) {
   next.set('tab', view);
   next.set('page', '1');
   next.set('per_page', '25');
+  // Fresh tab entry still uses the page default range
   next.set('date_from', range.from);
   next.set('date_to', range.to);
   return next;

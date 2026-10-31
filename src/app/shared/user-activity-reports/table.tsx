@@ -156,7 +156,6 @@ export default function UserActivityReportsTable({
     setSearchInput('');
     setPageSize(25);
     const params = buildClearedFiltersParams({
-      mode: 'last10Days',
       page: '1',
       extra: { tab: 'users', per_page: '25' },
     });

@@ -34,9 +34,12 @@ export default function AppAnalyticsDashboard() {
     from: defaultRange.from,
     to: defaultRange.to,
   });
+  /** After Clear/Reset, keep all-time until the user picks dates again. */
+  const [allTime, setAllTime] = useState(false);
 
-  const dateRange =
-    filters.from || filters.to
+  const dateRange = allTime
+    ? undefined
+    : filters.from || filters.to
       ? {
           ...(filters.from ? { from: filters.from } : {}),
           ...(filters.to ? { to: filters.to } : {}),
@@ -74,6 +77,8 @@ export default function AppAnalyticsDashboard() {
   );
 
   const handleFilter = (newFilters: AppAnalyticsFilters) => {
+    const hasDates = Boolean(newFilters.from || newFilters.to || newFilters.date);
+    setAllTime(!hasDates && Object.keys(newFilters).length === 0);
     setFilters(newFilters);
   };
 

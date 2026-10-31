@@ -61,9 +61,10 @@ export default function CustomerSupportsSeoKanbanPage() {
     'seo'
   );
 
-  const { defaults: dateDefaults } = useEnsureDefaultDateRange({
-    mode: 'last10Days',
-  });
+  const { defaults: dateDefaults, skip: skipDateDefault } =
+    useEnsureDefaultDateRange({
+      mode: 'last10Days',
+    });
   const defaultDates = {
     date_from: dateDefaults.from,
     date_to: dateDefaults.to,
@@ -225,6 +226,9 @@ export default function CustomerSupportsSeoKanbanPage() {
       if (dates.date_to) {
         params.set('date_to', dates.date_to);
       }
+      if (dates.date_from || dates.date_to) {
+        params.delete('all_dates');
+      }
     }
 
     // Add new filter params
@@ -244,7 +248,6 @@ export default function CustomerSupportsSeoKanbanPage() {
     setPage(1);
 
     const params = buildClearedFiltersParams({
-      mode: 'last10Days',
       extra: { type: KANBAN_TYPE },
     });
     router.replace(`?${params.toString()}`);
@@ -276,10 +279,13 @@ export default function CustomerSupportsSeoKanbanPage() {
               onClearFilters={handleClearFilters}
               currentFilters={filters}
               currentDates={{
-                date_from: searchParams.get('date_from') || defaultDates.date_from,
-                date_to: searchParams.get('date_to') || defaultDates.date_to,
+                date_from:
+                  searchParams.get('date_from') ||
+                  (!skipDateDefault ? defaultDates.date_from : undefined),
+                date_to:
+                  searchParams.get('date_to') ||
+                  (!skipDateDefault ? defaultDates.date_to : undefined),
               }}
-              defaultDates={defaultDates}
             />
           )}
           {kanbanPermissions.export && (

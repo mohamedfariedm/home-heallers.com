@@ -111,9 +111,6 @@ export default function DoctorTargetsTable({
 
   const handleReset = () => {
     const params = buildClearedFiltersParams({
-      mode: 'last10Days',
-      fromKey: 'start_date',
-      toKey: 'end_date',
       page: '1',
       extra: { tab: 'targets', per_page: '10' },
     });

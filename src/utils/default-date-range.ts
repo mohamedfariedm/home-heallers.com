@@ -10,6 +10,9 @@ export type DateRange = {
   to: string;
 };
 
+/** Set on Clear/Reset so auto date defaults are not re-injected. */
+export const ALL_DATES_PARAM = 'all_dates';
+
 /** Reservation operational KPI filters that intentionally omit date_from/date_to. */
 export const NO_DATE_DEFAULT_RESERVATION_FILTERS = new Set([
   'unassigned',
@@ -21,6 +24,7 @@ export const NO_DATE_DEFAULT_RESERVATION_FILTERS = new Set([
 export const NO_DATE_DEFAULT_PARAM_KEYS = [
   'follow_up_aging',
   'sla_breach',
+  ALL_DATES_PARAM,
 ] as const;
 
 function pad2(n: number): string {
@@ -67,7 +71,7 @@ export function resolveDateKeys(keys?: DateRangeKeys): {
 }
 
 /**
- * True when the URL is a drill-down that must stay without date defaults.
+ * True when the URL is a drill-down / explicit all-time clear that must stay without date defaults.
  */
 export function shouldSkipDefaultDateRange(
   params: URLSearchParams | { get: (key: string) => string | null }
@@ -112,24 +116,24 @@ export function ensureDefaultDateParams(
   const range = getDefaultDateRange(options.mode, options.now);
   params.set(fromKey, range.from);
   params.set(toKey, range.to);
+  params.delete(ALL_DATES_PARAM);
   return true;
 }
 
 /**
- * Build a clean query string for Clear/Reset: keep pagination (+ extras), apply default dates.
+ * Build a clean query string for Clear/Reset: wipe filters including dates (all-time).
+ * Sets `all_dates=1` so the page default range is not auto-reapplied.
  */
 export function buildClearedFiltersParams(
   options: DateRangeKeys & {
-    mode: DateRangeMode;
+    mode?: DateRangeMode;
     limit?: string | null;
     page?: string;
     extra?: Record<string, string>;
     now?: Date;
-  }
+  } = {}
 ): URLSearchParams {
   const params = new URLSearchParams();
-  const { fromKey, toKey } = resolveDateKeys(options);
-  const range = getDefaultDateRange(options.mode, options.now);
 
   params.set('page', options.page ?? '1');
   if (options.limit) {
@@ -142,7 +146,6 @@ export function buildClearedFiltersParams(
     });
   }
 
-  params.set(fromKey, range.from);
-  params.set(toKey, range.to);
+  params.set(ALL_DATES_PARAM, '1');
   return params;
 }

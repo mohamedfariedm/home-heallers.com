@@ -18,6 +18,7 @@ import BulkPersonalCouponsForm from '@/app/shared/reservations/bulk-personal-cou
 import {
   buildClearedFiltersParams,
   getLast10DaysRange,
+  shouldSkipDefaultDateRange,
 } from '@/utils/default-date-range';
 
 const FilterElement = dynamic(
@@ -69,9 +70,14 @@ export default function PationtsTable({
   const [pageSize, setPageSize] = useState(Number(searchParams.get('limit')) || 10);
   const [columnFilters, setColumnFilters] = useState<Record<string, any>>({});
   const defaultDates = getLast10DaysRange();
+  const skipDateDefault = shouldSkipDefaultDateRange(searchParams);
   const [dateFilters, setDateFilters] = useState<{ date_from?: string; date_to?: string }>({
-    date_from: searchParams.get('date_from') || defaultDates.from,
-    date_to: searchParams.get('date_to') || defaultDates.to,
+    date_from:
+      searchParams.get('date_from') ||
+      (!skipDateDefault ? defaultDates.from : undefined),
+    date_to:
+      searchParams.get('date_to') ||
+      (!skipDateDefault ? defaultDates.to : undefined),
   });
 
   useEffect(() => {
@@ -84,8 +90,12 @@ export default function PationtsTable({
       });
       return;
     }
-    const range = getLast10DaysRange();
-    setDateFilters({ date_from: range.from, date_to: range.to });
+    if (!shouldSkipDefaultDateRange(searchParams)) {
+      const range = getLast10DaysRange();
+      setDateFilters({ date_from: range.from, date_to: range.to });
+    } else {
+      setDateFilters({ date_from: undefined, date_to: undefined });
+    }
   }, [searchParams]);
 
   const handleFilterChange = (key: string, value: any) =>
@@ -189,6 +199,9 @@ export default function PationtsTable({
 
     if (dateFilters.date_from) params.set('date_from', dateFilters.date_from);
     if (dateFilters.date_to) params.set('date_to', dateFilters.date_to);
+    if (dateFilters.date_from || dateFilters.date_to) {
+      params.delete('all_dates');
+    }
 
     params.set('page', '1');
     router.push(`?${params.toString()}`);
@@ -227,12 +240,10 @@ export default function PationtsTable({
   const clearAllFilters = () => {
     const currentLimit = searchParams.get('limit') || '10';
     const params = buildClearedFiltersParams({
-      mode: 'last10Days',
       limit: currentLimit,
     });
-    const range = getLast10DaysRange();
     setColumnFilters({});
-    setDateFilters({ date_from: range.from, date_to: range.to });
+    setDateFilters({ date_from: undefined, date_to: undefined });
     handleReset();
     handleSearch('');
     router.push(`?${params.toString()}`);

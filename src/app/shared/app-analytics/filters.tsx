@@ -56,11 +56,10 @@ export default function AppAnalyticsFiltersComponent({
   };
 
   const handleReset = () => {
-    const range = getLast10DaysRange();
-    setFrom(parseIsoDate(range.from));
-    setTo(parseIsoDate(range.to));
+    setFrom(null);
+    setTo(null);
     setDate(null);
-    onFilter({ from: range.from, to: range.to });
+    onFilter({});
   };
 
   return (

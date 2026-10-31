@@ -138,7 +138,6 @@ export default function DoctorActivityReportsTable({
     setSearchInput('');
     setPageSize(25);
     const params = buildClearedFiltersParams({
-      mode: 'last10Days',
       page: '1',
       extra: { tab: 'doctors', per_page: '25' },
     });

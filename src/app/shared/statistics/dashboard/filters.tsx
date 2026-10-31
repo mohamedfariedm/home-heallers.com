@@ -275,15 +275,15 @@ export default function StatisticsFiltersComponent({
   };
 
   const handleReset = () => {
-    setDateFrom(defaults.date_from);
-    setDateTo(defaults.date_to);
+    setDateFrom('');
+    setDateTo('');
     setDoctorId('');
     setClientId('');
     setCenterId('');
     setSelectedStatuses([]);
     setSelectedSupportTypes([]);
     setSelectedSourceCampaigns([]);
-    onFilter({ date_from: defaults.date_from, date_to: defaults.date_to });
+    onFilter({});
   };
 
   const handleLast10Days = () => {

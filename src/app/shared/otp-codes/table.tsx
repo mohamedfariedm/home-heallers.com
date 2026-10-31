@@ -172,7 +172,6 @@ export default function OtpCodesTable({
           handleReset={() => {
             handleReset();
             const next = buildClearedFiltersParams({
-              mode: 'last10Days',
               limit: searchParams.get('limit') || '20',
             });
             router.push(`${pathName}?${next.toString()}`);

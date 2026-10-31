@@ -87,14 +87,13 @@ export default function KanbanFilters({
   };
 
   const handleClearFilters = () => {
-    // Reset column filters; restore page default date range (not all-time)
+    // Wipe all filters including dates
     setFilters({});
-    setDateFrom(defaultDates?.date_from || '');
-    setDateTo(defaultDates?.date_to || '');
+    setDateFrom('');
+    setDateTo('');
 
     setResetKey((prev) => prev + 1);
 
-    // Parent writes default dates into the URL
     onClearFilters();
   };
 

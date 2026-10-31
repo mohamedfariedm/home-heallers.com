@@ -35,11 +35,12 @@ export default function FilterElement({
 }: FilterElementProps) {
   const searchParams = useSearchParams();
   const defaults = getLast10DaysRange();
+  const cleared = Boolean(searchParams.get('all_dates'));
   const [startDate, setStartDate] = useState(
-    searchParams.get('start_date') || defaults.from
+    searchParams.get('start_date') || (cleared ? '' : defaults.from)
   );
   const [endDate, setEndDate] = useState(
-    searchParams.get('end_date') || defaults.to
+    searchParams.get('end_date') || (cleared ? '' : defaults.to)
   );
   const { data: doctorsRes } = useDoctors('page=1&limit=500');
 
