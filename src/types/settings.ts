@@ -261,4 +261,8 @@ export interface Settings {
   landing_pages?: LandingPage[];
   media_folders?: MediaFolder[];
   rate_colors?: RateColorsByMetric;
+  /** Default session price for newly created doctors (Bulk Price) */
+  session_price?: number | string | null;
+  booking_price?: number | string | null;
+  reservation_price?: number | string | null;
 }

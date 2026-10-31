@@ -24,12 +24,14 @@ import {
   Building2,
   FolderOpen,
   Palette,
+  CircleDollarSign,
 } from 'lucide-react';
 import TermsSection from './TermsSection';
 import ConditionsSection from './ConditionsSection';
 import BusinessInfoSection from './BusinessInfoSection';
 import FolderManagementSection from './FolderManagementSection';
 import RateColorsSection from './RateColorsSection';
+import PricingSection from './PricingSection';
 import { useTranslation } from 'react-i18next';
 
 interface SettingsFormProps {
@@ -77,6 +79,7 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
     { id: 'terms', label: t('settings_tab_terms'), icon: FileText },
     { id: 'conditions', label: t('settings_tab_conditions'), icon: Shield },
     { id: 'business-info', label: t('settings_tab_business'), icon: Building2 },
+    { id: 'pricing', label: t('settings_tab_pricing'), icon: CircleDollarSign },
     { id: 'rate-colors', label: t('settings_tab_rate_colors'), icon: Palette },
     // { id: 'folder-management', label: 'Folder Management', icon: FolderOpen },
   ];
@@ -130,6 +133,13 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
     setSettings((prev) => ({ ...prev, rate_colors }));
   };
 
+  const updateBulkPrice = (session_price: number | '') => {
+    setSettings((prev) => ({
+      ...prev,
+      session_price: session_price === '' ? undefined : session_price,
+    }));
+  };
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'banners':
@@ -177,6 +187,13 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
               }
             }
             onUpdate={updateBusinessInfo}
+          />
+        );
+      case 'pricing':
+        return (
+          <PricingSection
+            sessionPrice={settings.session_price}
+            onUpdate={updateBulkPrice}
           />
         );
       case 'rate-colors':

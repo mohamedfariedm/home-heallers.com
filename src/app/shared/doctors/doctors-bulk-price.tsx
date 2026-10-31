@@ -16,18 +16,10 @@ import {
   doctorsBulkPriceSchema,
   type DoctorsBulkPriceInput,
 } from '@/utils/validators/doctors-bulk-price.schema';
-import {
-  SETTINGS_PRICE_KEYS,
-  type DoctorsBulkPricePayload,
-  type SettingsPriceKey,
-  type SettingsPrices,
+import type {
+  DoctorsBulkPricePayload,
+  SettingsPrices,
 } from '@/types/doctors-bulk-price';
-
-const SETTINGS_PRICE_LABELS: Record<SettingsPriceKey, string> = {
-  session_price: 'Settings session price',
-  booking_price: 'Settings booking price',
-  reservation_price: 'Settings reservation price',
-};
 
 // Unfiltered on purpose: the page list total depends on the active URL filters.
 const ALL_DOCTORS_COUNT_QUERY = 'page=1&limit=1';
@@ -74,18 +66,11 @@ function DoctorsBulkPriceForm({
     setValues(data);
 
     const price = Number(data.doctor_session_price);
-    const payload: DoctorsBulkPricePayload = { session_price: price };
-
-    const settings: NonNullable<DoctorsBulkPricePayload['settings']> = {};
-    SETTINGS_PRICE_KEYS.forEach((key) => {
-      const current = currentSettings[key];
-      if (current == null || Number(current) !== price) {
-        settings[key] = price;
-      }
-    });
-    if (Object.keys(settings).length > 0) {
-      payload.settings = settings;
-    }
+    // Keep existing doctors and the Settings default for new doctors in sync.
+    const payload: DoctorsBulkPricePayload = {
+      session_price: price,
+      settings: { session_price: price },
+    };
 
     setPending(payload);
   };
@@ -94,7 +79,7 @@ function DoctorsBulkPriceForm({
     <div className="flex items-center justify-between">
       <div>
         <Title as="h4" className="font-semibold">
-          Bulk price
+          Bulk Price
         </Title>
         <Text className="mt-1 text-sm text-gray-500">Applies to {allDoctorsLabel}</Text>
       </div>
@@ -117,13 +102,11 @@ function DoctorsBulkPriceForm({
                 to <b>{pending.session_price} SAR</b>. Part-time prices are not changed.
               </li>
             )}
-            {SETTINGS_PRICE_KEYS.filter((key) => pending.settings?.[key] !== undefined).map(
-              (key) => (
-                <li key={key}>
-                  {SETTINGS_PRICE_LABELS[key]}: {String(currentSettings[key] ?? '—')} →{' '}
-                  <b>{pending.settings?.[key]} SAR</b>
-                </li>
-              )
+            {pending.settings?.session_price !== undefined && (
+              <li>
+                Settings Bulk Price: {String(currentSettings.session_price ?? '—')} →{' '}
+                <b>{pending.settings.session_price} SAR</b> (default for new doctors)
+              </li>
             )}
           </ul>
         </div>
@@ -163,9 +146,9 @@ function DoctorsBulkPriceForm({
             type="number"
             min={300}
             step={1}
-            label="Doctor session price (SAR)"
+            label="Bulk Price (SAR)"
             placeholder="Enter a price for all doctors"
-            helperText={`Overwrites the session price of ${allDoctorsLabel}, and the settings session, booking, and reservation prices.`}
+            helperText={`Updates ${allDoctorsLabel} and Settings Bulk Price (default for new doctors). Min 300.`}
             {...register('doctor_session_price')}
             error={errors.doctor_session_price?.message}
           />

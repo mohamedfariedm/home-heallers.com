@@ -52,9 +52,27 @@ export const doctorFormSchema = z.object({
   employment_type: z
     .string()
     .refine((v) => v === 'full_time' || v === 'part_time', 'Employment type is required'),
+  /**
+   * Patient-facing session price.
+   * On create: leave empty to let the backend use Settings Bulk Price (setting.session_price).
+   * On edit: show/update the doctor's own price.
+   */
+  session_price: z.string().optional(),
   /** Only used when employment_type = part_time (separate from patient session_price) */
   part_time_session_price: z.string().optional(),
 }).superRefine((data, ctx) => {
+  const sessionPriceRaw = data.session_price?.trim() ?? '';
+  if (sessionPriceRaw !== '') {
+    const sessionPrice = Number(sessionPriceRaw);
+    if (!Number.isFinite(sessionPrice) || sessionPrice < 300) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['session_price'],
+        message: 'Session price must be at least 300',
+      });
+    }
+  }
+
   if (data.employment_type !== 'part_time') return;
   const price = Number(data.part_time_session_price);
   if (!data.part_time_session_price?.trim() || !Number.isFinite(price) || price <= 0) {

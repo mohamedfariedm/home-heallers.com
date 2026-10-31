@@ -149,10 +149,23 @@ export default function CreateOrUpdateDoctors({ initValues }: { initValues?: any
         data.employment_type === 'part_time' ? Number(data.part_time_session_price) : null,
     };
 
+    const sessionPriceRaw = data.session_price?.trim() ?? '';
+    let session_price: number | undefined;
+    if (sessionPriceRaw !== '') {
+      session_price = Number(sessionPriceRaw);
+    } else if (initValues?.session_price != null) {
+      // Keep existing price on update if the field was cleared
+      session_price = Number(initValues.session_price);
+    }
+    // On create with empty session_price: omit so backend uses Settings Bulk Price
+
+    const payload =
+      session_price !== undefined ? { ...requestBody, session_price } : requestBody;
+
     if (initValues) {
-      updateDoctor({ doctor_id: initValues.id, ...requestBody });
+      updateDoctor({ doctor_id: initValues.id, ...payload });
     } else {
-      createDoctor(requestBody);
+      createDoctor(payload);
     }
 
     setLoading(false);
@@ -238,6 +251,9 @@ export default function CreateOrUpdateDoctors({ initValues }: { initValues?: any
           from: extractTimeFromDateTime(initValues?.from || ''),
           to: extractTimeFromDateTime(initValues?.to || ''),
           employment_type: initValues?.employment_type || '',
+          // Create: empty → backend fills from Settings Bulk Price
+          session_price:
+            initValues?.session_price != null ? String(initValues.session_price) : '',
           part_time_session_price:
             initValues?.part_time_session_price != null
               ? String(initValues.part_time_session_price)
@@ -498,6 +514,21 @@ export default function CreateOrUpdateDoctors({ initValues }: { initValues?: any
               helperText="Working hours end time"
             />
           </div>
+
+          <Input
+            label="Session Price (SAR)"
+            type="number"
+            min={300}
+            step={1}
+            placeholder={initValues ? 'Session price' : 'From Bulk Price'}
+            helperText={
+              initValues
+                ? 'Doctor session price (min 300)'
+                : 'Leave empty to use Settings Bulk Price for new doctors'
+            }
+            {...register('session_price')}
+            error={errors.session_price?.message}
+          />
 
           <div className="grid grid-cols-2 gap-4">
             <div>
