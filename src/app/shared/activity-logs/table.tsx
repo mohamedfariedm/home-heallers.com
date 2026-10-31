@@ -8,6 +8,7 @@ import { useColumn } from '@/hooks/use-column';
 import ControlledTable from '@/components/controlled-table';
 import { getColumns } from '@/app/shared/activity-logs/columns';
 import type { ActivityLog } from '@/types/activity-log';
+import { buildClearedFiltersParams } from '@/utils/default-date-range';
 
 const FilterElement = dynamic(
   () => import('@/app/shared/activity-logs/filter-element'),
@@ -145,7 +146,15 @@ export default function ActivityLogsTable({
     resetTable();
     setSearchInput('');
     setPageSize(10);
-    router.push(`${pathname}?page=1&per_page=10`);
+    const params = buildClearedFiltersParams({
+      mode: 'last10Days',
+      fromKey: 'created_from',
+      toKey: 'created_to',
+      page: '1',
+    });
+    params.set('per_page', '10');
+    params.delete('limit');
+    router.push(`${pathname}?${params.toString()}`);
   };
 
   const columns = React.useMemo(

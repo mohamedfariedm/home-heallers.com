@@ -14,6 +14,7 @@ import { usePermissions } from '@/context/PermissionsContext';
 import { toDoctorActivityQuery } from '@/utils/doctor-activity-query';
 import { routes } from '@/config/routes';
 import type { DoctorActivityDetailResponse } from '@/types/doctor-activity-report';
+import { useEnsureDefaultDateRange } from '@/hooks/use-ensure-default-date-range';
 
 export default function DoctorKpiDetailPage() {
   const params = useParams();
@@ -23,6 +24,8 @@ export default function DoctorKpiDetailPage() {
 
   const doctorId = Number(params.doctorId);
   const locale = String(params.locale ?? 'en');
+
+  useEnsureDefaultDateRange({ mode: 'last10Days' });
 
   const effectivePermissions =
     (session?.user as { permissions?: string[] })?.permissions ?? permissions;

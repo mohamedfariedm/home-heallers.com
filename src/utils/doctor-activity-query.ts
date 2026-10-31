@@ -1,3 +1,5 @@
+import { ensureDefaultDateParams } from '@/utils/default-date-range';
+
 type DoctorActivityQueryOptions = {
   /** Detail endpoint — do not apply list-only sort defaults. */
   forDetail?: boolean;
@@ -28,6 +30,8 @@ export function toDoctorActivityQuery(
   } else if (!p.get('sort_direction')) {
     p.set('sort_direction', 'desc');
   }
+
+  ensureDefaultDateParams(p, { mode: 'last10Days' });
 
   return p.toString();
 }

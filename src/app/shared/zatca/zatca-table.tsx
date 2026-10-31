@@ -9,6 +9,7 @@ import { getZatcaColumns } from '@/app/shared/zatca/zatca-columns';
 import type { ZatcaInvoice } from '@/types/zatca';
 import type { ZatcaPermissions } from '@/app/shared/zatca/permissions';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import { buildClearedFiltersParams } from '@/utils/default-date-range';
 
 const FilterElement = dynamic(
   () => import('@/app/shared/zatca/zatca-filter-element'),
@@ -95,7 +96,12 @@ export default function ZatcaInvoicesTable({
 
   const handleReset = () => {
     resetTable();
-    router.push(`${pathname}?page=1&per_page=${pageSize}`);
+    const params = buildClearedFiltersParams({
+      mode: 'last10Days',
+      page: '1',
+      extra: { tab: 'zatca', per_page: String(pageSize) },
+    });
+    router.push(`${pathname}?${params.toString()}`);
   };
 
   const handleSearchUrl = (value: string) => {

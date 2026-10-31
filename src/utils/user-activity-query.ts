@@ -1,3 +1,5 @@
+import { ensureDefaultDateParams } from '@/utils/default-date-range';
+
 type UserActivityQueryOptions = {
   /** Detail endpoint — do not apply list-only sort defaults. */
   forDetail?: boolean;
@@ -40,6 +42,8 @@ export function toUserActivityQuery(
   } else if (!p.get('sort_direction')) {
     p.set('sort_direction', 'desc');
   }
+
+  ensureDefaultDateParams(p, { mode: 'last10Days' });
 
   return p.toString();
 }

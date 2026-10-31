@@ -25,6 +25,11 @@ import {
   STATUS_COLUMNS,
   buildKanbanColumnData,
 } from '@/app/shared/customer-suport/kanban-status-columns';
+import { useEnsureDefaultDateRange } from '@/hooks/use-ensure-default-date-range';
+import {
+  buildClearedFiltersParams,
+  ensureDefaultDateParams,
+} from '@/utils/default-date-range';
 
 const pageHeader = {
   title: 'SEO Leads',
@@ -55,6 +60,14 @@ export default function CustomerSupportsSeoKanbanPage() {
     permissions,
     'seo'
   );
+
+  const { defaults: dateDefaults } = useEnsureDefaultDateRange({
+    mode: 'last10Days',
+  });
+  const defaultDates = {
+    date_from: dateDefaults.from,
+    date_to: dateDefaults.to,
+  };
 
   // Single page state for all columns
   const currentPage = parseSafePage(searchParams.get('page'));
@@ -133,6 +146,7 @@ export default function CustomerSupportsSeoKanbanPage() {
     params.set('page', String(page));
     params.set('limit', '25'); // Get more items to distribute across columns
     params.set('type', KANBAN_TYPE);
+    ensureDefaultDateParams(params, { mode: 'last10Days' });
 
     return params.toString();
   };
@@ -226,16 +240,13 @@ export default function CustomerSupportsSeoKanbanPage() {
   };
 
   const handleClearFilters = () => {
-    // Reset local filter state
     setFilters({});
     setPage(1);
 
-    // Reset filter params but keep kanban type
-    const params = new URLSearchParams();
-    params.set('page', '1');
-    params.set('type', KANBAN_TYPE);
-    
-    // Use replace to avoid adding to history and force a clean URL
+    const params = buildClearedFiltersParams({
+      mode: 'last10Days',
+      extra: { type: KANBAN_TYPE },
+    });
     router.replace(`?${params.toString()}`);
   };
 
@@ -265,9 +276,10 @@ export default function CustomerSupportsSeoKanbanPage() {
               onClearFilters={handleClearFilters}
               currentFilters={filters}
               currentDates={{
-                date_from: searchParams.get('date_from') || undefined,
-                date_to: searchParams.get('date_to') || undefined,
+                date_from: searchParams.get('date_from') || defaultDates.date_from,
+                date_to: searchParams.get('date_to') || defaultDates.date_to,
               }}
+              defaultDates={defaultDates}
             />
           )}
           {kanbanPermissions.export && (

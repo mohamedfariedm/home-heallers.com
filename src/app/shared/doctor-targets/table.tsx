@@ -8,6 +8,7 @@ import ControlledTable from '@/components/controlled-table';
 import { getColumns } from './columns';
 import { useRouter, useSearchParams } from 'next/navigation';
 import type { DoctorTargetsPermissions } from './permissions';
+import { buildClearedFiltersParams } from '@/utils/default-date-range';
 
 const FilterElement = dynamic(() => import('./filter-element'), { ssr: false });
 
@@ -109,10 +110,13 @@ export default function DoctorTargetsTable({
   };
 
   const handleReset = () => {
-    const params = new URLSearchParams();
-    params.set('page', '1');
-    params.set('per_page', '10');
-    params.set('tab', 'targets');
+    const params = buildClearedFiltersParams({
+      mode: 'last10Days',
+      fromKey: 'start_date',
+      toKey: 'end_date',
+      page: '1',
+      extra: { tab: 'targets', per_page: '10' },
+    });
     router.push(`?${params.toString()}`);
   };
 

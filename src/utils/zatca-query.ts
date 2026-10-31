@@ -1,3 +1,5 @@
+import { ensureDefaultDateParams } from '@/utils/default-date-range';
+
 /** Map invoices page URL params to ZATCA list API query string */
 export function toZatcaListQuery(searchParams: URLSearchParams): string {
   const p = new URLSearchParams();
@@ -14,5 +16,6 @@ export function toZatcaListQuery(searchParams: URLSearchParams): string {
   });
   if (!p.get('page')) p.set('page', '1');
   if (!p.get('per_page')) p.set('per_page', p.get('limit') ?? '25');
+  ensureDefaultDateParams(p, { mode: 'last10Days' });
   return p.toString();
 }

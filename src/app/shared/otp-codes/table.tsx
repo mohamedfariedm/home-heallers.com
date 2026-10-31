@@ -9,6 +9,7 @@ import { getColumns } from '@/app/shared/otp-codes/columns';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useExtendOtpExpiration } from '@/framework/otp-codes';
 import type { OtpCodeTableRow } from '@/types/otp-codes';
+import { buildClearedFiltersParams } from '@/utils/default-date-range';
 
 const FilterElement = dynamic(
   () => import('@/app/shared/otp-codes/filter-element'),
@@ -170,12 +171,11 @@ export default function OtpCodesTable({
           updateFilter={handleFilterUpdate}
           handleReset={() => {
             handleReset();
-            pushQuery({
-              type: null,
-              date_from: null,
-              date_to: null,
-              name: null,
+            const next = buildClearedFiltersParams({
+              mode: 'last10Days',
+              limit: searchParams.get('limit') || '20',
             });
+            router.push(`${pathName}?${next.toString()}`);
           }}
         />
       }

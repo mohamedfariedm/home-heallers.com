@@ -8,6 +8,8 @@ import ClientStatistics from '@/app/shared/patients/client-statistics';
 import { usePatients } from '@/framework/patients';
 import CreateOrUpdatePationts from '@/app/shared/patients/pationts-form';
 import { usePermissions } from '@/context/PermissionsContext';
+import { useEnsureDefaultDateRange } from '@/hooks/use-ensure-default-date-range';
+import { ensureDefaultDateParams } from '@/utils/default-date-range';
 // export const metadata = {
 //   ...metaObject('Enhanced Table'),
 // };
@@ -29,6 +31,8 @@ export default function PatientsTablePage() {
   const searchParams = useSearchParams();
   const { permissions } = usePermissions();
   const canManageCoupons = permissions.includes('coupons');
+  useEnsureDefaultDateRange({ mode: 'last10Days' });
+
   const queryParams = new URLSearchParams();
   searchParams.forEach((value, key) => {
     queryParams.set(key, value);
@@ -36,6 +40,7 @@ export default function PatientsTablePage() {
   if (!queryParams.get('page')) queryParams.set('page', '1');
   if (!queryParams.get('limit')) queryParams.set('limit', '10');
   queryParams.set('include_statistics', 'true');
+  ensureDefaultDateParams(queryParams, { mode: 'last10Days' });
   const { data, isLoading } = usePatients(queryParams.toString());
   const [selectedColumns, setSelectedColumns] = useState<any[]>([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState<any[]>([]);

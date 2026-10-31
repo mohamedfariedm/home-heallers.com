@@ -9,6 +9,8 @@ import CreateOrUpdateReservation from '@/app/shared/reservations/reservations-fo
 import ReservationStatistics from '@/app/shared/reservations/reservation-statistics';
 import { usePermissions } from '@/context/PermissionsContext';
 import { resolveReservationsPermissions } from '@/app/shared/reservations/permissions';
+import { useEnsureDefaultDateRange } from '@/hooks/use-ensure-default-date-range';
+import { ensureDefaultDateParams } from '@/utils/default-date-range';
 
 const pageHeader = {
   title: 'Abandoned Reservations',
@@ -29,6 +31,8 @@ export default function AbandonedReservationsTablePage() {
   const reservationPermissions = resolveReservationsPermissions(permissions);
   const canManageCoupons = permissions.includes('coupons');
 
+  useEnsureDefaultDateRange({ mode: 'monthToDate' });
+
   const queryParams = new URLSearchParams();
   searchParams.forEach((value, key) => {
     queryParams.set(key, value);
@@ -37,6 +41,7 @@ export default function AbandonedReservationsTablePage() {
   if (!queryParams.get('limit')) queryParams.set('limit', '10');
   queryParams.set('include_statistics', 'true');
   queryParams.set('abandoned', 'true');
+  ensureDefaultDateParams(queryParams, { mode: 'monthToDate' });
 
   const { data, isLoading } = useReservations(queryParams.toString());
   const [selectedColumns, setSelectedColumns] = useState<any[]>([]);

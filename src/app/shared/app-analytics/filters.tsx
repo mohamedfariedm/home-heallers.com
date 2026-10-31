@@ -15,7 +15,9 @@ import cn from '@/utils/class-names';
 import {
   DATE_DISPLAY_FORMAT,
   formatIsoDate,
+  parseIsoDate,
 } from '@/app/shared/doctor-targets/dates';
+import { getLast10DaysRange } from '@/utils/default-date-range';
 
 export interface AppAnalyticsFilters {
   from?: string;
@@ -33,8 +35,11 @@ export default function AppAnalyticsFiltersComponent({
   className,
 }: AppAnalyticsFiltersProps) {
   const { t } = useTranslation('app-analytics');
-  const [from, setFrom] = useState<Date | null>(null);
-  const [to, setTo] = useState<Date | null>(null);
+  const defaults = getLast10DaysRange();
+  const [from, setFrom] = useState<Date | null>(
+    () => parseIsoDate(defaults.from)
+  );
+  const [to, setTo] = useState<Date | null>(() => parseIsoDate(defaults.to));
   const [date, setDate] = useState<Date | null>(null);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -51,10 +56,11 @@ export default function AppAnalyticsFiltersComponent({
   };
 
   const handleReset = () => {
-    setFrom(null);
-    setTo(null);
+    const range = getLast10DaysRange();
+    setFrom(parseIsoDate(range.from));
+    setTo(parseIsoDate(range.to));
     setDate(null);
-    onFilter({});
+    onFilter({ from: range.from, to: range.to });
   };
 
   return (

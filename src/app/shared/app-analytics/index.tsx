@@ -19,6 +19,7 @@ import AppAnalyticsFiltersComponent, {
 import AppAnalyticsStatCards from './stat-cards';
 import AppAnalyticsCharts from './charts';
 import OutdatedInstallationsTable from './outdated-installations-table';
+import { getLast10DaysRange } from '@/utils/default-date-range';
 
 function toDateInputValue(date = new Date()) {
   return date.toISOString().slice(0, 10);
@@ -28,7 +29,11 @@ export default function AppAnalyticsDashboard() {
   const { t } = useTranslation('app-analytics');
   const { permissions } = usePermissions();
   const canView = permissions.includes('app_analytics');
-  const [filters, setFilters] = useState<AppAnalyticsFilters>({});
+  const defaultRange = getLast10DaysRange();
+  const [filters, setFilters] = useState<AppAnalyticsFilters>({
+    from: defaultRange.from,
+    to: defaultRange.to,
+  });
 
   const dateRange =
     filters.from || filters.to
@@ -36,7 +41,10 @@ export default function AppAnalyticsDashboard() {
           ...(filters.from ? { from: filters.from } : {}),
           ...(filters.to ? { to: filters.to } : {}),
         }
-      : undefined;
+      : {
+          from: defaultRange.from,
+          to: defaultRange.to,
+        };
 
   const {
     data: overviewResponse,

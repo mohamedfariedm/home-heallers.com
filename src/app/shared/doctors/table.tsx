@@ -12,6 +12,10 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { ActionIcon } from 'rizzui';
 import { PiCaretDownBold, PiCaretUpBold } from 'react-icons/pi';
 import { useDeleteDoctors, useUpdateDoctors } from '@/framework/doctors';
+import {
+  buildClearedFiltersParams,
+  getLast10DaysRange,
+} from '@/utils/default-date-range';
 
 const FilterElement = dynamic(
   () => import('@/app/shared/doctors/filter-element'),
@@ -60,10 +64,25 @@ export default function DoctorsTable({
   const [pageSize, setPageSize] = useState(Number(searchParams.get('limit')) || 10);
   const [togglingDoctorId, setTogglingDoctorId] = useState<number | null>(null);
   const [columnFilters, setColumnFilters] = useState<Record<string, any>>({});
+  const defaultDates = getLast10DaysRange();
   const [dateFilters, setDateFilters] = useState<{ date_from?: string; date_to?: string }>({
-    date_from: searchParams.get('date_from') || undefined,
-    date_to: searchParams.get('date_to') || undefined,
+    date_from: searchParams.get('date_from') || defaultDates.from,
+    date_to: searchParams.get('date_to') || defaultDates.to,
   });
+
+  useEffect(() => {
+    const from = searchParams.get('date_from');
+    const to = searchParams.get('date_to');
+    if (from || to) {
+      setDateFilters({
+        date_from: from || undefined,
+        date_to: to || undefined,
+      });
+      return;
+    }
+    const range = getLast10DaysRange();
+    setDateFilters({ date_from: range.from, date_to: range.to });
+  }, [searchParams]);
 
   const handleFilterChange = (key: string, value: any) =>
     setColumnFilters((prev) => ({ ...prev, [key]: value }));
@@ -219,13 +238,15 @@ export default function DoctorsTable({
   const { visibleColumns, checkedColumns, setCheckedColumns } = useColumn(columns);
 
   const clearAllFilters = () => {
-    const params = new URLSearchParams();
     const currentLimit = searchParams.get('limit') || '10';
-    params.set('page', '1');
-    params.set('limit', currentLimit);
+    const params = buildClearedFiltersParams({
+      mode: 'last10Days',
+      limit: currentLimit,
+    });
+    const range = getLast10DaysRange();
 
     setColumnFilters({});
-    setDateFilters({ date_from: undefined, date_to: undefined });
+    setDateFilters({ date_from: range.from, date_to: range.to });
     handleReset();
     handleSearch('');
     router.push(`?${params.toString()}`);

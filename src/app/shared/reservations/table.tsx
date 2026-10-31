@@ -17,6 +17,11 @@ import { useModal } from '@/app/shared/modal-views/use-modal';
 import { Button } from '@/components/ui/button';
 import BulkPersonalCouponsForm from '@/app/shared/reservations/bulk-personal-coupons-panel';
 import { asRecordList, catalogNameMap } from '@/app/shared/reservations/reservation-relations';
+import {
+  buildClearedFiltersParams,
+  getMonthToDateRange,
+  shouldSkipDefaultDateRange,
+} from '@/utils/default-date-range';
 
 const FilterElement = dynamic(
   () => import('@/app/shared/reservations/filter-element'),
@@ -88,10 +93,34 @@ export default function ReservationsTable({
   const router = useRouter();
   const [pageSize, setPageSize] = useState(Number(searchParams.get('limit')) || 10);
   const [columnFilters, setColumnFilters] = useState<Record<string, any>>({});
+  const defaultDates = getMonthToDateRange();
+  const skipDateDefault = shouldSkipDefaultDateRange(searchParams);
   const [dateFilters, setDateFilters] = useState<{ date_from?: string; date_to?: string }>({
-    date_from: searchParams.get('date_from') || undefined,
-    date_to: searchParams.get('date_to') || undefined,
+    date_from:
+      searchParams.get('date_from') ||
+      (!skipDateDefault ? defaultDates.from : undefined),
+    date_to:
+      searchParams.get('date_to') ||
+      (!skipDateDefault ? defaultDates.to : undefined),
   });
+
+  useEffect(() => {
+    const from = searchParams.get('date_from');
+    const to = searchParams.get('date_to');
+    if (from || to) {
+      setDateFilters({
+        date_from: from || undefined,
+        date_to: to || undefined,
+      });
+      return;
+    }
+    if (!shouldSkipDefaultDateRange(searchParams)) {
+      const range = getMonthToDateRange();
+      setDateFilters({ date_from: range.from, date_to: range.to });
+    } else {
+      setDateFilters({ date_from: undefined, date_to: undefined });
+    }
+  }, [searchParams]);
 
   const handleFilterChange = (key: string, value: any) => setColumnFilters((prev) => ({ ...prev, [key]: value }));
 
@@ -228,31 +257,21 @@ export default function ReservationsTable({
 
   const { visibleColumns, checkedColumns, setCheckedColumns } = useColumn(columns);
   
-  // Clear all filters function - defined after useTable to access handleReset and handleSearch
+  // Clear all filters — restore month-to-date default range (not all-time)
   const clearAllFilters = () => {
-    const params = new URLSearchParams();
-    
-    // Keep only essential params (page and limit)
     const currentLimit = searchParams.get('limit') || '10';
-    params.set('page', '1'); // Reset to first page
-    params.set('limit', currentLimit);
-    
-    // Clear all filter-related params by not adding them
-    // This includes:
-    // - Column filters (id_eq, patient_contains, etc.)
-    // - Date filters (date_from, date_to)
-    // - FilterState filters (status, client, service, city, state)
-    // - Any other filter params
-    
-    // Reset all state
+    const params = buildClearedFiltersParams({
+      mode: 'monthToDate',
+      limit: currentLimit,
+    });
+    const range = getMonthToDateRange();
+
     setColumnFilters({});
-    setDateFilters({ date_from: undefined, date_to: undefined });
-    
-    // Reset table internal filters
+    setDateFilters({ date_from: range.from, date_to: range.to });
+
     handleReset();
     handleSearch('');
-    
-    // Navigate to clean URL
+
     router.push(`?${params.toString()}`);
   };
   

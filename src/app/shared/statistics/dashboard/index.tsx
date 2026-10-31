@@ -30,6 +30,7 @@ import { toast } from 'react-hot-toast';
 import { useSettings, useUpdateSettings } from '@/framework/site-settings';
 import type { RateColorsByMetric } from '@/types/settings';
 import cn from '@/utils/class-names';
+import { getLast10DaysRange } from '@/utils/default-date-range';
 
 interface AggregateData {
   customer_support?: {
@@ -199,9 +200,16 @@ const DASHBOARD_TABS: Array<{
   },
 ];
 
+function getInitialStatisticsFilters(): StatisticsFilters {
+  const range = getLast10DaysRange();
+  return { date_from: range.from, date_to: range.to };
+}
+
 export default function StatisticsDashboard() {
   const { t } = useTranslation('statistics');
-  const [filters, setFilters] = useState<StatisticsFilters>({});
+  const [filters, setFilters] = useState<StatisticsFilters>(() =>
+    getInitialStatisticsFilters()
+  );
   const [aggregateData, setAggregateData] = useState<AggregateData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

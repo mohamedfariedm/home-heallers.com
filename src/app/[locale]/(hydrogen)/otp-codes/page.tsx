@@ -8,6 +8,8 @@ import { Text } from '@/components/ui/text';
 import OtpCodesTable from '@/app/shared/otp-codes/table';
 import { toOtpCodeTableRows, useOtpCodes } from '@/framework/otp-codes';
 import type { OtpCodesListResponse } from '@/types/otp-codes';
+import { useEnsureDefaultDateRange } from '@/hooks/use-ensure-default-date-range';
+import { ensureDefaultDateParams } from '@/utils/default-date-range';
 
 const pageHeader = {
   title: 'OTP Codes',
@@ -19,9 +21,12 @@ const pageHeader = {
 
 export default function OtpCodesPage() {
   const searchParams = useSearchParams();
+  useEnsureDefaultDateRange({ mode: 'last10Days' });
+
   const params = new URLSearchParams(searchParams);
   if (!params.get('page')) params.set('page', '1');
   if (!params.get('limit')) params.set('limit', '20');
+  ensureDefaultDateParams(params, { mode: 'last10Days' });
 
   const { data, isLoading, isError, error } = useOtpCodes(params.toString());
   const [selectedColumns, setSelectedColumns] = useState<any[]>([]);

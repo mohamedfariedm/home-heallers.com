@@ -14,6 +14,7 @@ import {
   hasActiveActivityLogFilters,
   toActivityLogQuery,
 } from '@/utils/activity-log-query';
+import { useEnsureDefaultDateRange } from '@/hooks/use-ensure-default-date-range';
 import type { ActivityLog, ActivityLogListResponse } from '@/types/activity-log';
 
 const pageHeader = {
@@ -28,6 +29,12 @@ export default function ActivityLogsPage() {
   const searchParams = useSearchParams();
   const { permissions } = usePermissions();
   const activityLogPermissions = resolveActivityLogsPermissions(permissions);
+
+  useEnsureDefaultDateRange({
+    mode: 'last10Days',
+    fromKey: 'created_from',
+    toKey: 'created_to',
+  });
 
   const queryString = toActivityLogQuery(
     new URLSearchParams(searchParams.toString())

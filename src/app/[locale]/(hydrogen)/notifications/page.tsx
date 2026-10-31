@@ -20,6 +20,8 @@ import type {
   ScheduledNotification,
   SentNotification,
 } from '@/types/admin-notifications';
+import { useEnsureDefaultDateRange } from '@/hooks/use-ensure-default-date-range';
+import { ensureDefaultDateParams } from '@/utils/default-date-range';
 
 type NotificationTab = 'send' | 'scheduled' | 'sent';
 
@@ -39,6 +41,13 @@ function buildQuery(searchParams: URLSearchParams, tab: NotificationTab) {
   if (!params.get('page')) params.set('page', '1');
   if (!params.get('per_page')) params.set('per_page', '10');
   params.delete('limit');
+  if (tab === 'sent') {
+    ensureDefaultDateParams(params, {
+      mode: 'last10Days',
+      fromKey: 'from',
+      toKey: 'to',
+    });
+  }
   return params;
 }
 
@@ -53,6 +62,13 @@ export default function NotificationsPage() {
       : searchParams.get('tab') === 'sent'
         ? 'sent'
         : 'send';
+
+  useEnsureDefaultDateRange({
+    mode: 'last10Days',
+    fromKey: 'from',
+    toKey: 'to',
+    enabled: activeTab === 'sent',
+  });
 
   const scheduledQuery = useMemo(() => {
     const params = buildQuery(new URLSearchParams(searchParams.toString()), 'scheduled');

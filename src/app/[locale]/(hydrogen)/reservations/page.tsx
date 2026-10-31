@@ -9,6 +9,8 @@ import CreateOrUpdateReservation from '@/app/shared/reservations/reservations-fo
 import ReservationStatistics from '@/app/shared/reservations/reservation-statistics';
 import { usePermissions } from '@/context/PermissionsContext';
 import { resolveReservationsPermissions } from '@/app/shared/reservations/permissions';
+import { useEnsureDefaultDateRange } from '@/hooks/use-ensure-default-date-range';
+import { ensureDefaultDateParams } from '@/utils/default-date-range';
 
 const pageHeader = {
   title: 'Reservations',
@@ -27,6 +29,8 @@ export default function ReservationsTablePage() {
   const searchParams = useSearchParams();
   const { permissions } = usePermissions();
   const reservationPermissions = resolveReservationsPermissions(permissions);
+
+  useEnsureDefaultDateRange({ mode: 'monthToDate' });
   
   // Build query string from search params
   const queryParams = new URLSearchParams();
@@ -36,6 +40,7 @@ export default function ReservationsTablePage() {
   if (!queryParams.get('page')) queryParams.set('page', '1');
   if (!queryParams.get('limit')) queryParams.set('limit', '10');
   queryParams.set('include_statistics', 'true');
+  ensureDefaultDateParams(queryParams, { mode: 'monthToDate' });
   
   const { data, isLoading } = useReservations(queryParams.toString());
   const [selectedColumns, setSelectedColumns] = useState<any[]>([]);

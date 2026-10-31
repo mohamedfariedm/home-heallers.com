@@ -8,6 +8,10 @@ import { useColumn } from '@/hooks/use-column';
 import ControlledTable from '@/components/controlled-table';
 import { getSentColumns } from '@/app/shared/notifications/columns';
 import type { SentNotification } from '@/types/admin-notifications';
+import {
+  buildClearedFiltersParams,
+  getLast10DaysRange,
+} from '@/utils/default-date-range';
 
 const FilterElement = dynamic(
   () => import('@/app/shared/notifications/sent-filter-element'),
@@ -93,20 +97,16 @@ export default function SentNotificationsTable({
   const handleReset = () => {
     resetTable();
     setSearchInput('');
-    const params = new URLSearchParams(searchParams.toString());
-    [
-      'search',
-      'source',
-      'recipient_type',
-      'status',
-      'lang',
-      'type',
-      'created_by',
-      'from',
-      'to',
-    ].forEach((key) => params.delete(key));
-    params.set('page', '1');
-    params.set('per_page', String(pageSize));
+    const range = getLast10DaysRange();
+    const params = buildClearedFiltersParams({
+      mode: 'last10Days',
+      fromKey: 'from',
+      toKey: 'to',
+      page: '1',
+      extra: { tab: 'sent', per_page: String(pageSize) },
+    });
+    params.set('from', range.from);
+    params.set('to', range.to);
     router.push(`${pathname}?${params.toString()}`);
   };
 

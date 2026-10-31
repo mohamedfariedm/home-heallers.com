@@ -11,6 +11,7 @@ import { useDoctors } from '@/framework/doctors';
 import SelectBox, { type SelectOption } from '@/components/ui/select';
 import { doctorDisplayName } from './status-badge';
 import DateInput from './date-input';
+import { getLast10DaysRange } from '@/utils/default-date-range';
 
 const statusOptions = [
   { value: 'draft', name: 'draft', label: <Text className="ms-2 font-medium">DRAFT</Text> },
@@ -33,8 +34,13 @@ export default function FilterElement({
   handleReset,
 }: FilterElementProps) {
   const searchParams = useSearchParams();
-  const [startDate, setStartDate] = useState(searchParams.get('start_date') || '');
-  const [endDate, setEndDate] = useState(searchParams.get('end_date') || '');
+  const defaults = getLast10DaysRange();
+  const [startDate, setStartDate] = useState(
+    searchParams.get('start_date') || defaults.from
+  );
+  const [endDate, setEndDate] = useState(
+    searchParams.get('end_date') || defaults.to
+  );
   const { data: doctorsRes } = useDoctors('page=1&limit=500');
 
   const doctorOptions: SelectOption[] = useMemo(() => {

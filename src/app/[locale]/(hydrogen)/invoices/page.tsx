@@ -19,6 +19,7 @@ import { toZatcaListQuery } from '@/utils/zatca-query';
 import { Text } from '@/components/ui/text';
 import type { ZatcaInvoice } from '@/types/zatca';
 import cn from '@/utils/class-names';
+import { useEnsureDefaultDateRange } from '@/hooks/use-ensure-default-date-range';
 
 const pageHeader = {
   title: 'invoices',
@@ -44,6 +45,11 @@ export default function InvoicesTablePage() {
 
   const activeView: InvoiceView =
     searchParams.get('tab') === 'zatca' ? 'zatca' : 'management';
+
+  useEnsureDefaultDateRange({
+    mode: 'last10Days',
+    enabled: activeView === 'zatca',
+  });
 
   const params = new URLSearchParams();
   searchParams.forEach((value, key) => {

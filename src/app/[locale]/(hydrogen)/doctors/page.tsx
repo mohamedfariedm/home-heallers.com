@@ -10,6 +10,8 @@ import CreateOrUpdateDoctors from '@/app/shared/doctors/doctors-form';
 import DoctorsBulkPrice from '@/app/shared/doctors/doctors-bulk-price';
 import CreateButton from '@/app/shared/create-button';
 import { PiCurrencyCircleDollarBold } from 'react-icons/pi';
+import { useEnsureDefaultDateRange } from '@/hooks/use-ensure-default-date-range';
+import { ensureDefaultDateParams } from '@/utils/default-date-range';
 
 const pageHeader = {
   title: 'Doctors',
@@ -26,6 +28,8 @@ const pageHeader = {
 
 export default function DoctorsTablePage() {
   const searchParams = useSearchParams();
+  useEnsureDefaultDateRange({ mode: 'last10Days' });
+
   const queryParams = new URLSearchParams();
   searchParams.forEach((value, key) => {
     queryParams.set(key, value);
@@ -33,6 +37,7 @@ export default function DoctorsTablePage() {
   if (!queryParams.get('page')) queryParams.set('page', '1');
   if (!queryParams.get('limit')) queryParams.set('limit', '10');
   queryParams.set('include_statistics', 'true');
+  ensureDefaultDateParams(queryParams, { mode: 'last10Days' });
 
   const { data, isLoading } = useDoctors(queryParams.toString());
   const [selectedColumns, setSelectedColumns] = useState<any[]>([]);

@@ -14,6 +14,7 @@ import { usePermissions } from '@/context/PermissionsContext';
 import { toUserActivityQuery } from '@/utils/user-activity-query';
 import { routes } from '@/config/routes';
 import type { UserActivityDetailResponse } from '@/types/user-activity-report';
+import { useEnsureDefaultDateRange } from '@/hooks/use-ensure-default-date-range';
 
 export default function UserKpiDetailPage() {
   const params = useParams();
@@ -23,6 +24,8 @@ export default function UserKpiDetailPage() {
 
   const userId = Number(params.userId);
   const locale = String(params.locale ?? 'en');
+
+  useEnsureDefaultDateRange({ mode: 'last10Days' });
 
   const effectivePermissions =
     (session?.user as { permissions?: string[] })?.permissions ?? permissions;

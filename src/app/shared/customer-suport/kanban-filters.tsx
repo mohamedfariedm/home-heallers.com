@@ -25,9 +25,17 @@ interface KanbanFiltersProps {
   onClearFilters: () => void;
   currentFilters?: Record<string, any>;
   currentDates?: { date_from?: string; date_to?: string };
+  /** Range restored on Clear All (page default). */
+  defaultDates?: { date_from?: string; date_to?: string };
 }
 
-export default function KanbanFilters({ onFilterChange, onClearFilters, currentFilters = {}, currentDates }: KanbanFiltersProps) {
+export default function KanbanFilters({
+  onFilterChange,
+  onClearFilters,
+  currentFilters = {},
+  currentDates,
+  defaultDates,
+}: KanbanFiltersProps) {
   const { data: packagesData, isLoading: offerOptionsLoading } = usePackages('limit=1000');
   const offerOptions = useMemo(() => {
     const list = packagesData?.data ?? [];
@@ -79,19 +87,15 @@ export default function KanbanFilters({ onFilterChange, onClearFilters, currentF
   };
 
   const handleClearFilters = () => {
-    // Reset all filters to completely empty
+    // Reset column filters; restore page default date range (not all-time)
     setFilters({});
-    setDateFrom('');
-    setDateTo('');
-    
-    // Trigger reset of all filter popovers by changing key
+    setDateFrom(defaultDates?.date_from || '');
+    setDateTo(defaultDates?.date_to || '');
+
     setResetKey((prev) => prev + 1);
-    
-    // Call parent's clear function to clear URL params
+
+    // Parent writes default dates into the URL
     onClearFilters();
-    
-    // Apply empty filters immediately to clear parent state
-    onFilterChange({}, { date_from: '', date_to: '' });
   };
 
   // Merge local filters with current (URL) filters to avoid double counting

@@ -13,6 +13,8 @@ import DoctorTargetsExportButton from '@/app/shared/doctor-targets/export-button
 import { useDoctorTargets } from '@/framework/doctor-targets';
 import { usePermissions } from '@/context/PermissionsContext';
 import { resolveDoctorTargetsPermissions } from '@/app/shared/doctor-targets/permissions';
+import { useEnsureDefaultDateRange } from '@/hooks/use-ensure-default-date-range';
+import { ensureDefaultDateParams } from '@/utils/default-date-range';
 
 const pageHeader = {
   title: 'Doctor Targets',
@@ -61,6 +63,13 @@ export default function DoctorTargetsPage() {
     );
   }, [tabParam, canDashboard, canViewList]);
 
+  useEnsureDefaultDateRange({
+    mode: 'last10Days',
+    fromKey: 'start_date',
+    toKey: 'end_date',
+    enabled: activeView === 'targets' && canViewList,
+  });
+
   const queryParams = new URLSearchParams();
   searchParams.forEach((value, key) => {
     if (key === 'tab') return;
@@ -69,6 +78,13 @@ export default function DoctorTargetsPage() {
   if (!queryParams.get('page')) queryParams.set('page', '1');
   if (!queryParams.get('per_page') && !queryParams.get('limit')) {
     queryParams.set('per_page', '10');
+  }
+  if (activeView === 'targets') {
+    ensureDefaultDateParams(queryParams, {
+      mode: 'last10Days',
+      fromKey: 'start_date',
+      toKey: 'end_date',
+    });
   }
 
   const { data, isLoading, isFetching } = useDoctorTargets(

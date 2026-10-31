@@ -20,6 +20,7 @@ import {
   SOURCE_CAMPAIGN_NOT_SPECIFIED_VALUE,
   SOURCE_CAMPAIGN_OPTIONS,
 } from '@/app/shared/source-campaign-options';
+import { getLast10DaysRange as getSharedLast10DaysRange } from '@/utils/default-date-range';
 
 export interface StatisticsFilters {
   date_from?: string;
@@ -61,15 +62,8 @@ interface StatisticsFiltersProps {
 
 /** Last 10 days, today inclusive. Matches the dashboard's initial date range. */
 function getLast10DaysRange(): { date_from: string; date_to: string } {
-  const today = new Date();
-  const from = new Date(today);
-  from.setDate(today.getDate() - 9);
-  const fmt = (d: Date) => {
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${d.getFullYear()}-${month}-${day}`;
-  };
-  return { date_from: fmt(from), date_to: fmt(today) };
+  const range = getSharedLast10DaysRange();
+  return { date_from: range.from, date_to: range.to };
 }
 
 const reservationStatusOptions = [

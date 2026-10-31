@@ -1,3 +1,5 @@
+import { ensureDefaultDateParams } from '@/utils/default-date-range';
+
 /** Map activity-logs page URL params to API query string */
 export function toActivityLogQuery(searchParams: URLSearchParams): string {
   const p = new URLSearchParams();
@@ -15,6 +17,18 @@ export function toActivityLogQuery(searchParams: URLSearchParams): string {
   if (!p.get('per_page')) p.set('per_page', '10');
   if (!p.get('sort_by')) p.set('sort_by', 'created_at');
   if (!p.get('sort_direction')) p.set('sort_direction', 'desc');
+
+  // Skip date defaults when a date shortcut flag is already set
+  const hasShortcut = ['today', 'yesterday', 'this_week', 'this_month', 'last_month'].some(
+    (key) => p.get(key) === '1'
+  );
+  if (!hasShortcut) {
+    ensureDefaultDateParams(p, {
+      mode: 'last10Days',
+      fromKey: 'created_from',
+      toKey: 'created_to',
+    });
+  }
 
   return p.toString();
 }

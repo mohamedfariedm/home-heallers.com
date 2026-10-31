@@ -21,6 +21,11 @@ import {
 import { SUPPORT_INBOX_CHANNEL } from '@/lib/support-tickets/realtime';
 import type { SupportTicketsStats } from '@/types/support-tickets';
 import TicketRow from './ticket-row';
+import { useEnsureDefaultDateRange } from '@/hooks/use-ensure-default-date-range';
+import {
+  buildClearedFiltersParams,
+  ensureDefaultDateParams,
+} from '@/utils/default-date-range';
 
 type TabKey =
   | 'open'
@@ -55,6 +60,12 @@ export default function SupportTicketsInbox() {
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
 
+  const { defaults: dateDefaults } = useEnsureDefaultDateRange({
+    mode: 'last10Days',
+    fromKey: 'from',
+    toKey: 'to',
+  });
+
   const tabKey = (searchParams.get('tab') as TabKey) || 'open';
   const tab = TABS.find((x) => x.key === tabKey) ?? TABS[0];
   const page = Number(searchParams.get('page') || 1);
@@ -82,6 +93,11 @@ export default function SupportTicketsInbox() {
     });
     params.set('page', String(page));
     params.set('per_page', String(perPage));
+    ensureDefaultDateParams(params, {
+      mode: 'last10Days',
+      fromKey: 'from',
+      toKey: 'to',
+    });
     return params.toString();
   }, [tab, searchParams, page, perPage]);
 
@@ -203,7 +219,7 @@ export default function SupportTicketsInbox() {
           {t('st_filter_from')}
           <Input
             type="date"
-            value={searchParams.get('from') ?? ''}
+            value={searchParams.get('from') ?? dateDefaults.from}
             onChange={(e) => setParams({ from: e.target.value || null })}
           />
         </label>
@@ -211,7 +227,7 @@ export default function SupportTicketsInbox() {
           {t('st_filter_to')}
           <Input
             type="date"
-            value={searchParams.get('to') ?? ''}
+            value={searchParams.get('to') ?? dateDefaults.to}
             onChange={(e) => setParams({ to: e.target.value || null })}
           />
         </label>
@@ -236,9 +252,21 @@ export default function SupportTicketsInbox() {
           <Button
             variant="text"
             size="sm"
-            onClick={() =>
-              setParams(Object.fromEntries(FILTER_KEYS.map((key) => [key, null])))
-            }
+            onClick={() => {
+              const cleared = buildClearedFiltersParams({
+                mode: 'last10Days',
+                fromKey: 'from',
+                toKey: 'to',
+                page: '1',
+              });
+              const next = new URLSearchParams(searchParams.toString());
+              FILTER_KEYS.forEach((key) => next.delete(key));
+              next.set('from', cleared.get('from')!);
+              next.set('to', cleared.get('to')!);
+              next.delete('page');
+              const qs = next.toString();
+              router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+            }}
           >
             {t('st_clear_filters')}
           </Button>

@@ -28,6 +28,8 @@ import {
   hasActiveDoctorActivityFilters,
   toDoctorActivityQuery,
 } from '@/utils/doctor-activity-query';
+import { useEnsureDefaultDateRange } from '@/hooks/use-ensure-default-date-range';
+import { getLast10DaysRange } from '@/utils/default-date-range';
 import type {
   UserActivityListResponse,
   UserActivityRow,
@@ -62,9 +64,12 @@ function resolveKpiView(
 /** Keep only shared pagination params when switching KPI tabs. */
 function cleanParamsForTab(view: KpiView) {
   const next = new URLSearchParams();
+  const range = getLast10DaysRange();
   next.set('tab', view);
   next.set('page', '1');
   next.set('per_page', '25');
+  next.set('date_from', range.from);
+  next.set('date_to', range.to);
   return next;
 }
 
@@ -74,6 +79,8 @@ export default function KpisPage() {
   const pathname = usePathname();
   const { permissions } = usePermissions();
   const { data: session } = useSession();
+
+  useEnsureDefaultDateRange({ mode: 'last10Days' });
 
   const effectivePermissions =
     (session?.user as { permissions?: string[] })?.permissions ?? permissions;

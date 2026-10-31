@@ -8,6 +8,7 @@ import { useColumn } from '@/hooks/use-column';
 import ControlledTable from '@/components/controlled-table';
 import { getDoctorActivityColumns } from '@/app/shared/doctor-activity-reports/columns';
 import type { DoctorActivityRow } from '@/types/doctor-activity-report';
+import { buildClearedFiltersParams } from '@/utils/default-date-range';
 
 const FilterElement = dynamic(
   () => import('@/app/shared/doctor-activity-reports/filter-element'),
@@ -136,7 +137,12 @@ export default function DoctorActivityReportsTable({
     resetTable();
     setSearchInput('');
     setPageSize(25);
-    router.push(`${pathname}?tab=doctors&page=1&per_page=25`);
+    const params = buildClearedFiltersParams({
+      mode: 'last10Days',
+      page: '1',
+      extra: { tab: 'doctors', per_page: '25' },
+    });
+    router.push(`${pathname}?${params.toString()}`);
   };
 
   const columns = React.useMemo(
