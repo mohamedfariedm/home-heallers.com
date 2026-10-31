@@ -48,8 +48,14 @@ function RankedBarChart({
   }));
 
   return (
-    <WidgetCard title={title} description={description} className="min-h-[360px]">
-      <div className="h-[280px] w-full pt-4">
+    <WidgetCard
+      title={title}
+      description={description}
+      rounded="xl"
+      className="flex h-full min-h-[380px] flex-col shadow-sm"
+      descriptionClassName="mt-1 text-sm text-gray-500 dark:text-gray-400"
+    >
+      <div className="mt-auto h-[280px] w-full pt-4">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 60 }}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
@@ -96,7 +102,19 @@ export default function AppAnalyticsCharts({ data, className }: AppAnalyticsChar
   const totalPlatform = platformData.reduce((sum, item) => sum + item.value, 0);
 
   return (
-    <div className={cn('grid grid-cols-1 gap-6 xl:grid-cols-2', className)}>
+    <section className={cn('space-y-4', className)}>
+      <div className="space-y-1">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+          {t('analytics_charts_title', 'Distribution & Devices')}
+        </h3>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          {t(
+            'analytics_charts_desc',
+            'Platform mix, versions, and top devices'
+          )}
+        </p>
+      </div>
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2 xl:gap-5">
       {platformData.length > 0 && (
         <WidgetCard
           title={t('analytics_platform_distribution', 'Platform Distribution')}
@@ -104,9 +122,11 @@ export default function AppAnalyticsCharts({ data, className }: AppAnalyticsChar
             count: totalPlatform.toLocaleString(),
             defaultValue: '{{count}} total installs',
           })}
-          className="min-h-[360px]"
+          rounded="xl"
+          className="flex h-full min-h-[380px] flex-col shadow-sm"
+          descriptionClassName="mt-1 text-sm text-gray-500 dark:text-gray-400"
         >
-          <div className="h-[280px] w-full pt-4">
+          <div className="mt-auto h-[280px] w-full pt-4">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -135,9 +155,11 @@ export default function AppAnalyticsCharts({ data, className }: AppAnalyticsChar
         <WidgetCard
           title={t('analytics_app_versions', 'App Versions')}
           description={t('analytics_app_versions_desc', 'Installations by app version')}
-          className="min-h-[360px]"
+          rounded="xl"
+          className="flex h-full min-h-[380px] flex-col shadow-sm"
+          descriptionClassName="mt-1 text-sm text-gray-500 dark:text-gray-400"
         >
-          <div className="h-[280px] w-full pt-4">
+          <div className="mt-auto h-[280px] w-full pt-4">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={versionData} margin={{ top: 10, right: 10, left: 0, bottom: 60 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
@@ -200,6 +222,7 @@ export default function AppAnalyticsCharts({ data, className }: AppAnalyticsChar
         valueKey="count"
         countLabel={t('shared_count', 'Count')}
       />
-    </div>
+      </div>
+    </section>
   );
 }

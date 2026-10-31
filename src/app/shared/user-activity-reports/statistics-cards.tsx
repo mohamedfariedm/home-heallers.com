@@ -7,14 +7,16 @@ import {
   PiClockBold,
   PiListChecksBold,
   PiUsersBold,
+  PiWarningBold,
 } from 'react-icons/pi';
 import cn from '@/utils/class-names';
-import KpiStatCard from '@/app/shared/kpis/kpi-stat-card';
+import KpiStatCard, { KPI_STAT_GRID_CLASS } from '@/app/shared/kpis/kpi-stat-card';
 import KpiBreakdownCardsSection from '@/app/shared/kpis/kpi-breakdown-cards-section';
 import {
   buildUserActivityPathFromApiLink,
   formatUserActivityLogName,
 } from '@/utils/user-activity-query';
+import { formatPercent } from '@/utils/dashboard-metric-helpers';
 import type { UserActivityStatistics } from '@/types/user-activity-report';
 
 interface UserActivityStatisticsCardsProps {
@@ -38,9 +40,78 @@ export default function UserActivityStatisticsCards({
 
   const locale = Cookies.get('NEXT_LOCALE') || 'en';
 
+  const operationalCards = [
+    ...('actions_per_active_user' in statistics
+      ? [
+          {
+            key: 'actions_per_active_user',
+            title: 'Actions / Active User',
+            value: Number(statistics.actions_per_active_user ?? 0).toFixed(1),
+            icon: PiUsersBold,
+            color: 'indigo' as const,
+          },
+        ]
+      : []),
+    ...('percent_create' in statistics
+      ? [
+          {
+            key: 'percent_create',
+            title: '% Create',
+            value: formatPercent(Number(statistics.percent_create ?? 0)),
+            icon: PiListChecksBold,
+            color: 'green' as const,
+          },
+        ]
+      : []),
+    ...('percent_update' in statistics
+      ? [
+          {
+            key: 'percent_update',
+            title: '% Update',
+            value: formatPercent(Number(statistics.percent_update ?? 0)),
+            icon: PiListChecksBold,
+            color: 'blue' as const,
+          },
+        ]
+      : []),
+    ...('percent_delete' in statistics
+      ? [
+          {
+            key: 'percent_delete',
+            title: '% Delete',
+            value: formatPercent(Number(statistics.percent_delete ?? 0)),
+            icon: PiListChecksBold,
+            color: 'amber' as const,
+          },
+        ]
+      : []),
+    ...('risk_actions_count' in statistics
+      ? [
+          {
+            key: 'risk_actions_count',
+            title: 'Risk Actions',
+            value: statistics.risk_actions_count ?? 0,
+            icon: PiWarningBold,
+            color: 'red' as const,
+          },
+        ]
+      : []),
+    ...('risk_action_rate' in statistics
+      ? [
+          {
+            key: 'risk_action_rate',
+            title: 'Risk Action Rate',
+            value: formatPercent(Number(statistics.risk_action_rate ?? 0)),
+            icon: PiWarningBold,
+            color: 'red' as const,
+          },
+        ]
+      : []),
+  ];
+
   return (
-    <div className={cn('space-y-6', className)}>
-      <div className="flex w-full flex-wrap gap-5">
+    <div className={cn('space-y-8', className)}>
+      <div className={KPI_STAT_GRID_CLASS}>
         {cards.map((card) => (
           <KpiStatCard
             key={card.key}
@@ -51,6 +122,25 @@ export default function UserActivityStatisticsCards({
           />
         ))}
       </div>
+
+      {operationalCards.length > 0 && (
+        <section className="space-y-4">
+          <h4 className="text-base font-semibold text-gray-900 dark:text-white">
+            Operational Mix
+          </h4>
+          <div className={KPI_STAT_GRID_CLASS}>
+            {operationalCards.map((card) => (
+              <KpiStatCard
+                key={card.key}
+                title={card.title}
+                value={card.value}
+                icon={card.icon}
+                color={card.color}
+              />
+            ))}
+          </div>
+        </section>
+      )}
 
       <KpiBreakdownCardsSection
         title="By Event"

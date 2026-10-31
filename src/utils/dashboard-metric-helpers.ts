@@ -103,6 +103,34 @@ export function toneForCollectionRate(rate: number): MetricTone {
   return 'excellent';
 }
 
+/** PDF §12 — Profile Completeness */
+export function toneForProfileCompleteness(percent: number): MetricTone {
+  if (percent < 70) return 'danger';
+  if (percent < 90) return 'average';
+  return 'excellent';
+}
+
+export function metricToneLabel(tone: MetricTone): string {
+  switch (tone) {
+    case 'excellent':
+      return 'Excellent';
+    case 'average':
+      return 'Average';
+    case 'danger':
+      return 'Needs Attention';
+    default:
+      return '';
+  }
+}
+
+/** PDF §12 — do not compare campaigns with tiny samples. */
+export function isSampleTooSmall(
+  count: number,
+  minForLeadsOrSupport = 50
+): boolean {
+  return count > 0 && count < minForLeadsOrSupport;
+}
+
 export function toneColors(tone: MetricTone) {
   switch (tone) {
     case 'excellent':

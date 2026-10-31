@@ -46,6 +46,19 @@ export interface ClientListStatistics {
   total_revenue?: number;
   avg_revenue_per_paying_patient?: number;
   avg_booking_value?: number;
+  /** Additive — hide widget if key missing */
+  repeat_patient_rate?: number;
+  inactive_patients_count?: number;
+  inactive_patients_link?: string;
+  avg_days_since_last_booking?: number;
+  high_value_patients_count?: number;
+  high_value_patients_link?: string;
+  ltv_avg?: number;
+  ltv_by_bucket?: Array<{
+    bucket: string;
+    count: number;
+    link: string;
+  }>;
 }
 
 export type { CancellationReasonStat, UpcomingSessionsStat };

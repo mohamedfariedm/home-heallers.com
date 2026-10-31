@@ -300,19 +300,19 @@ export default function StatisticsDashboard() {
   if (!isCalendarTab && loading && !aggregateData) {
     return (
       <div className="@container">
-        <div className="mb-6 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
+        <div className="mb-6 flex flex-col items-start justify-between gap-3 md:flex-row md:items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 @xl:text-3xl dark:text-white">
+            <h1 className="text-[22px] font-semibold tracking-tight text-gray-900 lg:text-2xl @xl:text-[26px] dark:text-white">
               {t('stats_title', 'Statistics Dashboard')}
             </h1>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            <p className="mt-1 text-sm text-gray-400 dark:text-gray-400">
               {t('stats_subtitle', 'Switch between Market, Finance, Operations, and Calendar')}
             </p>
           </div>
         </div>
         <Tabs selectedIndex={activeTab} onChange={setActiveTab}>
-          <div className="mb-6 border-b border-gray-200 dark:border-gray-700">
-            <TabList className="inline-flex w-full flex-wrap justify-start gap-1 border-0 p-0">
+          <div className="mb-6 border-b border-gray-200/70 dark:border-gray-700/80">
+            <TabList className="inline-flex w-full flex-wrap justify-start gap-0.5 border-0 p-0">
               {DASHBOARD_TABS.map((tab) => {
                 const Icon = tab.icon;
                 return (
@@ -320,10 +320,10 @@ export default function StatisticsDashboard() {
                     key={tab.id}
                     className={({ selected }) =>
                       cn(
-                        'relative flex items-center gap-2 rounded-t-lg px-4 py-3 text-sm font-medium outline-none transition-all',
+                        'relative flex items-center gap-2 rounded-t-lg px-4 py-2.5 text-sm font-medium outline-none transition-colors',
                         selected
-                          ? 'border-b-2 border-primary bg-primary/5 text-primary'
-                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white'
+                          ? 'border-b-2 border-primary text-primary'
+                          : 'text-gray-500 hover:bg-gray-50/80 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white'
                       )
                     }
                   >
@@ -363,12 +363,12 @@ export default function StatisticsDashboard() {
 
   return (
     <div className="@container">
-      <div className="mb-6 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
+      <div className="mb-6 flex flex-col items-start justify-between gap-3 md:flex-row md:items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 @xl:text-3xl dark:text-white">
+          <h1 className="text-[22px] font-semibold tracking-tight text-gray-900 lg:text-2xl @xl:text-[26px] dark:text-white">
             {t('stats_title', 'Statistics Dashboard')}
           </h1>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          <p className="mt-1 text-sm text-gray-400 dark:text-gray-400">
             {t('stats_subtitle', 'Switch between Market, Finance, Operations, and Calendar')}
           </p>
         </div>
@@ -384,8 +384,8 @@ export default function StatisticsDashboard() {
         </div>
       ) : (
         <Tabs selectedIndex={activeTab} onChange={setActiveTab}>
-          <div className="mb-6 border-b border-gray-200 dark:border-gray-700">
-            <TabList className="inline-flex w-full flex-wrap justify-start gap-1 border-0 p-0">
+          <div className="mb-6 border-b border-gray-200/70 dark:border-gray-700/80">
+            <TabList className="inline-flex w-full flex-wrap justify-start gap-0.5 border-0 p-0">
               {DASHBOARD_TABS.map((tab) => {
                 const Icon = tab.icon;
                 return (
@@ -393,10 +393,10 @@ export default function StatisticsDashboard() {
                     key={tab.id}
                     className={({ selected }) =>
                       cn(
-                        'relative flex items-center gap-2 rounded-t-lg px-4 py-3 text-sm font-medium outline-none transition-all',
+                        'relative flex items-center gap-2 rounded-t-lg px-4 py-2.5 text-sm font-medium outline-none transition-colors',
                         selected
-                          ? 'border-b-2 border-primary bg-primary/5 text-primary'
-                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white'
+                          ? 'border-b-2 border-primary text-primary'
+                          : 'text-gray-500 hover:bg-gray-50/80 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white'
                       )
                     }
                   >
@@ -418,7 +418,7 @@ export default function StatisticsDashboard() {
           <TabPanels>
             {/* Market */}
             <TabPanel className="outline-none">
-              <div className="space-y-6">
+              <div className="space-y-8">
                 <StatCards
                   data={aggregateData}
                   section="market"

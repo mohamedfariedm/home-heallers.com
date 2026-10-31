@@ -241,8 +241,8 @@ export default function KpisPage() {
             {showTabs ? (
               <KpiViewTabs
                 tabs={[
-                  { id: 'users', label: 'Users' },
-                  { id: 'doctors', label: 'Doctors' },
+                  { id: 'users', label: 'User Audit' },
+                  { id: 'doctors', label: 'Doctor Activity' },
                 ]}
                 activeTab={activeView}
                 onChange={(tabId) => setView(tabId as KpiView)}
@@ -261,6 +261,12 @@ export default function KpisPage() {
             )}
           </div>
         )}
+
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          These tabs are activity / audit reports. Operational KPIs (risk
+          actions, utilization, revenue per doctor) wait on Backend fields —
+          see docs/home_healers_dashboard_backend_request.md.
+        </p>
 
         {isLoading ? (
           <div className="m-auto py-16">

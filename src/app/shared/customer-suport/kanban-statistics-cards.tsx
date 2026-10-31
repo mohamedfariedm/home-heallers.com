@@ -21,11 +21,14 @@ import {
 } from 'react-icons/pi';
 import cn from '@/utils/class-names';
 import { useRouter, usePathname } from 'next/navigation';
+import KpiStatCard, { KPI_STAT_GRID_CLASS } from '@/app/shared/kpis/kpi-stat-card';
 import type { CustomerSupportStatistics } from '@/types/customer-support-statistics';
 import { KANBAN_FILTERABLE_COLUMNS } from './kanban-filter-columns';
 import {
   formatPercent,
   getStatusCountFromStats,
+  isSampleTooSmall,
+  metricToneLabel,
   sumUnknownSourceCount,
   toPercent,
   toneColors,
@@ -34,6 +37,7 @@ import {
   toneForSuccessRate,
   toneForSupportToReservation,
   toneForUnknownSource,
+  type MetricTone,
 } from '@/utils/dashboard-metric-helpers';
 import { formatStatusReasonLabel } from '@/config/dashboard-enums';
 import { formatSourceCampaign } from '@/app/shared/source-campaign-options';
@@ -49,6 +53,8 @@ type StatisticsCard = {
   title: string;
   value: number | string;
   subtitle?: string;
+  toneLabel?: string;
+  sampleNote?: string;
   icon?: any;
   bgColor: string;
   textColor: string;
@@ -207,19 +213,20 @@ const convertApiLinkToQueryParams = (apiLink: string | undefined): string => {
 };
 
 // Card component
-const StatCard = ({ 
-  title, 
-  value, 
+const StatCard = ({
+  title,
+  value,
   subtitle,
-  icon: Icon, 
-  bgColor, 
-  textColor, 
-  darkBgColor, 
-  darkTextColor, 
-  blurColor, 
+  toneLabel,
+  sampleNote,
+  icon,
+  bgColor,
+  textColor,
+  darkBgColor,
+  darkTextColor,
+  blurColor,
   darkBlurColor,
   link,
-  compact = false,
   showCheckbox = false,
   checked = false,
   onCheckboxChange,
@@ -228,6 +235,8 @@ const StatCard = ({
   title: string;
   value: number | string;
   subtitle?: string;
+  toneLabel?: string;
+  sampleNote?: string;
   icon: any;
   bgColor: string;
   textColor: string;
@@ -244,114 +253,70 @@ const StatCard = ({
 }) => {
   const router = useRouter();
   const pathname = usePathname();
-  
-  const [isHoveringCheckbox, setIsHoveringCheckbox] = useState(false);
 
-  const handleClick = (e: React.MouseEvent) => {
-    // Don't navigate if clicking on checkbox or checkbox area
-    if (showCheckbox && (
-      (e.target as HTMLElement).closest('input[type="checkbox"]') ||
-      (e.target as HTMLElement).closest('.checkbox-area')
-    )) {
-      return;
-    }
-    if (link) {
-      const queryParams = convertApiLinkToQueryParams(link);
-      const frontendParams = new URLSearchParams(queryParams);
-      if (supportType) {
-        frontendParams.set('type', supportType);
-      }
-      frontendParams.set('page', '1');
-      const url = `${pathname}?${frontendParams.toString()}`;
-      router.push(url);
-    }
-  };
-
-  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.stopPropagation();
-    if (onCheckboxChange) {
-      onCheckboxChange(e.target.checked);
-    }
-  };
-
-  const handleCheckboxAreaMouseEnter = () => {
-    setIsHoveringCheckbox(true);
-  };
-
-  const handleCheckboxAreaMouseLeave = () => {
-    setIsHoveringCheckbox(false);
-  };
-
-  const handleCardMouseLeave = () => {
-    setIsHoveringCheckbox(false);
-  };
-  
   return (
-    <div 
-      className={cn(
-        "relative overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all dark:border-gray-700 dark:bg-gray-800",
-        compact ? "min-w-[120px] flex-1 p-4" : "min-w-[200px] flex-1 p-6",
-        link && !isHoveringCheckbox && "cursor-pointer hover:shadow-lg hover:scale-[1.02]"
-      )}
-      onClick={handleClick}
-      onMouseLeave={handleCardMouseLeave}
-    >
-      {showCheckbox && (
-        <div 
-          className="checkbox-area absolute top-2 right-2 z-10 p-1 -m-1 cursor-default"
-          onMouseEnter={handleCheckboxAreaMouseEnter}
-          onMouseLeave={handleCheckboxAreaMouseLeave}
-        >
-          <input
-            type="checkbox"
-            checked={checked}
-            onChange={handleCheckboxChange}
-            onClick={(e) => e.stopPropagation()}
-            className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500 dark:border-gray-600 dark:bg-gray-700 cursor-pointer"
-          />
-        </div>
-      )}
-      <div className="flex items-center">
-        <div
-          className={cn(
-            'flex items-center justify-center rounded-lg',
-            compact ? 'h-8 w-8' : 'h-12 w-12',
-            bgColor,
-            textColor,
-            darkBgColor,
-            darkTextColor
-          )}
-        >
-          <Icon className={compact ? "h-4 w-4" : "h-6 w-6"} />
-        </div>
-      </div>
-
-      <div className={compact ? "mt-2" : "mt-4"}>
-        <p className={compact ? "text-xs font-medium text-gray-500 dark:text-gray-400" : "text-sm font-medium text-gray-500 dark:text-gray-400"}>
-          {title}
-        </p>
-        <p className={cn(
-          "mt-1 font-bold text-gray-900 dark:text-white",
-          compact ? "text-xl" : "text-3xl"
-        )}>
-          {typeof value === 'number' ? value.toLocaleString() : value}
-        </p>
-        {subtitle && (
-          <p className={compact ? "mt-0.5 text-xs text-gray-500 dark:text-gray-400" : "mt-1 text-sm text-gray-500 dark:text-gray-400"}>
-            {subtitle}
-          </p>
-        )}
-      </div>
-
-      <div
-        className={cn(
-          'absolute -right-4 -top-4 -z-10 rounded-full blur-2xl',
-          compact ? 'h-16 w-16' : 'h-24 w-24',
-          blurColor,
-          darkBlurColor
-        )}
-      />
-    </div>
+    <KpiStatCard
+      title={title}
+      value={value}
+      subtitle={
+        sampleNote ? (
+          <span className="block space-y-0.5">
+            {subtitle ? <span className="block">{subtitle}</span> : null}
+            <span className="block font-medium text-amber-600 dark:text-amber-400">
+              {sampleNote}
+            </span>
+          </span>
+        ) : (
+          subtitle
+        )
+      }
+      icon={icon}
+      tone={{
+        bgColor,
+        textColor,
+        darkBgColor,
+        darkTextColor,
+        blurColor,
+        darkBlurColor,
+      }}
+      badge={
+        toneLabel ? (
+          <span
+            className={cn(
+              'rounded-full px-2.5 py-0.5 text-[10px] font-semibold',
+              bgColor,
+              textColor,
+              darkBgColor,
+              darkTextColor
+            )}
+          >
+            {toneLabel}
+          </span>
+        ) : undefined
+      }
+      selected={checked}
+      checkbox={
+        showCheckbox
+          ? {
+              checked,
+              onChange: (next) => onCheckboxChange?.(next),
+            }
+          : undefined
+      }
+      onClick={
+        link
+          ? () => {
+              const queryParams = convertApiLinkToQueryParams(link);
+              const frontendParams = new URLSearchParams(queryParams);
+              if (supportType) {
+                frontendParams.set('type', supportType);
+              }
+              frontendParams.set('page', '1');
+              router.push(`${pathname}?${frontendParams.toString()}`);
+            }
+          : undefined
+      }
+    />
   );
 };
 
@@ -462,11 +427,18 @@ export default function KanbanStatisticsCards({
     .reduce((sum, c) => sum + (c.count || 0), 0);
   const unknownChannelRate = toPercent(unknownChannelCount, totalSupports);
 
-  const successTone = toneColors(toneForSuccessRate(successRate));
-  const failedTone = toneColors(toneForFailedRate(failedRate));
-  const leadTone = toneColors(toneForLeadQuality(leadQualityRate));
-  const conversionTone = toneColors(toneForSupportToReservation(supportToReservationRate));
-  const unknownTone = toneColors(toneForUnknownSource(unknownSourceRate));
+  const successToneKey: MetricTone = toneForSuccessRate(successRate);
+  const failedToneKey: MetricTone = toneForFailedRate(failedRate);
+  const leadToneKey: MetricTone = toneForLeadQuality(leadQualityRate);
+  const conversionToneKey: MetricTone = toneForSupportToReservation(
+    supportToReservationRate
+  );
+  const unknownToneKey: MetricTone = toneForUnknownSource(unknownSourceRate);
+  const successTone = toneColors(successToneKey);
+  const failedTone = toneColors(failedToneKey);
+  const leadTone = toneColors(leadToneKey);
+  const conversionTone = toneColors(conversionToneKey);
+  const unknownTone = toneColors(unknownToneKey);
 
   // Top KPIs — decision cards first (computed from existing statistics)
   const topKpiCards =
@@ -512,6 +484,7 @@ export default function KanbanStatisticsCards({
             title: 'Support → Reservation',
             value: formatPercent(supportToReservationRate),
             subtitle: `${statistics.clients_with_mobile_and_reservation || 0} / ${totalSupports}`,
+            toneLabel: metricToneLabel(conversionToneKey),
             icon: PiChartLineUpBold,
             ...conversionTone,
             compact: true,
@@ -520,6 +493,7 @@ export default function KanbanStatisticsCards({
             title: '% Unknown Source',
             value: formatPercent(unknownSourceRate),
             subtitle: `${unknownCount} of ${sourceTotal || totalSupports}`,
+            toneLabel: metricToneLabel(unknownToneKey),
             icon: PiTagBold,
             ...unknownTone,
             compact: true,
@@ -542,6 +516,7 @@ export default function KanbanStatisticsCards({
             title: 'Success Rate',
             value: formatPercent(successRate),
             subtitle: `${successCount} success`,
+            toneLabel: metricToneLabel(successToneKey),
             icon: PiCheckCircleBold,
             ...successTone,
             compact: true,
@@ -550,6 +525,7 @@ export default function KanbanStatisticsCards({
             title: 'Failed Rate',
             value: formatPercent(failedRate),
             subtitle: `${failedCount} failed`,
+            toneLabel: metricToneLabel(failedToneKey),
             icon: PiCheckCircleBold,
             ...failedTone,
             compact: true,
@@ -558,6 +534,7 @@ export default function KanbanStatisticsCards({
             title: 'Lead Quality Rate',
             value: formatPercent(leadQualityRate, 2),
             subtitle: `${statistics.leads?.qualified_leads || 0} qualified`,
+            toneLabel: metricToneLabel(leadToneKey),
             icon: PiChartLineUpBold,
             ...leadTone,
             compact: true,
@@ -566,6 +543,7 @@ export default function KanbanStatisticsCards({
             title: 'Support → Reservation',
             value: formatPercent(supportToReservationRate),
             subtitle: `${statistics.clients_with_mobile_and_reservation || 0} / ${totalSupports}`,
+            toneLabel: metricToneLabel(conversionToneKey),
             icon: PiUsersBold,
             ...conversionTone,
             compact: true,
@@ -649,6 +627,58 @@ export default function KanbanStatisticsCards({
     },
   ];
 
+  const responseMetricCards = [
+    ...('follow_up_rate' in statistics
+      ? [
+          {
+            title: 'Follow-up Rate',
+            value: formatPercent(Number(statistics.follow_up_rate ?? 0)),
+            icon: PiClockBold,
+            bgColor: 'bg-teal-50',
+            textColor: 'text-teal-600',
+            darkBgColor: 'dark:bg-teal-900/20',
+            darkTextColor: 'dark:text-teal-400',
+            blurColor: 'bg-teal-50/50',
+            darkBlurColor: 'dark:bg-teal-900/10',
+            compact: true,
+          },
+        ]
+      : []),
+    ...('new_aging_avg_hours' in statistics
+      ? [
+          {
+            title: 'New Aging Avg (hours)',
+            value: Number(statistics.new_aging_avg_hours ?? 0).toFixed(1),
+            icon: PiClockBold,
+            bgColor: 'bg-amber-50',
+            textColor: 'text-amber-600',
+            darkBgColor: 'dark:bg-amber-900/20',
+            darkTextColor: 'dark:text-amber-400',
+            blurColor: 'bg-amber-50/50',
+            darkBlurColor: 'dark:bg-amber-900/10',
+            compact: true,
+          },
+        ]
+      : []),
+    ...('first_response_time_avg_minutes' in statistics
+      ? [
+          {
+            title: 'First Response Avg (min)',
+            value: Number(statistics.first_response_time_avg_minutes ?? 0).toFixed(1),
+            subtitle: 'From first_call_time',
+            icon: PiClockBold,
+            bgColor: 'bg-sky-50',
+            textColor: 'text-sky-600',
+            darkBgColor: 'dark:bg-sky-900/20',
+            darkTextColor: 'dark:text-sky-400',
+            blurColor: 'bg-sky-50/50',
+            darkBlurColor: 'dark:bg-sky-900/10',
+            compact: true,
+          },
+        ]
+      : []),
+  ];
+
   const showUnknownSourceAlert = unknownSourceRate > 20;
   const showUnknownChannelAlert =
     supportType === 'operation' && unknownChannelRate > 10;
@@ -721,20 +751,23 @@ export default function KanbanStatisticsCards({
   // Row 4b: Lead quality by source campaign
   const allLeadQualityCampaignCards = (statistics.lead_quality_by_source_campaign || [])
     .sort((a, b) => (b.total_leads || 0) - (a.total_leads || 0))
-    .map((campaign) => ({
-      title: formatSourceCampaign(campaign.source_campaign),
-      value: `${Number(campaign.lead_quality_rate || 0).toFixed(2)}%`,
-      subtitle: `${campaign.qualified_leads || 0} / ${campaign.total_leads || 0} qualified`,
-      icon: PiChartLineUpBold,
-      bgColor: 'bg-amber-50',
-      textColor: 'text-amber-600',
-      darkBgColor: 'dark:bg-amber-900/20',
-      darkTextColor: 'dark:text-amber-400',
-      blurColor: 'bg-amber-50/50',
-      darkBlurColor: 'dark:bg-amber-900/10',
-      link: campaign.link,
-      compact: true,
-    }));
+    .map((campaign) => {
+      const totalLeads = campaign.total_leads || 0;
+      const qualityTone = toneForLeadQuality(Number(campaign.lead_quality_rate || 0));
+      const qualityColors = toneColors(qualityTone);
+      const tooSmall = isSampleTooSmall(totalLeads, 50);
+      return {
+        title: formatSourceCampaign(campaign.source_campaign),
+        value: `${Number(campaign.lead_quality_rate || 0).toFixed(2)}%`,
+        subtitle: `${campaign.qualified_leads || 0} / ${totalLeads} qualified`,
+        toneLabel: tooSmall ? undefined : metricToneLabel(qualityTone),
+        sampleNote: tooSmall ? 'Sample too small (< 50 leads)' : undefined,
+        icon: PiChartLineUpBold,
+        ...qualityColors,
+        link: campaign.link,
+        compact: true,
+      };
+    });
 
   const LEAD_QUALITY_CAMPAIGNS_PER_ROW = 6;
   const leadQualityCampaignCards = leadQualityCampaignExpanded
@@ -965,6 +998,9 @@ export default function KanbanStatisticsCards({
 
   const rows: StatisticsRow[] = [
     { title: 'Top KPIs', cards: topKpiCards },
+    ...(responseMetricCards.length > 0
+      ? [{ title: 'Response & Follow-up Rates', cards: responseMetricCards }]
+      : []),
     ...(aging
       ? [
           {
@@ -1261,7 +1297,7 @@ export default function KanbanStatisticsCards({
                 </button>
               )}
             </div>
-            <div className="flex flex-wrap w-full gap-3">
+            <div className={KPI_STAT_GRID_CLASS}>
               {row.title === 'Source Campaigns' && (
                 <StatCard key="total-source-campaigns" {...totalSourceCampaignCard} supportType={supportType} />
               )}

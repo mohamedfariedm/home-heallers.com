@@ -41,18 +41,18 @@ export default function Sidebar({ className }: { className?: string }) {
   return (
     <aside
       className={cn(
-        'fixed bottom-0 start-0 z-50 h-full w-[270px] border-e-2 border-gray-100 bg-white dark:bg-gray-100/50 2xl:w-72',
+        'fixed bottom-0 start-0 z-50 h-full w-[270px] border-e border-gray-100 bg-white dark:bg-gray-100/50 2xl:w-72',
         className
       )}
     >
-      <div className="sticky top-0 z-40 bg-gray-0/10 dark:bg-gray-100/5">
+      <div className="sticky top-0 z-40 border-b border-gray-100/80 bg-white/90 px-1 py-1 backdrop-blur-sm dark:bg-gray-100/5">
         <Link href={pathName('/')} aria-label="Site Logo">
           <Logo className="max-w-[155px]" />
         </Link>
       </div>
 
       <SimpleBar className="h-[calc(100vh_-_150px)]">
-        <div className="mt-4 pb-3 3xl:mt-6">
+        <div className="mt-5 pb-4 3xl:mt-6">
           {filteredMenuItems.map((item, index) => {
             const isActive = pathname === pathName(item?.href || '');
 
@@ -62,10 +62,10 @@ export default function Sidebar({ className }: { className?: string }) {
                   <Link
                     href={pathName(item.href)}
                     className={cn(
-                      'group relative mx-3 my-0.5 flex items-center rounded-md px-3 py-2 font-medium capitalize lg:my-1 2xl:mx-5 2xl:my-2',
+                      'group relative mx-3 my-0.5 flex items-center rounded-lg px-3 py-2 font-medium capitalize transition-colors duration-200 lg:my-1 2xl:mx-5 2xl:my-1.5',
                       isActive
-                        ? 'before:top-2/5 text-primary before:absolute before:-start-3 before:block before:h-4/5 before:w-1 before:rounded-ee-md before:rounded-se-md before:bg-primary 2xl:before:-start-5'
-                        : 'text-gray-700 transition-colors duration-200 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-700/90'
+                        ? 'bg-primary-lighter/70 text-primary before:absolute before:-start-3 before:top-2/5 before:block before:h-4/5 before:w-1 before:rounded-ee-md before:rounded-se-md before:bg-primary dark:bg-primary-lighter/20 2xl:before:-start-5'
+                        : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-700/90 dark:hover:bg-gray-100/60'
                     )}
                   >
                     {item?.icon && (
@@ -86,8 +86,8 @@ export default function Sidebar({ className }: { className?: string }) {
                   <Title
                     as="h6"
                     className={cn(
-                      'mb-2 truncate px-6 text-[11px] font-medium uppercase tracking-widest text-gray-500 dark:text-gray-500 2xl:px-8',
-                      index !== 0 && 'mt-6 3xl:mt-7'
+                      'mb-2.5 truncate px-6 text-[11px] font-medium uppercase tracking-widest text-gray-400 dark:text-gray-500 2xl:px-8',
+                      index !== 0 && 'mt-7 3xl:mt-8'
                     )}
                   >
                     {t(item.name)}

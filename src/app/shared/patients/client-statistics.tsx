@@ -20,20 +20,24 @@ import cn from '@/utils/class-names';
 import { useRouter, usePathname } from 'next/navigation';
 import { ReservationStatus } from '@/utils/reservation-payment';
 import type { ClientListStatistics } from '@/types/client-statistics';
+import {
+  formatPercent,
+  metricToneLabel,
+  toPercent,
+  toneColors,
+  toneForProfileCompleteness,
+} from '@/utils/dashboard-metric-helpers';
+import KpiStatCard, {
+  KPI_STAT_GRID_CLASS,
+  type KpiStatCardTone,
+} from '@/app/shared/kpis/kpi-stat-card';
 
 interface ClientStatisticsProps {
   statistics?: ClientListStatistics | null;
   className?: string;
 }
 
-type CardStyle = {
-  bgColor: string;
-  textColor: string;
-  darkBgColor: string;
-  darkTextColor: string;
-  blurColor: string;
-  darkBlurColor: string;
-};
+type CardStyle = KpiStatCardTone;
 
 const STATUS_STYLES: Record<number, CardStyle> = {
   [ReservationStatus.Reviewing]: {
@@ -117,13 +121,15 @@ function StatCard({
   title,
   value,
   subtitle,
-  icon: Icon,
+  toneLabel,
+  icon,
   style,
   link,
 }: {
   title: string;
   value: number | string;
   subtitle?: string;
+  toneLabel?: string;
   icon: any;
   style: CardStyle;
   link?: string;
@@ -132,43 +138,36 @@ function StatCard({
   const pathname = usePathname();
 
   return (
-    <div
-      className={cn(
-        'relative min-w-[160px] flex-1 overflow-hidden rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800',
-        link && 'cursor-pointer transition hover:scale-[1.02] hover:shadow-lg'
-      )}
-      onClick={() => {
-        if (!link) return;
-        const q = convertApiLinkToQueryParams(link);
-        router.push(q ? `${pathname}?${q}` : pathname);
-      }}
-    >
-      <div
-        className={cn(
-          'flex h-10 w-10 items-center justify-center rounded-lg',
-          style.bgColor,
-          style.textColor,
-          style.darkBgColor,
-          style.darkTextColor
-        )}
-      >
-        <Icon className="h-5 w-5" />
-      </div>
-      <p className="mt-3 text-sm font-medium text-gray-500 dark:text-gray-400">{title}</p>
-      <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">
-        {typeof value === 'number' ? value.toLocaleString() : value}
-      </p>
-      {subtitle && (
-        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{subtitle}</p>
-      )}
-      <div
-        className={cn(
-          'absolute -right-4 -top-4 -z-10 h-24 w-24 rounded-full blur-2xl',
-          style.blurColor,
-          style.darkBlurColor
-        )}
-      />
-    </div>
+    <KpiStatCard
+      title={title}
+      value={value}
+      subtitle={subtitle}
+      icon={icon}
+      tone={style}
+      badge={
+        toneLabel ? (
+          <span
+            className={cn(
+              'rounded-full px-2.5 py-0.5 text-[10px] font-semibold',
+              style.bgColor,
+              style.textColor,
+              style.darkBgColor,
+              style.darkTextColor
+            )}
+          >
+            {toneLabel}
+          </span>
+        ) : undefined
+      }
+      onClick={
+        link
+          ? () => {
+              const q = convertApiLinkToQueryParams(link);
+              router.push(q ? `${pathname}?${q}` : pathname);
+            }
+          : undefined
+      }
+    />
   );
 }
 
@@ -195,10 +194,31 @@ export default function ClientStatistics({ statistics, className }: ClientStatis
       link: item.link,
     }));
 
+  const completenessPercent = Number(
+    statistics.profile_completeness?.average_percent ?? 0
+  );
+  const completenessTone = toneForProfileCompleteness(completenessPercent);
+  const completenessStyle = toneColors(completenessTone);
+
+  const activePatients = statistics.active_patients_count ?? 0;
+  const repeatBookers = statistics.with_multiple_reservations?.users_count ?? 0;
+  const repeatRateBase =
+    activePatients > 0
+      ? activePatients
+      : Object.values(statistics.by_status || {}).reduce(
+          (sum, item) => sum + (item.users_count || 0),
+          0
+        );
+  const fallbackRepeatRate = toPercent(repeatBookers, repeatRateBase);
+  const repeatPatientRate =
+    typeof statistics.repeat_patient_rate === 'number'
+      ? Number(statistics.repeat_patient_rate)
+      : fallbackRepeatRate;
+
   const summaryCards = [
     {
       title: 'Patients with valid booking (period)',
-      value: statistics.active_patients_count ?? 0,
+      value: activePatients,
       subtitle: 'Not canceled/failed/pending payment',
       icon: PiUsersBold,
       style: {
@@ -240,11 +260,63 @@ export default function ClientStatistics({ statistics, className }: ClientStatis
       link: statistics.returning_patients_link,
     },
     {
+      title: 'Repeat Patient Rate',
+      value: formatPercent(repeatPatientRate),
+      subtitle: `${repeatBookers} with 2+ reservations`,
+      icon: PiRepeatBold,
+      style: {
+        bgColor: 'bg-teal-50',
+        textColor: 'text-teal-600',
+        darkBgColor: 'dark:bg-teal-900/20',
+        darkTextColor: 'dark:text-teal-400',
+        blurColor: 'bg-teal-50/50',
+        darkBlurColor: 'dark:bg-teal-900/10',
+      },
+      link: statistics.with_multiple_reservations?.link,
+    },
+    ...('inactive_patients_count' in statistics
+      ? [
+          {
+            title: 'Inactive Patients',
+            value: statistics.inactive_patients_count ?? 0,
+            subtitle: 'No valid booking in 90 days',
+            icon: PiClockBold,
+            style: {
+              bgColor: 'bg-amber-50',
+              textColor: 'text-amber-600',
+              darkBgColor: 'dark:bg-amber-900/20',
+              darkTextColor: 'dark:text-amber-400',
+              blurColor: 'bg-amber-50/50',
+              darkBlurColor: 'dark:bg-amber-900/10',
+            },
+            link: statistics.inactive_patients_link,
+          },
+        ]
+      : []),
+    ...('avg_days_since_last_booking' in statistics
+      ? [
+          {
+            title: 'Avg Days Since Last Booking',
+            value: Number(statistics.avg_days_since_last_booking ?? 0).toFixed(1),
+            icon: PiCalendarCheckBold,
+            style: infoStyle,
+          },
+        ]
+      : []),
+    {
       title: 'Profile Completeness',
-      value: `${Number(statistics.profile_completeness?.average_percent ?? 0).toFixed(2)}%`,
+      value: `${completenessPercent.toFixed(2)}%`,
       subtitle: `${statistics.profile_completeness?.patients_count ?? 0} booked profiles`,
+      toneLabel: metricToneLabel(completenessTone),
       icon: PiIdentificationCardBold,
-      style: infoStyle,
+      style: {
+        bgColor: completenessStyle.bgColor,
+        textColor: completenessStyle.textColor,
+        darkBgColor: completenessStyle.darkBgColor,
+        darkTextColor: completenessStyle.darkTextColor,
+        blurColor: completenessStyle.blurColor,
+        darkBlurColor: completenessStyle.darkBlurColor,
+      },
     },
   ];
 
@@ -337,8 +409,49 @@ export default function ClientStatistics({ statistics, className }: ClientStatis
           icon: PiCurrencyDollarBold,
           style: infoStyle,
         },
+        ...('high_value_patients_count' in statistics
+          ? [
+              {
+                title: 'High-value Patients',
+                value: statistics.high_value_patients_count ?? 0,
+                subtitle: 'Collected ≥ 5000 SAR',
+                icon: PiCurrencyDollarBold,
+                style: {
+                  bgColor: 'bg-emerald-50',
+                  textColor: 'text-emerald-600',
+                  darkBgColor: 'dark:bg-emerald-900/20',
+                  darkTextColor: 'dark:text-emerald-400',
+                  blurColor: 'bg-emerald-50/50',
+                  darkBlurColor: 'dark:bg-emerald-900/10',
+                },
+                link: statistics.high_value_patients_link,
+              },
+            ]
+          : []),
+        ...('ltv_avg' in statistics
+          ? [
+              {
+                title: 'Avg LTV',
+                value: Number(statistics.ltv_avg ?? 0).toLocaleString(),
+                subtitle: 'SAR collected / patient',
+                icon: PiCurrencyDollarBold,
+                style: infoStyle,
+              },
+            ]
+          : []),
       ]
     : [];
+
+  const ltvBucketCards =
+    canSeeRevenue && (statistics.ltv_by_bucket || []).length > 0
+      ? (statistics.ltv_by_bucket || []).map((b) => ({
+          title: `LTV ${b.bucket}`,
+          value: b.count,
+          icon: PiCurrencyDollarBold,
+          style: infoStyle,
+          link: b.link,
+        }))
+      : [];
 
   const insightCards = [
     {
@@ -388,6 +501,9 @@ export default function ClientStatistics({ statistics, className }: ClientStatis
     ...(revenueCards.length > 0
       ? [{ title: 'Collected Booking Value', cards: revenueCards }]
       : []),
+    ...(ltvBucketCards.length > 0
+      ? [{ title: 'LTV Buckets', cards: ltvBucketCards }]
+      : []),
     { title: 'Data Quality', cards: qualityCards },
     ...(completenessBuckets.length > 0
       ? [
@@ -408,18 +524,18 @@ export default function ClientStatistics({ statistics, className }: ClientStatis
   ];
 
   return (
-    <div className={cn('w-full space-y-6', className)}>
+    <div className={cn('w-full space-y-8', className)}>
       {rows.map((row) => (
-        <div key={row.title} className="space-y-3">
-          <h4 className="text-base font-semibold text-gray-800 dark:text-gray-200">
+        <section key={row.title} className="space-y-4">
+          <h4 className="text-base font-semibold text-gray-900 dark:text-white">
             {row.title}
           </h4>
-          <div className="flex w-full flex-wrap gap-5 pb-2">
+          <div className={KPI_STAT_GRID_CLASS}>
             {row.cards.map((card) => (
               <StatCard key={card.title} {...card} />
             ))}
           </div>
-        </div>
+        </section>
       ))}
     </div>
   );

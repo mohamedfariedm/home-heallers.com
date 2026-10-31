@@ -66,5 +66,9 @@ export interface CustomerSupportStatistics {
   by_agent?: import('./dashboard-statistics').AgentPerformanceStat[];
   converted_via_lead?: import('./dashboard-statistics').ConvertedViaLeadStat;
   offer_conversion?: import('./dashboard-statistics').OfferConversionStat[];
+  /** Additive — hide if missing */
+  follow_up_rate?: number;
+  new_aging_avg_hours?: number;
+  first_response_time_avg_minutes?: number;
 }
 

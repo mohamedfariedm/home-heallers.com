@@ -43,7 +43,9 @@ export default function OutdatedInstallationsTable({
               defaultValue: '{{count}} installations need an update',
             })
       }
-      className={cn(className)}
+      rounded="xl"
+      descriptionClassName="mt-1 text-sm text-gray-500 dark:text-gray-400"
+      className={cn('shadow-sm', className)}
     >
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">

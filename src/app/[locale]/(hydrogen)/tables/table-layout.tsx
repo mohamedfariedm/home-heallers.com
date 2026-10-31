@@ -51,7 +51,7 @@ export default function TableLayout({
   return (
     <>
       <PageHeader {...props}>
-        <div className="mt-4 flex items-center gap-3 @lg:mt-0">
+        <div className="flex flex-wrap items-center gap-2.5 @lg:justify-end">
           {canImport && importButton ? <ImportButton url={importButton} /> : ''}
           {canExport &&
             (exportElement ?? (
@@ -59,9 +59,9 @@ export default function TableLayout({
             ))}
           {headerActions}
           {canCreate && createName && createHref ? (
-            <Link href={createHref} className="w-full @lg:w-auto">
+            <Link href={createHref} className="w-full @sm:w-auto">
               <Button
-                className="mt-0 w-full text-xs capitalize @lg:w-auto dark:bg-gray-100 dark:text-white dark:active:bg-gray-100 sm:text-sm lg:mt-0"
+                className="mt-0 w-full text-xs capitalize @sm:w-auto dark:bg-gray-100 dark:text-white dark:active:bg-gray-100 sm:text-sm"
                 disabled={isLoading}
               >
                 <PiPlusBold className="me-1.5 h-[17px] w-[17px]" />
@@ -72,7 +72,7 @@ export default function TableLayout({
           <CreateButton
            label={createName} 
            view={createElementButton}
-           className='mt-0 w-full text-xs capitalize @lg:w-auto dark:bg-gray-100 dark:text-white dark:active:bg-gray-100 sm:text-sm lg:mt-0' 
+           className='mt-0 w-full text-xs capitalize @sm:w-auto dark:bg-gray-100 dark:text-white dark:active:bg-gray-100 sm:text-sm' 
            disabled={isLoading}
            customSize={customSize}
            />

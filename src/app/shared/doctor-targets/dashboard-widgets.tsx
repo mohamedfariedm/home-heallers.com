@@ -14,7 +14,9 @@ import {
 } from 'react-icons/pi';
 import cn from '@/utils/class-names';
 import Spinner from '@/components/ui/spinner';
-import KpiStatCard from '@/app/shared/kpis/kpi-stat-card';
+import KpiStatCard, {
+  KPI_STAT_GRID_CLASS,
+} from '@/app/shared/kpis/kpi-stat-card';
 import KpiBreakdownCardsSection from '@/app/shared/kpis/kpi-breakdown-cards-section';
 import { useDoctorTargetsDashboard } from '@/framework/doctor-targets';
 import {
@@ -56,8 +58,8 @@ export default function DoctorTargetsDashboardWidgets({
     : [];
 
   return (
-    <div className={cn('space-y-6', className)}>
-      <div className="flex w-full flex-wrap gap-5">
+    <div className={cn('space-y-8', className)}>
+      <div className={KPI_STAT_GRID_CLASS}>
         <KpiStatCard
           title="Draft"
           value={counts.draft ?? 0}
@@ -88,7 +90,7 @@ export default function DoctorTargetsDashboardWidgets({
         />
       </div>
 
-      <div className="flex w-full flex-wrap gap-5">
+      <div className={KPI_STAT_GRID_CLASS}>
         <KpiStatCard
           title="Total incentives"
           value={formatMoney(metrics?.total_incentives)}
@@ -121,7 +123,7 @@ export default function DoctorTargetsDashboardWidgets({
         />
       </div>
 
-      <div className="flex w-full flex-wrap gap-5">
+      <div className={KPI_STAT_GRID_CLASS}>
         <KpiStatCard
           title="Above target"
           value={metrics?.doctors_above_target ?? 0}

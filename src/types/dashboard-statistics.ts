@@ -96,6 +96,10 @@ export interface DoctorWorkloadRow {
   scheduled_sessions: number;
   sessions_completed: number;
   cancelled_sessions: number;
+  /** 0–100; omit if Backend does not send */
+  cancellation_rate?: number;
+  /** Omit if unknown */
+  rating?: number;
   link: string;
 }
 

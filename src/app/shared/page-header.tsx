@@ -15,12 +15,12 @@ export default function PageHeader({
   className,
 }: React.PropsWithChildren<PageHeaderTypes>) {
   return (
-    <header className={cn('mb-6 @container xs:-mt-2 lg:mb-7', className)}>
-      <div className="flex flex-col @lg:flex-row @lg:items-center @lg:justify-between">
+    <header className={cn('mb-6 @container xs:-mt-1 lg:mb-7', className)}>
+      <div className="flex flex-col gap-3 @lg:flex-row @lg:items-center @lg:justify-between @lg:gap-4">
         <div>
           <Title
             as="h2"
-            className="mb-2 text-[22px] lg:text-2xl 4xl:text-[26px]"
+            className="mb-1.5 text-[22px] font-semibold tracking-tight text-gray-900 lg:text-2xl 4xl:text-[26px]"
           >
             {title}
           </Title>
@@ -28,7 +28,7 @@ export default function PageHeader({
           <Breadcrumb
             separator=""
             separatorVariant="circle"
-            className="flex-wrap"
+            className="flex-wrap text-gray-400"
           >
             {breadcrumb.map((item) => (
               <Breadcrumb.Item

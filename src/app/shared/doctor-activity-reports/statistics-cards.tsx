@@ -9,7 +9,9 @@ import {
   PiStethoscopeBold,
 } from 'react-icons/pi';
 import cn from '@/utils/class-names';
-import KpiStatCard from '@/app/shared/kpis/kpi-stat-card';
+import KpiStatCard, {
+  KPI_STAT_GRID_3_CLASS,
+} from '@/app/shared/kpis/kpi-stat-card';
 import KpiBreakdownCardsSection from '@/app/shared/kpis/kpi-breakdown-cards-section';
 import {
   buildDoctorActivityPathFromApiLink,
@@ -48,8 +50,8 @@ export default function DoctorActivityStatisticsCards({
   const sessionsStats = statistics.sessions_statistics;
 
   return (
-    <div className={cn('space-y-6', className)}>
-      <div className="flex w-full flex-wrap gap-5">
+    <div className={cn('space-y-8', className)}>
+      <div className={KPI_STAT_GRID_3_CLASS}>
         {cards.map((card) => (
           <KpiStatCard
             key={card.key}
