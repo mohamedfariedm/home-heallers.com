@@ -32,8 +32,9 @@ export const reservationFormSchema = z
     fees_type: z.string().min(1, "Fees is required"),
     total_amount: z.string().min(1, "Total amount is required"),
     transaction_reference: z.string().optional(),
+    // Numeric reservation statuses (same as statusOptions / API): 7 = Draft
     status: z
-      .enum(["1", "2", "3", "4", "5", "6", "8"], {
+      .enum(["1", "2", "3", "4", "5", "6", "7", "8"], {
         errorMap: () => ({ message: "Status is required" }),
       })
       .default("2"),

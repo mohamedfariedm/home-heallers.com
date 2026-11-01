@@ -84,6 +84,7 @@ export const RESERVATION_STATUS = {
   Canceled: 4,
   Completed: 5,
   Failed: 6,
+  Draft: 7,
   PendingPayment: 8,
 } as const;
 
