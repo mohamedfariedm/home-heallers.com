@@ -3,6 +3,7 @@ import TableLayout from '@/app/[locale]/(hydrogen)/tables/table-layout';
 import Spinner from '@/components/ui/spinner';
 import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
+import { PiListChecks } from 'react-icons/pi';
 import { useCategories } from '@/framework/categories';
 import CreateCategories from '@/app/shared/categories/create-categories';
 import CategoryTable from '@/app/shared/categories/table';

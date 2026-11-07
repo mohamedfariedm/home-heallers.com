@@ -7,6 +7,7 @@ import { usePermissions } from '@/framework/permitions';
 import Spinner from '@/components/ui/spinner';
 import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
+import { PiUserGearDuotone } from 'react-icons/pi';
 // export const metadata = {
 //   ...metaObject('Enhanced Table'),
 // };
