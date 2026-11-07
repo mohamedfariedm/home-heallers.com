@@ -158,7 +158,7 @@ export default function ReservationsByCity({ data, className }: ReservationsByCi
                         index === 0 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' :
                         index === 1 ? 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300' :
                         index === 2 ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400' :
-                        'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
+                        'bg-blue-50 text-[#0F2466] dark:bg-blue-900/30 dark:text-blue-300'
                       )}>
                         {index + 1}
                       </span>
@@ -180,7 +180,7 @@ export default function ReservationsByCity({ data, className }: ReservationsByCi
                       </div>
                       <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden dark:bg-gray-700">
                         <div
-                          className="h-full bg-blue-600 rounded-full dark:bg-blue-500"
+                          className="h-full bg-[#143087] rounded-full dark:bg-blue-500"
                           style={{ width: `${Math.min(reservationPercentage, 100)}%` }}
                         />
                       </div>

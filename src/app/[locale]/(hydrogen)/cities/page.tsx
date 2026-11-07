@@ -1,4 +1,5 @@
 'use client';
+import { PiBuildingsFill } from 'react-icons/pi';
 import CitiesTable from '@/app/shared/cities/table';
 import TableLayout from '@/app/[locale]/(hydrogen)/tables/table-layout';
 import { useCities } from '@/framework/cities';
@@ -36,6 +37,8 @@ export default function CitiesTablePage() {
   return (
     <TableLayout
       title={pageHeader.title}
+      description="Manage cities master data"
+      icon={<PiBuildingsFill />}
       breadcrumb={pageHeader.breadcrumb}
       data={{
         columns: selectedColumns

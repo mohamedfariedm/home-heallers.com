@@ -1,6 +1,5 @@
 'use client';
 
-import logoImg from '@public/Vertical Transperent-05.png';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Title } from '@/components/ui/text';
@@ -41,8 +40,15 @@ export default function AuthWrapperThree({
           )}
         >
           <div className="flex flex-col items-center">
-            <Link href={'/'} className="mb-7 inline-block max-w-[64px] lg:mb-9">
-              <Image src={logoImg} alt="Isomorphic" className="dark:invert" />
+            <Link href={'/'} className="mb-7 inline-block max-w-[180px] lg:mb-9">
+              <Image
+                src="/logo-primary.png"
+                alt="هوم هيلرز"
+                width={180}
+                height={80}
+                className="h-auto w-auto max-h-14 max-w-[180px] object-contain"
+                priority
+              />
             </Link>
             <Title
               as="h2"

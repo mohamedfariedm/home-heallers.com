@@ -2,10 +2,12 @@
 
 import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import PageHeader from '@/app/shared/page-header';
-import TableLayout from '@/app/[locale]/(hydrogen)/tables/table-layout';
+import { useSearchParams } from 'next/navigation';
 import Spinner from '@/components/ui/spinner';
+import AdminPageShell, {
+  adminPrimaryButtonClass,
+  adminSecondaryButtonClass,
+} from '@/components/ui/admin-page-shell';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { usePermissions } from '@/context/PermissionsContext';
@@ -15,27 +17,18 @@ import HighlightsTable from '@/app/shared/highlights/table';
 import HighlightsSettingsModal from '@/app/shared/highlights/settings/settings-modal';
 import { routes } from '@/config/routes';
 import { useTranslation } from 'react-i18next';
-import { PiPlusBold, PiGearBold } from 'react-icons/pi';
+import { PiPlusBold, PiGearBold, PiCirclesThreePlusFill } from 'react-icons/pi';
+import cn from '@/utils/class-names';
 
 export default function HighlightsPage() {
   const { t } = useTranslation('highlights');
   const searchParams = useSearchParams();
-  const router = useRouter();
-  const pathname = usePathname();
   const { permissions } = usePermissions();
   const access = resolveHighlightsPermissions(permissions);
 
-  const pageHeader = {
-    title: t('highlights_page_title'),
-    breadcrumb: [
-      { href: '/', name: t('highlights_breadcrumb_home') },
-      { name: t('highlights_breadcrumb') },
-    ],
-  };
-
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [selectedColumns, setSelectedColumns] = useState<any[]>([]);
-  const [selectedRowKeys, setSelectedRowKeys] = useState<any[]>([]);
+  const [, setSelectedColumns] = useState<any[]>([]);
+  const [, setSelectedRowKeys] = useState<any[]>([]);
 
   const queryString = useMemo(() => {
     const params = new URLSearchParams(searchParams.toString());
@@ -49,20 +42,37 @@ export default function HighlightsPage() {
 
   if (!access.view || status === 403) {
     return (
-      <div className="rounded-md border border-gray-200 bg-white p-6 text-sm text-gray-600">
-        {t('highlights_no_permission_view')}
-      </div>
+      <AdminPageShell
+        title={t('highlights_page_title')}
+        description={t(
+          'highlights_page_description',
+          'Manage story highlights shown in the mobile app'
+        )}
+        icon={<PiCirclesThreePlusFill />}
+      >
+        <div className="rounded-2xl border border-gray-200 bg-white p-6 text-sm text-gray-600 shadow-sm">
+          {t('highlights_no_permission_view')}
+        </div>
+      </AdminPageShell>
     );
   }
 
   if (error && status !== 403) {
     return (
-      <div className="rounded-md border border-gray-200 bg-white p-6">
-        <Text className="text-gray-700">{t('highlights_load_error')}</Text>
-        <Button className="mt-4" onClick={() => refetch()}>
-          {t('highlights_retry')}
-        </Button>
-      </div>
+      <AdminPageShell
+        title={t('highlights_page_title')}
+        icon={<PiCirclesThreePlusFill />}
+      >
+        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          <Text className="text-gray-700">{t('highlights_load_error')}</Text>
+          <Button
+            className={cn(adminPrimaryButtonClass, 'mt-4')}
+            onClick={() => refetch()}
+          >
+            {t('highlights_retry')}
+          </Button>
+        </div>
+      </AdminPageShell>
     );
   }
 
@@ -70,14 +80,24 @@ export default function HighlightsPage() {
   const total = data?.meta?.total ?? rows.length;
 
   return (
-    <>
-      <PageHeader title={pageHeader.title} breadcrumb={pageHeader.breadcrumb}>
-        <div className="mt-4 flex items-center gap-3 @lg:mt-0">
+    <AdminPageShell
+      title={t('highlights_page_title')}
+      description={t(
+        'highlights_page_description',
+        'Manage story highlights shown in the mobile app'
+      )}
+      icon={<PiCirclesThreePlusFill />}
+      breadcrumb={[
+        { href: '/', name: t('highlights_breadcrumb_home') },
+        { name: t('highlights_breadcrumb') },
+      ]}
+      actions={
+        <>
           {access.settings && (
             <Button
               variant="outline"
               onClick={() => setIsSettingsOpen(true)}
-              className="flex items-center gap-2"
+              className={cn(adminSecondaryButtonClass, 'flex items-center gap-2')}
             >
               <PiGearBold className="h-4 w-4" />
               <span>{t('highlights_image_duration')}</span>
@@ -85,37 +105,35 @@ export default function HighlightsPage() {
           )}
           {access.create && (
             <Link href={routes.highlights.create}>
-              <Button className="flex items-center gap-2">
+              <Button className={cn(adminPrimaryButtonClass, 'flex items-center gap-2')}>
                 <PiPlusBold className="h-4 w-4" />
                 <span>{t('highlights_new')}</span>
               </Button>
             </Link>
           )}
+        </>
+      }
+    >
+      {isLoading ? (
+        <div className="flex h-64 items-center justify-center">
+          <Spinner size="lg" />
         </div>
-      </PageHeader>
-
-      <div className="mt-6">
-        {isLoading ? (
-          <div className="flex h-64 items-center justify-center">
-            <Spinner size="lg" />
-          </div>
-        ) : (
-          <HighlightsTable
-            data={rows}
-            totalItems={total}
-            isFetching={isFetching && !isLoading}
-            canEdit={access.update}
-            canDelete={access.delete}
-            getSelectedColumns={setSelectedColumns}
-            getSelectedRowKeys={setSelectedRowKeys}
-          />
-        )}
-      </div>
+      ) : (
+        <HighlightsTable
+          data={rows}
+          totalItems={total}
+          isFetching={isFetching && !isLoading}
+          canEdit={access.update}
+          canDelete={access.delete}
+          getSelectedColumns={setSelectedColumns}
+          getSelectedRowKeys={setSelectedRowKeys}
+        />
+      )}
 
       <HighlightsSettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
       />
-    </>
+    </AdminPageShell>
   );
 }

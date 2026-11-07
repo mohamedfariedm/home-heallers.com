@@ -132,7 +132,7 @@ const SortableSectionItem: React.FC<SortableSectionItemProps> = ({ section, inde
         <div className="flex items-center gap-2">
           <button
             onClick={() => onEdit(section)}
-            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+            className="p-2 text-[#143087] hover:bg-blue-50 rounded-lg transition-colors"
           >
             <Edit2 className="w-4 h-4" />
           </button>
@@ -380,7 +380,7 @@ const PageEditor: React.FC<PageEditorProps> = ({ page, onSave, onCancel, onSaveS
           </button>
           <button
             onClick={handleSavePage}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="px-4 py-2 bg-[#143087] text-white rounded-xl hover:bg-[#0F2466] transition-colors"
           >
             <Save className="w-4 h-4 inline mr-2" />
             Save Page
@@ -403,7 +403,7 @@ const PageEditor: React.FC<PageEditorProps> = ({ page, onSave, onCancel, onSaveS
                 onClick={() => setActiveTab(tab.id as any)}
                 className={`flex items-center gap-2 py-4 px-2 border-b-2 font-medium text-sm transition-colors ${
                   activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
+                    ? 'border-[#143087] text-[#143087]'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
@@ -431,7 +431,7 @@ const PageEditor: React.FC<PageEditorProps> = ({ page, onSave, onCancel, onSaveS
                   type="text"
                   value={editedPage.name?.en || ''}
                   onChange={(e) => updateMultilingualField('name', 'en', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#143087]/20"
                 />
               </div>
 
@@ -443,7 +443,7 @@ const PageEditor: React.FC<PageEditorProps> = ({ page, onSave, onCancel, onSaveS
                   type="text"
                   value={editedPage.title?.en || ''}
                   onChange={(e) => updateMultilingualField('title', 'en', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#143087]/20"
                 />
               </div>
 
@@ -455,7 +455,7 @@ const PageEditor: React.FC<PageEditorProps> = ({ page, onSave, onCancel, onSaveS
                   value={editedPage.description?.en || ''}
                   onChange={(e) => updateMultilingualField('description', 'en', e.target.value)}
                   rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#143087]/20"
                 />
               </div>
             </div>
@@ -472,7 +472,7 @@ const PageEditor: React.FC<PageEditorProps> = ({ page, onSave, onCancel, onSaveS
                   type="text"
                   value={editedPage.name?.ar || ''}
                   onChange={(e) => updateMultilingualField('name', 'ar', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#143087]/20"
                   dir="rtl"
                 />
               </div>
@@ -485,7 +485,7 @@ const PageEditor: React.FC<PageEditorProps> = ({ page, onSave, onCancel, onSaveS
                   type="text"
                   value={editedPage.title?.ar || ''}
                   onChange={(e) => updateMultilingualField('title', 'ar', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#143087]/20"
                   dir="rtl"
                 />
               </div>
@@ -498,7 +498,7 @@ const PageEditor: React.FC<PageEditorProps> = ({ page, onSave, onCancel, onSaveS
                   value={editedPage.description?.ar || ''}
                   onChange={(e) => updateMultilingualField('description', 'ar', e.target.value)}
                   rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#143087]/20"
                   dir="rtl"
                 />
               </div>
@@ -514,7 +514,7 @@ const PageEditor: React.FC<PageEditorProps> = ({ page, onSave, onCancel, onSaveS
               type="text"
               value={editedPage.slug}
               onChange={(e) => updateField('slug', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#143087]/20"
               placeholder="home, about-us, services"
             />
             <p className="text-xs text-gray-500 mt-1">
@@ -537,7 +537,7 @@ const PageEditor: React.FC<PageEditorProps> = ({ page, onSave, onCancel, onSaveS
                 type="button"
                 onClick={() => updateField('show_in_menu', !editedPage.show_in_menu)}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  editedPage.show_in_menu ? 'bg-blue-600' : 'bg-gray-300'
+                  editedPage.show_in_menu ? 'bg-[#143087]' : 'bg-gray-300'
                 }`}
               >
                 <span
@@ -559,7 +559,7 @@ const PageEditor: React.FC<PageEditorProps> = ({ page, onSave, onCancel, onSaveS
                 type="button"
                 onClick={() => updateField('show_in_footer', !editedPage.show_in_footer)}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  editedPage.show_in_footer ? 'bg-blue-600' : 'bg-gray-300'
+                  editedPage.show_in_footer ? 'bg-[#143087]' : 'bg-gray-300'
                 }`}
               >
                 <span
@@ -585,7 +585,7 @@ const PageEditor: React.FC<PageEditorProps> = ({ page, onSave, onCancel, onSaveS
             </div>
             <button
               onClick={addSection}
-              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              className="flex items-center gap-2 bg-[#143087] text-white px-4 py-2 rounded-xl hover:bg-[#0F2466] transition-colors"
             >
               <Plus className="w-4 h-4" />
               <span>Add Section</span>
@@ -597,7 +597,7 @@ const PageEditor: React.FC<PageEditorProps> = ({ page, onSave, onCancel, onSaveS
               <p className="text-gray-600 mb-4">No sections added yet</p>
               <button
                 onClick={addSection}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                className="bg-[#143087] text-white px-4 py-2 rounded-xl hover:bg-[#0F2466] transition-colors"
               >
                 Add Your First Section
               </button>

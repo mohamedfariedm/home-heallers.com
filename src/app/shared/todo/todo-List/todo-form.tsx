@@ -1,4 +1,9 @@
 'use client';
+import {
+  ModalFormHeader,
+  ModalFormFooter,
+  modalFormClassName,
+} from '@/components/ui/modal-form-shell';
 
 import { useState } from 'react';
 import { PiXBold } from 'react-icons/pi';
@@ -79,14 +84,7 @@ export default function UpdateCreateStore({ initValues }: {
             {({ register, control, getValues, setValue , formState: { errors } }) => {
                 return (
                 <>
-                    <div className="flex items-center justify-between">
-                        <Title as="h4" className="font-semibold">
-                            {initValues ? 'Update node' : 'Add a new node'}
-                        </Title>
-                        <ActionIcon size="sm" variant="text" onClick={closeModal}>
-                            <PiXBold className="h-auto w-5" />
-                        </ActionIcon>
-                    </div>
+                    <ModalFormHeader title={initValues ? 'Update node' : 'Add a new node'} />
                     <div className='flex flex-wrap px-1 gap-3'>
                         <Checkbox
                             key={0} 
@@ -133,22 +131,11 @@ export default function UpdateCreateStore({ initValues }: {
                     error={errors.description?.message}
                     />
 
-                    <div className="flex items-center justify-end gap-4">
-                    <Button
-                        variant="outline"
-                        onClick={closeModal}
-                        className="w-full @xl:w-auto"
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        type="submit"
-                        isLoading={isLoading}
-                        className="w-full @xl:w-auto"
-                    >
-                        {initValues ? 'Update Nodw' : 'Create Node'}
-                    </Button>
-                    </div>
+                    <ModalFormFooter
+                cancelLabel="Cancel"
+                isLoading={isLoading}
+                submitLabel={initValues ? 'Update Nodw' : 'Create Node'}
+            />
                 </>
                 );
             }}

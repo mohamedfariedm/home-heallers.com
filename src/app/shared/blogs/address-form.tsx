@@ -1,13 +1,15 @@
 'use client';
+import {
+  ModalFormHeader,
+  ModalFormFooter,
+  modalFormClassName,
+} from '@/components/ui/modal-form-shell';
 
 import { useRef, useState } from 'react';
 import { SubmitHandler, Controller, UseFormReturn } from 'react-hook-form';
 import { Form } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Title } from '@/components/ui/text';
-import { useModal } from '@/app/shared/modal-views/use-modal';
-import { ActionIcon, Switch } from 'rizzui';
+import { Switch } from 'rizzui';
 import Select from 'react-select';
 import CreatableSelect from 'react-select/creatable';
 import { useBlogDetail, useBlogs, useCreateBlog, useUpdateBlog } from '@/framework/blog';
@@ -52,7 +54,6 @@ export default function BlogsForm({ initValues }: { initValues?: any }) {
 function BlogFormFields({ initValues }: { initValues?: any }) {
   const { t, i18n } = useTranslation('blogs');
   const uiLang = i18n.language === 'ar' ? 'ar' : 'en';
-  const { closeModal } = useModal();
   const methodsRef = useRef<UseFormReturn<BlogFormInput> | null>(null);
   const { mutateAsync: update } = useUpdateBlog();
   const { mutateAsync: create, isPending } = useCreateBlog();
@@ -143,29 +144,41 @@ function BlogFormFields({ initValues }: { initValues?: any }) {
           ...seoFormDefaults(initValues),
         },
       }}
-      className="flex flex-col gap-6 p-6 overflow-y-auto @container [&_.rizzui-input-label]:font-medium [&_.rizzui-input-label]:text-gray-900"
+      className={modalFormClassName}
     >
       {(methods) => {
         methodsRef.current = methods;
-        const { register, setValue, watch, control, formState: { errors } } = methods;
+        const {
+          register,
+          setValue,
+          watch,
+          control,
+          formState: { errors },
+        } = methods;
 
-        return isBlogsLoading ? (
-          <div className="flex justify-center items-center h-full">
-            <Spinner size="xl" />
-          </div>
-        ) : (
-          <>
-            <div className="flex items-center justify-between">
-              <Title as="h4" className="font-semibold">
-                {initValues ? t('blogs_update') : t('blogs_add')}
-              </Title>
-              <ActionIcon size="sm" variant="text" onClick={closeModal}>
-                <PiXBold className="w-5 h-auto" />
-              </ActionIcon>
+        if (isBlogsLoading) {
+          return (
+            <div className="flex h-full items-center justify-center">
+              <Spinner size="xl" />
             </div>
+          );
+        }
 
-            <Input label={t('blogs_name_en')} {...register('nameEN')} error={errors.nameEN?.message} />
-            <Input label={t('blogs_name_ar')} {...register('nameAR')} error={errors.nameAR?.message} />
+        return (
+          <>
+            <ModalFormHeader
+              title={initValues ? t('blogs_update') : t('blogs_add')}
+            />
+            <Input
+              label={t('blogs_name_en')}
+              {...register('nameEN')}
+              error={errors.nameEN?.message}
+            />
+            <Input
+              label={t('blogs_name_ar')}
+              {...register('nameAR')}
+              error={errors.nameAR?.message}
+            />
             <QuillEditor
               name="descriptionEN"
               label={t('blogs_desc_en')}
@@ -178,7 +191,12 @@ function BlogFormFields({ initValues }: { initValues?: any }) {
               error={errors.descriptionAR?.message}
               control={control}
             />
-            <Input label={t('blogs_date')} type="date" {...register('date')} error={errors.date?.message} />
+            <Input
+              label={t('blogs_date')}
+              type="date"
+              {...register('date')}
+              error={errors.date?.message}
+            />
 
             <EntitySeoSection
               locale={locale}
@@ -191,7 +209,10 @@ function BlogFormFields({ initValues }: { initValues?: any }) {
               names={{ en: watch('nameEN'), ar: watch('nameAR') }}
             />
 
-            <FormGroup title={t('blogs_tags')} className="pt-7 @2xl:pt-9 @3xl:grid-cols-12 @3xl:pt-11">
+            <FormGroup
+              title={t('blogs_tags')}
+              className="pt-7 @2xl:pt-9 @3xl:grid-cols-12 @3xl:pt-11"
+            >
               <Controller
                 name="tags"
                 control={control}
@@ -203,7 +224,11 @@ function BlogFormFields({ initValues }: { initValues?: any }) {
                       value: tag,
                       label: tag,
                     }))}
-                    onChange={(selected) => field.onChange(selected ? selected.map((s: any) => s.value) : [])}
+                    onChange={(selected) =>
+                      field.onChange(
+                        selected ? selected.map((s: any) => s.value) : []
+                      )
+                    }
                     placeholder={t('blogs_tags_placeholder')}
                     styles={{
                       control: (base) => ({
@@ -219,7 +244,10 @@ function BlogFormFields({ initValues }: { initValues?: any }) {
               )}
             </FormGroup>
 
-            <FormGroup title={t('blogs_related')} className="pt-7 @2xl:pt-9 @3xl:grid-cols-12 @3xl:pt-11">
+            <FormGroup
+              title={t('blogs_related')}
+              className="pt-7 @2xl:pt-9 @3xl:grid-cols-12 @3xl:pt-11"
+            >
               <Controller
                 name="relatedBlogs"
                 control={control}
@@ -228,35 +256,53 @@ function BlogFormFields({ initValues }: { initValues?: any }) {
                     isMulti
                     options={data?.data?.map((blog: any) => ({
                       value: blog.id,
-                      label: resolveLocalizedName(blog.name, uiLang) || t('blogs_blog_fallback', { id: blog.id }),
+                      label:
+                        resolveLocalizedName(blog.name, uiLang) ||
+                        t('blogs_blog_fallback', { id: blog.id }),
                     }))}
                     value={field.value?.map((id: string) => ({
                       value: id,
-                      label: resolveLocalizedName(data?.data?.find((b: any) => b.id === id)?.name, uiLang) || '',
+                      label:
+                        resolveLocalizedName(
+                          data?.data?.find((b: any) => b.id === id)?.name,
+                          uiLang
+                        ) || '',
                     }))}
-                    onChange={(selected) => field.onChange(selected ? selected.map((s: any) => s.value) : [])}
+                    onChange={(selected) =>
+                      field.onChange(
+                        selected ? selected.map((s: any) => s.value) : []
+                      )
+                    }
                     placeholder={t('blogs_related_placeholder')}
                     isLoading={isBlogsLoading}
                     styles={{
                       control: (base) => ({
                         ...base,
-                        borderColor: errors.relatedBlogs ? 'red' : base.borderColor,
+                        borderColor: errors.relatedBlogs
+                          ? 'red'
+                          : base.borderColor,
                       }),
                     }}
                   />
                 )}
               />
               {errors.relatedBlogs?.message && (
-                <p className="text-xs text-red-500">{errors.relatedBlogs.message}</p>
+                <p className="text-xs text-red-500">
+                  {errors.relatedBlogs.message}
+                </p>
               )}
             </FormGroup>
 
             <div className="flex items-center gap-2">
               <Switch
                 checked={watch('show_in_home_page')}
-                onChange={(e) => setValue('show_in_home_page', e.target.checked)}
+                onChange={(e) =>
+                  setValue('show_in_home_page', e.target.checked)
+                }
               />
-              <label className="text-sm text-gray-900">{t('blogs_show_in_home')}</label>
+              <label className="text-sm text-gray-900">
+                {t('blogs_show_in_home')}
+              </label>
             </div>
 
             <FormGroup
@@ -264,7 +310,7 @@ function BlogFormFields({ initValues }: { initValues?: any }) {
               className="relative pt-7 @2xl:pt-9 @3xl:grid-cols-12 @3xl:pt-11"
             >
               {isLoading && (
-                <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/80 rounded-md">
+                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-md bg-white/80">
                   <Spinner size="xl" />
                 </div>
               )}
@@ -278,36 +324,40 @@ function BlogFormFields({ initValues }: { initValues?: any }) {
                   }}
                 />
                 {imageError > 0 && (
-                  <p className="text-xs text-red-500">{t('blogs_image_required')}</p>
+                  <p className="text-xs text-red-500">
+                    {t('blogs_image_required')}
+                  </p>
                 )}
-                {(isImageData?.[0]?.thumbnail || isImageData?.[0]?.original) && (
-                  <div className="relative flex justify-center items-center w-full mt-2">
+                {(isImageData?.[0]?.thumbnail ||
+                  isImageData?.[0]?.original) && (
+                  <div className="relative mt-2 flex w-full items-center justify-center">
                     <img
-                      src={isImageData[0].thumbnail || isImageData[0].original}
+                      src={
+                        isImageData[0].thumbnail || isImageData[0].original
+                      }
                       alt={t('blogs_preview_alt')}
-                      className="w-48 h-auto rounded border border-gray-200 shadow-sm"
+                      className="h-auto w-48 rounded border border-gray-200 shadow-sm"
                     />
                     <button
                       type="button"
                       onClick={() => setImage(null)}
-                      className="absolute -top-2 -right-2 bg-white border border-gray-300 rounded-full p-1 shadow hover:bg-red-50"
+                      className="absolute -right-2 -top-2 rounded-full border border-gray-300 bg-white p-1 shadow hover:bg-red-50"
                       title={t('blogs_remove_image')}
                     >
-                      <PiXBold className="w-4 h-4 text-red-500" />
+                      <PiXBold className="h-4 w-4 text-red-500" />
                     </button>
                   </div>
                 )}
               </div>
             </FormGroup>
 
-            <div className="flex justify-end gap-4">
-              <Button variant="outline" onClick={closeModal} className="w-full @xl:w-auto">
-                {t('blogs_cancel')}
-              </Button>
-              <Button type="submit" isLoading={isPending} className="w-full @xl:w-auto">
-                {initValues ? t('blogs_update') : t('blogs_create')}
-              </Button>
-            </div>
+            <ModalFormFooter
+              cancelLabel={t('blogs_cancel')}
+              isLoading={isPending}
+              submitLabel={
+                initValues ? t('blogs_update') : t('blogs_create')
+              }
+            />
           </>
         );
       }}

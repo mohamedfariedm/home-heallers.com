@@ -1,4 +1,9 @@
 'use client';
+import {
+  ModalFormHeader,
+  ModalFormFooter,
+  modalFormClassName,
+} from '@/components/ui/modal-form-shell';
 
 import { useState } from 'react';
 import { PiXBold } from 'react-icons/pi';
@@ -47,7 +52,6 @@ export default function UpdateCreateInquerie({ initValues }: {
 
   return (
     <>
- (
         <Form<InquerieFormInput>
             resetValues={reset}
             onSubmit={onSubmit}
@@ -64,16 +68,7 @@ export default function UpdateCreateInquerie({ initValues }: {
             {({ register, control , formState: { errors } }) => {
                 return (
                 <>
-                    <div className="flex items-center justify-between">
-                        <Title as="h4" className="font-semibold">
-                            {initValues ? 'Update Inquerie' : 'Add a new Inquerie'}
-                        </Title>
-                        <ActionIcon size="sm" variant="text" onClick={closeModal}>
-                            <PiXBold className="h-auto w-5" />
-                        </ActionIcon>
-                    </div>
-
-                    
+                    <ModalFormHeader title={initValues ? 'Update Inquerie' : 'Add a new Inquerie'} />
                     <Textarea
                     label="Feed Back"
                     labelClassName='font-semibold'
@@ -91,27 +86,15 @@ export default function UpdateCreateInquerie({ initValues }: {
                         />
 
                     
-                    <div className="flex items-center justify-end gap-4">
-                    <Button
-                        variant="outline"
-                        onClick={closeModal}
-                        className="w-full @xl:w-auto"
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        type="submit"
-                        isLoading={isLoading}
-                        className="w-full @xl:w-auto"
-                    >
-                        {initValues ? 'Update Inquerie' : 'Create Inquerie'}
-                    </Button>
-                    </div>
+                    <ModalFormFooter
+                cancelLabel="Cancel"
+                isLoading={isLoading}
+                submitLabel={initValues ? 'Update Inquerie' : 'Create Inquerie'}
+            />
                 </>
                 );
             }}
         </Form>
-    )
     </>   
   );
 }

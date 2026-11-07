@@ -1,4 +1,5 @@
 'use client';
+import { PiRoadHorizon } from 'react-icons/pi';
 import TableLayout from '@/app/[locale]/(hydrogen)/tables/table-layout';
 import Spinner from '@/components/ui/spinner';
 import { useSearchParams } from 'next/navigation';
@@ -36,6 +37,8 @@ export default function ServicesTablePage() {
   return (
     <TableLayout
       title={pageHeader.title}
+      description="Configure bookable services"
+      icon={<PiRoadHorizon />}
       breadcrumb={pageHeader.breadcrumb}
       data={{
         columns: selectedColumns

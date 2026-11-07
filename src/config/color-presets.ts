@@ -14,19 +14,15 @@ export const presetDark = {
   dark: '#ffffff',
 };
 
-// defaults from global css line 38
+// defaults — Home Healers royal blue (from logo #143087)
 export const DEFAULT_PRESET_COLORS = {
-  // lighter: '#d7e3fe',
-  // light: '#608efb',
-  // default: '#3872fa',
-  // dark: '#1d58d8',
-  lighter: '#ffe4e6', // Rose 100
-  light: '#fda4af', // Rose 300
-  default: '#e11d48', // Rose 600
-  dark: '#881337', // Rose 900
+  lighter: '#E8ECF5',
+  light: '#39519B',
+  default: '#143087',
+  dark: '#0F2466',
 };
 
-export const DEFAULT_PRESET_COLOR_NAME = 'rose';
+export const DEFAULT_PRESET_COLOR_NAME = 'Home Healers';
 
 export const usePresets = () => {
   const { theme } = useTheme();
@@ -39,46 +35,46 @@ export const usePresets = () => {
     {
       name: 'Black',
       colors: {
-        lighter: theme === 'light' ? presetLight.lighter : presetDark.lighter, // gray 100
-        light: theme === 'light' ? presetLight.light : presetDark.light, // gray 500
-        default: theme === 'light' ? presetLight.default : presetDark.default, // gray 900
-        dark: theme === 'light' ? presetLight.dark : presetDark.dark, // gray 1000
+        lighter: theme === 'light' ? presetLight.lighter : presetDark.lighter,
+        light: theme === 'light' ? presetLight.light : presetDark.light,
+        default: theme === 'light' ? presetLight.default : presetDark.default,
+        dark: theme === 'light' ? presetLight.dark : presetDark.dark,
       },
     },
     {
-      name: 'Teal',
+      name: 'Teal Soft',
       colors: {
-        lighter: '#ccfbf1', // Teal 100
-        light: '#5eead4', // Teal 300
-        default: '#0d9488', // Teal 600
-        dark: '#115e59', // Teal 800
+        lighter: '#ccfbf1',
+        light: '#5eead4',
+        default: '#0d9488',
+        dark: '#115e59',
       },
     },
     {
       name: 'Violet',
       colors: {
-        lighter: '#ede9fe', // Violet 100
-        light: '#a5b4fc', // Violet 300
-        default: '#7c3aed', // Violet 600
-        dark: '#4c1d95', // Violet 900
+        lighter: '#ede9fe',
+        light: '#a5b4fc',
+        default: '#7c3aed',
+        dark: '#4c1d95',
       },
     },
     {
       name: 'Rose',
       colors: {
-        lighter: '#ffe4e6', // Rose 100
-        light: '#fda4af', // Rose 300
-        default: '#e11d48', // Rose 600
-        dark: '#881337', // Rose 900
+        lighter: '#ffe4e6',
+        light: '#fda4af',
+        default: '#e11d48',
+        dark: '#881337',
       },
     },
     {
       name: 'Yellow',
       colors: {
-        lighter: '#fef9c3', // Yellow 100
-        light: '#fde047', // Yellow 300
-        default: '#ca8a04', // Yellow 500
-        dark: '#854d0e', // Yellow 800
+        lighter: '#fef9c3',
+        light: '#fde047',
+        default: '#ca8a04',
+        dark: '#854d0e',
       },
     },
   ];

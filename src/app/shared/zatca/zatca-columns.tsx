@@ -78,7 +78,7 @@ export function getZatcaColumns({
       width: 120,
       render: (_: string, row: ZatcaInvoice) =>
         permissions.view ? (
-          <Link href={`/invoices/${row.id}`} className="font-medium text-blue-600 hover:underline">
+          <Link href={`/invoices/${row.id}`} className="font-medium text-[#143087] hover:underline">
             {row.invoice_number}
           </Link>
         ) : (

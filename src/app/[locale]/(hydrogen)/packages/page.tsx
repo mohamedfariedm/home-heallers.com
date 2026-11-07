@@ -1,4 +1,5 @@
 'use client';
+import { PiTagDuotone } from 'react-icons/pi';
 import RegionsTable from '@/app/shared/regions/table';
 import TableLayout from '@/app/[locale]/(hydrogen)/tables/table-layout';
 import { useRegions } from '@/framework/regions';
@@ -40,6 +41,8 @@ export default function CountriesTablePage() {
   return (
     <TableLayout
       title={pageHeader.title}
+      description="Manage service packages"
+      icon={<PiTagDuotone />}
       breadcrumb={pageHeader.breadcrumb}
       data={{
         columns: selectedColumns

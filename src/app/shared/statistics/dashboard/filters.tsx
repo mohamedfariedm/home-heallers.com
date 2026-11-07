@@ -398,7 +398,7 @@ export default function StatisticsFiltersComponent({
             value={dateFrom}
             onChange={(e) => setDateFrom(e.target.value)}
             className="w-full"
-            inputClassName="border-gray-200 dark:border-gray-700 focus:ring-blue-500 rounded-lg"
+            inputClassName="border-gray-200 dark:border-gray-700 focus:ring-[#143087]/20 rounded-lg"
           />
         </div>
 
@@ -412,7 +412,7 @@ export default function StatisticsFiltersComponent({
             value={dateTo}
             onChange={(e) => setDateTo(e.target.value)}
             className="w-full"
-            inputClassName="border-gray-200 dark:border-gray-700 focus:ring-blue-500 rounded-lg"
+            inputClassName="border-gray-200 dark:border-gray-700 focus:ring-[#143087]/20 rounded-lg"
           />
         </div>
 
@@ -429,7 +429,7 @@ export default function StatisticsFiltersComponent({
             options={doctorOptions}
             placeholder={t('stats_select_doctor', 'Select Doctor')}
             className="w-full"
-            selectClassName="border-gray-200 dark:border-gray-700 focus:ring-blue-500 rounded-lg h-[38px]"
+            selectClassName="border-gray-200 dark:border-gray-700 focus:ring-[#143087]/20 rounded-lg h-[38px]"
           />
         </div>
 
@@ -446,7 +446,7 @@ export default function StatisticsFiltersComponent({
             options={clientOptions}
             placeholder={t('stats_select_client', 'Select Client')}
             className="w-full"
-            selectClassName="border-gray-200 dark:border-gray-700 focus:ring-blue-500 rounded-lg h-[38px]"
+            selectClassName="border-gray-200 dark:border-gray-700 focus:ring-[#143087]/20 rounded-lg h-[38px]"
           />
         </div>
 
@@ -463,7 +463,7 @@ export default function StatisticsFiltersComponent({
             options={centerOptions}
             placeholder={t('stats_select_center', 'Select Center')}
             className="w-full"
-            selectClassName="border-gray-200 dark:border-gray-700 focus:ring-blue-500 rounded-lg h-[38px]"
+            selectClassName="border-gray-200 dark:border-gray-700 focus:ring-[#143087]/20 rounded-lg h-[38px]"
           />
         </div>
 
@@ -487,7 +487,7 @@ export default function StatisticsFiltersComponent({
             displayValue={multiSelectDisplayValue}
             placeholder={t('stats_select_reservation_status', 'Select Reservation Status')}
             className="w-full"
-            selectClassName="border-gray-200 dark:border-gray-700 focus:ring-blue-500 rounded-lg min-h-[38px]"
+            selectClassName="border-gray-200 dark:border-gray-700 focus:ring-[#143087]/20 rounded-lg min-h-[38px]"
           />
         </div>
 
@@ -508,7 +508,7 @@ export default function StatisticsFiltersComponent({
             displayValue={multiSelectDisplayValue}
             placeholder={t('stats_select_support_type', 'Select Customer Support Type')}
             className="w-full"
-            selectClassName="border-gray-200 dark:border-gray-700 focus:ring-blue-500 rounded-lg min-h-[38px]"
+            selectClassName="border-gray-200 dark:border-gray-700 focus:ring-[#143087]/20 rounded-lg min-h-[38px]"
           />
         </div>
 
@@ -529,7 +529,7 @@ export default function StatisticsFiltersComponent({
             displayValue={multiSelectDisplayValue}
             placeholder={t('stats_select_source_campaign', 'Select Source Campaign')}
             className="w-full"
-            selectClassName="border-gray-200 dark:border-gray-700 focus:ring-blue-500 rounded-lg min-h-[38px]"
+            selectClassName="border-gray-200 dark:border-gray-700 focus:ring-[#143087]/20 rounded-lg min-h-[38px]"
           />
         </div>
       </div>
@@ -539,7 +539,7 @@ export default function StatisticsFiltersComponent({
             <Button
               variant="text"
               onClick={handleLast10Days}
-              className="me-auto text-blue-600 hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-900/20"
+              className="me-auto text-[#143087] hover:bg-blue-50 hover:text-[#0F2466]"
             >
               <PiArrowCounterClockwiseBold className="me-1.5 h-4 w-4" />
               {t('stats_last_10_days', 'Last 10 days')}
@@ -554,7 +554,7 @@ export default function StatisticsFiltersComponent({
             </Button>
             <Button
               onClick={handleApplyFilters}
-              className="bg-gray-900 px-8 text-white hover:bg-gray-800 dark:bg-gray-100 dark:text-gray-900"
+              className="bg-[#143087] px-8 text-white hover:bg-[#0F2466]"
             >
               <PiMagnifyingGlassBold className="me-1.5 h-4 w-4" />
               {t('shared_apply_filters', 'Apply Filters')}

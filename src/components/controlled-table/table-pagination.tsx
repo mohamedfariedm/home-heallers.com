@@ -34,18 +34,18 @@ export default function TablePagination({
   return (
     <div
       className={cn(
-        'table-pagination flex items-center justify-center sm:justify-between',
+        'table-pagination mt-4 flex items-center justify-center rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-sm sm:justify-between',
         paginatorClassName
       )}
     >
       {!setPageSize ? (
         total && (
-          <div className="hidden text-gray-500 sm:inline-flex">
+          <div className="hidden text-sm text-gray-500 sm:inline-flex">
             {props.current} of {Math.ceil(total / pageSize)} pages
           </div>
         )
       ) : (
-        <div className="hidden items-center sm:flex">
+        <div className="hidden items-center text-sm text-gray-600 sm:flex">
           Rows per page:{' '}
           <Select
             options={paginationLimitOptions}
@@ -56,8 +56,8 @@ export default function TablePagination({
             getOptionValue={({ value }) => value}
             suffix={<PiCaretDownBold />}
             useContainerWidth={false}
-            dropdownClassName="p-1 border w-12 border-gray-100 shadow-lg"
-            className="ms-1 [&_button]:font-medium"
+            dropdownClassName="w-12 rounded-xl border border-gray-100 p-1 shadow-lg"
+            className="ms-1 [&_button]:rounded-xl [&_button]:border-gray-200 [&_button]:font-medium [&_button]:ring-[#143087]/20 [&_button]:focus:border-[#143087] [&_button]:focus:ring-[#143087]/20"
           />
         </div>
       )}
@@ -66,8 +66,9 @@ export default function TablePagination({
         pageSize={pageSize}
         defaultCurrent={1}
         showLessItems={true}
-        prevIconClassName="py-0 text-gray-500 !leading-[26px]"
-        nextIconClassName="py-0 text-gray-500 !leading-[26px]"
+        rounded="lg"
+        prevIconClassName="py-0 !leading-[26px] text-gray-500 hover:text-[#143087]"
+        nextIconClassName="py-0 !leading-[26px] text-gray-500 hover:text-[#143087]"
         {...props}
       />
     </div>

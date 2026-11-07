@@ -100,7 +100,7 @@ export default function TopTenModal({
                               ? 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
                               : index === 2
                               ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400'
-                              : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
+                              : 'bg-blue-50 text-[#0F2466] dark:bg-blue-900/30 dark:text-blue-300'
                           )}
                         >
                           {index + 1}
@@ -122,7 +122,7 @@ export default function TopTenModal({
                         <div className="flex items-center justify-end gap-2">
                           <div className="w-24 bg-gray-200 rounded-full h-2 dark:bg-gray-700">
                             <div
-                              className="bg-blue-600 h-2 rounded-full dark:bg-blue-500"
+                              className="bg-[#143087] h-2 rounded-full dark:bg-blue-500"
                               style={{ width: `${Math.min(percentage, 100)}%` }}
                             />
                           </div>

@@ -101,7 +101,7 @@ const SEOSection: React.FC<SEOSectionProps> = ({ seo, onUpdate }) => {
       {/* Header */}
       <div>
         <h2 className="mb-2 flex items-center gap-2 text-xl font-semibold text-gray-900">
-          <Globe className="h-6 w-6 text-blue-600" />
+          <Globe className="h-6 w-6 text-[#143087]" />
           {t('settings_seo_title')}
         </h2>
         <p className="text-gray-600">
@@ -119,7 +119,7 @@ const SEOSection: React.FC<SEOSectionProps> = ({ seo, onUpdate }) => {
           value={activePage}
           onChange={(e) => setActivePage(e.target.value)}
           className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none
-                     focus:ring-2 focus:ring-blue-500 md:w-64"
+                     focus:ring-2 focus:ring-[#143087]/20 md:w-64"
         >
           {pageKeys.map((page) => (
             <option key={page} value={page}>
@@ -137,7 +137,7 @@ const SEOSection: React.FC<SEOSectionProps> = ({ seo, onUpdate }) => {
             onClick={() => setActiveLang(lang)}
             className={`rounded-lg border px-4 py-2 text-sm font-medium ${
               activeLang === lang
-                ? 'border-blue-600 bg-blue-600 text-white'
+                ? 'border-[#143087] bg-[#143087] text-white'
                 : 'border-gray-300 bg-white text-gray-600 hover:bg-gray-50'
             }`}
           >
@@ -151,7 +151,7 @@ const SEOSection: React.FC<SEOSectionProps> = ({ seo, onUpdate }) => {
         {/* Basic SEO */}
         <div className="rounded-lg border bg-gray-50 p-6">
           <div className="mb-4 flex items-center gap-3">
-            <Search className="h-6 w-6 text-blue-600" />
+            <Search className="h-6 w-6 text-[#143087]" />
             <h3 className="text-lg font-medium text-gray-900">{t('settings_seo_basic')}</h3>
           </div>
 
@@ -228,7 +228,7 @@ const SEOSection: React.FC<SEOSectionProps> = ({ seo, onUpdate }) => {
         {/* Open Graph */}
         <div className="rounded-lg border bg-gray-50 p-6">
           <div className="mb-4 flex items-center gap-3">
-            <Share2 className="h-6 w-6 text-blue-600" />
+            <Share2 className="h-6 w-6 text-[#143087]" />
             <h3 className="text-lg font-medium text-gray-900">
               {t('settings_seo_og')}
             </h3>

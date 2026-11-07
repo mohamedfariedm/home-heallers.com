@@ -129,7 +129,7 @@ const FolderCard: React.FC<FolderCardProps> = ({
   const isOwner = isFolderOwner(folder, viewer.userId);
 
   return (
-    <div className="group relative bg-white border border-gray-200 rounded-xl p-4 flex flex-col items-center gap-3 hover:shadow-md hover:border-blue-300 transition-all cursor-pointer">
+    <div className="group relative bg-white border border-gray-200 rounded-xl p-4 flex flex-col items-center gap-3 hover:shadow-md hover:border-[#143087]/40 transition-all cursor-pointer">
       <button
         onClick={onOpen}
         className="flex flex-col items-center gap-2 w-full"
@@ -158,14 +158,14 @@ const FolderCard: React.FC<FolderCardProps> = ({
                 shared.slice(0, 2).map((user) => (
                   <span
                     key={user.id}
-                    className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700"
+                    className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-50 text-[#143087]"
                   >
                     {user.name || `User #${user.id}`}
                   </span>
                 ))
               )}
               {shared.length > 2 && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700">
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-50 text-[#143087]">
                   +{shared.length - 2}
                 </span>
               )}
@@ -181,7 +181,7 @@ const FolderCard: React.FC<FolderCardProps> = ({
         {canEditAccess && (
           <button
             onClick={(e) => { e.stopPropagation(); onEditAccess(); }}
-            className="text-blue-400 hover:text-blue-600"
+            className="text-[#39519B] hover:text-[#143087]"
             title="Folder access"
           >
             <Shield className="w-4 h-4" />
@@ -222,7 +222,7 @@ const FilePreviewModal: React.FC<VideoModalProps> = ({ file, onClose }) => {
         className="relative w-full max-w-4xl bg-black rounded-2xl overflow-hidden shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-5 py-3 bg-gray-900">
+        <div className="flex items-center justify-between px-5 py-3 bg-[#143087]">
           <p className="text-white font-medium truncate max-w-[80%]" title={file.name}>
             {file.name || 'File Preview'}
           </p>
@@ -257,7 +257,7 @@ const FilePreviewModal: React.FC<VideoModalProps> = ({ file, onClose }) => {
                 href={src}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-colors"
+                className="px-4 py-2 bg-[#143087] text-white rounded-lg text-sm hover:bg-[#0F2466] transition-colors"
               >
                 Open / Download
               </a>
@@ -289,7 +289,7 @@ const FileCard: React.FC<FileCardProps> = ({ file, canDelete, onDelete, onPrevie
   const isImage = !isVideo && isImageFile(file.name || src);
 
   return (
-    <div className="group relative bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md hover:border-blue-300 transition-all">
+    <div className="group relative bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md hover:border-[#143087]/40 transition-all">
       <button
         onClick={onPreview}
         className="w-full aspect-video bg-gray-100 flex items-center justify-center overflow-hidden relative"
@@ -318,14 +318,14 @@ const FileCard: React.FC<FileCardProps> = ({ file, canDelete, onDelete, onPrevie
         {isVideo && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-all">
             <div className="opacity-0 group-hover:opacity-100 transition-all bg-white/90 rounded-full p-3 shadow-lg">
-              <Play className="w-6 h-6 text-blue-600 fill-blue-600" />
+              <Play className="w-6 h-6 text-[#143087] fill-[#143087]" />
             </div>
           </div>
         )}
         {!isVideo && (isImage || src) && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/20 transition-all">
             <div className="opacity-0 group-hover:opacity-100 transition-all bg-white/90 rounded-full p-3 shadow-lg">
-              <ImageIcon className="w-6 h-6 text-blue-600" />
+              <ImageIcon className="w-6 h-6 text-[#143087]" />
             </div>
           </div>
         )}
@@ -371,7 +371,7 @@ const UploadPanel: React.FC<UploadPanelProps> = ({ onUpload, onClose }) => {
   return (
     <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 space-y-4">
       <div className="flex items-center justify-between">
-        <h4 className="font-semibold text-blue-800 flex items-center gap-2">
+        <h4 className="font-semibold text-[#0F2466] flex items-center gap-2">
           <Upload className="w-4 h-4" /> Upload File
         </h4>
         <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
@@ -388,7 +388,7 @@ const UploadPanel: React.FC<UploadPanelProps> = ({ onUpload, onClose }) => {
           value={fileName}
           onChange={(e) => setFileName(e.target.value)}
           placeholder="Enter a name for this file…"
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#143087]"
         />
       </div>
 
@@ -404,7 +404,7 @@ const UploadPanel: React.FC<UploadPanelProps> = ({ onUpload, onClose }) => {
       <button
         onClick={handleAdd}
         disabled={!pendingFiles.length}
-        className="w-full bg-blue-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        className="w-full bg-[#143087] text-white py-2 rounded-lg text-sm font-medium hover:bg-[#0F2466] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
       >
         Add to Folder
       </button>
@@ -482,7 +482,7 @@ const FolderFormDialog: React.FC<FolderFormDialogProps> = ({
             onKeyDown={(e) => e.key === 'Enter' && submit()}
             placeholder="Folder name…"
             autoFocus
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#143087]"
           />
         </div>
         {canEditAccess && (
@@ -503,7 +503,7 @@ const FolderFormDialog: React.FC<FolderFormDialogProps> = ({
               value={userQuery}
               onChange={(e) => setUserQuery(e.target.value)}
               placeholder="Search users…"
-              className="w-full mb-2 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full mb-2 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#143087]"
             />
             <div className="max-h-48 overflow-y-auto rounded-lg border border-gray-200 divide-y divide-gray-100">
               {usersLoading ? (
@@ -522,7 +522,7 @@ const FolderFormDialog: React.FC<FolderFormDialogProps> = ({
                         type="checkbox"
                         checked={checked}
                         onChange={() => toggleUser(user)}
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        className="rounded border-gray-300 text-[#143087] focus:ring-[#143087]"
                       />
                       <span>{user.name}</span>
                     </label>
@@ -542,7 +542,7 @@ const FolderFormDialog: React.FC<FolderFormDialogProps> = ({
           <button
             onClick={submit}
             disabled={!name.trim()}
-            className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="px-4 py-2 bg-[#143087] text-white text-sm rounded-lg hover:bg-[#0F2466] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             {confirmLabel}
           </button>
@@ -745,7 +745,7 @@ const FolderManagementSection: React.FC<FolderManagementSectionProps> = ({
           {canMutateCurrent && (
             <button
               onClick={() => setShowNewFolder(true)}
-              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+              className="flex items-center gap-2 bg-[#143087] text-white px-4 py-2 rounded-lg hover:bg-[#0F2466] transition-colors text-sm font-medium"
             >
               <Plus className="w-4 h-4" />
               New Folder
@@ -767,7 +767,7 @@ const FolderManagementSection: React.FC<FolderManagementSectionProps> = ({
       <nav className="flex items-center gap-1 text-sm text-gray-500 flex-wrap">
         <button
           onClick={() => { setCurrentPath([]); setShowUpload(false); }}
-          className="flex items-center gap-1 hover:text-blue-600 transition-colors font-medium"
+          className="flex items-center gap-1 hover:text-[#143087] transition-colors font-medium"
         >
           <Home className="w-4 h-4" />
           <span>Root</span>
@@ -777,8 +777,8 @@ const FolderManagementSection: React.FC<FolderManagementSectionProps> = ({
             <ChevronRight className="w-4 h-4 text-gray-300" />
             <button
               onClick={() => navigateTo(i)}
-              className={`hover:text-blue-600 transition-colors font-medium ${
-                i === breadcrumbs.length - 1 ? 'text-blue-600' : ''
+              className={`hover:text-[#143087] transition-colors font-medium ${
+                i === breadcrumbs.length - 1 ? 'text-[#143087]' : ''
               }`}
             >
               {crumb.name}
@@ -798,7 +798,9 @@ const FolderManagementSection: React.FC<FolderManagementSectionProps> = ({
       {/* Gallery Grid */}
       {displayedFolders.length === 0 && displayedFiles.length === 0 ? (
         <div className="text-center py-16 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
-          <FolderOpen className="w-14 h-14 mx-auto text-gray-300 mb-3" />
+          <div className="mb-3 mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50">
+            <FolderOpen className="w-7 h-7 text-[#143087]" />
+          </div>
           <p className="text-gray-500 font-medium">
             {currentPath.length === 0
               ? canMutateCurrent

@@ -196,7 +196,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
       <div
         className={`
           relative border-2 border-dashed rounded-lg p-6 transition-all duration-200
-          ${dragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400 bg-gray-50'}
+          ${dragActive ? 'border-[#143087] bg-blue-50' : 'border-gray-300 hover:border-gray-400 bg-gray-50'}
           ${isLoading ? 'opacity-60 pointer-events-none' : ''}
         `}
         onDragEnter={handleDrag}
@@ -206,7 +206,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
       >
         {isLoading ? (
           <div className="flex flex-col items-center justify-center gap-3">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#143087]" />
             <span className="text-sm text-gray-600">
               {t('attachments_upload_uploading', 'Uploading…')}
             </span>
@@ -218,7 +218,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div
-                    className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                    className="bg-[#143087] h-2 rounded-full transition-all duration-300"
                     style={{ width: `${uploadProgress}%` }}
                   />
                 </div>

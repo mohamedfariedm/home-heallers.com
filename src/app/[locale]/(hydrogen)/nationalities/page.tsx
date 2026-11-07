@@ -40,6 +40,8 @@ export default function PermitionsTablePage() {
   return (
     <TableLayout
       title={pageHeader.title}
+      description="Manage nationalities master data"
+      icon={<PiHammerDuotone />}
       breadcrumb={pageHeader.breadcrumb}
       data={{columns: selectedColumns.filter((column) => column !== 'checked' && column !== 'action').map((column: String) => column.replace(/\./g, '_').replace(/\s/g, '_')), rows: selectedRowKeys}}
       fileName="Nationalities/index"

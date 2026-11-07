@@ -31,11 +31,11 @@ export default function HeliumSidebar({ className }: { className?: string }) {
         <div className="sticky top-0 z-40 flex justify-center px-6 pb-5 pt-5 2xl:px-8 2xl:pt-6">
           <Link href={localizedHref('/')} aria-label="Site Logo">
             <Image
-              src="/Vertical Transperent-05.png"
+              src="/logo-primary.png"
               alt={siteConfig.title}
-              // className="dark:invert"
-              width={200}
-              height={100}
+              width={180}
+              height={80}
+              className="h-auto w-auto max-h-12 max-w-[180px] object-contain"
               priority
             />
           </Link>

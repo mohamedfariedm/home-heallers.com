@@ -15,7 +15,8 @@ export default function DateFiled({
         placeholderText={placeholderText}
         selectsRange={false}
         inputProps={{
-          inputClassName: 'h-9 [&_input]:text-ellipsis',
+          inputClassName:
+            'h-9 rounded-xl border-gray-200 ring-[#143087]/20 focus:border-[#143087] focus:ring-[#143087]/20 [&_input]:text-ellipsis',
           ...inputProps,
         }}
         className="w-72"

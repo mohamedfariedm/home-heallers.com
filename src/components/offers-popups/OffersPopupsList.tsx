@@ -83,11 +83,11 @@ export default function OffersPopupsList({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search popups…"
-            className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-10 pr-3 text-sm outline-none ring-[#0d7377]/20 focus:ring-2"
+            className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-10 pr-3 text-sm outline-none ring-[#143087]/20 focus:ring-2"
           />
         </div>
         <Link href={routes.offersPopups.create}>
-          <Button className="gap-2 bg-[#0d7377] hover:bg-[#0a5c5f]">
+          <Button className="gap-2 bg-[#143087] hover:bg-[#0F2466]">
             <Plus className="h-4 w-4" />
             New popup
           </Button>
@@ -96,8 +96,8 @@ export default function OffersPopupsList({
 
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-white py-20 text-center">
-          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-teal-50">
-            <Megaphone className="h-7 w-7 text-[#0d7377]" />
+          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50">
+            <Megaphone className="h-7 w-7 text-[#143087]" />
           </div>
           <p className="text-lg font-medium text-gray-700">No offer popups yet</p>
           <p className="mt-1 max-w-sm text-sm text-gray-400">
@@ -105,7 +105,7 @@ export default function OffersPopupsList({
             with site settings and used by the website.
           </p>
           <Link href={routes.offersPopups.create} className="mt-5">
-            <Button className="gap-2 bg-[#0d7377] hover:bg-[#0a5c5f]">
+            <Button className="gap-2 bg-[#143087] hover:bg-[#0F2466]">
               <Plus className="h-4 w-4" />
               Create first popup
             </Button>
@@ -130,7 +130,7 @@ export default function OffersPopupsList({
                   <td className="px-4 py-3">
                     <Link
                       href={routes.offersPopups.edit(popup.id)}
-                      className="font-medium text-gray-900 hover:text-[#0d7377]"
+                      className="font-medium text-gray-900 hover:text-[#143087]"
                     >
                       {popup.name || 'Untitled popup'}
                     </Link>
@@ -175,7 +175,7 @@ export default function OffersPopupsList({
                     <div className="flex items-center justify-end gap-1">
                       <Link
                         href={routes.offersPopups.edit(popup.id)}
-                        className="rounded-lg p-2 text-gray-500 hover:bg-teal-50 hover:text-[#0d7377]"
+                        className="rounded-lg p-2 text-gray-500 hover:bg-blue-50 hover:text-[#143087]"
                         title="Edit"
                       >
                         <Pencil className="h-4 w-4" />
@@ -183,7 +183,7 @@ export default function OffersPopupsList({
                       <button
                         type="button"
                         onClick={() => duplicate(popup)}
-                        className="rounded-lg p-2 text-gray-500 hover:bg-teal-50 hover:text-[#0d7377]"
+                        className="rounded-lg p-2 text-gray-500 hover:bg-blue-50 hover:text-[#143087]"
                         title="Duplicate"
                         disabled={isSaving}
                       >

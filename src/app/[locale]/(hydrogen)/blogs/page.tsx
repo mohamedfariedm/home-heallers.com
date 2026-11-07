@@ -1,4 +1,5 @@
 'use client';
+import { IoBusiness } from 'react-icons/io5';
 import TableLayout from '@/app/[locale]/(hydrogen)/tables/table-layout';
 import Spinner from '@/components/ui/spinner';
 import { useSearchParams } from 'next/navigation';
@@ -31,6 +32,8 @@ export default function AddressesTablePage() {
     <>
     <TableLayout
       title={pageHeader.title}
+      description="Publish and manage blog posts"
+      icon={<IoBusiness />}
       breadcrumb={pageHeader.breadcrumb}
       data={{
         columns: selectedColumns.filter((col) => col !== 'checked' && col !== 'action'),

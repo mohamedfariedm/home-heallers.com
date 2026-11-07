@@ -1,4 +1,5 @@
 'use client';
+import { PiReceipt } from 'react-icons/pi';
 
 import TableLayout from '@/app/[locale]/(hydrogen)/tables/table-layout';
 import Spinner from '@/components/ui/spinner';
@@ -93,6 +94,8 @@ export default function InvoicesTablePage() {
   return (
     <TableLayout
       title={pageHeader.title}
+      description="Manage patient and doctor invoices"
+      icon={<PiReceipt />}
       breadcrumb={pageHeader.breadcrumb}
       data={{
         columns: selectedColumns.filter(
@@ -121,7 +124,7 @@ export default function InvoicesTablePage() {
                 onClick={() => setView('management')}
                 className={cn(
                   activeView === 'management' &&
-                    'bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900'
+                    'bg-[#143087] text-white'
                 )}
               >
                 Invoice management
@@ -131,7 +134,7 @@ export default function InvoicesTablePage() {
                 onClick={() => setView('zatca')}
                 className={cn(
                   activeView === 'zatca' &&
-                    'bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900'
+                    'bg-[#143087] text-white'
                 )}
               >
                 ZATCA compliance

@@ -94,7 +94,7 @@ export default function InvoiceDetailView({
         </div>
         <div className="flex flex-wrap gap-2">
           <Link href="/invoices">
-            <span className="text-sm text-blue-600 hover:underline">← Back to list</span>
+            <span className="text-sm text-[#143087] hover:underline">← Back to list</span>
           </Link>
         </div>
       </div>
@@ -173,7 +173,7 @@ export default function InvoiceDetailView({
               <div className="flex justify-between">
                 <dt className="text-gray-500">Client</dt>
                 <dd>
-                  <Link href={`/clients`} className="text-blue-600 hover:underline">
+                  <Link href={`/clients`} className="text-[#143087] hover:underline">
                     #{invoice.client_id}
                   </Link>
                 </dd>

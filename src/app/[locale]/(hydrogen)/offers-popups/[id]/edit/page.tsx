@@ -58,7 +58,7 @@ export default function EditOfferPopupPage() {
           This offers popup may have been deleted.
         </p>
         <Link href={routes.offersPopups.index}>
-          <Button className="bg-[#0d7377] hover:bg-[#0a5c5f]">
+          <Button className="bg-[#143087] hover:bg-[#0F2466]">
             Back to popups
           </Button>
         </Link>

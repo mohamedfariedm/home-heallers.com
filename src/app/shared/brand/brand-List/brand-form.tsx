@@ -1,4 +1,9 @@
 'use client';
+import {
+  ModalFormHeader,
+  ModalFormFooter,
+  modalFormClassName,
+} from '@/components/ui/modal-form-shell';
 
 import { useState } from 'react';
 import { PiXBold } from 'react-icons/pi';
@@ -73,14 +78,7 @@ export default function UpdateCreateBrand({ initValues }: {
                 
                 return (
                 <>
-                    <div className="flex items-center justify-between">
-                        <Title as="h4" className="font-semibold">
-                            {initValues ? 'Update Brand' : 'Add a new Brand'}
-                        </Title>
-                        <ActionIcon size="sm" variant="text" onClick={closeModal}>
-                            <PiXBold className="h-auto w-5" />
-                        </ActionIcon>
-                    </div>
+                    <ModalFormHeader title={initValues ? 'Update Brand' : 'Add a new Brand'} />
                     <div className='flex flex-wrap px-1 gap-3'>
                         <Checkbox
                             key={0} 
@@ -145,24 +143,11 @@ export default function UpdateCreateBrand({ initValues }: {
 
                          </div>
 
-
-
-                    <div className="flex items-center justify-end gap-4">
-                    <Button
-                        variant="outline"
-                        onClick={closeModal}
-                        className="w-full @xl:w-auto"
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        type="submit"
+                    <ModalFormFooter
+                        cancelLabel="Cancel"
                         isLoading={isLoading}
-                        className="w-full @xl:w-auto"
-                    >
-                        {initValues ? 'Update brand' : 'Create brand'}
-                    </Button>
-                    </div>
+                        submitLabel={initValues ? 'Update brand' : 'Create brand'}
+                    />
                 </>
                 );
             }}

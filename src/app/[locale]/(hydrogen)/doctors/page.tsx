@@ -1,4 +1,5 @@
 'use client';
+import { PiUserCircle } from 'react-icons/pi';
 import TableLayout from '@/app/[locale]/(hydrogen)/tables/table-layout';
 import Spinner from '@/components/ui/spinner';
 import { useSearchParams } from 'next/navigation';
@@ -46,6 +47,8 @@ export default function DoctorsTablePage() {
   return (
     <TableLayout
       title={pageHeader.title}
+      description="Manage doctors and availability"
+      icon={<PiUserCircle />}
       breadcrumb={pageHeader.breadcrumb}
       data={{
         columns: selectedColumns

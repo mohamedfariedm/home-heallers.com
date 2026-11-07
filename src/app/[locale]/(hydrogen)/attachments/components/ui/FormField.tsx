@@ -32,7 +32,7 @@ export const FormField: React.FC<FormFieldProps> = ({
   
   const baseClasses = `
     w-full px-4 py-3 border rounded-lg transition-all duration-200
-    focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+    focus:ring-2 focus:ring-[#143087]/20 focus:border-[#143087]
     ${fieldError ? 'border-red-500 bg-red-50' : 'border-gray-300 bg-white hover:border-gray-400'}
     ${className}
   `;

@@ -76,7 +76,7 @@ export default function AppAnalyticsFiltersComponent({
         )}
       >
         <div className="flex items-center gap-2">
-          <div className="flex rounded-lg bg-blue-50 p-2 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400">
+          <div className="flex rounded-lg bg-blue-50 p-2 text-[#143087]">
             <PiFunnelBold className="h-5 w-5" />
           </div>
           <h3 className="text-base font-bold text-gray-900 dark:text-gray-100">
@@ -122,7 +122,7 @@ export default function AppAnalyticsFiltersComponent({
                   inputProps={{
                     className: 'w-full',
                     inputClassName:
-                      'border-gray-200 dark:border-gray-700 focus:ring-blue-500 rounded-lg',
+                      'border-gray-200 dark:border-gray-700 focus:ring-[#143087]/20 rounded-lg',
                   }}
                 />
               </div>
@@ -140,7 +140,7 @@ export default function AppAnalyticsFiltersComponent({
                   inputProps={{
                     className: 'w-full',
                     inputClassName:
-                      'border-gray-200 dark:border-gray-700 focus:ring-blue-500 rounded-lg',
+                      'border-gray-200 dark:border-gray-700 focus:ring-[#143087]/20 rounded-lg',
                   }}
                 />
               </div>
@@ -157,7 +157,7 @@ export default function AppAnalyticsFiltersComponent({
                   inputProps={{
                     className: 'w-full',
                     inputClassName:
-                      'border-gray-200 dark:border-gray-700 focus:ring-blue-500 rounded-lg',
+                      'border-gray-200 dark:border-gray-700 focus:ring-[#143087]/20 rounded-lg',
                   }}
                 />
               </div>
@@ -174,7 +174,7 @@ export default function AppAnalyticsFiltersComponent({
               </Button>
               <Button
                 onClick={handleApplyFilters}
-                className="bg-gray-900 px-8 text-white hover:bg-gray-800 dark:bg-gray-100 dark:text-gray-900"
+                className="bg-[#143087] px-8 text-white hover:bg-[#0F2466]"
               >
                 <PiMagnifyingGlassBold className="me-1.5 h-4 w-4" />
                 {t('shared_apply_filters', 'Apply Filters')}

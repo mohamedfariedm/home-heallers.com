@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   PiCalendarBlankBold,
+  PiChartBar,
   PiChartLineUpBold,
   PiCurrencyDollarBold,
   PiGearBold,
@@ -31,6 +32,7 @@ import { useSettings, useUpdateSettings } from '@/framework/site-settings';
 import type { RateColorsByMetric } from '@/types/settings';
 import cn from '@/utils/class-names';
 import { getLast10DaysRange } from '@/utils/default-date-range';
+import AdminPageShell from '@/components/ui/admin-page-shell';
 
 interface AggregateData {
   customer_support?: {
@@ -352,7 +354,7 @@ export default function StatisticsDashboard() {
           <p className="mt-2 text-sm text-gray-500">{error}</p>
           <button
             onClick={() => fetchStatistics()}
-            className="mt-4 rounded-lg bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+            className="mt-4 rounded-lg bg-[#143087] px-4 py-2 text-white hover:bg-[#0F2466]"
           >
             {t('shared_try_again', 'Try Again')}
           </button>
@@ -362,18 +364,16 @@ export default function StatisticsDashboard() {
   }
 
   return (
-    <div className="@container">
-      <div className="mb-6 flex flex-col items-start justify-between gap-3 md:flex-row md:items-center">
-        <div>
-          <h1 className="text-[22px] font-semibold tracking-tight text-gray-900 lg:text-2xl @xl:text-[26px] dark:text-white">
-            {t('stats_title', 'Statistics Dashboard')}
-          </h1>
-          <p className="mt-1 text-sm text-gray-400 dark:text-gray-400">
-            {t('stats_subtitle', 'Switch between Market, Finance, Operations, and Calendar')}
-          </p>
-        </div>
-      </div>
-
+    <AdminPageShell
+      title={t('stats_title', 'Statistics Dashboard')}
+      description={t(
+        'stats_subtitle',
+        'Switch between Market, Finance, Operations, and Calendar'
+      )}
+      icon={<PiChartBar />}
+      maxWidth="full"
+      className="@container"
+    >
       {!isCalendarTab && (
         <StatisticsFiltersComponent onFilter={handleFilter} className="mb-6" />
       )}
@@ -647,17 +647,17 @@ export default function StatisticsDashboard() {
             aggregateData.reservations?.total === 0 &&
             aggregateData.customer_support?.total === 0 &&
             (aggregateData.leads?.total_leads ?? 0) === 0 && (
-              <div className="mt-6 rounded-lg border border-gray-200 bg-gray-50 p-12 text-center dark:border-gray-700 dark:bg-gray-800">
-                <p className="text-lg font-medium text-gray-900 dark:text-white">
+              <div className="mt-6 rounded-2xl border border-dashed border-gray-200 bg-white p-12 text-center shadow-sm">
+                <p className="text-lg font-medium text-gray-700">
                   {t('stats_no_data', 'No data found')}
                 </p>
-                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                <p className="mt-2 text-sm text-gray-400">
                   {t('stats_no_data_hint', 'Try adjusting your filters to see statistics')}
                 </p>
               </div>
             )}
         </Tabs>
       )}
-    </div>
+    </AdminPageShell>
   );
 }

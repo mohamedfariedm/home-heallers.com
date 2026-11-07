@@ -15,7 +15,7 @@ const classes = {
   },
   color: {
     DEFAULT:
-      '[&>.rc-slider-track]:bg-gray-900 [&>.rc-slider-handle]:border-gray-1000 [&>.rc-slider-handle]:hover:border-gray-1000 [&>.rc-slider-handle-dragging]:!border-gray-1000 [&>.rc-slider-handle-dragging]:ring-gray-400/60 [&>.rc-slider-step>.rc-slider-dot-active]:border-gray-1000',
+      '[&>.rc-slider-track]:bg-[#143087] [&>.rc-slider-handle]:border-[#143087] [&>.rc-slider-handle]:hover:border-[#0F2466] [&>.rc-slider-handle-dragging]:!border-[#143087] [&>.rc-slider-handle-dragging]:ring-[#143087]/40 [&>.rc-slider-step>.rc-slider-dot-active]:border-[#143087]',
     primary:
       '[&>.rc-slider-track]:bg-primary [&>.rc-slider-handle]:border-primary-dark [&>.rc-slider-handle]:hover:border-primary-dark [&>.rc-slider-handle-dragging]:!border-primary-dark [&>.rc-slider-handle-dragging]:ring-primary-light/40 [&>.rc-slider-step>.rc-slider-dot-active]:border-primary-dark',
     secondary:

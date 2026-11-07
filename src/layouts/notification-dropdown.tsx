@@ -75,8 +75,8 @@ function NotificationsList({
               const content = (
                 <div
                   className={cn(
-                    'group grid grid-cols-[minmax(0,1fr)_auto] gap-3 rounded-md px-2 py-2 pe-3 transition-colors hover:bg-gray-100 dark:hover:bg-gray-50',
-                    unread && 'bg-gray-50/80 dark:bg-gray-50/30'
+                    'group grid grid-cols-[minmax(0,1fr)_auto] gap-3 rounded-xl px-2 py-2 pe-3 transition-colors hover:bg-blue-50/70 dark:hover:bg-blue-50/40',
+                    unread && 'bg-blue-50/60 dark:bg-blue-50/20'
                   )}
                 >
                   <div className="w-full min-w-0">
@@ -101,10 +101,10 @@ function NotificationsList({
                         renderAsDot
                         size="lg"
                         color="primary"
-                        className="scale-90"
+                        className="scale-90 !bg-[#143087]"
                       />
                     ) : (
-                      <span className="inline-block rounded-full bg-gray-100 p-0.5 dark:bg-gray-50">
+                      <span className="inline-block rounded-full bg-blue-50 p-0.5 text-[#143087] dark:bg-blue-50/50">
                         <PiCheck className="h-auto w-[9px]" />
                       </span>
                     )}
@@ -184,7 +184,7 @@ export function NotificationBellButton({
         aria-label="Notification"
         variant="text"
         className={cn(
-          'relative h-[34px] w-[34px] shadow backdrop-blur-md dark:bg-gray-100 md:h-9 md:w-9',
+          'relative h-[34px] w-[34px] shadow backdrop-blur-md hover:bg-blue-50 hover:text-[#143087] dark:bg-gray-100 md:h-9 md:w-9',
           className
         )}
       >
@@ -195,7 +195,7 @@ export function NotificationBellButton({
             color="warning"
             enableOutlineRing
             className={cn(
-              'absolute right-2.5 top-2.5 -translate-y-1/3 translate-x-1/2',
+              'absolute right-2.5 top-2.5 -translate-y-1/3 translate-x-1/2 !bg-[#39519B]',
               badgeClassName
             )}
           />

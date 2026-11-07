@@ -1,4 +1,5 @@
 'use client';
+import { PiFileText } from 'react-icons/pi';
 import ContractsTable from '@/app/shared/contracts/table';
 import TableLayout from '@/app/[locale]/(hydrogen)/tables/table-layout';
 import { useContracts } from '@/framework/contracts';
@@ -33,6 +34,8 @@ export default function ContractsTablePage() {
   return (
     <TableLayout
       title={pageHeader.title}
+      description="Manage contracts and agreements"
+      icon={<PiFileText />}
       breadcrumb={pageHeader.breadcrumb}
       data={{
         columns: selectedColumns

@@ -22,7 +22,7 @@ export default function FiltersButton({
   return (
     <Button
       className={cn(
-        'mt-4 w-full cursor-pointer @lg:mt-0 @lg:w-auto dark:bg-gray-100 dark:text-white dark:active:bg-gray-100',
+        'mt-4 w-full cursor-pointer rounded-xl border border-gray-200 bg-white text-gray-700 hover:border-[#143087]/40 hover:bg-blue-50 hover:text-[#143087] @lg:mt-0 @lg:w-auto dark:bg-white dark:text-gray-700',
         className
       )}
       onClick={() =>

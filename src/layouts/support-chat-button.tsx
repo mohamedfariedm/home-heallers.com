@@ -123,7 +123,7 @@ export default function SupportChatButton({
         title={label}
         variant="text"
         className={cn(
-          'relative h-[34px] w-[34px] shadow backdrop-blur-md dark:bg-gray-100 md:h-9 md:w-9',
+          'relative h-[34px] w-[34px] shadow backdrop-blur-md hover:bg-blue-50 hover:text-[#143087] dark:bg-gray-100 md:h-9 md:w-9',
           ringing && 'ring-2 ring-red-500',
           className
         )}

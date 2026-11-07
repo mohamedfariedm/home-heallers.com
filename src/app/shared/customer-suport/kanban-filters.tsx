@@ -137,12 +137,12 @@ export default function KanbanFilters({
       <Button
         onClick={() => setIsOpen(true)}
         variant="outline"
-        className="flex items-center gap-2"
+        className="flex items-center gap-2 border-gray-200 hover:border-[#143087]/40 hover:bg-blue-50 hover:text-[#143087]"
       >
         <PiFunnel className="h-4 w-4" />
         Filters
         {hasActiveFilters && (
-          <span className="ml-1 rounded-full bg-primary px-2 py-0.5 text-xs font-medium text-white">
+          <span className="ml-1 rounded-full bg-[#143087] px-2 py-0.5 text-xs font-medium text-white">
             {activeFilterCount}
           </span>
         )}
@@ -159,7 +159,7 @@ export default function KanbanFilters({
         <div className="flex h-full flex-col">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4 dark:border-gray-700">
-            <Title as="h5" className="font-semibold">
+            <Title as="h5" className="font-semibold text-[#143087]">
               Advanced Filters
             </Title>
             <ActionIcon
@@ -167,7 +167,7 @@ export default function KanbanFilters({
               rounded="full"
               variant="text"
               onClick={() => setIsOpen(false)}
-              className="hover:bg-gray-100 dark:hover:bg-gray-200"
+              className="hover:bg-blue-50 hover:text-[#143087] dark:hover:bg-blue-900/20"
             >
               <PiXBold className="h-4 w-4" />
             </ActionIcon>
@@ -177,13 +177,13 @@ export default function KanbanFilters({
           <div className="flex-1 overflow-y-auto px-5 py-4">
             {/* Date Filters */}
             <div className="mb-6 grid grid-cols-2 gap-4">
-              <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-50">
+              <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-50">
                 <div className="mb-3 flex items-center justify-between">
                   <label className="text-sm font-semibold text-gray-900 dark:text-gray-900">
                     Date From
                   </label>
                   {(dateFrom || currentDates?.date_from) && (
-                    <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-medium text-white">
+                    <span className="rounded-full bg-[#143087] px-2 py-0.5 text-xs font-medium text-white">
                       Active
                     </span>
                   )}
@@ -193,16 +193,16 @@ export default function KanbanFilters({
                   value={dateFrom || currentDates?.date_from || ''}
                   onChange={(e) => setDateFrom(e.target.value)}
                   className="w-full"
-                  inputClassName="border-gray-200 dark:border-gray-700 focus:ring-blue-500 rounded-lg h-9"
+                  inputClassName="border-gray-200 dark:border-gray-700 focus:ring-[#143087]/20 rounded-lg h-9"
                 />
               </div>
-              <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-50">
+              <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-50">
                 <div className="mb-3 flex items-center justify-between">
                   <label className="text-sm font-semibold text-gray-900 dark:text-gray-900">
                     Date To
                   </label>
                   {(dateTo || currentDates?.date_to) && (
-                    <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-medium text-white">
+                    <span className="rounded-full bg-[#143087] px-2 py-0.5 text-xs font-medium text-white">
                       Active
                     </span>
                   )}
@@ -212,7 +212,7 @@ export default function KanbanFilters({
                   value={dateTo || currentDates?.date_to || ''}
                   onChange={(e) => setDateTo(e.target.value)}
                   className="w-full"
-                  inputClassName="border-gray-200 dark:border-gray-700 focus:ring-blue-500 rounded-lg h-9"
+                  inputClassName="border-gray-200 dark:border-gray-700 focus:ring-[#143087]/20 rounded-lg h-9"
                 />
               </div>
             </div>
@@ -228,9 +228,9 @@ export default function KanbanFilters({
                   <div
                     key={columnKey}
                     className={cn(
-                      'rounded-lg border p-4 transition-colors',
+                      'rounded-2xl border p-4 shadow-sm transition-colors',
                       hasFilter
-                        ? 'border-primary bg-primary/5 dark:bg-primary/10'
+                        ? 'border-[#143087]/40 bg-blue-50 dark:border-blue-700/50 dark:bg-blue-900/20'
                         : 'border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-50'
                     )}
                   >
@@ -239,7 +239,7 @@ export default function KanbanFilters({
                         {columnLabel}
                       </label>
                       {hasFilter && (
-                        <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-medium text-white">
+                        <span className="rounded-full bg-[#143087] px-2 py-0.5 text-xs font-medium text-white">
                           Active
                         </span>
                       )}
@@ -266,12 +266,15 @@ export default function KanbanFilters({
               <Button
                 variant="outline"
                 onClick={handleClearFilters}
-                className="flex-1"
+                className="flex-1 border-gray-200 hover:border-[#143087]/40 hover:bg-blue-50 hover:text-[#143087]"
                 disabled={!hasActiveFilters}
               >
                 Clear All
               </Button>
-              <Button onClick={handleApplyFilters} className="flex-1">
+              <Button
+                onClick={handleApplyFilters}
+                className="flex-1 bg-[#143087] hover:bg-[#0F2466]"
+              >
                 Apply Filters
                 {hasActiveFilters && (
                   <span className="ml-2 rounded-full bg-white/20 px-2 py-0.5 text-xs">

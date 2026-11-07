@@ -1,19 +1,21 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { PiXBold } from 'react-icons/pi';
+import { PiPackageDuotone } from 'react-icons/pi';
 import { SubmitHandler } from 'react-hook-form';
 import { Form } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { ActionIcon } from '@/components/ui/action-icon';
 import { Title } from '@/components/ui/text';
 import { useModal } from '@/app/shared/modal-views/use-modal';
 import { useCreateRoles, useUpdateRole } from '@/framework/roles';
 import { usePermissions } from '@/framework/permitions';
 import Select from 'react-select';
 import { createRoleSchema, CreateRoleInput } from '@/utils/validators/create-role.schema';
-import { Checkbox } from 'rizzui';
+import {
+  ModalFormHeader,
+  ModalFormFooter,
+  modalFormClassName,
+} from '@/components/ui/modal-form-shell';
 
 /** Width for create/update role modals (header button + row edit). */
 export const ROLE_MODAL_CUSTOM_SIZE = 'min(92vw, 820px)';
@@ -70,38 +72,33 @@ export default function CreateRole({ initValues }: { initValues?: any }) {
           name: initValues?.name || "",
         },
       }}
-      className="flex flex-grow flex-col gap-6 p-6 @container [&_.rizzui-input-label]:font-medium [&_.rizzui-input-label]:text-gray-900"
+      className={modalFormClassName}
     >
       {({ register, formState: { errors } }) => (
         <>
-          <div className="flex items-center justify-between">
-            <Title as="h4" className="font-semibold">
-              {initValues ? 'Update Role' : 'Add a new Role'}
-            </Title>
-            <ActionIcon size="sm" variant="text" onClick={closeModal}>
-              <PiXBold className="h-auto w-5" />
-            </ActionIcon>
-          </div>
-
-
+          <ModalFormHeader
+            title={initValues ? 'Update Role' : 'Add a new Role'}
+            description="Assign permissions to this role"
+            icon={<PiPackageDuotone />}
+          />
 
           <Input
-          key={"name"}
+            key={'name'}
             label="Role Name (English)"
             placeholder="Enter English name"
-            {...register("name")}
+            {...register('name')}
             error={errors.name?.message}
           />
-          
 
-          {/* Permissions Multi-Select */}
           <div className="flex flex-col gap-4">
-            <Title as="h5" className="font-semibold">Select Permissions</Title>
+            <Title as="h5" className="font-semibold">
+              Select Permissions
+            </Title>
             {isPermissionsLoading ? (
               <div>Loading...</div>
             ) : (
               <Select
-              key={"permissionsSelect"}
+                key={'permissionsSelect'}
                 isMulti
                 menuPortalTarget={document.body}
                 styles={{
@@ -109,6 +106,7 @@ export default function CreateRole({ initValues }: { initValues?: any }) {
                   control: (base) => ({
                     ...base,
                     alignItems: 'flex-start',
+                    borderRadius: 12,
                   }),
                   valueContainer: (base) => ({
                     ...base,
@@ -123,7 +121,7 @@ export default function CreateRole({ initValues }: { initValues?: any }) {
                 }}
                 options={permissions?.data?.map((permission: any) => ({
                   value: permission.id,
-                  label: permission.name || permission.name || "Unnamed",
+                  label: permission.name || permission.name || 'Unnamed',
                 }))}
                 value={selectedPermissions}
                 onChange={handlePermissionChange}
@@ -132,22 +130,11 @@ export default function CreateRole({ initValues }: { initValues?: any }) {
             )}
           </div>
 
-          <div className="flex items-center justify-end gap-4">
-            <Button
-              variant="outline"
-              onClick={closeModal}
-              className="w-full @xl:w-auto"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              isLoading={isLoading}
-              className="w-full @xl:w-auto"
-            >
-              {initValues ? 'Update Role' : 'Create Role'}
-            </Button>
-          </div>
+          <ModalFormFooter
+            cancelLabel="Cancel"
+            isLoading={isLoading}
+            submitLabel={initValues ? 'Update Role' : 'Create Role'}
+          />
         </>
       )}
     </Form>

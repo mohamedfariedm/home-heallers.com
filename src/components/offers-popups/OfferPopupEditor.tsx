@@ -3,7 +3,7 @@
 import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
-import { ExternalLink, Plus, Trash2, ArrowLeft } from 'lucide-react';
+import { ExternalLink, Plus, Trash2, ArrowLeft, Megaphone } from 'lucide-react';
 import {
   MultilingualText,
   OfferPopup,
@@ -22,6 +22,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { DatePicker } from '@/components/ui/datepicker';
 import { Textarea } from '@/components/ui/textarea';
 import CouponSelect from '@/app/shared/geo-regions/coupon-select';
+import AdminPageShell from '@/components/ui/admin-page-shell';
 import OfferPopupPreview from './OfferPopupPreview';
 import OfferPopupSummary from './OfferPopupSummary';
 import {
@@ -89,7 +90,7 @@ function SegmentedControl<T extends string>({
           onClick={() => onChange(opt.value)}
           className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
             value === opt.value
-              ? 'bg-white text-[#0d7377] shadow-sm'
+              ? 'bg-white text-[#143087] shadow-sm'
               : 'text-gray-600 hover:text-gray-900'
           }`}
         >
@@ -274,73 +275,66 @@ export default function OfferPopupEditor({
 
   const err = (key: string) => (showErrors ? errors[key] : undefined);
 
-  return (
-    <div className="min-h-screen bg-[#f4f7f8]">
-      <div className="sticky top-0 z-20 border-b border-gray-200 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <div>
-            <div className="mb-1 flex items-center gap-2 text-xs text-gray-400">
-              <Link
-                href={routes.offersPopups.index}
-                className="hover:text-[#0d7377]"
-              >
-                Website
-              </Link>
-              <span>/</span>
-              <Link
-                href={routes.offersPopups.index}
-                className="hover:text-[#0d7377]"
-              >
-                Popups
-              </Link>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-xl font-bold text-gray-900">
-                {popup.name ||
-                  (mode === 'create' ? 'New Offers Popup' : 'Edit Offers Popup')}
-              </h1>
-              <span
-                className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                  popup.status === 'active'
-                    ? 'bg-emerald-50 text-emerald-700'
-                    : 'bg-gray-100 text-gray-500'
-                }`}
-              >
-                {popup.status === 'active' ? 'Active' : 'Inactive'}
-              </span>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Link href={routes.offersPopups.index}>
-              <Button variant="outline" className="gap-2">
-                <ArrowLeft className="h-4 w-4" />
-                Back
-              </Button>
-            </Link>
-            <Button
-              variant="outline"
-              className="gap-2"
-              onClick={handlePreview}
-              type="button"
-            >
-              <ExternalLink className="h-4 w-4" />
-              Preview on site
-            </Button>
-            <Button
-              className="bg-[#0d7377] hover:bg-[#0a5c5f]"
-              onClick={handleSave}
-              disabled={isSaving}
-              isLoading={isSaving}
-              type="button"
-            >
-              Save changes
-            </Button>
-          </div>
-        </div>
-      </div>
+  const editorTitle =
+    popup.name ||
+    (mode === 'create' ? 'New Offers Popup' : 'Edit Offers Popup');
 
-      <div className="mx-auto grid max-w-7xl gap-6 px-4 py-6 lg:grid-cols-[minmax(0,1fr)_320px] sm:px-6">
-        <div className="space-y-5">
+  return (
+    <AdminPageShell
+      title={editorTitle}
+      description={
+        mode === 'create'
+          ? 'Create a lead-capture popup for offer pages'
+          : 'Edit popup content, targeting, and display rules'
+      }
+      icon={<Megaphone />}
+      breadcrumb={[
+        { name: 'Website', href: routes.offersPopups.index },
+        { name: 'Popups', href: routes.offersPopups.index },
+        { name: mode === 'create' ? 'Create' : 'Edit' },
+      ]}
+      status={
+        <span
+          className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+            popup.status === 'active'
+              ? 'bg-emerald-50 text-emerald-700'
+              : 'bg-gray-100 text-gray-500'
+          }`}
+        >
+          {popup.status === 'active' ? 'Active' : 'Inactive'}
+        </span>
+      }
+      actions={
+        <>
+          <Link href={routes.offersPopups.index}>
+            <Button variant="outline" className="gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </Button>
+          </Link>
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={handlePreview}
+            type="button"
+          >
+            <ExternalLink className="h-4 w-4" />
+            Preview on site
+          </Button>
+          <Button
+            className="bg-[#143087] hover:bg-[#0F2466]"
+            onClick={handleSave}
+            disabled={isSaving}
+            isLoading={isSaving}
+            type="button"
+          >
+            Save changes
+          </Button>
+        </>
+      }
+      contentClassName="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]"
+    >
+      <div className="space-y-5">
           <SectionCard title="General">
             <div>
               <FieldLabel>Popup name</FieldLabel>
@@ -399,7 +393,7 @@ export default function OfferPopupEditor({
                 ))}
                 <button
                   type="button"
-                  className="inline-flex items-center gap-1.5 text-sm font-medium text-[#0d7377] hover:underline"
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-[#143087] hover:underline"
                   onClick={() =>
                     patch('url_rules', [
                       ...popup.url_rules,
@@ -497,7 +491,7 @@ export default function OfferPopupEditor({
                       Number(e.target.value)
                     )
                   }
-                  className="w-full accent-[#0d7377]"
+                  className="w-full accent-[#143087]"
                 />
                 <FieldError message={err('show_after_scroll_percent')} />
               </div>
@@ -869,43 +863,42 @@ export default function OfferPopupEditor({
               </div>
             </div>
           </SectionCard>
-        </div>
-
-        <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
-          <div className="flex justify-end">
-            <SegmentedControl
-              value={previewLang}
-              options={[
-                { value: 'ar', label: 'AR preview' },
-                { value: 'en', label: 'EN preview' },
-              ]}
-              onChange={setPreviewLang}
-            />
-          </div>
-          <OfferPopupPreview popup={popup} lang={previewLang} />
-          <OfferPopupSummary popup={popup} />
-          <div className="flex flex-col gap-2">
-            <Button
-              variant="outline"
-              className="w-full gap-2"
-              onClick={handlePreview}
-              type="button"
-            >
-              <ExternalLink className="h-4 w-4" />
-              Preview on site
-            </Button>
-            <Button
-              className="w-full bg-[#0d7377] hover:bg-[#0a5c5f]"
-              onClick={handleSave}
-              disabled={isSaving}
-              isLoading={isSaving}
-              type="button"
-            >
-              Save changes
-            </Button>
-          </div>
-        </aside>
       </div>
-    </div>
+
+      <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+        <div className="flex justify-end">
+          <SegmentedControl
+            value={previewLang}
+            options={[
+              { value: 'ar', label: 'AR preview' },
+              { value: 'en', label: 'EN preview' },
+            ]}
+            onChange={setPreviewLang}
+          />
+        </div>
+        <OfferPopupPreview popup={popup} lang={previewLang} />
+        <OfferPopupSummary popup={popup} />
+        <div className="flex flex-col gap-2">
+          <Button
+            variant="outline"
+            className="w-full gap-2"
+            onClick={handlePreview}
+            type="button"
+          >
+            <ExternalLink className="h-4 w-4" />
+            Preview on site
+          </Button>
+          <Button
+            className="w-full bg-[#143087] hover:bg-[#0F2466]"
+            onClick={handleSave}
+            disabled={isSaving}
+            isLoading={isSaving}
+            type="button"
+          >
+            Save changes
+          </Button>
+        </div>
+      </aside>
+    </AdminPageShell>
   );
 }

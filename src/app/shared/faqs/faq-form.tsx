@@ -1,11 +1,13 @@
 'use client';
 
+import {
+  ModalFormHeader,
+  ModalFormFooter,
+  modalFormClassName,
+} from '@/components/ui/modal-form-shell';
 import { useModal } from '@/app/shared/modal-views/use-modal';
-import { ActionIcon } from '@/components/ui/action-icon';
-import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Title } from '@/components/ui/text';
 import {
   FaqFormInput,
   FaqFormSchema,
@@ -17,11 +19,10 @@ import Cookies from 'js-cookie';
 import toast from 'react-hot-toast';
 
 import { useState } from 'react';
-import { Controller, SubmitHandler } from 'react-hook-form';
-import { PiXBold } from 'react-icons/pi';
+import { SubmitHandler } from 'react-hook-form';
+import { IoHelpCircle } from 'react-icons/io5';
 
 import { useCreateFaqs, useUpdateFaqs } from '@/framework/faqs';
-import DOMPurify from 'isomorphic-dompurify';
 
 import QuillLoader from '@/components/loader/quill-loader';
 import dynamic from 'next/dynamic';
@@ -45,7 +46,9 @@ export default function UpdateCreateBrand({
   const { mutate: create, isPending } = useCreateFaqs();
   const [isoading, setLoading] = useState(false);
   let [imageError, setImageError] = useState(0);
-  const [isImageData, setImage] = useState(initValues ? initValues?.image : null);
+  const [isImageData, setImage] = useState(
+    initValues ? initValues?.image : null
+  );
 
   const handleFileUpload = (event: any, type: 'Image' | 'File') => {
     setLoading(true);
@@ -60,7 +63,6 @@ export default function UpdateCreateBrand({
         },
       })
       .then((response) => {
-        console.log(response.data.data);
         if (type === 'Image') {
           setImage(response.data.data);
         }
@@ -70,8 +72,7 @@ export default function UpdateCreateBrand({
           })
         );
       })
-      .catch((error) => {
-        console.log(error);
+      .catch(() => {
         toast.error(t('faqs_upload_retry'));
       })
       .finally(() => {
@@ -87,7 +88,7 @@ export default function UpdateCreateBrand({
         id: initValues.id,
       });
     } else {
-      create({...data,image: isImageData});
+      create({ ...data, image: isImageData });
     }
     setReset({
       roleName: '',
@@ -97,115 +98,91 @@ export default function UpdateCreateBrand({
   };
 
   return (
-    <>
-      <Form<FaqFormInput>
-        resetValues={reset}
-        onSubmit={onSubmit}
-        validationSchema={FaqFormSchema}
-        useFormProps={{
-          defaultValues: initValues,
-        }}
-        className="flex flex-grow flex-col gap-6 overflow-y-auto p-6 @container [&_.rizzui-input-label]:font-medium [&_.rizzui-input-label]:text-gray-900"
-      >
-        {({
-          register,
-          getValues,
-          control,
-          setValue,
-          formState: { errors, isLoading },
-        }) => {
-          console.log(errors);
-          
-          return (
-            <>
-              <div className="flex items-center justify-between">
-                <Title as="h4" className="font-semibold">
-                  {initValues ? t('faqs_update') : t('faqs_add')}
-                </Title>
-                <ActionIcon size="sm" variant="text" onClick={closeModal}>
-                  <PiXBold className="h-auto w-5" />
-                </ActionIcon>
+    <Form<FaqFormInput>
+      resetValues={reset}
+      onSubmit={onSubmit}
+      validationSchema={FaqFormSchema}
+      useFormProps={{
+        defaultValues: initValues,
+      }}
+      className={modalFormClassName}
+    >
+      {({ register, control, formState: { errors, isLoading } }) => (
+        <>
+          <ModalFormHeader
+            title={initValues ? t('faqs_update') : t('faqs_add')}
+            description={
+              initValues
+                ? 'Update this FAQ entry'
+                : 'Create a new frequently asked question'
+            }
+            icon={<IoHelpCircle />}
+          />
+
+          <Input
+            label={t('faqs_question_en')}
+            placeholder={t('faqs_question_en')}
+            {...register('title_question.en')}
+            error={errors.title_question?.en?.message}
+          />
+          <Input
+            label={t('faqs_question_ar')}
+            placeholder={t('faqs_question_ar')}
+            {...register('title_question.ar')}
+            error={errors.title_question?.ar?.message}
+          />
+
+          <QuillEditor
+            name="answer.en"
+            error={errors.answer?.en?.message}
+            control={control}
+            label={t('faqs_answer_en')}
+            className="col-span-full [&_.ql-editor]:min-h-[100px]"
+            labelClassName="mb-1.5 font-medium text-gray-700 dark:text-gray-600"
+          />
+
+          <QuillEditor
+            error={errors.answer?.ar?.message}
+            control={control}
+            name="answer.ar"
+            label={t('faqs_answer_ar')}
+            className="col-span-full [&_.ql-editor]:min-h-[100px]"
+            labelClassName="mb-1.5 font-medium text-gray-700 dark:text-gray-600"
+          />
+
+          <FormGroup
+            title={t('faqs_image')}
+            className="relative pt-7 @2xl:pt-9 @3xl:grid-cols-12 @3xl:pt-11"
+          >
+            {isoading && (
+              <div className="absolute z-10 m-auto flex h-[100%] w-[100%] items-center justify-center ">
+                <Spinner size="xl" />
               </div>
+            )}
+            <Upload
+              title={t('faqs_image')}
+              accept="img"
+              onChange={(e) => {
+                setImageError(0);
+                handleFileUpload(e, 'Image');
+              }}
+            />
+            {imageError ? (
+              <p className="rizzui-input-error-text mt-0.5 text-xs text-red">
+                {t('faqs_image_required')}
+              </p>
+            ) : (
+              ''
+            )}
+          </FormGroup>
 
-              <Input
-                label={t('faqs_question_en')}
-                placeholder={t('faqs_question_en')}
-                {...register('title_question.en')}
-                error={errors.title_question?.en?.message}
-              />
-              <Input
-                label={t('faqs_question_ar')}
-                placeholder={t('faqs_question_ar')}
-                {...register('title_question.ar')}
-                error={errors.title_question?.ar?.message}
-              />
-
-              <QuillEditor
-                    name="answer.en"
-                    error={errors.answer?.en?.message}
-                    control={control}
-                    label={t('faqs_answer_en')}
-                    className="col-span-full [&_.ql-editor]:min-h-[100px]"
-                    labelClassName="font-medium text-gray-700 dark:text-gray-600 mb-1.5"
-                  />
-              
-                  <QuillEditor
-                    error={errors.answer?.ar?.message }
-                    control={control}
-                    name="answer.ar"
-                    label={t('faqs_answer_ar')}
-                    className="col-span-full [&_.ql-editor]:min-h-[100px]"
-                    labelClassName="font-medium text-gray-700 dark:text-gray-600 mb-1.5"
-                  />
-              
-
-              <FormGroup
-                title={t('faqs_image')}
-                className="relative pt-7 @2xl:pt-9 @3xl:grid-cols-12 @3xl:pt-11"
-              >
-                {isoading && (
-                  <div className="absolute z-10 m-auto flex h-[100%] w-[100%] items-center justify-center ">
-                    <Spinner size="xl" />
-                  </div>
-                )}
-                <Upload
-                  title={t('faqs_image')}
-                  accept="img"
-                  onChange={(e) => {
-                    setImageError(0);
-                    handleFileUpload(e, 'Image');
-                  }}
-                />
-                {imageError ? (
-                  // "faried Error"
-                  <p className="rizzui-input-error-text mt-0.5 text-xs text-red">
-                    {t('faqs_image_required')}
-                  </p>
-                ) : (
-                  ''
-                )}
-              </FormGroup>
-
-              <div className="flex items-center justify-end gap-4">
-                <Button
-                  variant="outline"
-                  onClick={closeModal}
-                  className="w-full @xl:w-auto"
-                >
-                  {t('faqs_cancel')}
-                </Button>
-                <Button
-                  type="submit"
-                  isLoading={isLoading}
-                  className="w-full @xl:w-auto"
-                >
-                  {initValues ? t('faqs_update') : t('faqs_create')}
-                </Button>
-              </div>
-            </>
-          );
-        }}
-      </Form>
-    </>
+          <ModalFormFooter
+            cancelLabel={t('faqs_cancel')}
+            isLoading={isLoading || isPending}
+            submitLabel={initValues ? t('faqs_update') : t('faqs_create')}
+          />
+        </>
+      )}
+    </Form>
   );
 }

@@ -44,7 +44,7 @@ export default function PriceField({
       <div className="flex items-center">
         <Input
           prefix={'$'}
-          inputClassName="w-24 h-9"
+          inputClassName="h-9 w-24 rounded-xl border-gray-200 ring-[#143087]/20 focus:border-[#143087] focus:ring-[#143087]/20"
           type="number"
           placeholder="0.00"
           min={0}
@@ -55,7 +55,7 @@ export default function PriceField({
         <Input
           prefix={'$'}
           min={Number(minPrice)}
-          inputClassName="w-24 h-9"
+          inputClassName="h-9 w-24 rounded-xl border-gray-200 ring-[#143087]/20 focus:border-[#143087] focus:ring-[#143087]/20"
           type="number"
           placeholder="100.00"
           value={maxPrice}

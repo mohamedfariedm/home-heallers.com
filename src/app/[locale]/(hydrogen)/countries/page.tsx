@@ -1,4 +1,5 @@
 'use client';
+import { PiMapPinLineDuotone } from 'react-icons/pi';
 import RegionsTable from '@/app/shared/regions/table';
 import TableLayout from '@/app/[locale]/(hydrogen)/tables/table-layout';
 import { useRegions } from '@/framework/regions';
@@ -37,6 +38,8 @@ export default function CountriesTablePage() {
   return (
     <TableLayout
       title={pageHeader.title}
+      description="Manage countries master data"
+      icon={<PiMapPinLineDuotone />}
       breadcrumb={pageHeader.breadcrumb}
       data={{
         columns: selectedColumns

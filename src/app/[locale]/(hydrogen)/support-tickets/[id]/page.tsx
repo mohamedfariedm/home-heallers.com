@@ -1,15 +1,20 @@
 'use client';
 
 import { useTranslation } from 'react-i18next';
-import PageHeader from '@/app/shared/page-header';
+import AdminPageShell from '@/components/ui/admin-page-shell';
 import Spinner from '@/components/ui/spinner';
 import { useIsMounted } from '@/hooks/use-is-mounted';
 import { usePermissions } from '@/context/PermissionsContext';
 import { routes } from '@/config/routes';
 import { resolveSupportTicketsPermissions } from '@/app/shared/support-tickets/permissions';
 import SupportTicketThread from '@/app/shared/support-tickets/thread';
+import { PiLifebuoyDuotone } from 'react-icons/pi';
 
-export default function SupportTicketDetailPage({ params }: { params: { id: string } }) {
+export default function SupportTicketDetailPage({
+  params,
+}: {
+  params: { id: string };
+}) {
   const { t } = useTranslation();
   const isMounted = useIsMounted();
   const { permissions } = usePermissions();
@@ -23,25 +28,31 @@ export default function SupportTicketDetailPage({ params }: { params: { id: stri
     );
   }
 
-  const pageHeader = {
-    title: t('st_page_title'),
-    breadcrumb: [
-      { href: '/', name: t('st_breadcrumb_home') },
-      { href: routes.supportTickets.index, name: t('st_page_title') },
-      { name: `#${params.id}` },
-    ],
-  };
-
   return (
-    <>
-      <PageHeader title={pageHeader.title} breadcrumb={pageHeader.breadcrumb} />
+    <AdminPageShell
+      title={`${t('st_page_title')} #${params.id}`}
+      description={t('st_thread_description', 'Conversation thread for this ticket')}
+      icon={<PiLifebuoyDuotone />}
+      breadcrumb={[
+        { href: '/', name: t('st_breadcrumb_home') },
+        { href: routes.supportTickets.index, name: t('st_page_title') },
+        { name: `#${params.id}` },
+      ]}
+      maxWidth="full"
+    >
       {access.view ? (
-        <SupportTicketThread key={params.id} ticketId={params.id} access={access} />
+        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+          <SupportTicketThread
+            key={params.id}
+            ticketId={params.id}
+            access={access}
+          />
+        </div>
       ) : (
-        <div className="rounded-md border border-gray-200 bg-white p-6 text-sm text-gray-600">
+        <div className="rounded-2xl border border-gray-200 bg-white p-6 text-sm text-gray-600 shadow-sm">
           {t('st_no_permission')}
         </div>
       )}
-    </>
+    </AdminPageShell>
   );
 }

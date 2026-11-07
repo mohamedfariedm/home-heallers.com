@@ -1,4 +1,5 @@
 'use client';
+import { PiTagDuotone } from 'react-icons/pi';
 
 import TableLayout from '@/app/[locale]/(hydrogen)/tables/table-layout';
 import Spinner from '@/components/ui/spinner';
@@ -104,6 +105,8 @@ export default function OffersPage() {
   return (
     <TableLayout
       title={pageHeader.title}
+      description="Manage promotional offers and packages"
+      icon={<PiTagDuotone />}
       breadcrumb={pageHeader.breadcrumb}
       data={{
         columns: selectedColumns

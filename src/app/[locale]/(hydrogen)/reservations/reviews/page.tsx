@@ -1,4 +1,5 @@
 'use client';
+import { IoStarOutline } from 'react-icons/io5';
 import TableLayout from '@/app/[locale]/(hydrogen)/tables/table-layout';
 import Spinner from '@/components/ui/spinner';
 import { useSearchParams } from 'next/navigation';
@@ -32,6 +33,8 @@ export default function ReservationReviewsPage() {
   return (
     <TableLayout
       title={pageHeader.title}
+      description="Review patient feedback on completed visits"
+      icon={<IoStarOutline />}
       breadcrumb={pageHeader.breadcrumb}
       data={{
         columns: selectedColumns

@@ -1,8 +1,11 @@
 'use client';
+
 import FolderManagementSection from '@/components/FolderManagementSection';
 import Spinner from '@/components/ui/spinner';
+import AdminPageShell from '@/components/ui/admin-page-shell';
 import { useSettings, useUpdateSettings } from '@/framework/site-settings';
 import { MediaFolder } from '@/types/settings';
+import { PiFolderLockDuotone } from 'react-icons/pi';
 
 export default function MediaFoldersPage() {
   const { data, isLoading } = useSettings();
@@ -16,55 +19,31 @@ export default function MediaFoldersPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="w-full mx-auto">
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
-            <div className="flex items-center gap-3">
-              <svg
-                className="w-6 h-6 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"
-                />
-              </svg>
-              <div>
-                <h1 className="text-2xl font-bold text-white">Media Folders</h1>
-                <p className="text-blue-100 text-sm mt-0.5">
-                  Organize your videos and files in folders
-                </p>
-              </div>
-              {isPending && (
-                <div className="ml-auto flex items-center gap-2 text-white text-sm">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-                  Saving…
-                </div>
-              )}
-            </div>
+    <AdminPageShell
+      title="Media Folders"
+      description="Organize your videos and files in folders"
+      icon={<PiFolderLockDuotone />}
+      status={
+        isPending ? (
+          <div className="flex items-center gap-2 text-sm text-[#143087]">
+            <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-[#143087]" />
+            Saving…
           </div>
-
-          {/* Content */}
-          <div className="p-6">
-            {isLoading ? (
-              <div className="flex items-center justify-center py-24">
-                <Spinner size="lg" />
-              </div>
-            ) : (
-              <FolderManagementSection
-                folders={settings?.media_folders ?? []}
-                onUpdate={handleUpdate}
-              />
-            )}
+        ) : null
+      }
+    >
+      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-24">
+            <Spinner size="lg" />
           </div>
-        </div>
+        ) : (
+          <FolderManagementSection
+            folders={settings?.media_folders ?? []}
+            onUpdate={handleUpdate}
+          />
+        )}
       </div>
-    </div>
+    </AdminPageShell>
   );
 }

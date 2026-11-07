@@ -140,7 +140,7 @@ function RecordCard({ record }: { record: UserActivityRecord }) {
               <Link
                 href={subjectHref}
                 onClick={(e) => e.stopPropagation()}
-                className="font-semibold text-blue-600 hover:underline dark:text-blue-400"
+                className="font-semibold text-[#143087] hover:underline"
               >
                 {modelLabel}
               </Link>

@@ -35,8 +35,8 @@ export default function KpiViewTabs({
           className={cn(
             'rounded-md px-4 py-2 text-sm font-medium transition-colors',
             activeTab === tab.id
-              ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-800 dark:text-white'
-              : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
+              ? 'bg-[#143087] text-white shadow-sm'
+              : 'text-gray-600 hover:bg-blue-50 hover:text-[#143087] dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200'
           )}
         >
           {tab.label}

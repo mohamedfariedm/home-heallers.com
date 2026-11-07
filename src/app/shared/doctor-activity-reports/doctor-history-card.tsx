@@ -51,7 +51,7 @@ export default function DoctorHistoryCard({ item }: { item: DoctorHistoryItem })
         {reservationHref ? (
           <Link
             href={reservationHref}
-            className="font-medium text-blue-600 hover:underline dark:text-blue-400"
+            className="font-medium text-[#143087] hover:underline"
           >
             Reservation #{item.reservation_id}
           </Link>

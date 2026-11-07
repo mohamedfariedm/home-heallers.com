@@ -143,7 +143,7 @@ function ValueDisplay({
           <button
             type="button"
             onClick={() => setExpanded((prev) => !prev)}
-            className="text-xs font-medium text-blue-600 hover:underline dark:text-blue-400"
+            className="text-xs font-medium text-[#143087] hover:underline"
           >
             {expanded ? 'Show preview' : 'Show full HTML'}
           </button>

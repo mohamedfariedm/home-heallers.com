@@ -8,6 +8,7 @@ import { useSearchParams, usePathname, useRouter } from 'next/navigation';
 import * as tr from '@/app/[locale]/dictionaries/index';
 import { useState } from 'react';
 import { useRoles } from '@/framework/roles';
+import { FaUserShield } from 'react-icons/fa6';
 // export const metadata = {
 //   ...metaObject('Enhanced Table'),
 // };
@@ -44,6 +45,8 @@ export default function UsersTablePage({
   return (
     <TableLayout
       title={text.userTitle}
+      description="Manage admin users"
+      icon={<FaUserShield />}
       breadcrumb={pageHeader.breadcrumb}
       data={{
         columns: selectedColumns

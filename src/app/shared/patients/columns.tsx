@@ -82,7 +82,12 @@ export const getColumns = ({
         <Tooltip size="sm" content={() => 'Edit'} placement="top" color="invert">
           <CreateButton
             icon={
-              <ActionIcon tag="span" size="sm" variant="outline">
+              <ActionIcon
+                tag="span"
+                size="sm"
+                variant="outline"
+                className="hover:!border-[#143087]/40 hover:bg-blue-50 hover:text-[#143087]"
+              >
                 <PencilIcon className="h-4 w-4" />
               </ActionIcon>
             }
@@ -119,7 +124,11 @@ export const getColumns = ({
           description={`Are you sure you want to delete user #${row.id}?`}
           onDelete={() => onDeleteItem([row.id])}
         >
-          <ActionIcon size="sm" variant="outline" className="hover:text-gray-700">
+          <ActionIcon
+            size="sm"
+            variant="outline"
+            className="hover:!border-[#143087]/40 hover:bg-blue-50 hover:text-[#143087]"
+          >
             <TrashIcon className="h-4 w-4" />
           </ActionIcon>
         </DeletePopover>

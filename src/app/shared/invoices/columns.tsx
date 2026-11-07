@@ -87,7 +87,7 @@ export const getColumns = ({
                     tag="span"
                     size="sm"
                     variant="outline"
-                    className="hover:!border-gray-900 hover:text-gray-700"
+                    className="hover:!border-[#143087]/40 hover:bg-blue-50 hover:text-[#143087] "
                   >
                     <PencilIcon className="h-4 w-4" />
                   </ActionIcon>
@@ -111,7 +111,7 @@ export const getColumns = ({
                   tag="span"
                   size="sm"
                   variant="outline"
-                  className="hover:!border-gray-900 hover:text-gray-700"
+                  className="hover:!border-[#143087]/40 hover:bg-blue-50 hover:text-[#143087] "
                 >
                   <EyeIcon className="h-4 w-4" />
                 </ActionIcon>
@@ -134,7 +134,7 @@ export const getColumns = ({
                   tag="span"
                   size="sm"
                   variant="outline"
-                  className="hover:!border-gray-900 hover:text-gray-700"
+                  className="hover:!border-[#143087]/40 hover:bg-blue-50 hover:text-[#143087] "
                 >
                   <PiShieldCheck className="h-4 w-4" />
                 </ActionIcon>
@@ -151,7 +151,7 @@ export const getColumns = ({
                 size="sm"
                 variant="outline"
                 aria-label={'Delete Invoice'}
-                className="cursor-pointer hover:!border-gray-900 hover:text-gray-700"
+                className="cursor-pointer hover:!border-[#143087]/40 hover:bg-blue-50 hover:text-[#143087] "
               >
                 <TrashIcon className="h-4 w-4" />
               </ActionIcon>

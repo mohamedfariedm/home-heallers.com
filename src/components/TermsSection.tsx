@@ -158,7 +158,7 @@ export default function TermsSection({ terms, onUpdate }: TermsSectionProps) {
           <select
             value={lang}
             onChange={(e) => setLang(e.target.value as "ar" | "en")}
-            className="w-40 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+            className="w-40 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#143087]/20 focus:border-[#143087] text-sm"
           >
             <option value="ar">{tt('settings_lang_arabic')}</option>
             <option value="en">{tt('settings_lang_english')}</option>
@@ -188,7 +188,7 @@ export default function TermsSection({ terms, onUpdate }: TermsSectionProps) {
             value={t.title}
             onChange={(e) => updateField("title", e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md
-                       focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       focus:outline-none focus:ring-2 focus:ring-[#143087]/20"
           />
         </div>
       )}
@@ -239,7 +239,7 @@ export default function TermsSection({ terms, onUpdate }: TermsSectionProps) {
                     updateSection(i, "heading", e.target.value)
                   }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md
-                             focus:outline-none focus:ring-2 focus:ring-blue-500"
+                             focus:outline-none focus:ring-2 focus:ring-[#143087]/20"
                 />
               </div>
 

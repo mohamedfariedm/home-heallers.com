@@ -242,7 +242,7 @@ export default function KanbanCardModal({
                   <button
                     type="button"
                     onClick={handleBackToList}
-                    className="flex items-center gap-2 text-blue-600 transition-colors hover:text-blue-800"
+                    className="flex items-center gap-2 text-[#143087] transition-colors hover:text-[#0F2466]"
                   >
                     <PiXBold className="h-4 w-4 rotate-45" />
                     <span>Back to Reservations List</span>
@@ -263,7 +263,7 @@ export default function KanbanCardModal({
                     <button
                       type="button"
                       onClick={handleBackToList}
-                      className="flex items-center gap-2 text-blue-600 transition-colors hover:text-blue-800"
+                      className="flex items-center gap-2 text-[#143087] transition-colors hover:text-[#0F2466]"
                     >
                       <PiXBold className="h-4 w-4 rotate-45" />
                       <span>Back to Reservations List</span>
@@ -314,7 +314,7 @@ export default function KanbanCardModal({
                     {canEdit && (
                       <button
                         onClick={handleCreateNew}
-                        className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                        className="flex items-center gap-2 bg-[#143087] text-white px-4 py-2 rounded-xl hover:bg-[#0F2466] transition-colors"
                       >
                         <PiCalendarCheck className="h-4 w-4" />
                         <span>Create New Reservation</span>
@@ -329,7 +329,7 @@ export default function KanbanCardModal({
                       {canEdit && (
                         <button
                           onClick={handleCreateNew}
-                          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                          className="bg-[#143087] text-white px-4 py-2 rounded-xl hover:bg-[#0F2466] transition-colors"
                         >
                           Create First Reservation
                         </button>
@@ -347,7 +347,7 @@ export default function KanbanCardModal({
                           key={reservation.id}
                           className={cn(
                             'rounded-lg border border-gray-200 bg-white p-4 transition-all',
-                            'hover:border-blue-500 hover:shadow-md'
+                            'hover:border-[#143087] hover:shadow-md'
                           )}
                         >
                           <div className="flex items-start justify-between gap-3">

@@ -1,4 +1,5 @@
 'use client';
+import { PiWallet } from 'react-icons/pi';
 
 import TableLayout from '@/app/[locale]/(hydrogen)/tables/table-layout';
 import Spinner from '@/components/ui/spinner';
@@ -53,6 +54,8 @@ export default function WithdrawalRequestsPage() {
 
       <TableLayout
         title={pageHeader.title}
+        description="Approve and track doctor withdrawals"
+        icon={<PiWallet />}
         breadcrumb={pageHeader.breadcrumb}
         data={{ columns: [], rows: [] }}
         fileName="Withdrawals/index"

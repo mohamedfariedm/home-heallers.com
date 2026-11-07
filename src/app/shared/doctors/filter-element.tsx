@@ -207,7 +207,7 @@ export default function FilterElement({
           onChange={(e) => handleDateChange('date_from', e.target.value)}
           placeholder="Date From"
           className="w-40"
-          inputClassName="border-gray-200 dark:border-gray-700 focus:ring-blue-500 rounded-lg h-8 text-xs"
+          inputClassName="border-gray-200 dark:border-gray-700 focus:ring-[#143087] rounded-lg h-8 text-xs"
         />
         <Input
           type="date"
@@ -215,7 +215,7 @@ export default function FilterElement({
           onChange={(e) => handleDateChange('date_to', e.target.value)}
           placeholder="Date To"
           className="w-40"
-          inputClassName="border-gray-200 dark:border-gray-700 focus:ring-blue-500 rounded-lg h-8 text-xs"
+          inputClassName="border-gray-200 dark:border-gray-700 focus:ring-[#143087] rounded-lg h-8 text-xs"
         />
       </div>
 

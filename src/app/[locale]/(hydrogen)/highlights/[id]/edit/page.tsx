@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useParams } from 'next/navigation';
-import PageHeader from '@/app/shared/page-header';
+import AdminPageShell from '@/components/ui/admin-page-shell';
 import Spinner from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { usePermissions } from '@/context/PermissionsContext';
@@ -12,6 +12,7 @@ import HighlightForm from '@/app/shared/highlights/create-edit/highlight-form';
 import ElementsManager from '@/app/shared/highlights/elements/elements-manager';
 import { routes } from '@/config/routes';
 import { useTranslation } from 'react-i18next';
+import { PiCirclesThreePlusFill } from 'react-icons/pi';
 
 export default function EditHighlightPage() {
   const { t } = useTranslation('highlights');
@@ -23,10 +24,17 @@ export default function EditHighlightPage() {
 
   const { data: highlight, isLoading, error } = useHighlightDetail(id);
 
-  const pageHeader = {
-    title: highlight?.title?.en
-      ? t('highlights_edit_title_named', { name: highlight.title.en })
-      : t('highlights_edit_title'),
+  const title = highlight?.title?.en
+    ? t('highlights_edit_title_named', { name: highlight.title.en })
+    : t('highlights_edit_title');
+
+  const shellProps = {
+    title,
+    description: t(
+      'highlights_edit_description',
+      'Update highlight details and story elements'
+    ),
+    icon: <PiCirclesThreePlusFill />,
     breadcrumb: [
       { href: '/', name: t('highlights_breadcrumb_home') },
       { href: routes.highlights.index, name: t('highlights_breadcrumb') },
@@ -36,44 +44,48 @@ export default function EditHighlightPage() {
 
   if (!access.update) {
     return (
-      <div className="rounded-md border border-gray-200 bg-white p-6 text-sm text-gray-600">
-        {t('highlights_no_permission_edit')}
-      </div>
+      <AdminPageShell {...shellProps}>
+        <div className="rounded-2xl border border-gray-200 bg-white p-6 text-sm text-gray-600 shadow-sm">
+          {t('highlights_no_permission_edit')}
+        </div>
+      </AdminPageShell>
     );
   }
 
   if (isLoading) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <Spinner size="lg" />
-      </div>
+      <AdminPageShell {...shellProps}>
+        <div className="flex h-64 items-center justify-center">
+          <Spinner size="lg" />
+        </div>
+      </AdminPageShell>
     );
   }
 
   if (error || !highlight) {
     return (
-      <div className="rounded-md border border-gray-200 bg-white p-6">
-        <Text className="text-gray-700">{t('highlights_not_found')}</Text>
-      </div>
+      <AdminPageShell {...shellProps}>
+        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          <Text className="text-gray-700">{t('highlights_not_found')}</Text>
+        </div>
+      </AdminPageShell>
     );
   }
 
   return (
-    <>
-      <PageHeader title={pageHeader.title} breadcrumb={pageHeader.breadcrumb} />
-
-      <div className="mt-6 grid grid-cols-1 gap-8 lg:grid-cols-12">
-        <div className="lg:col-span-5">
+    <AdminPageShell {...shellProps}>
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm lg:col-span-5">
           <HighlightForm initialValues={highlight} />
         </div>
 
-        <div className="lg:col-span-7">
+        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm lg:col-span-7">
           <ElementsManager
             highlightId={Number(highlight.id)}
             elements={highlight.elements || []}
           />
         </div>
       </div>
-    </>
+    </AdminPageShell>
   );
 }

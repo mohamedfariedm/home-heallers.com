@@ -1,4 +1,5 @@
 'use client';
+import { IoStarOutline } from 'react-icons/io5';
 import TableLayout from '@/app/[locale]/(hydrogen)/tables/table-layout';
 import ClientForm from '@/app/shared/client-review/review-form';
 import ClientReview from '@/app/shared/client-review/table';
@@ -36,6 +37,8 @@ export default function ClientReviewPage() {
         {
           <TableLayout
   title={pageHeader.title}
+       description="Review and moderate client testimonials"
+       icon={<IoStarOutline />}
        breadcrumb={pageHeader.breadcrumb}
        data={{
          columns: selectedColumns

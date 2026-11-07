@@ -75,7 +75,7 @@ export default function XmlViewer({
               onClick={() => has && handleTab(tab.kind)}
               className={`rounded-md px-3 py-1.5 text-sm font-medium ${
                 active === tab.kind
-                  ? 'bg-gray-900 text-white'
+                  ? 'bg-[#143087] text-white'
                   : has
                     ? 'text-gray-700 hover:bg-gray-100'
                     : 'cursor-not-allowed text-gray-300'

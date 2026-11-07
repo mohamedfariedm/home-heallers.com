@@ -1,4 +1,5 @@
 'use client';
+import { PiGlobe } from 'react-icons/pi';
 import TableLayout from '@/app/[locale]/(hydrogen)/tables/table-layout';
 import Spinner from '@/components/ui/spinner';
 import { useSearchParams } from 'next/navigation';
@@ -55,6 +56,8 @@ export default function ReservationsTablePage() {
       ) : (
       <TableLayout
         title={pageHeader.title}
+        description="View and manage all reservations"
+        icon={<PiGlobe />}
         breadcrumb={pageHeader.breadcrumb}
         data={{
           columns: selectedColumns

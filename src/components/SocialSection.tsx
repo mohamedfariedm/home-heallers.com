@@ -107,7 +107,7 @@ const SocialSection: React.FC<SocialSectionProps> = ({ social, onUpdate }) => {
                     value={currentValue.url || ''}
                     onChange={(e) => handleChange(field.key, { url: e.target.value })}
                     placeholder={t('settings_social_placeholder', { platform: field.label })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#143087]/20 focus:border-[#143087]"
                   />
                 </div>
                 
@@ -118,7 +118,7 @@ const SocialSection: React.FC<SocialSectionProps> = ({ social, onUpdate }) => {
                       href={currentValue.url.startsWith('http') ? currentValue.url : `https://${currentValue.url}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 underline"
+                      className="text-[#143087] hover:text-[#0F2466] underline"
                     >
                       {currentValue.url}
                     </a>
@@ -130,9 +130,9 @@ const SocialSection: React.FC<SocialSectionProps> = ({ social, onUpdate }) => {
         })}
       </div>
 
-      <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-        <h4 className="font-medium text-blue-900 mb-2">{t('settings_social_tips_title')}</h4>
-        <ul className="text-sm text-blue-800 space-y-1">
+      <div className="bg-blue-50 rounded-2xl p-4 border border-blue-200">
+        <h4 className="font-medium text-[#0F2466] mb-2">{t('settings_social_tips_title')}</h4>
+        <ul className="text-sm text-[#143087] space-y-1">
           <li>• {t('settings_social_tip1')}</li>
           <li>• {t('settings_social_tip2')}</li>
           <li>• {t('settings_social_tip3')}</li>

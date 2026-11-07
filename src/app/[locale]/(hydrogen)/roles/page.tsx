@@ -39,6 +39,8 @@ export default function RolesTablePage() {
   return (
     <TableLayout
       title={pageHeader.title}
+      description="Manage user roles"
+      icon={<PiPackageDuotone />}
       breadcrumb={pageHeader.breadcrumb}
       data={{columns: selectedColumns.filter((column) => column !== 'checked' && column !== 'action').map((column: String) => column.replace(/\./g, '_').replace(/\s/g, '_')), rows: selectedRowKeys}}
       fileName="roles/index"

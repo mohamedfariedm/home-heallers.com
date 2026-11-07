@@ -53,7 +53,7 @@ function RatePercentInput({
         setDraft(String(normalized));
         onCommit(normalized);
       }}
-      className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-[#143087] focus:outline-none focus:ring-2 focus:ring-[#143087]/20"
     />
   );
 }
@@ -155,7 +155,7 @@ const RateMetricRangesEditor: React.FC<RateMetricRangesEditorProps> = ({
                 value={range.label || ''}
                 onChange={(event) => updateRange(index, { label: event.target.value })}
                 placeholder={t('settings_rate_label_ph')}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-[#143087] focus:outline-none focus:ring-2 focus:ring-[#143087]/20"
               />
             </div>
           </div>
@@ -165,7 +165,7 @@ const RateMetricRangesEditor: React.FC<RateMetricRangesEditorProps> = ({
       <button
         type="button"
         onClick={addRange}
-        className="inline-flex items-center space-x-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+        className="inline-flex items-center space-x-2 rounded-xl bg-[#143087] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#0F2466]"
       >
         <Plus className="h-4 w-4" />
         <span>{t('settings_rate_add_range')}</span>

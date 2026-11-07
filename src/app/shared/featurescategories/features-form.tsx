@@ -1,4 +1,9 @@
 'use client';
+import {
+  ModalFormHeader,
+  ModalFormFooter,
+  modalFormClassName,
+} from '@/components/ui/modal-form-shell';
 
 import { useEffect, useState } from 'react';
 import { PiXBold } from 'react-icons/pi';
@@ -95,14 +100,7 @@ export default function UpdateCreateCategory({ initValues }: {
                                                             const SelectedSupCategory:any = watch('VCP_id')
                 return (
                 <>
-                    <div className="flex items-center justify-between">
-                        <Title as="h4" className="font-semibold">
-                            {initValues ? 'Update Category' : 'Add a new Category'}
-                        </Title>
-                        <ActionIcon size="sm" variant="text" onClick={closeModal}>
-                            <PiXBold className="h-auto w-5" />
-                        </ActionIcon>
-                    </div>
+                    <ModalFormHeader title={initValues ? 'Update Category' : 'Add a new Category'} />
                     <div className='flex flex-wrap px-1 gap-3'>
                         <Checkbox
                             key={0} 
@@ -235,22 +233,11 @@ export default function UpdateCreateCategory({ initValues }: {
                             onChange={ () => setIsActive(isActive ? 0 : 1) }
                         />
                     </div>
-                    <div className="flex items-center justify-end gap-4">
-                    <Button
-                        variant="outline"
-                        onClick={closeModal}
-                        className="w-full @xl:w-auto"
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        type="submit"
-                        isLoading={isLoading}
-                        className="w-full @xl:w-auto"
-                    >
-                        {initValues ? 'Update Category' : 'Create category'}
-                    </Button>
-                    </div>
+                    <ModalFormFooter
+                cancelLabel="Cancel"
+                isLoading={isLoading}
+                submitLabel={initValues ? 'Update Category' : 'Create category'}
+            />
                 </>
                 );
             }}

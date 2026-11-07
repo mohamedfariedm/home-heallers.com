@@ -1,4 +1,5 @@
 'use client';
+import { PiHourglassSimpleDuotone } from 'react-icons/pi';
 
 import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -67,6 +68,8 @@ export default function ActivityLogsPage() {
   return (
     <TableLayout
       title={pageHeader.title}
+      description="Audit recent system activity"
+      icon={<PiHourglassSimpleDuotone />}
       breadcrumb={pageHeader.breadcrumb}
       data={{
         columns: selectedColumns

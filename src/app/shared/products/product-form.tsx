@@ -1,4 +1,9 @@
 'use client';
+import {
+  ModalFormHeader,
+  ModalFormFooter,
+  modalFormClassName,
+} from '@/components/ui/modal-form-shell';
 
 import { useEffect, useState } from 'react';
 import { PiXBold } from 'react-icons/pi';
@@ -115,14 +120,7 @@ useEffect(()=>{
                         const SelectedSubCategory = watch('sub_category_id')
                         return (
                         <>
-                            <div className="flex items-center justify-between">
-                                <Title as="h4" className="font-semibold">
-                                    {initValues ? 'Update Product' : 'Add a new Product'}
-                                </Title>
-                                <ActionIcon size="sm" variant="text" onClick={closeModal}>
-                                    <PiXBold className="h-auto w-5" />
-                                </ActionIcon>
-                            </div>
+                            <ModalFormHeader title={initValues ? 'Update Product' : 'Add a new Product'} />
                             <div className='flex flex-wrap px-1 gap-3'>
                                 <Checkbox
                                     key={0} 
@@ -359,22 +357,11 @@ useEffect(()=>{
                         )) : null
                         }
 
-                            <div className="flex items-center justify-end gap-4">
-                            <Button
-                                variant="outline"
-                                onClick={closeModal}
-                                className="w-full @xl:w-auto"
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                type="submit"
-                                isLoading={isLoading}
-                                className="w-full @xl:w-auto"
-                            >
-                                {initValues ? 'Update Product' : 'Create Product'}
-                            </Button>
-                            </div>
+                            <ModalFormFooter
+                cancelLabel="Cancel"
+                isLoading={isLoading}
+                submitLabel={initValues ? 'Update Product' : 'Create Product'}
+            />
                         </>
                         );
                     }}

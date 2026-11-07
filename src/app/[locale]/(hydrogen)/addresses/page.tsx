@@ -1,4 +1,5 @@
 'use client';
+import { PiMapPinDuotone } from 'react-icons/pi';
 import TableLayout from '@/app/[locale]/(hydrogen)/tables/table-layout';
 import Spinner from '@/components/ui/spinner';
 import { useSearchParams } from 'next/navigation';
@@ -28,6 +29,8 @@ export default function AddressesTablePage() {
   return (
     <TableLayout
       title={pageHeader.title}
+      description="Manage addresses master data"
+      icon={<PiMapPinDuotone />}
       breadcrumb={pageHeader.breadcrumb}
       data={{
         columns: selectedColumns.filter((col) => col !== 'checked' && col !== 'action'),

@@ -2,14 +2,19 @@
 
 import Link from 'next/link';
 import { PiPlusBold } from 'react-icons/pi';
-import PageHeader, { PageHeaderTypes } from '@/app/shared/page-header';
+import { PageHeaderTypes } from '@/app/shared/page-header';
 import ExportButton from '@/app/shared/export-button';
 import CreateButton from '@/app/shared/create-button';
 import ImportButton from '@/app/shared/import-button';
 import { Button } from '@/components/ui/button';
+import AdminPageShell, {
+  adminPrimaryButtonClass,
+  adminSecondaryButtonClass,
+} from '@/components/ui/admin-page-shell';
+import cn from '@/utils/class-names';
 
 type TableLayoutProps = {
-  data: {columns: unknown[], rows: unknown[]};
+  data: { columns: unknown[]; rows: unknown[] };
   header: string;
   fileName: string;
   createName?: string;
@@ -25,6 +30,8 @@ type TableLayoutProps = {
   canCreate?: boolean;
   exportElement?: React.ReactNode;
   headerActions?: React.ReactNode;
+  description?: string;
+  icon?: React.ReactNode;
 } & PageHeaderTypes;
 
 export default function TableLayout({
@@ -45,42 +52,70 @@ export default function TableLayout({
   canCreate = true,
   exportElement,
   headerActions,
-  ...props
+  description,
+  icon,
+  title,
+  breadcrumb,
+  className,
 }: React.PropsWithChildren<TableLayoutProps>) {
+  const actions = (
+    <>
+      {canImport && importButton ? (
+        <ImportButton
+          url={importButton}
+          className={cn(adminSecondaryButtonClass, 'text-xs sm:text-sm')}
+        />
+      ) : null}
+      {canExport &&
+        (exportElement ?? (
+          <ExportButton
+            data={data}
+            fileName={fileName}
+            header={'excel'}
+            type={type}
+            role={role}
+            className={cn(adminSecondaryButtonClass, 'text-xs sm:text-sm')}
+          />
+        ))}
+      {headerActions}
+      {canCreate && createName && createHref ? (
+        <Link href={createHref} className="w-full @sm:w-auto">
+          <Button
+            className={cn(
+              adminPrimaryButtonClass,
+              'mt-0 w-full text-xs capitalize @sm:w-auto sm:text-sm'
+            )}
+            disabled={isLoading}
+          >
+            <PiPlusBold className="me-1.5 h-[17px] w-[17px]" />
+            {createName}
+          </Button>
+        </Link>
+      ) : canCreate && createName ? (
+        <CreateButton
+          label={createName}
+          view={createElementButton}
+          className={cn(
+            adminPrimaryButtonClass,
+            'mt-0 w-full text-xs capitalize @sm:w-auto sm:text-sm'
+          )}
+          disabled={isLoading}
+          customSize={customSize}
+        />
+      ) : null}
+    </>
+  );
 
   return (
-    <>
-      <PageHeader {...props}>
-        <div className="flex flex-wrap items-center gap-2.5 @lg:justify-end">
-          {canImport && importButton ? <ImportButton url={importButton} /> : ''}
-          {canExport &&
-            (exportElement ?? (
-              <ExportButton data={data} fileName={fileName} header={'excel'} type={type} role={role} />
-            ))}
-          {headerActions}
-          {canCreate && createName && createHref ? (
-            <Link href={createHref} className="w-full @sm:w-auto">
-              <Button
-                className="mt-0 w-full text-xs capitalize @sm:w-auto dark:bg-gray-100 dark:text-white dark:active:bg-gray-100 sm:text-sm"
-                disabled={isLoading}
-              >
-                <PiPlusBold className="me-1.5 h-[17px] w-[17px]" />
-                {createName}
-              </Button>
-            </Link>
-          ) : canCreate && createName ? (
-          <CreateButton
-           label={createName} 
-           view={createElementButton}
-           className='mt-0 w-full text-xs capitalize @sm:w-auto dark:bg-gray-100 dark:text-white dark:active:bg-gray-100 sm:text-sm' 
-           disabled={isLoading}
-           customSize={customSize}
-           />
-           ) : null}
-        </div>
-      </PageHeader>
-
+    <AdminPageShell
+      title={title}
+      description={description}
+      icon={icon}
+      breadcrumb={breadcrumb}
+      actions={actions}
+      className={className}
+    >
       {children}
-    </>
+    </AdminPageShell>
   );
 }

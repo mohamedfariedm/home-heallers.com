@@ -1,38 +1,45 @@
-"use client"
+'use client';
 
-import { useState } from "react"
-import { PiXBold } from "react-icons/pi"
-import type { SubmitHandler } from "react-hook-form"
-import { Form } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { ActionIcon } from "@/components/ui/action-icon"
-import { Title } from "@/components/ui/text"
-import { useModal } from "@/app/shared/modal-views/use-modal"
-import { type CreateNationalityInput, createNationalitySchema } from "@/utils/validators/create-nationality.schema"
-import { useCreateNationality, useUpdateNationality } from "@/framework/nationality"
+import { useState } from 'react';
+import { PiHammerDuotone } from 'react-icons/pi';
+import type { SubmitHandler } from 'react-hook-form';
+import { Form } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { useModal } from '@/app/shared/modal-views/use-modal';
+import {
+  type CreateNationalityInput,
+  createNationalitySchema,
+} from '@/utils/validators/create-nationality.schema';
+import {
+  useCreateNationality,
+  useUpdateNationality,
+} from '@/framework/nationality';
+import {
+  ModalFormHeader,
+  ModalFormFooter,
+  modalFormClassName,
+} from '@/components/ui/modal-form-shell';
+
 export default function CreateNationality({ initValues }: { initValues?: any }) {
-  const { closeModal } = useModal()
-  const [isLoading, setLoading] = useState(false)
-  const { mutate, isPending } = useCreateNationality()
-  const { mutate: update } = useUpdateNationality()
-console.log(initValues);
+  const { closeModal } = useModal();
+  const [isLoading, setLoading] = useState(false);
+  const { mutate, isPending } = useCreateNationality();
+  const { mutate: update } = useUpdateNationality();
 
   const onSubmit: SubmitHandler<CreateNationalityInput> = (data) => {
     if (initValues) {
       update({
         role_id: initValues?.id,
         name: data.name,
-      })
+      });
     } else {
       mutate({
         name: data.name,
-      })
+      });
     }
 
-    setLoading(isPending)
-    // closeModal();
-  }
+    setLoading(isPending);
+  };
 
   return (
     <Form<CreateNationalityInput>
@@ -41,49 +48,47 @@ console.log(initValues);
       useFormProps={{
         defaultValues: {
           name: {
-            en: initValues?.name?.en || "",
-            ar: initValues?.name?.ar || "",
+            en: initValues?.name?.en || '',
+            ar: initValues?.name?.ar || '',
           },
         },
       }}
-      className="flex flex-grow flex-col gap-6 p-6 @container [&_.rizzui-input-label]:font-medium [&_.rizzui-input-label]:text-gray-900"
+      className={modalFormClassName}
     >
       {({ register, formState: { errors } }) => (
         <>
-          <div className="flex items-center justify-between">
-            <Title as="h4" className="font-semibold">
-              {initValues ? "Update Nationality" : "Add a new Nationality"}
-            </Title>
-            <ActionIcon size="sm" variant="text" onClick={closeModal}>
-              <PiXBold className="h-auto w-5" />
-            </ActionIcon>
-          </div>
+          <ModalFormHeader
+            title={
+              initValues ? 'Update Nationality' : 'Add a new Nationality'
+            }
+            description="Manage nationality master data"
+            icon={<PiHammerDuotone />}
+          />
 
           <Input
-            key={"name.en"}
+            key={'name.en'}
             label="Nationality Name (English)"
             placeholder="Enter English name"
-            {...register("name.en")}
+            {...register('name.en')}
             error={errors.name?.en?.message}
           />
           <Input
-            key={"name.ar"}
+            key={'name.ar'}
             label="Nationality Name (Arabic)"
             placeholder="أدخل الاسم بالعربية"
-            {...register("name.ar")}
+            {...register('name.ar')}
             error={errors.name?.ar?.message}
           />
 
-          <div className="flex items-center justify-end gap-4">
-            <Button variant="outline" onClick={closeModal} className="w-full @xl:w-auto">
-              Cancel
-            </Button>
-            <Button type="submit" isLoading={isLoading} className="w-full @xl:w-auto">
-              {initValues ? "Update Nationality" : "Create Nationality"}
-            </Button>
-          </div>
+          <ModalFormFooter
+            cancelLabel="Cancel"
+            isLoading={isLoading}
+            submitLabel={
+              initValues ? 'Update Nationality' : 'Create Nationality'
+            }
+          />
         </>
       )}
     </Form>
-  )
+  );
 }

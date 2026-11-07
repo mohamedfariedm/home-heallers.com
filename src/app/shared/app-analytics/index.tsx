@@ -116,7 +116,7 @@ export default function AppAnalyticsDashboard() {
             <button
               type="button"
               onClick={() => refetch()}
-              className="mt-4 rounded-lg bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+              className="mt-4 rounded-lg bg-[#143087] px-4 py-2 text-white hover:bg-[#0F2466]"
             >
               {t('shared_try_again', 'Try Again')}
             </button>

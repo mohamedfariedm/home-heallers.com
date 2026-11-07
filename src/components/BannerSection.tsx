@@ -185,7 +185,7 @@ const BannerSection: React.FC<BannerSectionProps> = ({ banners = [], onUpdate })
               updateBanner(index, { ...banner, ctb: e.target.value })
             }
             placeholder={t('banners_ctb_placeholder')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#143087] focus:border-[#143087]"
           />
         </div>
       );
@@ -220,7 +220,7 @@ const BannerSection: React.FC<BannerSectionProps> = ({ banners = [], onUpdate })
                   : null,
               });
             }}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#143087] focus:border-[#143087]"
           >
             <option value="">
               {loading ? t('banners_loading') : t('banners_select_entity', { entity: label.toLowerCase() })}
@@ -251,7 +251,7 @@ const BannerSection: React.FC<BannerSectionProps> = ({ banners = [], onUpdate })
         <h2 className="text-xl font-semibold text-gray-900">{t('banners_management')}</h2>
         <button
           onClick={addBanner}
-          className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          className="flex items-center space-x-2 bg-[#143087] text-white px-4 py-2 rounded-lg hover:bg-[#0F2466] transition-colors"
         >
           <Plus className="w-4 h-4" />
           <span>{t('banners_add')}</span>
@@ -283,7 +283,7 @@ const BannerSection: React.FC<BannerSectionProps> = ({ banners = [], onUpdate })
                     <select
                       value={banner.type || 'web'}
                       onChange={(e) => updateBanner(index, { ...banner, type: e.target.value as 'web' | 'mobile app' })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#143087] focus:border-[#143087]"
                     >
                       <option value="web">{t('banners_type_web')}</option>
                       <option value="mobile app">{t('banners_type_mobile')}</option>
@@ -304,7 +304,7 @@ const BannerSection: React.FC<BannerSectionProps> = ({ banners = [], onUpdate })
                           order: Number(e.target.value),
                         })
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#143087] focus:border-[#143087]"
                     />
                   </div>
                 </div>
@@ -316,7 +316,7 @@ const BannerSection: React.FC<BannerSectionProps> = ({ banners = [], onUpdate })
                   <select
                     value={banner.page}
                     onChange={(e) => updateBanner(index, { ...banner, page: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#143087] focus:border-[#143087]"
                   >
                     {pageOptions.map((page) => (
                       <option key={page} value={page}>
@@ -342,7 +342,7 @@ const BannerSection: React.FC<BannerSectionProps> = ({ banners = [], onUpdate })
                   {banner.attachment.original && (
                     <button
                       onClick={() => setSelectedBanner(banner)}
-                      className="flex items-center space-x-2 text-blue-600 hover:text-blue-800 transition-colors mt-2"
+                      className="flex items-center space-x-2 text-[#143087] hover:text-[#0F2466] transition-colors mt-2"
                     >
                       <Eye className="w-4 h-4" />
                       <span>{t('banners_preview')}</span>
@@ -381,10 +381,10 @@ const BannerSection: React.FC<BannerSectionProps> = ({ banners = [], onUpdate })
             </div>
 
             {/* CTA (notification-shaped) — like the Highlights/Stories CTA */}
-            <div className="mt-5 rounded-lg border border-purple-100 bg-purple-50/50 p-4">
+            <div className="mt-5 rounded-lg border border-blue-100 bg-blue-50/50 p-4">
               <div className="mb-3 flex items-center gap-2">
-                <BellRing className="h-4 w-4 text-purple-700" />
-                <span className="text-sm font-semibold text-purple-900">
+                <BellRing className="h-4 w-4 text-[#143087]" />
+                <span className="text-sm font-semibold text-[#0F2466]">
                   {t('banners_cta_action')}
                 </span>
               </div>
@@ -396,7 +396,7 @@ const BannerSection: React.FC<BannerSectionProps> = ({ banners = [], onUpdate })
                   <select
                     value={actionSelectValue(banner)}
                     onChange={(e) => handleCtaTypeChange(index, banner, e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#143087] focus:border-[#143087]"
                   >
                     {CTA_TYPE_OPTIONS.map((opt) => (
                       <option key={opt.value} value={opt.value}>
@@ -425,7 +425,7 @@ const BannerSection: React.FC<BannerSectionProps> = ({ banners = [], onUpdate })
                       updateBanner(index, { ...banner, url: e.target.value || null })
                     }
                     placeholder="https://home-healers.com/offers/22"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#143087] focus:border-[#143087]"
                   />
                 </div>
               )}
@@ -435,24 +435,26 @@ const BannerSection: React.FC<BannerSectionProps> = ({ banners = [], onUpdate })
 
         {banners.length === 0 && (
           <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-            <svg
-              className="w-12 h-12 mx-auto mb-4 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
+            <div className="mb-4 mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50">
+              <svg
+                className="w-7 h-7 text-[#143087]"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+            </div>
             <p className="text-gray-600 mb-4">{t('banners_empty')}</p>
             <button
               onClick={addBanner}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              className="bg-[#143087] text-white px-4 py-2 rounded-lg hover:bg-[#0F2466] transition-colors"
             >
               {t('banners_add_first')}
             </button>

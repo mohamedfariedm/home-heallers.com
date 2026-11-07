@@ -43,7 +43,7 @@ const BusinessInfoSection: React.FC<BusinessInfoSectionProps> = ({ businessInfo,
           return (
             <div key={field.key} className="bg-gray-50 rounded-lg p-6 border border-gray-200">
               <div className="flex items-center space-x-3 mb-4">
-                <Icon className="w-5 h-5 text-blue-600" />
+                <Icon className="w-5 h-5 text-[#143087]" />
                 <div>
                   <h3 className="text-lg font-medium text-gray-900">{t(field.labelKey)}</h3>
                 </div>
@@ -55,7 +55,7 @@ const BusinessInfoSection: React.FC<BusinessInfoSectionProps> = ({ businessInfo,
                   value={value}
                   onChange={(e) => handleChange(field.key, e.target.value)}
                   placeholder={t('settings_business_ph', { label: t(field.labelKey) })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#143087]/20 focus:border-[#143087]"
                 />
               </div>
             </div>
@@ -63,9 +63,9 @@ const BusinessInfoSection: React.FC<BusinessInfoSectionProps> = ({ businessInfo,
         })}
       </div>
 
-      <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-        <h4 className="font-medium text-blue-900 mb-2">{t('settings_business_guidelines_title')}</h4>
-        <ul className="text-sm text-blue-800 space-y-1">
+      <div className="bg-blue-50 rounded-2xl p-4 border border-blue-200">
+        <h4 className="font-medium text-[#0F2466] mb-2">{t('settings_business_guidelines_title')}</h4>
+        <ul className="text-sm text-[#143087] space-y-1">
           <li>• {t('settings_business_guide1')}</li>
           <li>• {t('settings_business_guide2')}</li>
           <li>• {t('settings_business_guide3')}</li>
