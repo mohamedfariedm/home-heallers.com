@@ -15,12 +15,18 @@ import { resolveLocalizedName } from '@/utils/resolve-localized-name';
 
 interface CouponSelectProps {
   value: string | null;
-  onChange: (couponId: string | null) => void;
+  onChange: (couponId: string | null, coupon?: MarketCoupon | null) => void;
   lang: 'ar' | 'en';
   /** The coupon already linked to the region (edit), shown even if it is not in the current page. */
   currentCoupon?: GeoRegionCoupon | null;
   error?: string;
   disabled?: boolean;
+  /** When false, hides the "No coupon" option (required picker). Default true. */
+  allowNone?: boolean;
+  label?: string;
+  hint?: string;
+  /** Prefill values when opening Create coupon modal. */
+  createInitValues?: Record<string, unknown>;
 }
 
 type Option = {
@@ -52,6 +58,10 @@ export default function CouponSelect({
   currentCoupon,
   error,
   disabled,
+  allowNone = true,
+  label,
+  hint,
+  createInitValues,
 }: CouponSelectProps) {
   const { t } = useTranslation();
   const { openModal } = useModal();
@@ -70,6 +80,13 @@ export default function CouponSelect({
   }, [search]);
 
   const { data, isLoading } = useCoupons(query);
+
+  const couponsById = useMemo(() => {
+    const list: MarketCoupon[] = Array.isArray(data?.data) ? data.data : [];
+    const map = new Map<string, MarketCoupon>();
+    list.forEach((c) => map.set(c.id, c));
+    return map;
+  }, [data?.data]);
 
   const options: Option[] = useMemo(() => {
     const list: MarketCoupon[] = Array.isArray(data?.data) ? data.data : [];
@@ -102,21 +119,26 @@ export default function CouponSelect({
       }
     }
 
-    return [
-      { value: NONE, label: t('geo_coupon_none', 'No coupon') },
-      ...mapped,
-    ];
-  }, [data?.data, lang, value, currentCoupon, t]);
+    if (allowNone) {
+      return [
+        { value: NONE, label: t('geo_coupon_none', 'No coupon') },
+        ...mapped,
+      ];
+    }
+    return mapped;
+  }, [data?.data, lang, value, currentCoupon, t, allowNone]);
 
   const selected =
-    options.find((o) => o.value === (value ?? NONE)) ?? options[0];
+    options.find((o) => o.value === (value ?? (allowNone ? NONE : ''))) ??
+    (allowNone ? options[0] : null);
 
   const handleCreate = () => {
     openModal({
       view: (
         <CreateOrUpdateCoupon
+          initValues={createInitValues}
           onCreated={(coupon) => {
-            if (coupon?.id) onChange(String(coupon.id));
+            if (coupon?.id) onChange(String(coupon.id), coupon);
           }}
         />
       ),
@@ -128,7 +150,7 @@ export default function CouponSelect({
     <div>
       <div className="mb-1.5 flex items-center justify-between gap-2">
         <label className="block text-sm font-medium text-gray-700">
-          {t('geo_field_coupon', 'Coupon')}
+          {label || t('geo_field_coupon', 'Coupon')}
         </label>
         <Button
           type="button"
@@ -152,9 +174,34 @@ export default function CouponSelect({
         onInputChange={(v, meta) => {
           if (meta.action === 'input-change') setInput(v);
         }}
-        onChange={(opt) =>
-          onChange(!opt || opt.value === NONE ? null : opt.value)
-        }
+        onChange={(opt) => {
+          if (!opt || opt.value === NONE) {
+            onChange(null, null);
+            return;
+          }
+          const full = couponsById.get(opt.value);
+          onChange(
+            opt.value,
+            full ??
+              ({
+                id: opt.value,
+                code: opt.code || '',
+                name: {},
+                type: 'percent',
+                value: 0,
+                eligible_user_type: 'any',
+                first_booking_scope: 'none',
+                is_active: true,
+                service_ids: [],
+                free_service_ids: [],
+                city_ids: [],
+                country_ids: [],
+                phone_numbers: [],
+                insurance_types: [],
+                patient_segments: [],
+              } as MarketCoupon)
+          );
+        }}
         formatOptionLabel={(opt) =>
           opt.value === NONE ? (
             <span className="text-gray-600">{opt.label}</span>
@@ -185,7 +232,7 @@ export default function CouponSelect({
         <p className="mt-1 text-sm text-red-500">{error}</p>
       ) : (
         <Text className="mt-1 text-xs text-gray-500">
-          {t('geo_coupon_hint', 'Only active coupons are listed.')}
+          {hint || t('geo_coupon_hint', 'Only active coupons are listed.')}
         </Text>
       )}
     </div>

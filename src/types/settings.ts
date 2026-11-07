@@ -14,6 +14,11 @@ export interface Banner {
   cta_type?: string | null;
   deep_link?: string | null;
   url?: string | null;
+  /**
+   * CTB link only. When set (including `""`), CTA type is none —
+   * mutually exclusive with `cta_type` / entity pickers.
+   */
+  ctb?: string | null;
   extra_data?: Record<string, any> | null;
 }
 
@@ -249,6 +254,82 @@ export interface RateColorRange {
 
 export type RateColorsByMetric = Partial<Record<RateMetricKey, RateColorRange[]>>;
 
+export type OfferPopupUrlMatchType = 'contains' | 'equals';
+export type OfferPopupDevices = 'both' | 'desktop' | 'mobile';
+export type OfferPopupTriggerType =
+  | 'time_delay'
+  | 'scroll_depth'
+  | 'whichever_first'
+  | 'exit_intent';
+export type OfferPopupDiscountType = 'percentage' | 'fixed' | 'free_session';
+export type OfferPopupFrequency =
+  | 'once_per_session'
+  | 'once_per_day'
+  | 'every_visit';
+
+export interface OfferPopupUrlRule {
+  match: OfferPopupUrlMatchType;
+  value: string;
+}
+
+export interface OfferPopupTracking {
+  meta_lead: boolean;
+  snapchat_sign_up: boolean;
+  ga4_generate_lead: boolean;
+  tiktok_submit_form: boolean;
+}
+
+export type OfferPopupFormFieldKey =
+  | 'name'
+  | 'mobile'
+  | 'service'
+  | 'consent';
+
+export interface OfferPopupFormFieldConfig {
+  visible: boolean;
+  required: boolean;
+}
+
+export type OfferPopupFormFields = Record<
+  OfferPopupFormFieldKey,
+  OfferPopupFormFieldConfig
+>;
+
+export interface OfferPopup {
+  id: string;
+  name: string;
+  status: 'active' | 'inactive';
+  url_rules: OfferPopupUrlRule[];
+  devices: OfferPopupDevices;
+  priority: number;
+  trigger_type: OfferPopupTriggerType;
+  show_after_seconds: number;
+  show_after_scroll_percent: number;
+  /** Bilingual offer title shown on the website */
+  offer_title: MultilingualText;
+  /** Bilingual badge text */
+  badge_text: MultilingualText;
+  discount_type: OfferPopupDiscountType;
+  discount_value: number | null;
+  start_date: string | null;
+  end_date: string | null;
+  /** Linked market coupon UUID (required) */
+  coupon_id: string | null;
+  /** Denormalized coupon code for leads / website display */
+  coupon_code: string;
+  show_countdown: boolean;
+  auto_hide_after_end: boolean;
+  form_fields: OfferPopupFormFields;
+  button_text: MultilingualText;
+  success_message: MultilingualText;
+  max_times_per_visitor: OfferPopupFrequency;
+  hide_after_close_days: number;
+  never_show_after_submit: boolean;
+  save_to_leads: boolean;
+  notify_call_center: boolean;
+  tracking: OfferPopupTracking;
+}
+
 export interface Settings {
   banners: Banner[];
   social: Social;
@@ -261,4 +342,5 @@ export interface Settings {
   landing_pages?: LandingPage[];
   media_folders?: MediaFolder[];
   rate_colors?: RateColorsByMetric;
+  offer_popups?: OfferPopup[];
 }

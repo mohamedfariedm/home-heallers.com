@@ -933,8 +933,11 @@ function TargetingTab({
 
 export default function CreateOrUpdateCoupon({
   initValues,
+  onCreated,
 }: {
   initValues?: any;
+  /** Called after a successful create with the API coupon payload (when available). */
+  onCreated?: (coupon: any) => void;
 }) {
   const { closeModal } = useModal();
   const { mutate: createCoupon, isPending: isCreating } = useCreateCoupons();
@@ -1036,7 +1039,13 @@ export default function CreateOrUpdateCoupon({
         { onError: showServerErrors }
       );
     } else {
-      createCoupon(payload, { onError: showServerErrors });
+      createCoupon(payload, {
+        onError: showServerErrors,
+        onSuccess: (response: any) => {
+          const coupon = response?.data ?? response;
+          if (coupon?.id) onCreated?.(coupon);
+        },
+      });
     }
   };
 

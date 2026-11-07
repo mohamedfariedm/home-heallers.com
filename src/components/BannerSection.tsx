@@ -19,6 +19,7 @@ interface BannerSectionProps {
 // CTA type selector — mirrors the Highlights/Stories CTA. `coupon` is
 // intentionally excluded (banners must not offer it and the API rejects it).
 // Labels are translated at render time via i18n.
+// `ctb` is UI-only: it forces `cta_type` to none and stores a link in `ctb`.
 const CTA_TYPE_OPTIONS = [
   { value: '', labelKey: 'banners_cta_none' },
   { value: 'offers', labelKey: 'banners_cta_offers' },
@@ -26,9 +27,21 @@ const CTA_TYPE_OPTIONS = [
   { value: 'categories', labelKey: 'banners_cta_categories' },
   // Opens the app's quick-booking screen — no deep_link / url needed.
   { value: 'quick_booking', labelKey: 'banners_cta_quick_booking' },
+  // Link-only; CTA type stays none (no entity / deep-link picker).
+  { value: 'ctb', labelKey: 'banners_cta_ctb' },
 ];
 
 const ENTITY_CTA_TYPES = ['offers', 'doctors', 'categories'];
+
+/** CTB mode is active when `ctb` is present (including empty string). */
+function isCtbMode(banner: Banner) {
+  return banner.ctb !== null && banner.ctb !== undefined;
+}
+
+function actionSelectValue(banner: Banner) {
+  if (isCtbMode(banner)) return 'ctb';
+  return banner.cta_type || '';
+}
 
 function resolveEntityName(item: any): string {
   const name = item?.name;
@@ -79,6 +92,7 @@ const BannerSection: React.FC<BannerSectionProps> = ({ banners = [], onUpdate })
       cta_type: null,
       deep_link: null,
       url: null,
+      ctb: null,
       extra_data: null,
       attachment: {
         id: Date.now(),
@@ -100,13 +114,26 @@ const BannerSection: React.FC<BannerSectionProps> = ({ banners = [], onUpdate })
     onUpdate(newBanners);
   };
 
-  // Changing the CTA type resets the resolved companion fields.
+  // Changing the action resets companion fields.
+  // CTB → CTA type forced to none; value is only the `ctb` link.
   const handleCtaTypeChange = (index: number, banner: Banner, nextType: string) => {
+    if (nextType === 'ctb') {
+      updateBanner(index, {
+        ...banner,
+        cta_type: null,
+        deep_link: null,
+        url: null,
+        ctb: banner.ctb ?? '',
+        extra_data: null,
+      });
+      return;
+    }
     updateBanner(index, {
       ...banner,
       cta_type: nextType || null,
       deep_link: null,
       url: null,
+      ctb: null,
       extra_data: null,
     });
   };
@@ -145,6 +172,25 @@ const BannerSection: React.FC<BannerSectionProps> = ({ banners = [], onUpdate })
     .sort((a, b) => (a.banner.order ?? 0) - (b.banner.order ?? 0));
 
   const renderCtaValueField = (index: number, banner: Banner) => {
+    if (isCtbMode(banner)) {
+      return (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            {t('banners_ctb_link')}
+          </label>
+          <input
+            type="url"
+            value={banner.ctb ?? ''}
+            onChange={(e) =>
+              updateBanner(index, { ...banner, ctb: e.target.value })
+            }
+            placeholder={t('banners_ctb_placeholder')}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
+        </div>
+      );
+    }
+
     const ctaType = banner.cta_type || '';
 
     // offers / doctors / categories all resolve to deep_link = entity id
@@ -348,7 +394,7 @@ const BannerSection: React.FC<BannerSectionProps> = ({ banners = [], onUpdate })
                     {t('banners_cta_type')}
                   </label>
                   <select
-                    value={banner.cta_type || ''}
+                    value={actionSelectValue(banner)}
                     onChange={(e) => handleCtaTypeChange(index, banner, e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
@@ -359,12 +405,12 @@ const BannerSection: React.FC<BannerSectionProps> = ({ banners = [], onUpdate })
                     ))}
                   </select>
                 </div>
-                {ENTITY_CTA_TYPES.includes(banner.cta_type || '')
+                {isCtbMode(banner) || ENTITY_CTA_TYPES.includes(banner.cta_type || '')
                   ? renderCtaValueField(index, banner)
                   : null}
               </div>
 
-              {ENTITY_CTA_TYPES.includes(banner.cta_type || '') && (
+              {ENTITY_CTA_TYPES.includes(banner.cta_type || '') && !isCtbMode(banner) && (
                 <div className="mt-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     {t('banners_external_url')}{' '}

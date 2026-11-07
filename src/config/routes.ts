@@ -49,6 +49,11 @@ export const routes = {
   landingBuilder: {
     index: '/landing-builder',
   },
+  offersPopups: {
+    index: '/offers-popups',
+    create: '/offers-popups/create',
+    edit: (id: string | number) => `/offers-popups/${id}/edit`,
+  },
   logistics: {
     dashboard: '/logistics',
     shipmentList: '/logistics/shipments',

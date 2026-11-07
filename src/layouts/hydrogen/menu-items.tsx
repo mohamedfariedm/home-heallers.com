@@ -64,6 +64,7 @@ import {
   PiWallet,
   PiMapTrifoldDuotone,
   PiLifebuoyDuotone,
+  PiChatTeardropTextDuotone,
 } from 'react-icons/pi';
 import {
   IoWarningOutline,
@@ -517,6 +518,12 @@ export const menuItemsHaydrogen = [
     href: routes.landingPages.index,
     icon: <PiBrowserDuotone />,
     permissions: 'landing_pages',
+  },
+  {
+    name: 'Offers Popups',
+    href: routes.offersPopups.index,
+    icon: <PiChatTeardropTextDuotone />,
+    permissions: 'offer_popups',
   },
   {
     name: 'Landing Page Generator',
