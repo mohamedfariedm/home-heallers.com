@@ -587,8 +587,9 @@ export default function InvoiceView({ invoiceData }: InvoiceViewProps) {
           <div className="text-right">
             
             <div className="text-sm text-muted-foreground leading-snug space-y-0.5">
-              <p>مؤسسة هوم هيلرز</p>
-              <p>الرقم الضريبي (310796025900003)</p>
+              <p>مؤسسة هوم هيلرز (Home Healers)</p>
+              <p>الرقم الضريبي (310500448400003)</p>
+              <p>الرقم المميز (3105004484)</p>
               <p>السجل التجاري رقم (4031281879)</p>
               <p>العنوان المختصر : R L D A  4 4 4 1</p>
               <p>رقم المبنى : 4441</p>
