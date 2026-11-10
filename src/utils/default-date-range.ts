@@ -121,6 +121,33 @@ export function ensureDefaultDateParams(
 }
 
 /**
+ * Write a chosen date range onto `params`, or mark all-time when both ends are empty.
+ * Always clears previous from/to keys first. Sets `all_dates=1` when empty so
+ * `ensureDefaultDateParams` / `useEnsureDefaultDateRange` do not re-inject defaults.
+ */
+export function applyDateRangeToParams(
+  params: URLSearchParams,
+  dates: { date_from?: string | null; date_to?: string | null } | undefined,
+  keys?: DateRangeKeys
+): void {
+  const { fromKey, toKey } = resolveDateKeys(keys);
+  const from = dates?.date_from?.trim() || '';
+  const to = dates?.date_to?.trim() || '';
+
+  params.delete(fromKey);
+  params.delete(toKey);
+
+  if (from || to) {
+    if (from) params.set(fromKey, from);
+    if (to) params.set(toKey, to);
+    params.delete(ALL_DATES_PARAM);
+    return;
+  }
+
+  params.set(ALL_DATES_PARAM, '1');
+}
+
+/**
  * Build a clean query string for Clear/Reset: wipe filters including dates (all-time).
  * Sets `all_dates=1` so the page default range is not auto-reapplied.
  */

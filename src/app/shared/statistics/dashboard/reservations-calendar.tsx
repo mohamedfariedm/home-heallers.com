@@ -31,6 +31,7 @@ import type {
 import ReservationViewModal from '@/app/shared/reservations/reservation-view-modal';
 import client from '@/framework/utils';
 import toast from 'react-hot-toast';
+import type { StatisticsFilters } from './filters';
 
 const localizer = dayjsLocalizer(dayjs);
 
@@ -397,18 +398,41 @@ function InfoTile({
   );
 }
 
-export default function ReservationsCalendar({ className }: { className?: string }) {
+export default function ReservationsCalendar({
+  className,
+  filters,
+}: {
+  className?: string;
+  /** Shared dashboard filters — doctor + date range seed the calendar. */
+  filters?: StatisticsFilters;
+}) {
   const { t } = useTranslation('statistics');
   const { openModal } = useModal();
-  const [currentDate, setCurrentDate] = useState(() =>
-    dayjs().startOf('month').toDate()
-  );
+  const [currentDate, setCurrentDate] = useState(() => {
+    const anchor = filters?.date_to || filters?.date_from;
+    const d = anchor ? dayjs(anchor) : dayjs();
+    return (d.isValid() ? d : dayjs()).startOf('month').toDate();
+  });
   const [view, setView] = useState<View>('month');
   const [status, setStatus] = useState<SessionStatus | ''>('');
-  const [doctorId, setDoctorId] = useState('');
+  const [doctorId, setDoctorId] = useState(filters?.doctor_id ? String(filters.doctor_id) : '');
   const [doctors, setDoctors] = useState<
     Array<{ value: string; label: string; name: string }>
   >([{ value: '', label: t('cal_all_doctors', 'All doctors'), name: t('cal_all_doctors', 'All doctors') }]);
+
+  // Keep calendar aligned with shared dashboard filters
+  useEffect(() => {
+    setDoctorId(filters?.doctor_id ? String(filters.doctor_id) : '');
+  }, [filters?.doctor_id]);
+
+  useEffect(() => {
+    const anchor = filters?.date_to || filters?.date_from;
+    if (!anchor) return;
+    const d = dayjs(anchor);
+    if (!d.isValid()) return;
+    setCurrentDate(d.startOf('month').toDate());
+    setView('month');
+  }, [filters?.date_from, filters?.date_to]);
 
   const year = dayjs(currentDate).year();
   const month = dayjs(currentDate).month() + 1;

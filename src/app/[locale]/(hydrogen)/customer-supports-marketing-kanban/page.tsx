@@ -27,6 +27,7 @@ import {
 } from '@/app/shared/customer-suport/kanban-status-columns';
 import { useEnsureDefaultDateRange } from '@/hooks/use-ensure-default-date-range';
 import {
+  applyDateRangeToParams,
   buildClearedFiltersParams,
   ensureDefaultDateParams,
 } from '@/utils/default-date-range';
@@ -214,21 +215,8 @@ export default function CustomerSupportsMarketingKanbanPage() {
       });
     });
 
-    // Clear old date params
-    params.delete('date_from');
-    params.delete('date_to');
-
-    // Add new date params
     if (dates) {
-      if (dates.date_from) {
-        params.set('date_from', dates.date_from);
-      }
-      if (dates.date_to) {
-        params.set('date_to', dates.date_to);
-      }
-      if (dates.date_from || dates.date_to) {
-        params.delete('all_dates');
-      }
+      applyDateRangeToParams(params, dates);
     }
 
     // Add new filter params

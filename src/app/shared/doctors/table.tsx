@@ -13,6 +13,7 @@ import { ActionIcon } from 'rizzui';
 import { PiCaretDownBold, PiCaretUpBold } from 'react-icons/pi';
 import { useDeleteDoctors, useUpdateDoctors } from '@/framework/doctors';
 import {
+  applyDateRangeToParams,
   buildClearedFiltersParams,
   getLast10DaysRange,
   shouldSkipDefaultDateRange,
@@ -99,6 +100,14 @@ export default function DoctorsTable({
 
   const handleDateChange = (dates: { date_from?: string; date_to?: string }) => {
     setDateFilters(dates);
+  };
+
+  const clearDateFilters = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    applyDateRangeToParams(params, {});
+    params.set('page', '1');
+    setDateFilters({ date_from: undefined, date_to: undefined });
+    router.push(`?${params.toString()}`);
   };
 
   const filterState = {
@@ -190,8 +199,6 @@ export default function DoctorsTable({
       if (columnFilters[prefix]) params.delete(key);
     });
 
-    params.delete('date_from');
-    params.delete('date_to');
     drawerFilterKeys.forEach((key) => params.delete(key));
 
     Object.entries(columnFilters).forEach(([key, val]) => {
@@ -206,15 +213,7 @@ export default function DoctorsTable({
       if (value) params.set(key, String(value));
     });
 
-    if (dateFilters.date_from) {
-      params.set('date_from', dateFilters.date_from);
-    }
-    if (dateFilters.date_to) {
-      params.set('date_to', dateFilters.date_to);
-    }
-    if (dateFilters.date_from || dateFilters.date_to) {
-      params.delete('all_dates');
-    }
+    applyDateRangeToParams(params, dateFilters);
 
     params.set('page', '1');
     router.push(`?${params.toString()}`);
@@ -318,8 +317,8 @@ export default function DoctorsTable({
           setCheckedColumns,
           filters: {
             ...filters,
-            ...(dateFilters.date_from && { date_from: dateFilters.date_from }),
-            ...(dateFilters.date_to && { date_to: dateFilters.date_to }),
+            date_from: dateFilters.date_from || '',
+            date_to: dateFilters.date_to || '',
           },
         }}
         filterElement={
@@ -329,6 +328,7 @@ export default function DoctorsTable({
             updateFilter={updateFilter}
             handleReset={handleReset}
             onDateChange={handleDateChange}
+            onClearDates={clearDateFilters}
             currentDates={dateFilters}
           />
         }

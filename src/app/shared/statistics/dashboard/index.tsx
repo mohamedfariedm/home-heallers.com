@@ -374,9 +374,7 @@ export default function StatisticsDashboard() {
         </div>
       </div>
 
-      {!isCalendarTab && (
-        <StatisticsFiltersComponent onFilter={handleFilter} className="mb-6" />
-      )}
+      <StatisticsFiltersComponent onFilter={handleFilter} className="mb-6" />
 
       {loading && !isCalendarTab ? (
         <div className="flex min-h-[400px] items-center justify-center">
@@ -562,7 +560,6 @@ export default function StatisticsDashboard() {
                             <SingleMetricChart
                               data={aggregateData.chart_data}
                               metric="reservations"
-                              lastDays={10}
                               className="h-full"
                             />
                           )}
@@ -572,7 +569,6 @@ export default function StatisticsDashboard() {
                             <SingleMetricChart
                               data={aggregateData.chart_data}
                               metric="sessions"
-                              lastDays={10}
                               className="h-full"
                             />
                           )}
@@ -582,7 +578,6 @@ export default function StatisticsDashboard() {
                             <SingleMetricChart
                               data={aggregateData.chart_data}
                               metric="clients"
-                              lastDays={10}
                               className="h-full"
                             />
                           )}
@@ -638,7 +633,7 @@ export default function StatisticsDashboard() {
 
             {/* Calendar */}
             <TabPanel className="outline-none">
-              <ReservationsCalendar />
+              <ReservationsCalendar filters={filters} />
             </TabPanel>
           </TabPanels>
 

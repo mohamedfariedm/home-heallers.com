@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import BulkPersonalCouponsForm from '@/app/shared/reservations/bulk-personal-coupons-panel';
 import { asRecordList, catalogNameMap } from '@/app/shared/reservations/reservation-relations';
 import {
+  applyDateRangeToParams,
   buildClearedFiltersParams,
   getMonthToDateRange,
   shouldSkipDefaultDateRange,
@@ -128,6 +129,15 @@ export default function ReservationsTable({
     setDateFilters(dates);
   };
 
+  /** Clear dates immediately in the URL so defaults are not re-injected. */
+  const clearDateFilters = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    applyDateRangeToParams(params, {});
+    params.set('page', '1');
+    setDateFilters({ date_from: undefined, date_to: undefined });
+    router.push(`?${params.toString()}`);
+  };
+
   const applyAllFilters = () => {
     const params = new URLSearchParams(searchParams.toString());
 
@@ -137,10 +147,6 @@ export default function ReservationsTable({
       if (columnFilters[prefix]) params.delete(key);
     });
 
-    // clear old date filters
-    params.delete('date_from');
-    params.delete('date_to');
-
     // build clean query params
     Object.entries(columnFilters).forEach(([key, val]) => {
       const { c1, c2, logic } = val;
@@ -149,16 +155,7 @@ export default function ReservationsTable({
         params.set(`${key}_${c2.op}_${logic === 'or' ? 'or' : 'and'}`, c2.value);
     });
 
-    // Add date filters
-    if (dateFilters.date_from) {
-      params.set('date_from', dateFilters.date_from);
-    }
-    if (dateFilters.date_to) {
-      params.set('date_to', dateFilters.date_to);
-    }
-    if (dateFilters.date_from || dateFilters.date_to) {
-      params.delete('all_dates');
-    }
+    applyDateRangeToParams(params, dateFilters);
 
     params.set('page', '1');
     router.push(`?${params.toString()}`);
@@ -332,8 +329,8 @@ export default function ReservationsTable({
           setCheckedColumns,
           filters: {
             ...filters,
-            ...(dateFilters.date_from && { date_from: dateFilters.date_from }),
-            ...(dateFilters.date_to && { date_to: dateFilters.date_to }),
+            date_from: dateFilters.date_from || '',
+            date_to: dateFilters.date_to || '',
           }
         }}
         filterElement={
@@ -343,6 +340,7 @@ export default function ReservationsTable({
             updateFilter={updateFilter}
             handleReset={handleReset}
             onDateChange={handleDateChange}
+            onClearDates={clearDateFilters}
             currentDates={dateFilters}
           />
         }

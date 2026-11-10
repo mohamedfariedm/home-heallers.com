@@ -12,6 +12,7 @@ import { Title } from '@/components/ui/text';
 import cn from '@/utils/class-names';
 import { useMedia } from '@/hooks/use-media';
 import DropdownAction from '@/components/charts/dropdown-action';
+import { applyDateRangeToParams } from '@/utils/default-date-range';
 const Drawer = dynamic(
   () => import('@/components/ui/drawer').then((module) => module.Drawer),
   { ssr: false }
@@ -57,19 +58,20 @@ function FilterDrawerView({
   const handleShowResults = () => {
   const keys = Object.keys(filters || {});
   const params = new URLSearchParams(searchParams.toString());
+  const hasDateKeys =
+    Object.prototype.hasOwnProperty.call(filters || {}, 'date_from') ||
+    Object.prototype.hasOwnProperty.call(filters || {}, 'date_to');
 
   keys.forEach((key) => {
+    if (key === 'date_from' || key === 'date_to') {
+      // Dates are applied together below so empty clear can set all_dates.
+      return;
+    }
+
     const value = filters[key];
 
     // ✅ only include if value is not empty, null, or undefined
-    // Handle date_from and date_to specifically
-    if (key === 'date_from' || key === 'date_to') {
-      if (value !== '' && value !== null && value !== undefined) {
-        params.set(key, String(value));
-      } else {
-        params.delete(key);
-      }
-    } else if (value !== '' && value !== null && value !== undefined) {
+    if (value !== '' && value !== null && value !== undefined) {
       // For other filters, check if it's a nested object (like column filters)
       if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
         // Skip nested filter objects - they're handled by applyAllFilters
@@ -81,6 +83,13 @@ function FilterDrawerView({
       params.delete(key);
     }
   });
+
+  if (hasDateKeys) {
+    applyDateRangeToParams(params, {
+      date_from: filters?.date_from,
+      date_to: filters?.date_to,
+    });
+  }
 
   setOpenDrawer(false);
   params.set('page', '1'); // always reset to first page

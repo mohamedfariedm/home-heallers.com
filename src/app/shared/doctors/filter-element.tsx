@@ -5,7 +5,6 @@ import { PiTrashDuotone } from 'react-icons/pi';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import StatusField from '@/components/controlled-table/status-field';
-import { useSearchParams } from 'next/navigation';
 import { Text } from '@/components/ui/text';
 import { useMedia } from '@/hooks/use-media';
 
@@ -69,6 +68,7 @@ type FilterElementProps = {
   updateFilter: (columnId: string, filterValue: string | any[]) => void;
   handleReset: () => void;
   onDateChange?: (dates: { date_from?: string; date_to?: string }) => void;
+  onClearDates?: () => void;
   currentDates?: { date_from?: string; date_to?: string };
 };
 
@@ -77,34 +77,17 @@ export default function FilterElement({
   updateFilter,
   handleReset,
   onDateChange,
+  onClearDates,
   currentDates,
 }: FilterElementProps) {
-  const searchParams = useSearchParams();
   const isMediumScreen = useMedia('(max-width: 1860px)', false);
-  const [dateFrom, setDateFrom] = useState(currentDates?.date_from || searchParams.get('date_from') || '');
-  const [dateTo, setDateTo] = useState(currentDates?.date_to || searchParams.get('date_to') || '');
+  const [dateFrom, setDateFrom] = useState(currentDates?.date_from || '');
+  const [dateTo, setDateTo] = useState(currentDates?.date_to || '');
 
   useEffect(() => {
-    const urlDateFrom = searchParams.get('date_from') || '';
-    const urlDateTo = searchParams.get('date_to') || '';
-    if (urlDateFrom !== dateFrom) {
-      setDateFrom(urlDateFrom);
-    }
-    if (urlDateTo !== dateTo) {
-      setDateTo(urlDateTo);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (currentDates) {
-      if (currentDates.date_from !== dateFrom) {
-        setDateFrom(currentDates.date_from || '');
-      }
-      if (currentDates.date_to !== dateTo) {
-        setDateTo(currentDates.date_to || '');
-      }
-    }
-  }, [currentDates]);
+    setDateFrom(currentDates?.date_from || '');
+    setDateTo(currentDates?.date_to || '');
+  }, [currentDates?.date_from, currentDates?.date_to]);
 
   const handleDateChange = (field: 'date_from' | 'date_to', value: string) => {
     if (field === 'date_from') {
@@ -113,22 +96,20 @@ export default function FilterElement({
       setDateTo(value);
     }
 
-    if (onDateChange) {
-      onDateChange({
-        date_from: field === 'date_from' ? (value || undefined) : (dateFrom || undefined),
-        date_to: field === 'date_to' ? (value || undefined) : (dateTo || undefined),
-      });
-    }
+    onDateChange?.({
+      date_from: field === 'date_from' ? value || undefined : dateFrom || undefined,
+      date_to: field === 'date_to' ? value || undefined : dateTo || undefined,
+    });
   };
 
   const handleResetAll = () => {
     setDateFrom('');
     setDateTo('');
-
-    if (onDateChange) {
-      onDateChange({ date_from: undefined, date_to: undefined });
+    onDateChange?.({ date_from: undefined, date_to: undefined });
+    if (onClearDates) {
+      onClearDates();
+      return;
     }
-
     handleReset();
   };
 

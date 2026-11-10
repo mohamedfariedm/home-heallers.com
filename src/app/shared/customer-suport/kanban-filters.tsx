@@ -56,23 +56,18 @@ export default function KanbanFilters({
 
   // Sync local filters with current applied filters when drawer opens
   useEffect(() => {
-    if (isOpen) {
-      // Only sync if there are actual filters, otherwise keep empty
-      if (Object.keys(currentFilters).length > 0) {
-        setFilters(currentFilters);
-      } else {
-        setFilters({});
-      }
-      // Sync dates
-      if (currentDates) {
-        setDateFrom(currentDates.date_from || '');
-        setDateTo(currentDates.date_to || '');
-      } else {
-        setDateFrom('');
-        setDateTo('');
-      }
+    if (!isOpen) return;
+
+    if (Object.keys(currentFilters).length > 0) {
+      setFilters(currentFilters);
+    } else {
+      setFilters({});
     }
-  }, [isOpen, currentFilters, currentDates]);
+    setDateFrom(currentDates?.date_from || '');
+    setDateTo(currentDates?.date_to || '');
+    // Only re-sync when the drawer opens; avoid wiping in-progress edits.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   const handleFilterChange = (key: string, value: any) => {
     setFilters((prev) => {
@@ -115,22 +110,19 @@ export default function KanbanFilters({
     return result;
   }, [filters, currentFilters]);
 
-  const effectiveDateFrom = dateFrom || currentDates?.date_from || '';
-  const effectiveDateTo = dateTo || currentDates?.date_to || '';
-
   const hasActiveFilters =
     Object.keys(mergedFilters).some(
       (key) => mergedFilters[key]?.c1?.value || mergedFilters[key]?.c2?.value
     ) ||
-    !!effectiveDateFrom ||
-    !!effectiveDateTo;
+    !!dateFrom ||
+    !!dateTo;
 
   const activeFilterCount =
     Object.keys(mergedFilters).filter(
       (key) => mergedFilters[key]?.c1?.value || mergedFilters[key]?.c2?.value
     ).length +
-    (effectiveDateFrom ? 1 : 0) +
-    (effectiveDateTo ? 1 : 0);
+    (dateFrom ? 1 : 0) +
+    (dateTo ? 1 : 0);
 
   return (
     <>
@@ -182,7 +174,7 @@ export default function KanbanFilters({
                   <label className="text-sm font-semibold text-gray-900 dark:text-gray-900">
                     Date From
                   </label>
-                  {(dateFrom || currentDates?.date_from) && (
+                  {dateFrom && (
                     <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-medium text-white">
                       Active
                     </span>
@@ -190,7 +182,7 @@ export default function KanbanFilters({
                 </div>
                 <Input
                   type="date"
-                  value={dateFrom || currentDates?.date_from || ''}
+                  value={dateFrom}
                   onChange={(e) => setDateFrom(e.target.value)}
                   className="w-full"
                   inputClassName="border-gray-200 dark:border-gray-700 focus:ring-blue-500 rounded-lg h-9"
@@ -201,7 +193,7 @@ export default function KanbanFilters({
                   <label className="text-sm font-semibold text-gray-900 dark:text-gray-900">
                     Date To
                   </label>
-                  {(dateTo || currentDates?.date_to) && (
+                  {dateTo && (
                     <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-medium text-white">
                       Active
                     </span>
@@ -209,7 +201,7 @@ export default function KanbanFilters({
                 </div>
                 <Input
                   type="date"
-                  value={dateTo || currentDates?.date_to || ''}
+                  value={dateTo}
                   onChange={(e) => setDateTo(e.target.value)}
                   className="w-full"
                   inputClassName="border-gray-200 dark:border-gray-700 focus:ring-blue-500 rounded-lg h-9"

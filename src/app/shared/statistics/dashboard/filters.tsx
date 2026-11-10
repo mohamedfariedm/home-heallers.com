@@ -275,20 +275,38 @@ export default function StatisticsFiltersComponent({
   };
 
   const handleReset = () => {
-    setDateFrom('');
-    setDateTo('');
+    const range = getLast10DaysRange();
+    setDateFrom(range.date_from);
+    setDateTo(range.date_to);
     setDoctorId('');
     setClientId('');
     setCenterId('');
     setSelectedStatuses([]);
     setSelectedSupportTypes([]);
     setSelectedSourceCampaigns([]);
-    onFilter({});
+    onFilter({ date_from: range.date_from, date_to: range.date_to });
   };
 
   const handleLast10Days = () => {
-    setDateFrom(defaults.date_from);
-    setDateTo(defaults.date_to);
+    const range = getLast10DaysRange();
+    setDateFrom(range.date_from);
+    setDateTo(range.date_to);
+    onFilter({
+      date_from: range.date_from,
+      date_to: range.date_to,
+      ...(toSelectValue(doctorId) ? { doctor_id: toSelectValue(doctorId) } : {}),
+      ...(toSelectValue(clientId) ? { client_id: toSelectValue(clientId) } : {}),
+      ...(toSelectValue(centerId) ? { center_id: toSelectValue(centerId) } : {}),
+      ...(selectedStatuses.length > 0
+        ? { reservation_statuses: selectedStatuses.map((s) => parseInt(s)) }
+        : {}),
+      ...(selectedSupportTypes.length > 0
+        ? { customer_support_types: selectedSupportTypes }
+        : {}),
+      ...(selectedSourceCampaigns.length > 0
+        ? { source_campaigns: selectedSourceCampaigns }
+        : {}),
+    });
   };
 
   const reservationStatusSelectOptions = useMemo(
