@@ -83,6 +83,11 @@ interface AggregateData {
   };
   doctors?: {
     total: number;
+    active_by_category?: Array<{
+      category_id: number | null;
+      name: string;
+      active_doctors: number;
+    }>;
   };
   clients?: {
     total: number;
@@ -537,6 +542,46 @@ export default function StatisticsDashboard() {
                   onSaveRateColors={handleSaveRateColors}
                   isSavingRateColors={isSavingRateColors}
                 />
+
+                {hasPermission('dashboard.active_doctors') &&
+                  (aggregateData?.doctors?.active_by_category?.length ?? 0) > 0 && (
+                    <section className="space-y-4">
+                      <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                        {t('stats_active_doctors_by_category', 'Active doctors by department')}
+                      </h2>
+                      <div className="overflow-x-auto rounded-2xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+                        <table className="min-w-full text-sm">
+                          <thead className="bg-gray-50 text-left dark:bg-gray-900/40">
+                            <tr>
+                              <th className="px-3 py-2 font-medium">
+                                {t('stats_department', 'Department')}
+                              </th>
+                              <th className="px-3 py-2 font-medium">
+                                {t('stats_active_doctors', 'Active doctors')}
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {aggregateData?.doctors?.active_by_category?.map((row) => (
+                              <tr
+                                key={row.category_id ?? 'unassigned'}
+                                className="border-t border-gray-100 dark:border-gray-800"
+                              >
+                                <td className="px-3 py-2">{row.name}</td>
+                                <td className="px-3 py-2">{row.active_doctors}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        {t(
+                          'stats_active_doctors_by_category_hint',
+                          'Counted from the doctor active status. A doctor in more than one department is counted in each. This roster is not limited to the selected dates.'
+                        )}
+                      </p>
+                    </section>
+                  )}
 
                 {hasPermission('dashboard.reservations_by_status') &&
                   aggregateData?.reservations &&

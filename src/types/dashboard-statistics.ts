@@ -111,6 +111,12 @@ export interface DoctorCityDemandRow {
   doctors_served_count: number;
 }
 
+export interface ActiveDoctorsByCategoryRow {
+  category_id: number | null;
+  name: string;
+  active_doctors: number;
+}
+
 export interface DoctorListStatistics {
   active_doctors: number;
   working_doctors: number;
@@ -119,4 +125,5 @@ export interface DoctorListStatistics {
   sessions_per_working_doctor: number;
   by_doctor: DoctorWorkloadRow[];
   by_city: DoctorCityDemandRow[];
+  active_doctors_by_category?: ActiveDoctorsByCategoryRow[];
 }

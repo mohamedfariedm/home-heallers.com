@@ -148,11 +148,9 @@ export default function FilterElement({
         displayValue={(selected: string) =>
           statusOptions.find((option) => option.value === selected)?.label ?? selected
         }
-        {...(isMediumScreen && {
-          placeholder: 'Status',
-          label: 'Status',
-          ...fieldProps,
-        })}
+        placeholder="Active / Inactive"
+        label="Status"
+        labelClassName="font-medium text-gray-700"
       />
 
       <StatusField
