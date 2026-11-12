@@ -1,4 +1,9 @@
 'use client';
+import {
+  ModalFormHeader,
+  ModalFormFooter,
+  modalFormClassName,
+} from '@/components/ui/modal-form-shell';
 
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
@@ -86,14 +91,7 @@ export default function SendNotificationForm() {
       onSubmit={handleSubmit(onSubmit)}
       className="flex flex-grow flex-col gap-5 p-6 @container [&_.rizzui-input-label]:font-medium [&_.rizzui-input-label]:text-gray-900"
     >
-      <div className="flex items-center justify-between">
-        <Title as="h4" className="font-semibold">
-          Send notification now
-        </Title>
-        <ActionIcon size="sm" variant="text" onClick={closeModal}>
-          <PiXBold className="h-auto w-5" />
-        </ActionIcon>
-      </div>
+      <ModalFormHeader title="Send notification now" />
 
       <FormGroup title="Audience">
         <Controller

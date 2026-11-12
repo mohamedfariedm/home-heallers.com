@@ -2,8 +2,10 @@
 
 import { Suspense, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { PiGearBold } from 'react-icons/pi';
-import PageHeader from '@/app/shared/page-header';
+import { PiGearBold, PiLifebuoyDuotone } from 'react-icons/pi';
+import AdminPageShell, {
+  adminSecondaryButtonClass,
+} from '@/components/ui/admin-page-shell';
 import Spinner from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';
 import { usePermissions } from '@/context/PermissionsContext';
@@ -11,6 +13,7 @@ import { useIsMounted } from '@/hooks/use-is-mounted';
 import { resolveSupportTicketsPermissions } from '@/app/shared/support-tickets/permissions';
 import SupportTicketsInbox from '@/app/shared/support-tickets/inbox';
 import SupportTicketsSettingsModal from '@/app/shared/support-tickets/settings-modal';
+import cn from '@/utils/class-names';
 
 function SupportTicketsPageContent() {
   const { t } = useTranslation();
@@ -19,8 +22,6 @@ function SupportTicketsPageContent() {
   const access = resolveSupportTicketsPermissions(permissions);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
-  // Translations load after the server render, so wait for the client before
-  // painting any translated text. Otherwise React hydrates the raw keys.
   if (!isMounted) {
     return (
       <div className="flex h-64 items-center justify-center">
@@ -29,43 +30,64 @@ function SupportTicketsPageContent() {
     );
   }
 
-  const pageHeader = {
-    title: t('st_page_title'),
-    breadcrumb: [{ href: '/', name: t('st_breadcrumb_home') }, { name: t('st_page_title') }],
-  };
+  const title = t('st_page_title');
+  const breadcrumb = [
+    { href: '/', name: t('st_breadcrumb_home') },
+    { name: t('st_page_title') },
+  ];
 
   if (!access.view) {
     return (
-      <>
-        <PageHeader title={pageHeader.title} breadcrumb={pageHeader.breadcrumb} />
-        <div className="rounded-md border border-gray-200 bg-white p-6 text-sm text-gray-600">
+      <AdminPageShell
+        title={title}
+        description={t(
+          'st_page_description',
+          'Review and respond to customer support tickets'
+        )}
+        icon={<PiLifebuoyDuotone />}
+        breadcrumb={breadcrumb}
+      >
+        <div className="rounded-2xl border border-gray-200 bg-white p-6 text-sm text-gray-600 shadow-sm">
           {t('st_no_permission')}
         </div>
-      </>
+      </AdminPageShell>
     );
   }
 
   return (
-    <>
-      <PageHeader title={pageHeader.title} breadcrumb={pageHeader.breadcrumb}>
-        {access.settings && (
+    <AdminPageShell
+      title={title}
+      description={t(
+        'st_page_description',
+        'Review and respond to customer support tickets'
+      )}
+      icon={<PiLifebuoyDuotone />}
+      breadcrumb={breadcrumb}
+      maxWidth="full"
+      actions={
+        access.settings ? (
           <Button
             variant="outline"
-            className="mt-4 flex items-center gap-2 @lg:mt-0"
+            className={cn(adminSecondaryButtonClass, 'flex items-center gap-2')}
             onClick={() => setSettingsOpen(true)}
           >
             <PiGearBold className="h-4 w-4" />
             <span>{t('st_settings_title')}</span>
           </Button>
-        )}
-      </PageHeader>
-
-      <SupportTicketsInbox />
+        ) : null
+      }
+    >
+      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <SupportTicketsInbox />
+      </div>
 
       {access.settings && (
-        <SupportTicketsSettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
+        <SupportTicketsSettingsModal
+          isOpen={settingsOpen}
+          onClose={() => setSettingsOpen(false)}
+        />
       )}
-    </>
+    </AdminPageShell>
   );
 }
 

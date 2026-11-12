@@ -1,4 +1,9 @@
 'use client';
+import {
+  ModalFormHeader,
+  ModalFormFooter,
+  modalFormClassName,
+} from '@/components/ui/modal-form-shell';
 
 import { useModal } from '@/app/shared/modal-views/use-modal';
 import { ActionIcon } from '@/components/ui/action-icon';
@@ -206,7 +211,7 @@ export default function UpdateCreateBrand({
             rate: initValues?.rate
           },
         }}
-        className="flex flex-grow flex-col gap-6 overflow-y-auto p-6 @container [&_.rizzui-input-label]:font-medium [&_.rizzui-input-label]:text-gray-900"
+        className={modalFormClassName}
       >
         {({
           register,
@@ -217,15 +222,7 @@ export default function UpdateCreateBrand({
         }) => {
           return (
             <>
-              <div className="flex items-center justify-between">
-                <Title as="h4" className="font-semibold">
-                  {initValues ? t('client_review_update') : t('client_review_add')}
-                </Title>
-                <ActionIcon size="sm" variant="text" onClick={closeModal}>
-                  <PiXBold className="h-auto w-5" />
-                </ActionIcon>
-              </div>
-
+              <ModalFormHeader title={initValues ? t('client_review_update') : t('client_review_add')} />
               <Input
                 label={t('client_review_title_en')}
                 placeholder={t('client_review_title_en')}
@@ -351,22 +348,11 @@ export default function UpdateCreateBrand({
                 )}
               </FormGroup>
 
-              <div className="flex items-center justify-end gap-4">
-                <Button
-                  variant="outline"
-                  onClick={closeModal}
-                  className="w-full @xl:w-auto"
-                >
-                  {t('client_review_cancel')}
-                </Button>
-                <Button
-                  type="submit"
-                  isLoading={isLoading}
-                  className="w-full @xl:w-auto"
-                >
-                  {initValues ? t('client_review_update') : t('client_review_create')}
-                </Button>
-              </div>
+              <ModalFormFooter
+                cancelLabel={t('client_review_cancel')}
+                isLoading={isLoading}
+                submitLabel={initValues ? t('client_review_update') : t('client_review_create')}
+            />
             </>
           );
         }}

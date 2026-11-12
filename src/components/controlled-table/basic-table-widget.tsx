@@ -128,7 +128,8 @@ export default function BasicTableWidget({
             onClear={() => handleSearch('')}
             onChange={(event) => handleSearch(event.target.value)}
             clearable
-            prefix={<PiMagnifyingGlassBold className="h-4 w-4" />}
+            inputClassName="rounded-xl border-gray-200 ring-[#143087]/20 focus:border-[#143087] focus:ring-[#143087]/20"
+            prefix={<PiMagnifyingGlassBold className="h-4 w-4 text-gray-400" />}
           />
         ),
       })}

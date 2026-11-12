@@ -1,4 +1,9 @@
 'use client';
+import {
+  ModalFormHeader,
+  ModalFormFooter,
+  modalFormClassName,
+} from '@/components/ui/modal-form-shell';
 
 import { useState } from 'react';
 import { PiXBold } from 'react-icons/pi';
@@ -152,22 +157,11 @@ export default function OtpCodeForm({
             Clear expiration (set to null)
           </label>
 
-          <div className="flex items-center justify-end gap-4">
-            <Button
-              variant="outline"
-              onClick={closeModal}
-              className="w-full @xl:w-auto"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              isLoading={isPending}
-              className="w-full @xl:w-auto"
-            >
-              Update OTP
-            </Button>
-          </div>
+          <ModalFormFooter
+                cancelLabel="Cancel"
+                isLoading={isPending}
+                submitLabel="Update OTP"
+              />
         </>
       )}
     </Form>

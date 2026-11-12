@@ -128,7 +128,7 @@ export default function StatisticsDashboard() {
           <p className="mt-2 text-sm text-gray-500">{error}</p>
           <button
             onClick={() => fetchStatistics()}
-            className="mt-4 rounded-lg bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+            className="mt-4 rounded-lg bg-[#143087] px-4 py-2 text-white hover:bg-[#0F2466]"
           >
             Try Again
           </button>

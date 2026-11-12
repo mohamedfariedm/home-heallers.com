@@ -666,7 +666,7 @@ export default function ReservationsCalendar({
                     className={cn(
                       'rounded-lg px-3 py-1.5 text-xs font-semibold capitalize transition',
                       view === v
-                        ? 'bg-gray-900 text-white shadow-sm'
+                        ? 'bg-[#143087] text-white shadow-sm'
                         : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
                     )}
                   >

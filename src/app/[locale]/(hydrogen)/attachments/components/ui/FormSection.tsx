@@ -9,16 +9,16 @@ interface FormSectionProps {
 export const FormSection: React.FC<FormSectionProps> = ({
   title,
   children,
-  className = ''
+  className = '',
 }) => {
   return (
-    <div className={`bg-white rounded-lg border border-gray-200 shadow-sm ${className}`}>
-      <div className="px-6 py-4 border-b border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+    <div
+      className={`overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm ${className}`}
+    >
+      <div className="border-b border-gray-100 bg-gray-50 px-6 py-4">
+        <h3 className="text-base font-semibold text-gray-900">{title}</h3>
       </div>
-      <div className="p-6 space-y-6">
-        {children}
-      </div>
+      <div className="space-y-6 p-6">{children}</div>
     </div>
   );
 };

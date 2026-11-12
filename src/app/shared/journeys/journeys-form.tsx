@@ -1,4 +1,9 @@
 'use client';
+import {
+  ModalFormHeader,
+  ModalFormFooter,
+  modalFormClassName,
+} from '@/components/ui/modal-form-shell';
 
 import { useState } from 'react';
 import { PiXBold } from 'react-icons/pi';
@@ -83,15 +88,7 @@ export default function UpdateCreateJourney({ initValues }: {
             {({ register, control , formState: { errors } }) => {
                 return (
                 <>
-                    <div className="flex items-center justify-between">
-                        <Title as="h4" className="font-semibold">
-                            {initValues ? 'Update Journey' : 'Add a new Journey'}
-                        </Title>
-                        <ActionIcon size="sm" variant="text" onClick={closeModal}>
-                            <PiXBold className="h-auto w-5" />
-                        </ActionIcon>
-                    </div>
-
+                    <ModalFormHeader title={initValues ? 'Update Journey' : 'Add a new Journey'} />
                     <FormGroup
                         title="User"
                         className="pt-7 @2xl:pt-7 @3xl:grid-cols-12 @3xl:pt-11"
@@ -220,22 +217,11 @@ export default function UpdateCreateJourney({ initValues }: {
                         </div>
                     )}
                     
-                    <div className="flex items-center justify-end gap-4">
-                    <Button
-                        variant="outline"
-                        onClick={closeModal}
-                        className="w-full @xl:w-auto"
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        type="submit"
-                        isLoading={isLoading}
-                        className="w-full @xl:w-auto"
-                    >
-                        {initValues ? 'Update Journey' : 'Create Journey'}
-                    </Button>
-                    </div>
+                    <ModalFormFooter
+                cancelLabel="Cancel"
+                isLoading={isLoading}
+                submitLabel={initValues ? 'Update Journey' : 'Create Journey'}
+            />
                 </>
                 );
             }}

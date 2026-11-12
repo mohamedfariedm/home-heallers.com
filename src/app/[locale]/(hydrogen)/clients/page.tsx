@@ -1,4 +1,5 @@
 'use client';
+import { PiCircleDashedBold } from 'react-icons/pi';
 import TableLayout from '@/app/[locale]/(hydrogen)/tables/table-layout';
 import Spinner from '@/components/ui/spinner';
 import { useSearchParams } from 'next/navigation';
@@ -47,6 +48,8 @@ export default function PatientsTablePage() {
   return (
     <TableLayout
       title={pageHeader.title}
+      description="Manage patient profiles and records"
+      icon={<PiCircleDashedBold />}
       breadcrumb={pageHeader.breadcrumb}
       data={{
         columns: selectedColumns

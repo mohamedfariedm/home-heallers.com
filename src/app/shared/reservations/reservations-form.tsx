@@ -1,4 +1,9 @@
 'use client';
+import {
+  ModalFormHeader,
+  ModalFormFooter,
+  modalFormClassName,
+} from '@/components/ui/modal-form-shell';
 
 import React, { useEffect, useRef, useState } from 'react';
 import {
@@ -922,7 +927,7 @@ export default function CreateOrUpdateReservation({
 
       {reservationType === 'guest' ? (
         // key forces a remount so the very first toggle always re-renders fresh
-        <div key="guest" className="space-y-4 border-l-4 border-blue-500 pl-4">
+        <div key="guest" className="space-y-4 border-l-4 border-[#143087] pl-4">
           <h5 className="text-sm font-semibold">Guest Patient Information</h5>
           <div className="grid grid-cols-2 gap-4">
             <Input
@@ -1429,7 +1434,7 @@ export default function CreateOrUpdateReservation({
                       const newValue = Number(e.target.value);
                       onChange(newValue);
                     }}
-                    className="w-full rounded-lg border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                    className="w-full rounded-lg border border-gray-300 p-2 focus:ring-2 focus:ring-[#143087]/20 focus:border-[#143087] outline-none transition-all"
                   >
                     <option value={0}>Unpaid</option>
                     <option value={1}>Paid</option>

@@ -1,4 +1,5 @@
 'use client';
+import { PiStackDuotone } from 'react-icons/pi';
 
 import TableLayout from '@/app/[locale]/(hydrogen)/tables/table-layout';
 import Spinner from '@/components/ui/spinner';
@@ -29,6 +30,8 @@ export default function GroupsPage() {
   return (
     <TableLayout
       title={pageHeader.title}
+      description="Organize doctors into groups"
+      icon={<PiStackDuotone />}
       breadcrumb={pageHeader.breadcrumb}
       data={{
         columns: selectedColumns

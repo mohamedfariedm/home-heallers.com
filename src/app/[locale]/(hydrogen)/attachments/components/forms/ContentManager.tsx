@@ -42,9 +42,7 @@ export const ContentManager: React.FC<ContentManagerProps> = ({
   };
 
   return (
-    <div className="w-full mx-auto p-6 space-y-8">
-
-      {/* Section Settings */}
+    <div className="w-full space-y-8">
       <SectionSettings
         section={data.section}
         onUpdate={onUpdateSection}
@@ -52,26 +50,25 @@ export const ContentManager: React.FC<ContentManagerProps> = ({
         isLoading={isLoading}
       />
 
-      {/* Content Items */}
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-gray-900">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-lg font-semibold text-gray-900">
             {t('attachments_content_items', {
               count: data.data.length,
               defaultValue: 'Content Items ({{count}})',
             })}
           </h2>
-          <div className="flex items-center gap-4 text-sm text-gray-600">
-            <div className="flex items-center gap-1">
-              <Image className="h-4 w-4" />
+          <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500">
+            <div className="flex items-center gap-1.5">
+              <Image className="h-4 w-4 text-[#143087]" />
               <span>
                 {hasImages
                   ? t('attachments_has_images', 'Has Images')
                   : t('attachments_no_images', 'No Images')}
               </span>
             </div>
-            <div className="flex items-center gap-1">
-              <FileText className="h-4 w-4" />
+            <div className="flex items-center gap-1.5">
+              <FileText className="h-4 w-4 text-[#143087]" />
               <span>
                 {hasDescriptions
                   ? t('attachments_has_descriptions', 'Has Descriptions')
@@ -82,12 +79,14 @@ export const ContentManager: React.FC<ContentManagerProps> = ({
         </div>
 
         {data.data.length === 0 ? (
-          <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-            <List className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-white py-20 text-center">
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50">
+              <List className="h-7 w-7 text-[#143087]" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-700">
               {t('attachments_empty_title', 'No content items yet')}
             </h3>
-            <p className="text-gray-600 mb-4">
+            <p className="mt-1 max-w-sm text-sm text-gray-400">
               {t(
                 'attachments_empty_hint',
                 "This section doesn't have any content items to display."
@@ -96,19 +95,23 @@ export const ContentManager: React.FC<ContentManagerProps> = ({
           </div>
         ) : (
           <div className="space-y-4">
-            {data.data.map((item, index) => {
+            {data.data.map((item) => {
               const ItemIcon = getItemIcon(item);
               const isActive = activeItem === item.id;
-              
+
               return (
-                <div key={item.id} className="border border-gray-200 rounded-lg overflow-hidden">
-                  {/* Item Header */}
-                  <div 
-                    className="flex items-center justify-between p-4 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors"
+                <div
+                  key={item.id}
+                  className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm"
+                >
+                  <div
+                    className="flex cursor-pointer items-center justify-between bg-gray-50/80 p-4 transition-colors hover:bg-blue-50/40"
                     onClick={() => setActiveItem(isActive ? null : item.id)}
                   >
                     <div className="flex items-center gap-3">
-                      <ItemIcon className="h-5 w-5 text-gray-500" />
+                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50">
+                        <ItemIcon className="h-4 w-4 text-[#143087]" />
+                      </div>
                       <div>
                         <h3 className="font-medium text-gray-900">
                           {item.title?.[lang] ||
@@ -119,7 +122,7 @@ export const ContentManager: React.FC<ContentManagerProps> = ({
                               defaultValue: 'Item {{id}}',
                             })}
                         </h3>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-gray-400">
                           {t('attachments_item_meta', {
                             id: item.id,
                             date: new Date(item.updated_at).toLocaleDateString(),
@@ -129,33 +132,43 @@ export const ContentManager: React.FC<ContentManagerProps> = ({
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className={`px-2 py-1 text-xs rounded-full ${
-                        item.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                      }`}>
+                      <span
+                        className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                          item.active
+                            ? 'bg-emerald-50 text-emerald-700'
+                            : 'bg-gray-100 text-gray-500'
+                        }`}
+                      >
                         {item.active
                           ? t('shared_active', 'Active')
                           : t('shared_inactive', 'Inactive')}
                       </span>
-                      <svg 
+                      <svg
                         className={`h-5 w-5 text-gray-400 transition-transform ${
                           isActive ? 'rotate-180' : ''
                         }`}
-                        fill="none" 
-                        stroke="currentColor" 
+                        fill="none"
+                        stroke="currentColor"
                         viewBox="0 0 24 24"
                       >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
                       </svg>
                     </div>
                   </div>
 
-                  {/* Item Form */}
                   {isActive && (
-                    <div className="p-6 bg-white border-t border-gray-200">
+                    <div className="border-t border-gray-100 bg-white p-6">
                       <ContentItemForm
                         item={item}
                         onUpdate={onUpdateItem}
-                        onDelete={onDeleteItem ? () => onDeleteItem(item.id) : undefined}
+                        onDelete={
+                          onDeleteItem ? () => onDeleteItem(item.id) : undefined
+                        }
                         isLoading={isLoading}
                         hasImages={hasImages}
                       />

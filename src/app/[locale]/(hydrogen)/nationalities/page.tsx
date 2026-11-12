@@ -10,6 +10,7 @@ import { useState } from 'react';
 import NationalityTable from '@/app/shared/nationalities/table';
 import CreateNationality from '@/app/shared/nationalities/create-nationality';
 import { useNationality } from '@/framework/nationality';
+import { PiHammerDuotone } from 'react-icons/pi';
 // export const metadata = {
 //   ...metaObject('Enhanced Table'),
 // };
@@ -40,6 +41,8 @@ export default function PermitionsTablePage() {
   return (
     <TableLayout
       title={pageHeader.title}
+      description="Manage nationalities master data"
+      icon={<PiHammerDuotone />}
       breadcrumb={pageHeader.breadcrumb}
       data={{columns: selectedColumns.filter((column) => column !== 'checked' && column !== 'action').map((column: String) => column.replace(/\./g, '_').replace(/\s/g, '_')), rows: selectedRowKeys}}
       fileName="Nationalities/index"

@@ -10,7 +10,9 @@ import {
   PiPlusBold,
   PiTrashBold,
 } from 'react-icons/pi';
-import PageHeader from '@/app/shared/page-header';
+import AdminPageShell, {
+  adminPrimaryButtonClass,
+} from '@/components/ui/admin-page-shell';
 import Spinner from '@/components/ui/spinner';
 import Pagination from '@/components/ui/pagination';
 import { Button } from '@/components/ui/button';
@@ -31,11 +33,12 @@ import {
 import { useCountries } from '@/framework/countrues';
 import { routes } from '@/config/routes';
 import type { GeoLang } from '@/types/geo-regions';
+import cn from '@/utils/class-names';
 
 const PAGE_SIZE = 10;
 
 const selectCls =
-  'rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900';
+  'rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none ring-[#143087]/20 focus:ring-2';
 
 function pickName(
   name: { ar?: string; en?: string } | string | null | undefined,
@@ -122,20 +125,25 @@ export default function GeoRegionsPage() {
   const hasFilters = Boolean(search || status || countryId);
 
   return (
-    <>
-      <PageHeader title={pageHeader.title} breadcrumb={pageHeader.breadcrumb}>
-        {access.create && (
-          <div className="mt-4 @lg:mt-0">
-            <Link href={routes.geoRegions.create}>
-              <Button className="flex items-center gap-2">
-                <PiPlusBold className="h-4 w-4" />
-                <span>{t('geo_new', 'New Region')}</span>
-              </Button>
-            </Link>
-          </div>
-        )}
-      </PageHeader>
-
+    <AdminPageShell
+      title={pageHeader.title}
+      description={t(
+        'geo_page_description',
+        'Manage geographic service regions'
+      )}
+      icon={<PiMapTrifoldDuotone />}
+      breadcrumb={pageHeader.breadcrumb}
+      actions={
+        access.create ? (
+          <Link href={routes.geoRegions.create}>
+            <Button className={cn(adminPrimaryButtonClass, 'flex items-center gap-2')}>
+              <PiPlusBold className="h-4 w-4" />
+              <span>{t('geo_new', 'New Region')}</span>
+            </Button>
+          </Link>
+        ) : null
+      }
+    >
       <div className="space-y-4">
         <div className="flex flex-wrap items-center gap-3">
           <div className="w-full sm:w-72">
@@ -380,6 +388,6 @@ export default function GeoRegionsPage() {
           </div>
         )}
       </div>
-    </>
+    </AdminPageShell>
   );
 }

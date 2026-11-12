@@ -50,7 +50,7 @@ export default function DoctorActivityDrillDownLink({
       href={pathname}
       onClick={handleClick}
       className={cn(
-        'font-semibold text-blue-600 hover:underline dark:text-blue-400',
+        'font-semibold text-[#143087] hover:underline',
         className
       )}
     >

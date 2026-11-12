@@ -47,7 +47,7 @@ const AppLinksSection: React.FC<AppLinksSectionProps> = ({
                 value={iosLink}
                 onChange={(e) => handleIOSChange(e.target.value)}
                 placeholder="https://apps.apple.com/app/your-app-name/id123456789"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#143087]/20 focus:border-[#143087]"
               />
             </div>
             
@@ -58,7 +58,7 @@ const AppLinksSection: React.FC<AppLinksSectionProps> = ({
                   href={iosLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-800 underline break-all"
+                  className="text-[#143087] hover:text-[#0F2466] underline break-all"
                 >
                   {iosLink}
                 </a>
@@ -84,7 +84,7 @@ const AppLinksSection: React.FC<AppLinksSectionProps> = ({
                 value={androidLink}
                 onChange={(e) => handleAndroidChange(e.target.value)}
                 placeholder="https://play.google.com/store/apps/details?id=com.yourapp"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#143087]/20 focus:border-[#143087]"
               />
             </div>
             
@@ -95,7 +95,7 @@ const AppLinksSection: React.FC<AppLinksSectionProps> = ({
                   href={androidLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-800 underline break-all"
+                  className="text-[#143087] hover:text-[#0F2466] underline break-all"
                 >
                   {androidLink}
                 </a>

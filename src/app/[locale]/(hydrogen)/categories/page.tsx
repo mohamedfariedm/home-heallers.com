@@ -3,6 +3,7 @@ import TableLayout from '@/app/[locale]/(hydrogen)/tables/table-layout';
 import Spinner from '@/components/ui/spinner';
 import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
+import { PiListChecks } from 'react-icons/pi';
 import { useCategories } from '@/framework/categories';
 import CreateCategories from '@/app/shared/categories/create-categories';
 import CategoryTable from '@/app/shared/categories/table';
@@ -36,6 +37,8 @@ export default function PermitionsTablePage() {
   return (
     <TableLayout
       title={pageHeader.title}
+      description="Organize services into categories"
+      icon={<PiListChecks />}
       breadcrumb={pageHeader.breadcrumb}
       data={{columns: selectedColumns.filter((column) => column !== 'checked' && column !== 'action').map((column: String) => column.replace(/\./g, '_').replace(/\s/g, '_')), rows: selectedRowKeys}}
       fileName="Categories/index"

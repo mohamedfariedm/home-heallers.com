@@ -2,8 +2,8 @@
 'use client';
 
 import Link from 'next/link';
-import { Fragment } from 'react';
-import { usePathname } from 'next/navigation';
+import { Fragment, useMemo } from 'react';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { Title } from '@/components/ui/text';
 import cn from '@/utils/class-names';
 import SimpleBar from '@/components/ui/simplebar';
@@ -16,22 +16,56 @@ import { useSession } from 'next-auth/react';
 import Cookies from 'js-cookie';
 import { getLocaleFromPathname, withLocalePrefix } from '@/lib/locale';
 
+function isMenuItemActive(
+  pathname: string,
+  search: string,
+  localePath: (path: string) => string,
+  href?: string
+) {
+  if (!href) return false;
+
+  const [pathPart, queryPart] = href.split('?');
+  const localized = localePath(pathPart);
+
+  if (queryPart) {
+    const wanted = new URLSearchParams(queryPart);
+    const current = new URLSearchParams(search);
+    const pathMatches =
+      pathname === localized || pathname.endsWith(pathPart);
+    if (!pathMatches) return false;
+    for (const [key, value] of wanted.entries()) {
+      if (current.get(key) !== value) return false;
+    }
+    return true;
+  }
+
+  if (pathname === localized) return true;
+  if (localized !== localePath('/') && pathname.startsWith(`${localized}/`)) {
+    return true;
+  }
+  return false;
+}
+
 export default function Sidebar({ className }: { className?: string }) {
   const { data: session, status } = useSession();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { t } = useTranslation('menu');
   const locale = getLocaleFromPathname(pathname);
   const { permissions } = usePermissions();
 
+  const pathName = (selectedPath: string) =>
+    withLocalePrefix(selectedPath, locale);
 
-  const pathName = (selectedPath: string) => withLocalePrefix(selectedPath, locale);
+  const search = useMemo(() => searchParams.toString(), [searchParams]);
 
   const hasAuthToken = Boolean(Cookies.get('auth_token'));
   const effectivePermissions = session?.user?.permissions || permissions;
-  const filteredMenuItems = filterMenuItemsByPermissions(menuItemsHaydrogen, effectivePermissions);
+  const filteredMenuItems = filterMenuItemsByPermissions(
+    menuItemsHaydrogen,
+    effectivePermissions
+  );
 
-  // Middleware gates routes on auth_token; NextAuth session can lag or briefly
-  // refetch as unauthenticated — keep sidebar visible when the token exists.
   const showSidebar = status === 'authenticated' || hasAuthToken;
 
   if (!showSidebar) {
@@ -41,20 +75,29 @@ export default function Sidebar({ className }: { className?: string }) {
   return (
     <aside
       className={cn(
-        'fixed bottom-0 start-0 z-50 h-full w-[270px] border-e border-gray-100 bg-white dark:bg-gray-100/50 2xl:w-72',
+        'fixed bottom-0 start-0 z-50 flex h-full w-[270px] flex-col border-e border-gray-100 bg-gradient-to-b from-white via-white to-[#E8ECF5]/50 dark:bg-gray-100/50 2xl:w-72',
         className
       )}
     >
-      <div className="sticky top-0 z-40 border-b border-gray-100/80 bg-white/90 px-1 py-1 backdrop-blur-sm dark:bg-gray-100/5">
-        <Link href={pathName('/')} aria-label="Site Logo">
-          <Logo className="max-w-[155px]" />
+      <div className="sticky top-0 z-40 flex items-center justify-center border-b border-gray-100 bg-transparent px-5 py-5">
+        <Link
+          href={pathName('/')}
+          aria-label="Site Logo"
+          className="inline-flex w-full items-center justify-center"
+        >
+          <Logo className="mx-auto" />
         </Link>
       </div>
 
-      <SimpleBar className="h-[calc(100vh_-_150px)]">
-        <div className="mt-5 pb-4 3xl:mt-6">
+      <SimpleBar className="h-[calc(100vh_-_80px)]">
+        <nav className="mt-4 space-y-0.5 pb-8">
           {filteredMenuItems.map((item, index) => {
-            const isActive = pathname === pathName(item?.href || '');
+            const active = isMenuItemActive(
+              pathname,
+              search,
+              pathName,
+              item?.href
+            );
 
             return (
               <Fragment key={item.name + '-' + index}>
@@ -62,32 +105,32 @@ export default function Sidebar({ className }: { className?: string }) {
                   <Link
                     href={pathName(item.href)}
                     className={cn(
-                      'group relative mx-3 my-0.5 flex items-center rounded-lg px-3 py-2 font-medium capitalize transition-colors duration-200 lg:my-1 2xl:mx-5 2xl:my-1.5',
-                      isActive
-                        ? 'bg-primary-lighter/70 text-primary before:absolute before:-start-3 before:top-2/5 before:block before:h-4/5 before:w-1 before:rounded-ee-md before:rounded-se-md before:bg-primary dark:bg-primary-lighter/20 2xl:before:-start-5'
-                        : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-700/90 dark:hover:bg-gray-100/60'
+                      'group relative mx-3 flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium capitalize transition-all duration-200 2xl:mx-4',
+                      active
+                        ? 'bg-gradient-to-r from-[#143087] to-[#39519B] text-white shadow-sm shadow-[#143087]/15'
+                        : 'text-gray-600 hover:bg-blue-50/80 hover:text-[#143087]'
                     )}
                   >
                     {item?.icon && (
                       <span
                         className={cn(
-                          'me-2 inline-flex h-5 w-5 items-center justify-center rounded-md [&>svg]:h-[19px] [&>svg]:w-[19px]',
-                          isActive
-                            ? 'text-primary'
-                            : 'text-gray-800 dark:text-gray-500 dark:group-hover:text-gray-700'
+                          'inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors [&>svg]:h-[18px] [&>svg]:w-[18px]',
+                          active
+                            ? 'bg-white/15 text-white'
+                            : 'bg-[#E8ECF5] text-[#143087] group-hover:bg-blue-100/80'
                         )}
                       >
                         {item?.icon}
                       </span>
                     )}
-                    {t(item.name)}
+                    <span className="truncate">{t(item.name)}</span>
                   </Link>
                 ) : (
                   <Title
                     as="h6"
                     className={cn(
-                      'mb-2.5 truncate px-6 text-[11px] font-medium uppercase tracking-widest text-gray-400 dark:text-gray-500 2xl:px-8',
-                      index !== 0 && 'mt-7 3xl:mt-8'
+                      'mb-2 truncate px-6 text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-400 2xl:px-7',
+                      index !== 0 && 'mt-6'
                     )}
                   >
                     {t(item.name)}
@@ -96,7 +139,7 @@ export default function Sidebar({ className }: { className?: string }) {
               </Fragment>
             );
           })}
-        </div>
+        </nav>
       </SimpleBar>
     </aside>
   );

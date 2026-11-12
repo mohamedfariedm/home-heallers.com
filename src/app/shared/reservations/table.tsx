@@ -290,7 +290,7 @@ export default function ReservationsTable({
         </button>
         <button
           onClick={applyAllFilters}
-          className="px-4 py-2 text-sm rounded-md bg-blue-600 text-white hover:bg-blue-700 transition"
+          className="px-4 py-2 text-sm rounded-xl bg-[#143087] text-white hover:bg-[#0F2466] transition"
         >
           Apply Filters
         </button>

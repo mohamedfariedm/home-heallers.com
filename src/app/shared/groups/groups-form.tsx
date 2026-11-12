@@ -1,4 +1,9 @@
 'use client';
+import {
+  ModalFormHeader,
+  ModalFormFooter,
+  modalFormClassName,
+} from '@/components/ui/modal-form-shell';
 
 import { useMemo } from 'react';
 import { PiXBold } from 'react-icons/pi';
@@ -70,15 +75,7 @@ export default function GroupsForm({ initValues }: { initValues?: any }) {
     >
       {({ register, formState: { errors }, control }) => (
         <>
-          <div className="flex items-center justify-between">
-            <Title as="h4" className="font-semibold">
-              {initValues ? 'Update group' : 'Create group'}
-            </Title>
-            <ActionIcon size="sm" variant="text" onClick={closeModal}>
-              <PiXBold className="h-auto w-5" />
-            </ActionIcon>
-          </div>
-
+          <ModalFormHeader title={initValues ? 'Update group' : 'Create group'} />
           <Input
             label="Group name"
             placeholder="e.g. Night shift"
@@ -130,22 +127,11 @@ export default function GroupsForm({ initValues }: { initValues?: any }) {
             }}
           />
 
-          <div className="flex items-center justify-end gap-4">
-            <Button
-              variant="outline"
-              onClick={closeModal}
-              className="w-full @xl:w-auto"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              isLoading={isCreating || isUpdating}
-              className="w-full @xl:w-auto"
-            >
-              {initValues ? 'Update group' : 'Create group'}
-            </Button>
-          </div>
+          <ModalFormFooter
+                cancelLabel="Cancel"
+                isLoading={isCreating || isUpdating}
+                submitLabel={initValues ? 'Update group' : 'Create group'}
+            />
         </>
       )}
     </Form>

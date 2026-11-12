@@ -1,4 +1,9 @@
 'use client';
+import {
+  ModalFormHeader,
+  ModalFormFooter,
+  modalFormClassName,
+} from '@/components/ui/modal-form-shell';
 
 import { useMemo } from 'react';
 import { Controller, type SubmitHandler, useForm } from 'react-hook-form';
@@ -186,15 +191,7 @@ export default function ScheduledNotificationForm({
       })}
       className="flex flex-grow flex-col gap-5 p-6 @container [&_.rizzui-input-label]:font-medium [&_.rizzui-input-label]:text-gray-900"
     >
-      <div className="flex items-center justify-between">
-        <Title as="h4" className="font-semibold">
-          {initValues ? 'Edit scheduled notification' : 'Schedule notification'}
-        </Title>
-        <ActionIcon size="sm" variant="text" onClick={closeModal}>
-          <PiXBold className="h-auto w-5" />
-        </ActionIcon>
-      </div>
-
+      <ModalFormHeader title={initValues ? 'Edit scheduled notification' : 'Schedule notification'} />
       <FormGroup title="Audience">
         <Controller
           control={control}

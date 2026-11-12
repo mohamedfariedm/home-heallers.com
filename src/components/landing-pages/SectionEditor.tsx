@@ -223,7 +223,7 @@ const SectionEditor: React.FC<SectionEditorProps> = ({ section, onSave, onCancel
           </button>
           <button
             onClick={() => onSave(editedSection)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="px-4 py-2 bg-[#143087] text-white rounded-xl hover:bg-[#0F2466] transition-colors"
           >
             <Save className="w-4 h-4 inline mr-2" />
             Save Section
@@ -246,7 +246,7 @@ const SectionEditor: React.FC<SectionEditorProps> = ({ section, onSave, onCancel
               updateField('display_mode', 'section');
             }
           }}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#143087]/20"
         >
           {sectionTypes.map((type) => (
             <option key={type.value} value={type.value}>
@@ -268,7 +268,7 @@ const SectionEditor: React.FC<SectionEditorProps> = ({ section, onSave, onCancel
           type="button"
           onClick={() => updateField('active', !editedSection.active)}
           className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-            editedSection.active !== false ? 'bg-blue-600' : 'bg-gray-300'
+            editedSection.active !== false ? 'bg-[#143087]' : 'bg-gray-300'
           }`}
         >
           <span
@@ -288,7 +288,7 @@ const SectionEditor: React.FC<SectionEditorProps> = ({ section, onSave, onCancel
           <select
             value={editedSection.display_mode || 'section'}
             onChange={(e) => updateField('display_mode', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#143087]/20"
           >
             <option value="section">Section</option>
             <option value="slider">Swiper Slider</option>
@@ -314,7 +314,7 @@ const SectionEditor: React.FC<SectionEditorProps> = ({ section, onSave, onCancel
               updateField('selected_blogs', undefined);
               updateField('selected_faqs', undefined);
             }}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#143087]/20"
           >
             {slideTypes.map((type) => (
               <option key={type.value} value={type.value}>
@@ -401,7 +401,7 @@ const SectionEditor: React.FC<SectionEditorProps> = ({ section, onSave, onCancel
                     type="button"
                     onClick={() => updateField('payment_link', !editedSection.payment_link)}
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      editedSection.payment_link ? 'bg-blue-600' : 'bg-gray-300'
+                      editedSection.payment_link ? 'bg-[#143087]' : 'bg-gray-300'
                     }`}
                   >
                     <span
@@ -426,7 +426,7 @@ const SectionEditor: React.FC<SectionEditorProps> = ({ section, onSave, onCancel
           type="number"
           value={editedSection.order}
           onChange={(e) => updateField('order', parseInt(e.target.value) || 1)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#143087]/20"
           min="1"
         />
       </div>
@@ -446,7 +446,7 @@ const SectionEditor: React.FC<SectionEditorProps> = ({ section, onSave, onCancel
                 type="text"
                 value={editedSection.title?.en || ''}
                 onChange={(e) => updateMultilingualField('title', 'en', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#143087]/20"
               />
             </div>
 
@@ -458,7 +458,7 @@ const SectionEditor: React.FC<SectionEditorProps> = ({ section, onSave, onCancel
                 value={editedSection.content?.en || ''}
                 onChange={(e) => updateMultilingualField('content', 'en', e.target.value)}
                 rows={6}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#143087]/20"
               />
             </div>
           </div>
@@ -475,7 +475,7 @@ const SectionEditor: React.FC<SectionEditorProps> = ({ section, onSave, onCancel
                 type="text"
                 value={editedSection.title?.ar || ''}
                 onChange={(e) => updateMultilingualField('title', 'ar', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#143087]/20"
                 dir="rtl"
               />
             </div>
@@ -488,7 +488,7 @@ const SectionEditor: React.FC<SectionEditorProps> = ({ section, onSave, onCancel
                 value={editedSection.content?.ar || ''}
                 onChange={(e) => updateMultilingualField('content', 'ar', e.target.value)}
                 rows={6}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#143087]/20"
                 dir="rtl"
               />
             </div>

@@ -119,7 +119,7 @@ export default function KanbanColumn({
         'flex h-full min-h-[600px] w-80 flex-col rounded-lg border-2 transition-colors',
         colors.border,
         colors.bg,
-        (isOver || isHighlighted) && 'ring-2 ring-blue-500 ring-offset-2',
+        (isOver || isHighlighted) && 'ring-2 ring-[#143087] ring-offset-2',
         'relative'
       )}
     >

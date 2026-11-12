@@ -34,7 +34,7 @@ export default function SettingsButton({
       aria-label="Settings"
       variant="text"
       className={cn(
-        'relative h-[34px] w-[34px] shadow backdrop-blur-md dark:bg-gray-100 md:h-9 md:w-9',
+        'relative h-[34px] w-[34px] shadow backdrop-blur-md hover:bg-blue-50 hover:text-[#143087] dark:bg-gray-100 md:h-9 md:w-9',
         className
       )}
       onClick={() =>

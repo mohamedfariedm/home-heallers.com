@@ -231,7 +231,7 @@ export const ContentItemForm: React.FC<ContentItemFormProps> = ({
             <button
               type="submit"
               disabled={isLoading}
-              className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center gap-2 px-6 py-2 bg-[#143087] text-white rounded-xl hover:bg-[#0F2466] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isLoading ? (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>

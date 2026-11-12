@@ -54,7 +54,7 @@ function SearchBox({ onClose }: { onClose?: () => void }) {
           ref={inputRef}
           onChange={(e) => setSearchText(() => e.target.value)}
           placeholder="Search here"
-          className="flex-1"
+          className="flex-1 [&_input]:rounded-xl [&_input]:focus:ring-[#143087]/20"
           prefix={
             <PiMagnifyingGlassBold className="h-[18px] w-[18px] text-gray-600" />
           }
@@ -109,7 +109,7 @@ function SearchBox({ onClose }: { onClose?: () => void }) {
               {item?.href ? (
                 <Link
                   href={item?.href as string}
-                  className="relative my-0.5 flex items-center rounded-lg px-3 py-2 text-sm hover:bg-gray-100 focus:outline-none focus-visible:bg-gray-100 dark:hover:bg-gray-50/50 dark:hover:backdrop-blur-lg"
+                  className="relative my-0.5 flex items-center rounded-xl px-3 py-2 text-sm hover:bg-blue-50 hover:text-[#143087] focus:outline-none focus-visible:bg-blue-50 dark:hover:bg-blue-50/50 dark:hover:backdrop-blur-lg"
                 >
                   <span className="inline-flex items-center justify-center rounded-md border border-gray-300 p-2 text-gray-500">
                     <PiFileTextDuotone className="h-5 w-5" />
@@ -171,7 +171,7 @@ export default function SearchWidget({
       <button
         onClick={() => setOpen(true)}
         className={cn(
-          'group inline-flex items-center focus:outline-none active:translate-y-px xl:h-10 xl:w-full xl:max-w-sm xl:rounded-xl xl:border xl:border-gray-200 xl:py-2 xl:pe-2 xl:ps-3.5 xl:shadow-sm xl:backdrop-blur-md xl:transition-colors xl:duration-200 xl:hover:border-gray-900 xl:hover:outline-double xl:hover:outline-[0.5px] xl:hover:outline-gray-900 xl:focus-visible:border-gray-900 xl:focus-visible:outline-double xl:focus-visible:outline-[0.5px] xl:focus-visible:outline-gray-900',
+          'group inline-flex items-center rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[#143087]/20 active:translate-y-px xl:h-10 xl:w-full xl:max-w-sm xl:rounded-xl xl:border xl:border-gray-200 xl:py-2 xl:pe-2 xl:ps-3.5 xl:shadow-sm xl:backdrop-blur-md xl:transition-colors xl:duration-200 xl:hover:border-[#143087]/40 xl:hover:bg-blue-50/40 xl:focus-visible:border-[#143087] xl:focus-visible:ring-2 xl:focus-visible:ring-[#143087]/20',
           className
         )}
       >
@@ -191,8 +191,8 @@ export default function SearchWidget({
       <Modal
         isOpen={open}
         onClose={() => setOpen(false)}
-        overlayClassName="dark:bg-opacity-20 dark:bg-gray-50 dark:backdrop-blur-sm"
-        containerClassName="dark:bg-gray-100/90 overflow-hidden"
+        overlayClassName="bg-slate-900/40 backdrop-blur-[2px] dark:bg-opacity-20 dark:bg-gray-50 dark:backdrop-blur-sm"
+        containerClassName="overflow-hidden rounded-2xl border border-gray-200 shadow-xl dark:bg-gray-100/90"
       >
         <SearchBox onClose={() => setOpen(false)} />
       </Modal>

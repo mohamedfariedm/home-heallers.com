@@ -78,7 +78,7 @@ export default function UserKpiDetailPage() {
       <div className="@container space-y-6">
         <Link
           href={`/${locale}${routes.kpis.index}?tab=users`}
-          className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+          className="inline-flex items-center text-sm font-medium text-[#143087] hover:text-[#0F2466]"
         >
           ← Back to User KPIs
         </Link>

@@ -288,7 +288,7 @@ export function UserNameLink({ row }: { row: UserActivityRow }) {
   const href = buildUserActivityDetailPath(locale, row.user.id, params);
 
   return (
-    <Link href={href} className="font-medium text-blue-600 hover:underline dark:text-blue-400">
+    <Link href={href} className="font-medium text-[#143087] hover:underline">
       {row.user.name}
     </Link>
   );

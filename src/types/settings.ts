@@ -330,7 +330,13 @@ export interface OfferPopup {
   tracking: OfferPopupTracking;
 }
 
-export interface Settings {
+export interface AbandonedPaymentCouponSettings {
+  abandoned_payment_coupon_enabled: boolean;
+  abandoned_payment_coupon_percent: number;
+  abandoned_payment_coupon_delay_minutes: number;
+}
+
+export interface Settings extends Partial<AbandonedPaymentCouponSettings> {
   banners: Banner[];
   social: Social;
   ios_link: string;
@@ -343,4 +349,6 @@ export interface Settings {
   media_folders?: MediaFolder[];
   rate_colors?: RateColorsByMetric;
   offer_popups?: OfferPopup[];
+  /** Other system keys (e.g. session_price) must be preserved on save. */
+  [key: string]: any;
 }

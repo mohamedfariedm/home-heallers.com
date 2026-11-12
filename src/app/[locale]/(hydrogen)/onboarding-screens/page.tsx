@@ -5,8 +5,11 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { PiDeviceMobileDuotone, PiPlusBold } from 'react-icons/pi';
-import PageHeader from '@/app/shared/page-header';
 import Spinner from '@/components/ui/spinner';
+import AdminPageShell, {
+  adminPrimaryButtonClass,
+  adminSecondaryButtonClass,
+} from '@/components/ui/admin-page-shell';
 import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/modal';
 import { Title, Text } from '@/components/ui/text';
@@ -21,6 +24,7 @@ import {
 } from '@/framework/onboarding-screens';
 import { OnboardingScreen } from '@/types/onboarding-screens';
 import { routes } from '@/config/routes';
+import cn from '@/utils/class-names';
 
 type StatusFilter = 'all' | 'active' | 'inactive';
 
@@ -34,13 +38,6 @@ export default function OnboardingScreensPage() {
   const params = useParams();
   const { t } = useTranslation('onboarding-screens');
   const lang = params?.locale === 'ar' ? 'ar' : 'en';
-  const pageHeader = {
-    title: t('Tutorial'),
-    breadcrumb: [
-      { href: '/', name: t('tutorial_home', 'Home') },
-      { name: t('Tutorial') },
-    ],
-  };
   const { permissions } = usePermissions();
   const access = resolveOnboardingScreensPermissions(permissions);
 
@@ -62,24 +59,41 @@ export default function OnboardingScreensPage() {
     return screens;
   }, [screens, filter]);
 
+  const shellProps = {
+    title: t('Tutorial'),
+    description: t(
+      'tutorial_page_description',
+      'Configure onboarding tutorials shown when users open the app'
+    ),
+    icon: <PiDeviceMobileDuotone />,
+    breadcrumb: [
+      { href: '/', name: t('tutorial_home', 'Home') },
+      { name: t('Tutorial') },
+    ],
+  };
+
   if (!access.view || status === 403) {
     return (
-      <div className="rounded-md border border-gray-200 bg-white p-6 text-sm text-gray-600">
-        {t('tutorial_no_permission_view', "You don't have permission to view tutorials.")}
-      </div>
+      <AdminPageShell {...shellProps}>
+        <div className="rounded-2xl border border-gray-200 bg-white p-6 text-sm text-gray-600 shadow-sm">
+          {t('tutorial_no_permission_view', "You don't have permission to view tutorials.")}
+        </div>
+      </AdminPageShell>
     );
   }
 
   if (error) {
     return (
-      <div className="rounded-md border border-gray-200 bg-white p-6">
-        <Text className="text-gray-700">
-          {t('tutorial_load_error', 'Could not load tutorials.')}
-        </Text>
-        <Button className="mt-4" onClick={() => refetch()}>
-          {t('tutorial_retry', 'Retry')}
-        </Button>
-      </div>
+      <AdminPageShell {...shellProps}>
+        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          <Text className="text-gray-700">
+            {t('tutorial_load_error', 'Could not load tutorials.')}
+          </Text>
+          <Button className={cn(adminPrimaryButtonClass, 'mt-4')} onClick={() => refetch()}>
+            {t('tutorial_retry', 'Retry')}
+          </Button>
+        </div>
+      </AdminPageShell>
     );
   }
 
@@ -91,37 +105,36 @@ export default function OnboardingScreensPage() {
     toggleActive.mutate(screen.id);
   };
 
-  // Reorder needs every id, so drag & drop is only available on the full list.
   const canSort = access.update && filter === 'all' && screens.length > 1;
 
   return (
-    <>
-      <PageHeader title={pageHeader.title} breadcrumb={pageHeader.breadcrumb}>
-        {access.create && (
-          <div className="mt-4 @lg:mt-0">
-            <Link href={routes.onboardingScreens.create}>
-              <Button className="flex items-center gap-2">
-                <PiPlusBold className="h-4 w-4" />
-                <span>{t('tutorial_new', 'New Tutorial')}</span>
-              </Button>
-            </Link>
-          </div>
-        )}
-      </PageHeader>
-
-      <div className="mt-6 max-w-4xl space-y-4">
+    <AdminPageShell
+      {...shellProps}
+      actions={
+        access.create ? (
+          <Link href={routes.onboardingScreens.create}>
+            <Button className={cn(adminPrimaryButtonClass, 'flex items-center gap-2')}>
+              <PiPlusBold className="h-4 w-4" />
+              <span>{t('tutorial_new', 'New Tutorial')}</span>
+            </Button>
+          </Link>
+        ) : null
+      }
+    >
+      <div className="max-w-4xl space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="inline-flex rounded-lg border border-gray-200 bg-white p-1">
+          <div className="inline-flex rounded-xl border border-gray-200 bg-white p-1 shadow-sm">
             {FILTERS.map((f) => (
               <button
                 key={f.value}
                 type="button"
                 onClick={() => setFilter(f.value)}
-                className={`rounded-md px-3 py-1.5 text-sm font-medium transition ${
+                className={cn(
+                  'rounded-lg px-3 py-1.5 text-sm font-medium transition',
                   filter === f.value
-                    ? 'bg-gray-900 text-white'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
+                    ? 'bg-[#143087] text-white'
+                    : 'text-gray-600 hover:text-[#143087]'
+                )}
               >
                 {t(f.labelKey, f.label)}
               </button>
@@ -141,15 +154,17 @@ export default function OnboardingScreensPage() {
             <Spinner size="lg" />
           </div>
         ) : visibleScreens.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white py-14 text-center">
-            <PiDeviceMobileDuotone className="mb-2 h-10 w-10 text-gray-400" />
-            <Text className="font-medium text-gray-700">
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-white py-20 text-center">
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50">
+              <PiDeviceMobileDuotone className="h-7 w-7 text-[#143087]" />
+            </div>
+            <Text className="text-lg font-medium text-gray-700">
               {screens.length === 0
                 ? t('tutorial_empty', 'No tutorials yet')
                 : t('tutorial_no_match', 'No tutorials match this filter')}
             </Text>
             {screens.length === 0 && (
-              <Text className="mt-1 text-xs text-gray-500">
+              <Text className="mt-1 max-w-sm text-sm text-gray-400">
                 {t(
                   'tutorial_empty_hint',
                   'The app shows its built-in default tutorials until you add one.'
@@ -183,10 +198,15 @@ export default function OnboardingScreensPage() {
             )}
           </Text>
           <div className="mt-6 flex justify-end gap-3">
-            <Button variant="outline" onClick={() => setConfirmDeactivate(null)}>
+            <Button
+              variant="outline"
+              className={adminSecondaryButtonClass}
+              onClick={() => setConfirmDeactivate(null)}
+            >
               {t('tutorial_cancel', 'Cancel')}
             </Button>
             <Button
+              className={adminPrimaryButtonClass}
               isLoading={toggleActive.isPending}
               onClick={() => {
                 if (!confirmDeactivate) return;
@@ -200,6 +220,6 @@ export default function OnboardingScreensPage() {
           </div>
         </div>
       </Modal>
-    </>
+    </AdminPageShell>
   );
 }

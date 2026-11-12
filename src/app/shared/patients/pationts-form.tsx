@@ -1,3 +1,8 @@
+import {
+  ModalFormHeader,
+  ModalFormFooter,
+  modalFormClassName,
+} from '@/components/ui/modal-form-shell';
 import React, { useState } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { PiXBold } from 'react-icons/pi';
@@ -150,14 +155,7 @@ export default function CreateOrUpdatePationts({ initValues }: { initValues?: an
         
         return(
         <>
-          <div className="flex items-center justify-between">
-            <Title as="h4" className="font-semibold">
-              {initValues ? 'Update patient' : 'Create patient'}
-            </Title>
-            <ActionIcon size="sm" variant="text" onClick={closeModal}>
-              <PiXBold className="h-auto w-5" />
-            </ActionIcon>
-          </div>
+          <ModalFormHeader title={initValues ? 'Update patient' : 'Create patient'} />
 
           {duplicatePatientId != null && (
             <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-200">
@@ -170,7 +168,7 @@ export default function CreateOrUpdatePationts({ initValues }: { initValues?: an
               </p>
               <Link
                 href={routes.patients.detail(duplicatePatientId)}
-                className="mt-2 inline-block font-semibold text-blue-600 underline dark:text-blue-400"
+                className="mt-2 inline-block font-semibold text-[#143087] underline"
                 onClick={() => closeModal()}
               >
                 Open / use existing patient #{duplicatePatientId}
@@ -282,14 +280,11 @@ export default function CreateOrUpdatePationts({ initValues }: { initValues?: an
             </div>
           </div>
 
-          <div className="flex justify-end gap-4 mt-6">
-            <Button variant="outline" onClick={closeModal}>
-              Cancel
-            </Button>
-            <Button type="submit" isLoading={isCreating || isUpdating}>
-              {initValues ? 'Update patient' : 'Create patient'}
-            </Button>
-          </div>
+          <ModalFormFooter
+            cancelLabel="Cancel"
+            isLoading={isCreating || isUpdating}
+            submitLabel={initValues ? 'Update patient' : 'Create patient'}
+          />
         </>
       )}
       }

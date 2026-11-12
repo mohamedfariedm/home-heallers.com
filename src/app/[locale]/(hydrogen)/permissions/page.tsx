@@ -7,6 +7,7 @@ import { usePermissions } from '@/framework/permitions';
 import Spinner from '@/components/ui/spinner';
 import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
+import { PiUserGearDuotone } from 'react-icons/pi';
 // export const metadata = {
 //   ...metaObject('Enhanced Table'),
 // };
@@ -37,6 +38,8 @@ export default function PermitionsTablePage() {
   return (
     <TableLayout
       title={pageHeader.title}
+      description="Configure access permissions"
+      icon={<PiUserGearDuotone />}
       breadcrumb={pageHeader.breadcrumb}
       data={{columns: selectedColumns.filter((column) => column !== 'checked' && column !== 'action').map((column: String) => column.replace(/\./g, '_').replace(/\s/g, '_')), rows: selectedRowKeys}}
       fileName="permition/index"

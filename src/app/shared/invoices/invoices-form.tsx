@@ -1,4 +1,9 @@
 'use client';
+import {
+  ModalFormHeader,
+  ModalFormFooter,
+  modalFormClassName,
+} from '@/components/ui/modal-form-shell';
 
 import { useState, useEffect, type ChangeEvent } from 'react';
 import { type SubmitHandler, useForm } from 'react-hook-form';
@@ -513,7 +518,7 @@ export default function InvoiceManager({
 console.log(editingDetail);
 console.log('====================================');
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-[#E8ECF5] p-4 md:p-6">
       <div className="mx-auto max-w-7xl space-y-8">
         {isLoadingAny ? (
           <div className="flex h-96 items-center justify-center">
@@ -526,7 +531,7 @@ console.log('====================================');
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
             {/* Header */}
             <Card className="border-0 bg-white/80 shadow-lg backdrop-blur-sm">
-              <CardHeader className="rounded-t-lg bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+              <CardHeader className="rounded-t-lg bg-[#143087] text-white">
                 <CardTitle className="flex items-center justify-between text-xl">
                   <div className="flex items-center gap-3">
                     <Receipt className="h-6 w-6" />
@@ -600,7 +605,7 @@ console.log('====================================');
                   <FormGroup title="Status">
                     <select
                       {...register('status')}
-                      className="w-full rounded-lg border border-gray-300 bg-white p-3 focus:border-transparent focus:ring-2 focus:ring-blue-500"
+                      className="w-full rounded-lg border border-gray-300 bg-white p-3 focus:border-transparent focus:ring-2 focus:ring-[#143087]/20"
                     >
                       <option value="">Select Status</option>
                       {statusOptions.map((option) => (
@@ -689,7 +694,7 @@ console.log('====================================');
                               <p className="font-semibold text-gray-900">
                                 {detail.category_name || '—'}
                               </p>
-                              <p className="rounded bg-blue-50 px-2 py-1 text-xs text-blue-600">
+                              <p className="rounded bg-blue-50 px-2 py-1 text-xs text-[#143087]">
                                 Tax: {detail.tax_percentage || '15%'}
                               </p>
                             </div>
@@ -759,8 +764,8 @@ console.log('====================================');
 
                 {/* Edit/Add Detail */}
                 {editingDetail && (
-                  <Card className="mt-8 border-2 border-blue-500 shadow-xl">
-                    <CardHeader className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+                  <Card className="mt-8 border-2 border-[#143087] shadow-xl">
+                    <CardHeader className="bg-[#143087] text-white">
                       <CardTitle className="flex items-center justify-between">
                         {isAddingNew ? 'Add New Detail' : 'Edit Detail'}
                         <Button
@@ -827,7 +832,7 @@ console.log('====================================');
                                 : ''
                             }
                             onChange={handleCategoryChange}
-                            className="w-full rounded-lg border border-gray-300 bg-white p-3 focus:border-transparent focus:ring-2 focus:ring-blue-500"
+                            className="w-full rounded-lg border border-gray-300 bg-white p-3 focus:border-transparent focus:ring-2 focus:ring-[#143087]/20"
                           >
                             <option value="">Select Category</option>
                             {categoriesData?.data?.map(
@@ -855,7 +860,7 @@ console.log('====================================');
                           <select
                             value={String(editingDetail.doctor_id ?? '')}
                             onChange={handleDoctorChange}
-                            className="w-full rounded-lg border border-gray-300 bg-white p-3 focus:border-transparent focus:ring-2 focus:ring-blue-500"
+                            className="w-full rounded-lg border border-gray-300 bg-white p-3 focus:border-transparent focus:ring-2 focus:ring-[#143087]/20"
                           >
                             <option value="">Select Doctor</option>
                             {doctorsData?.data?.map((doctor: any) => (
@@ -943,7 +948,7 @@ console.log('====================================');
                                 e.target.value
                               )
                             }
-                            className="w-full rounded-lg border border-gray-300 bg-white p-3 focus:border-transparent focus:ring-2 focus:ring-blue-500"
+                            className="w-full rounded-lg border border-gray-300 bg-white p-3 focus:border-transparent focus:ring-2 focus:ring-[#143087]/20"
                           >
                             {taxPercentageOptions.map((option) => (
                               <option key={option.value} value={option.value}>
@@ -980,7 +985,7 @@ console.log('====================================');
                         <Button
                           onClick={handleSaveDetail}
                           size="lg"
-                          className="bg-blue-600 hover:bg-blue-700"
+                          className="bg-[#143087] hover:bg-[#0F2466]"
                           type="button"
                         >
                           <Save className="mr-2 h-4 w-4" />
@@ -995,7 +1000,7 @@ console.log('====================================');
 
             {/* Notes */}
             <Card className="border-0 bg-white/80 shadow-lg backdrop-blur-sm">
-              <CardHeader className="rounded-t-lg bg-gradient-to-r from-purple-600 to-purple-700 text-white">
+              <CardHeader className="rounded-t-lg bg-[#143087] text-white">
                 <CardTitle className="flex items-center gap-3 text-xl">
                   <FileText className="h-6 w-6" />
                   Invoice Notes
@@ -1022,11 +1027,11 @@ console.log('====================================');
               </CardHeader>
               <CardContent className="p-8">
                 <div className="mb-8 grid grid-cols-2 gap-6 md:grid-cols-4">
-                  <div className="rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50 to-blue-100 p-6 text-center">
-                    <p className="mb-2 text-sm font-medium text-blue-600">
+                  <div className="rounded-xl border border-blue-200 bg-gradient-to-br from-[#E8ECF5] to-blue-100 p-6 text-center">
+                    <p className="mb-2 text-sm font-medium text-[#143087]">
                       Total Before Tax
                     </p>
-                    <p className="text-2xl font-bold text-blue-800">
+                    <p className="text-2xl font-bold text-[#0F2466]">
                       {Number(watch('total_before_tax'))} ر.س
                     </p>
                   </div>
@@ -1093,7 +1098,7 @@ console.log('====================================');
                   <Button
                     type="submit"
                     size="lg"
-                    className="bg-gradient-to-r from-blue-600 to-blue-700 px-12 py-3 shadow-lg hover:from-blue-700 hover:to-blue-800"
+                    className="rounded-xl bg-[#143087] px-12 py-3 shadow-lg hover:bg-[#0F2466]"
                     disabled={isCreating || isUpdating}
                   >
                     {isCreating || isUpdating ? (

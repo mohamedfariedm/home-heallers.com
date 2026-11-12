@@ -1,10 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import logoImg from '@public/logo-primary.png';
-import logoImgText from '@public/logo-primary-text.svg';
-import LogoIconImg from '@public/Vertical Transperent-05.png';
-
 import Image from 'next/image';
 import { Title, Text } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
@@ -68,7 +64,14 @@ export default function AuthWrapperOne({
                 href={'/'}
                 className="mb-6 inline-flex max-w-[168px] xl:mb-8"
               >
-                <Image width={150} height={150} src={LogoIconImg} alt="Home Healers" />
+                <Image
+                  src="/logo-primary.png"
+                  alt="هوم هيلرز"
+                  width={180}
+                  height={80}
+                  className="h-auto w-auto max-h-14 max-w-[180px] object-contain"
+                  priority
+                />
                 {/* <Image
                   src={logoImgText}
                   alt="Isomorphic"

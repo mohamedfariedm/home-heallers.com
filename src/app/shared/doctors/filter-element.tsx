@@ -129,11 +129,9 @@ export default function FilterElement({
         displayValue={(selected: string) =>
           statusOptions.find((option) => option.value === selected)?.label ?? selected
         }
-        {...(isMediumScreen && {
-          placeholder: 'Status',
-          label: 'Status',
-          ...fieldProps,
-        })}
+        placeholder="Active / Inactive"
+        label="Status"
+        labelClassName="font-medium text-gray-700"
       />
 
       <StatusField
@@ -188,7 +186,7 @@ export default function FilterElement({
           onChange={(e) => handleDateChange('date_from', e.target.value)}
           placeholder="Date From"
           className="w-40"
-          inputClassName="border-gray-200 dark:border-gray-700 focus:ring-blue-500 rounded-lg h-8 text-xs"
+          inputClassName="border-gray-200 dark:border-gray-700 focus:ring-[#143087] rounded-lg h-8 text-xs"
         />
         <Input
           type="date"
@@ -196,7 +194,7 @@ export default function FilterElement({
           onChange={(e) => handleDateChange('date_to', e.target.value)}
           placeholder="Date To"
           className="w-40"
-          inputClassName="border-gray-200 dark:border-gray-700 focus:ring-blue-500 rounded-lg h-8 text-xs"
+          inputClassName="border-gray-200 dark:border-gray-700 focus:ring-[#143087] rounded-lg h-8 text-xs"
         />
       </div>
 

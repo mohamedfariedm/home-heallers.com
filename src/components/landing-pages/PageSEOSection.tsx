@@ -97,7 +97,7 @@ const PageSEOSection: React.FC<PageSEOSectionProps> = ({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-6 text-white">
+      <div className="bg-[#143087] rounded-2xl p-6 text-white">
         <div className="flex items-center gap-3 mb-2">
           <Search className="w-8 h-8" />
           <h2 className="text-2xl font-bold">Professional SEO Settings</h2>
@@ -115,7 +115,7 @@ const PageSEOSection: React.FC<PageSEOSectionProps> = ({
             onClick={() => setActiveLang(lang)}
             className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
               activeLang === lang
-                ? 'bg-blue-600 text-white border-blue-600 shadow-md'
+                ? 'bg-[#143087] text-white border-[#143087] shadow-md'
                 : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
             }`}
           >
@@ -139,7 +139,7 @@ const PageSEOSection: React.FC<PageSEOSectionProps> = ({
               onClick={() => setActiveTab(tab.id as any)}
               className={`flex items-center gap-2 px-4 py-2 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === tab.id
-                  ? 'border-blue-600 text-blue-600'
+                  ? 'border-[#143087] text-[#143087]'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -154,7 +154,7 @@ const PageSEOSection: React.FC<PageSEOSectionProps> = ({
       {activeTab === 'basic' && (
         <div className="bg-gray-50 rounded-lg p-6 border space-y-6">
           <div className="flex items-center gap-3 mb-4">
-            <Search className="w-6 h-6 text-blue-600" />
+            <Search className="w-6 h-6 text-[#143087]" />
             <h3 className="text-lg font-semibold text-gray-900">Basic SEO - Core Ranking Factors</h3>
           </div>
 
@@ -168,7 +168,7 @@ const PageSEOSection: React.FC<PageSEOSectionProps> = ({
                 type="text"
                 value={metaTitle?.[activeLang] || ''}
                 onChange={(e) => updateMetaTitle(activeLang, e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#143087]/20"
                 placeholder="Optimized page title with primary keyword"
                 maxLength={60}
               />
@@ -191,7 +191,7 @@ const PageSEOSection: React.FC<PageSEOSectionProps> = ({
                 value={metaDescription?.[activeLang] || ''}
                 onChange={(e) => updateMetaDescription(activeLang, e.target.value)}
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#143087]/20"
                 placeholder="Compelling description that includes keywords and a call-to-action"
                 maxLength={160}
               />
@@ -208,14 +208,14 @@ const PageSEOSection: React.FC<PageSEOSectionProps> = ({
             {/* Focus Keyword */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                <Target className="w-4 h-4 text-blue-600" />
+                <Target className="w-4 h-4 text-[#143087]" />
                 Focus Keyword (Primary Keyword)
               </label>
               <input
                 type="text"
                 value={currentSEO.focus_keyword?.[activeLang] || ''}
                 onChange={(e) => updateMultilingualField('focus_keyword', activeLang, e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#143087]/20"
                 placeholder="main keyword you want to rank for"
               />
               <p className="text-xs text-gray-500 mt-1">
@@ -232,7 +232,7 @@ const PageSEOSection: React.FC<PageSEOSectionProps> = ({
                 type="text"
                 value={currentSEO.h1_tag?.[activeLang] || ''}
                 onChange={(e) => updateMultilingualField('h1_tag', activeLang, e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#143087]/20"
                 placeholder="Main heading of the page (include focus keyword)"
               />
               <p className="text-xs text-gray-500 mt-1">
@@ -243,14 +243,14 @@ const PageSEOSection: React.FC<PageSEOSectionProps> = ({
             {/* Meta Keywords */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                <Tag className="w-4 h-4 text-blue-600" />
+                <Tag className="w-4 h-4 text-[#143087]" />
                 Meta Keywords
               </label>
               <input
                 type="text"
                 value={currentSEO.meta_keywords?.[activeLang] || ''}
                 onChange={(e) => updateMultilingualField('meta_keywords', activeLang, e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#143087]/20"
                 placeholder="keyword1, keyword2, keyword3, keyword4"
               />
               <p className="text-xs text-gray-500 mt-1">
@@ -261,14 +261,14 @@ const PageSEOSection: React.FC<PageSEOSectionProps> = ({
             {/* Canonical URL */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                <Link2 className="w-4 h-4 text-blue-600" />
+                <Link2 className="w-4 h-4 text-[#143087]" />
                 Canonical URL
               </label>
               <input
                 type="text"
                 value={currentSEO.canonical_url || ''}
                 onChange={(e) => updateSEOField('canonical_url', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#143087]/20"
                 placeholder="https://yoursite.com/landing-page"
               />
               <p className="text-xs text-gray-500 mt-1">
@@ -285,7 +285,7 @@ const PageSEOSection: React.FC<PageSEOSectionProps> = ({
           {/* Open Graph */}
           <div className="bg-gray-50 rounded-lg p-6 border">
             <div className="flex items-center gap-3 mb-4">
-              <Share2 className="w-6 h-6 text-blue-600" />
+              <Share2 className="w-6 h-6 text-[#143087]" />
               <h3 className="text-lg font-semibold text-gray-900">Open Graph (Facebook, LinkedIn)</h3>
             </div>
 
@@ -298,7 +298,7 @@ const PageSEOSection: React.FC<PageSEOSectionProps> = ({
                   type="text"
                   value={currentSEO.og_title?.[activeLang] || ''}
                   onChange={(e) => updateMultilingualField('og_title', activeLang, e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#143087]/20"
                   placeholder="Title for social media sharing"
                 />
               </div>
@@ -311,7 +311,7 @@ const PageSEOSection: React.FC<PageSEOSectionProps> = ({
                   value={currentSEO.og_description?.[activeLang] || ''}
                   onChange={(e) => updateMultilingualField('og_description', activeLang, e.target.value)}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#143087]/20"
                   placeholder="Description for social media sharing"
                 />
               </div>
@@ -355,7 +355,7 @@ const PageSEOSection: React.FC<PageSEOSectionProps> = ({
                   <select
                     value={currentSEO.og_type || 'website'}
                     onChange={(e) => updateSEOField('og_type', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#143087]/20"
                   >
                     <option value="website">Website</option>
                     <option value="article">Article</option>
@@ -373,7 +373,7 @@ const PageSEOSection: React.FC<PageSEOSectionProps> = ({
                     type="text"
                     value={currentSEO.og_url || ''}
                     onChange={(e) => updateSEOField('og_url', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#143087]/20"
                     placeholder="https://yoursite.com/landing-page"
                   />
                 </div>
@@ -387,7 +387,7 @@ const PageSEOSection: React.FC<PageSEOSectionProps> = ({
                   type="text"
                   value={currentSEO.og_site_name || ''}
                   onChange={(e) => updateSEOField('og_site_name', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#143087]/20"
                   placeholder="Your Site Name"
                 />
               </div>
@@ -409,7 +409,7 @@ const PageSEOSection: React.FC<PageSEOSectionProps> = ({
                 <select
                   value={currentSEO.twitter_card || 'summary_large_image'}
                   onChange={(e) => updateSEOField('twitter_card', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#143087]/20"
                 >
                   <option value="summary">Summary</option>
                   <option value="summary_large_image">Summary Large Image</option>
@@ -426,7 +426,7 @@ const PageSEOSection: React.FC<PageSEOSectionProps> = ({
                   type="text"
                   value={currentSEO.twitter_title?.[activeLang] || ''}
                   onChange={(e) => updateMultilingualField('twitter_title', activeLang, e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#143087]/20"
                   placeholder="Title for Twitter sharing"
                 />
               </div>
@@ -439,7 +439,7 @@ const PageSEOSection: React.FC<PageSEOSectionProps> = ({
                   value={currentSEO.twitter_description?.[activeLang] || ''}
                   onChange={(e) => updateMultilingualField('twitter_description', activeLang, e.target.value)}
                   rows={2}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#143087]/20"
                   placeholder="Description for Twitter sharing"
                 />
               </div>
@@ -483,7 +483,7 @@ const PageSEOSection: React.FC<PageSEOSectionProps> = ({
                   type="text"
                   value={currentSEO.twitter_site || ''}
                   onChange={(e) => updateSEOField('twitter_site', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#143087]/20"
                   placeholder="@yourusername"
                 />
               </div>
@@ -496,7 +496,7 @@ const PageSEOSection: React.FC<PageSEOSectionProps> = ({
       {activeTab === 'technical' && (
         <div className="bg-gray-50 rounded-lg p-6 border space-y-6">
           <div className="flex items-center gap-3 mb-4">
-            <Code className="w-6 h-6 text-blue-600" />
+            <Code className="w-6 h-6 text-[#143087]" />
             <h3 className="text-lg font-semibold text-gray-900">Technical SEO</h3>
           </div>
 
@@ -508,7 +508,7 @@ const PageSEOSection: React.FC<PageSEOSectionProps> = ({
               <select
                 value={currentSEO.meta_robots || 'index, follow'}
                 onChange={(e) => updateSEOField('meta_robots', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#143087]/20"
               >
                 <option value="index, follow">Index, Follow (Recommended)</option>
                 <option value="index, nofollow">Index, NoFollow</option>
@@ -527,7 +527,7 @@ const PageSEOSection: React.FC<PageSEOSectionProps> = ({
               <select
                 value={currentSEO.schema_type || 'WebPage'}
                 onChange={(e) => updateSEOField('schema_type', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#143087]/20"
               >
                 <option value="WebPage">WebPage</option>
                 <option value="Article">Article</option>
@@ -550,7 +550,7 @@ const PageSEOSection: React.FC<PageSEOSectionProps> = ({
               <select
                 value={currentSEO.language || activeLang}
                 onChange={(e) => updateSEOField('language', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#143087]/20"
               >
                 <option value="en">English (en)</option>
                 <option value="ar">Arabic (ar)</option>
@@ -566,7 +566,7 @@ const PageSEOSection: React.FC<PageSEOSectionProps> = ({
       {activeTab === 'advanced' && (
         <div className="bg-gray-50 rounded-lg p-6 border space-y-6">
           <div className="flex items-center gap-3 mb-4">
-            <Target className="w-6 h-6 text-blue-600" />
+            <Target className="w-6 h-6 text-[#143087]" />
             <h3 className="text-lg font-semibold text-gray-900">Advanced SEO</h3>
           </div>
 
@@ -574,28 +574,28 @@ const PageSEOSection: React.FC<PageSEOSectionProps> = ({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                  <User className="w-4 h-4 text-blue-600" />
+                  <User className="w-4 h-4 text-[#143087]" />
                   Author
                 </label>
                 <input
                   type="text"
                   value={currentSEO.author || ''}
                   onChange={(e) => updateSEOField('author', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#143087]/20"
                   placeholder="Author name"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-blue-600" />
+                  <Calendar className="w-4 h-4 text-[#143087]" />
                   Published Date
                 </label>
                 <input
                   type="date"
                   value={currentSEO.published_date || ''}
                   onChange={(e) => updateSEOField('published_date', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#143087]/20"
                 />
               </div>
             </div>
@@ -608,7 +608,7 @@ const PageSEOSection: React.FC<PageSEOSectionProps> = ({
                 type="date"
                 value={currentSEO.modified_date || ''}
                 onChange={(e) => updateSEOField('modified_date', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#143087]/20"
               />
             </div>
 
@@ -620,7 +620,7 @@ const PageSEOSection: React.FC<PageSEOSectionProps> = ({
                 type="text"
                 value={currentSEO.article_section?.[activeLang] || ''}
                 onChange={(e) => updateMultilingualField('article_section', activeLang, e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#143087]/20"
                 placeholder="Category or section name"
               />
             </div>
@@ -633,7 +633,7 @@ const PageSEOSection: React.FC<PageSEOSectionProps> = ({
                 type="text"
                 value={currentSEO.article_tags?.[activeLang] || ''}
                 onChange={(e) => updateMultilingualField('article_tags', activeLang, e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#143087]/20"
                 placeholder="tag1, tag2, tag3"
               />
             </div>
@@ -642,7 +642,7 @@ const PageSEOSection: React.FC<PageSEOSectionProps> = ({
       )}
 
       {/* SEO Best Practices */}
-      <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-6 border-2 border-green-200">
+      <div className="bg-gradient-to-r from-green-50 to-[#E8ECF5] rounded-lg p-6 border-2 border-green-200">
         <h4 className="font-semibold text-green-900 mb-3 flex items-center gap-2">
           <Globe className="w-5 h-5" />
           Professional SEO Best Practices for #1 Google Ranking

@@ -1,4 +1,5 @@
 'use client';
+import { PiTarget } from 'react-icons/pi';
 
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
@@ -136,6 +137,8 @@ export default function DoctorTargetsPage() {
   return (
     <TableLayout
       title={pageHeader.title}
+      description="Set and track doctor performance targets"
+      icon={<PiTarget />}
       breadcrumb={pageHeader.breadcrumb}
       data={{
         columns: selectedColumns

@@ -1,7 +1,10 @@
 'use client';
 
-import PageHeader from '@/app/shared/page-header';
 import Spinner from '@/components/ui/spinner';
+import AdminPageShell, {
+  adminPrimaryButtonClass,
+  adminSecondaryButtonClass,
+} from '@/components/ui/admin-page-shell';
 import { useSearchParams, useRouter } from 'next/navigation';
 import {
   useCustomerSupport,
@@ -13,7 +16,7 @@ import Pagination from '@/components/ui/pagination';
 import { Button } from '@/components/ui/button';
 import { useModal } from '@/app/shared/modal-views/use-modal';
 import CreateOrUpdateCustomerSupport from '@/app/shared/customer-suport/suport-form';
-import { PiPlusBold } from 'react-icons/pi';
+import { PiPhoneCall, PiPlusBold } from 'react-icons/pi';
 import KanbanFilters from '@/app/shared/customer-suport/kanban-filters';
 import KanbanStatisticsCards from '@/app/shared/customer-suport/kanban-statistics-cards';
 import ExportButton from '@/app/shared/export-button';
@@ -31,9 +34,11 @@ import {
   buildClearedFiltersParams,
   ensureDefaultDateParams,
 } from '@/utils/default-date-range';
+import cn from '@/utils/class-names';
 
 const pageHeader = {
   title: 'Outbound Customer Supports',
+  description: 'Track and move outbound marketing leads across the pipeline',
   breadcrumb: [
     {
       href: '/',
@@ -52,14 +57,14 @@ const parseSafePage = (value: string | null): number => {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
 };
 
-export default function CustomerSupportsMarketingKanbanPage() {
+export default function CustomerSupportsOperationKanbanPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { openModal } = useModal();
   const { permissions } = usePermissions();
   const kanbanPermissions = resolveCustomerSupportKanbanPermissions(
     permissions,
-    'marketing'
+    'operation'
   );
 
   const { defaults: dateDefaults, skip: skipDateDefault } =
@@ -195,7 +200,7 @@ export default function CustomerSupportsMarketingKanbanPage() {
   const handleCreateClick = () => {
     if (!kanbanPermissions.create) return;
     openModal({
-      view: <CreateOrUpdateCustomerSupport type="marketing" />,
+      view: <CreateOrUpdateCustomerSupport type="operation" />,
       customSize: '900px',
     });
   };
@@ -251,16 +256,31 @@ export default function CustomerSupportsMarketingKanbanPage() {
   // Check if any column is loading
   const isLoading = Object.values(columnData).some((col) => col.isLoading);
 
-  return (
-    <>
-      {!kanbanPermissions.view ? (
-        <div className="rounded-md border border-gray-200 bg-white p-6 text-sm text-gray-600 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300">
+  if (!kanbanPermissions.view) {
+    return (
+      <AdminPageShell
+        title={pageHeader.title}
+        description={pageHeader.description}
+        icon={<PiPhoneCall />}
+        breadcrumb={pageHeader.breadcrumb}
+        maxWidth="full"
+      >
+        <div className="rounded-2xl border border-gray-200 bg-white p-6 text-sm text-gray-600 shadow-sm">
           You do not have permission to view this page.
         </div>
-      ) : (
+      </AdminPageShell>
+    );
+  }
+
+  return (
+    <AdminPageShell
+      title={pageHeader.title}
+      description={pageHeader.description}
+      icon={<PiPhoneCall />}
+      breadcrumb={pageHeader.breadcrumb}
+      maxWidth="full"
+      actions={
         <>
-      <PageHeader title={pageHeader.title} breadcrumb={pageHeader.breadcrumb}>
-        <div className="mt-4 flex w-full flex-col gap-3 @lg:mt-0 @lg:flex-row @lg:items-center @lg:justify-end">
           {kanbanPermissions.filter && (
             <KanbanFilters
               onFilterChange={handleFilterChange}
@@ -281,27 +301,33 @@ export default function CustomerSupportsMarketingKanbanPage() {
               data={{ columns: [], rows: [] }}
               fileName="customer-supports-marketing"
               header="excel"
-              type="marketing"
+              type="operation"
+              className={adminSecondaryButtonClass}
             />
           )}
           {kanbanPermissions.create && (
-            <Button onClick={handleCreateClick} className="w-full @lg:w-auto">
+            <Button
+              onClick={handleCreateClick}
+              className={cn(adminPrimaryButtonClass, 'w-full @lg:w-auto')}
+            >
               <PiPlusBold className="me-1.5 h-[17px] w-[17px]" />
               Create New Customer Support
             </Button>
           )}
-        </div>
-      </PageHeader>
-
+        </>
+      }
+    >
       {isLoading ? (
         <div className="flex h-96 items-center justify-center">
           <Spinner size="lg" />
         </div>
       ) : (
         <div className="flex w-full flex-col gap-4">
-          {/* Statistics Cards */}
-          <KanbanStatisticsCards statistics={allData.data?.statistics} supportType={KANBAN_TYPE} />
-          
+          <KanbanStatisticsCards
+            statistics={allData.data?.statistics}
+            supportType={KANBAN_TYPE}
+          />
+
           <div className="flex w-full gap-4 overflow-x-auto pb-4">
             <CustomerSupportKanban
               columns={STATUS_COLUMNS}
@@ -318,9 +344,8 @@ export default function CustomerSupportsMarketingKanbanPage() {
             />
           </div>
 
-          {/* Single pagination for all columns - appears below all columns */}
           {needsPagination && (
-            <div className="mt-8 flex w-full justify-center border-t border-gray-200 pt-6 dark:border-gray-700">
+            <div className="mt-8 flex w-full justify-center border-t border-gray-200 pt-6">
               <Pagination
                 total={totalItems}
                 current={page}
@@ -334,8 +359,6 @@ export default function CustomerSupportsMarketingKanbanPage() {
           )}
         </div>
       )}
-      </>
-      )}
-    </>
+    </AdminPageShell>
   );
 }

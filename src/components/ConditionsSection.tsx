@@ -125,7 +125,7 @@ export default function ConditionsSection({
       <div className="flex items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-semibold text-gray-900 mb-1 flex items-center gap-2">
-            <Shield className="w-6 h-6 text-blue-600" />
+            <Shield className="w-6 h-6 text-[#143087]" />
             {lang === "ar" ? "سياسة الخصوصية" : "Privacy Policy"}
           </h2>
           <p className="text-gray-600 text-sm">
@@ -162,7 +162,7 @@ export default function ConditionsSection({
           value={lang}
           onChange={(e) => setLang(e.target.value as "ar" | "en")}
           className="w-40 px-3 py-2 border border-gray-300 rounded-md
-                     focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                     focus:outline-none focus:ring-2 focus:ring-[#143087]/20 text-sm"
         >
           <option value="ar">{tt('settings_lang_arabic')}</option>
           <option value="en">{tt('settings_lang_english')}</option>
@@ -189,7 +189,7 @@ export default function ConditionsSection({
             value={c.title}
             onChange={(e) => updateField("title", e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md
-                       focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       focus:outline-none focus:ring-2 focus:ring-[#143087]/20"
           />
         </div>
       )}
@@ -212,7 +212,7 @@ export default function ConditionsSection({
                   <div className="cursor-grab text-gray-400 hover:text-gray-600">
                     <GripVertical className="w-4 h-4" />
                   </div>
-                  <ListChecks className="w-5 h-5 text-blue-500" />
+                  <ListChecks className="w-5 h-5 text-[#39519B]" />
                   <h3 className="text-base font-medium text-gray-900">
                     {lang === "ar" ? "شرط" : "Condition"} {i + 1}
                   </h3>
@@ -239,7 +239,7 @@ export default function ConditionsSection({
                     updateItem(i, "heading", e.target.value)
                   }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md
-                             focus:outline-none focus:ring-2 focus:ring-blue-500"
+                             focus:outline-none focus:ring-2 focus:ring-[#143087]/20"
                 />
               </div>
 
@@ -269,7 +269,7 @@ export default function ConditionsSection({
             type="button"
             onClick={addItem}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-md
-                       border border-dashed border-blue-400 text-blue-600
+                       border border-dashed border-[#143087] text-[#143087]
                        hover:bg-blue-50 text-sm"
           >
             <Plus className="w-4 h-4" />

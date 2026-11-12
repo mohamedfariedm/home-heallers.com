@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Spinner from '@/components/ui/spinner';
+import AdminPageShell from '@/components/ui/admin-page-shell';
 import { useSettings } from '@/framework/site-settings';
 import { MediaFolder, MediaFile } from '@/types/settings';
 import { resolveEffectiveRoles } from '@/utils/kpi-export';
@@ -20,6 +21,7 @@ import {
   filterVisibleMediaFolders,
   type MediaFolderViewer,
 } from '@/utils/media-folder-access';
+import { PiFileImageDuotone } from 'react-icons/pi';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -84,7 +86,7 @@ const VideoModal: React.FC<{ file: MediaFile; onClose: () => void }> = ({ file, 
 const FolderCard: React.FC<{ folder: MediaFolder; onClick: () => void }> = ({ folder, onClick }) => (
   <button
     onClick={onClick}
-    className="group flex flex-col items-center gap-3 p-5 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-200 transition-all text-left w-full"
+    className="group flex w-full flex-col items-center gap-3 rounded-2xl border border-gray-100 bg-white p-5 text-left shadow-sm transition-all hover:border-[#143087]/40 hover:shadow-md"
   >
     <div className="w-16 h-16 flex items-center justify-center bg-gradient-to-br from-amber-50 to-yellow-100 rounded-2xl group-hover:from-amber-100 group-hover:to-yellow-200 transition-all">
       <Folder className="w-9 h-9 text-amber-400 group-hover:text-amber-500 transition-colors" />
@@ -110,7 +112,7 @@ const FileCard: React.FC<{ file: MediaFile; onPlay: () => void }> = ({ file, onP
   return (
     <button
       onClick={onPlay}
-      className="group relative bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-200 transition-all overflow-hidden text-left w-full"
+      className="group relative w-full overflow-hidden rounded-2xl border border-gray-100 bg-white text-left shadow-sm transition-all hover:border-[#143087]/40 hover:shadow-md"
     >
       {/* Thumbnail */}
       <div className="aspect-video bg-gray-100 overflow-hidden relative">
@@ -129,7 +131,7 @@ const FileCard: React.FC<{ file: MediaFile; onPlay: () => void }> = ({ file, onP
         {/* Play overlay */}
         <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/40 transition-all">
           <div className="opacity-0 group-hover:opacity-100 scale-75 group-hover:scale-100 transition-all bg-white rounded-full p-3.5 shadow-xl">
-            <Play className="w-6 h-6 text-blue-600 fill-blue-600" />
+            <Play className="h-6 w-6 fill-[#143087] text-[#143087]" />
           </div>
         </div>
       </div>
@@ -191,43 +193,33 @@ export default function MediaGalleryPage() {
   const isEmpty = displayedFolders.length === 0 && displayedFiles.length === 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20">
-      {/* Page Header */}
-      <div className="bg-white border-b border-gray-100 shadow-sm sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow">
-            <Film className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-gray-900">Media Gallery</h1>
-            <p className="text-xs text-gray-400">Browse your media folders and videos</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-6 py-8 space-y-6">
-        {/* Breadcrumb */}
-        <nav className="flex items-center gap-1.5 text-sm flex-wrap">
+    <AdminPageShell
+      title="Media Gallery"
+      description="Browse your media folders and videos"
+      icon={<PiFileImageDuotone />}
+    >
+      <div className="space-y-6">
+        <nav className="flex flex-wrap items-center gap-1.5 text-sm">
           <button
             onClick={() => setCurrentPath([])}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors font-medium ${
+            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-medium transition-colors ${
               currentPath.length === 0
-                ? 'bg-blue-50 text-blue-600'
-                : 'text-gray-500 hover:text-blue-600 hover:bg-gray-100'
+                ? 'bg-blue-50 text-[#143087]'
+                : 'text-gray-500 hover:bg-gray-100 hover:text-[#143087]'
             }`}
           >
-            <Home className="w-3.5 h-3.5" />
+            <Home className="h-3.5 w-3.5" />
             <span>All Folders</span>
           </button>
           {breadcrumbs.map((crumb, i) => (
             <React.Fragment key={crumb.id}>
-              <ChevronRight className="w-3.5 h-3.5 text-gray-300" />
+              <ChevronRight className="h-3.5 w-3.5 text-gray-300" />
               <button
                 onClick={() => setCurrentPath(currentPath.slice(0, i + 1))}
-                className={`px-3 py-1.5 rounded-lg transition-colors font-medium ${
+                className={`rounded-lg px-3 py-1.5 font-medium transition-colors ${
                   i === breadcrumbs.length - 1
-                    ? 'bg-blue-50 text-blue-600'
-                    : 'text-gray-500 hover:text-blue-600 hover:bg-gray-100'
+                    ? 'bg-blue-50 text-[#143087]'
+                    : 'text-gray-500 hover:bg-gray-100 hover:text-[#143087]'
                 }`}
               >
                 {crumb.name}
@@ -236,18 +228,17 @@ export default function MediaGalleryPage() {
           ))}
         </nav>
 
-        {/* Content */}
         {isLoading ? (
           <div className="flex items-center justify-center py-32">
             <Spinner size="lg" />
           </div>
         ) : isEmpty ? (
-          <div className="flex flex-col items-center justify-center py-32 text-center">
-            <div className="w-20 h-20 rounded-3xl bg-gray-100 flex items-center justify-center mb-4">
-              <FolderOpen className="w-10 h-10 text-gray-300" />
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-white py-32 text-center">
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50">
+              <FolderOpen className="h-7 w-7 text-[#143087]" />
             </div>
-            <p className="text-gray-500 font-medium text-lg">No media here</p>
-            <p className="text-gray-400 text-sm mt-1">
+            <p className="text-lg font-medium text-gray-700">No media here</p>
+            <p className="mt-1 text-sm text-gray-400">
               {currentPath.length === 0
                 ? 'No folders are visible to you yet.'
                 : 'This folder is empty.'}
@@ -255,13 +246,12 @@ export default function MediaGalleryPage() {
           </div>
         ) : (
           <div className="space-y-8">
-            {/* Sub-folders */}
             {displayedFolders.length > 0 && (
               <section>
-                <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">
+                <h2 className="mb-4 text-xs font-semibold uppercase tracking-widest text-gray-400">
                   Folders
                 </h2>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                   {displayedFolders.map((folder) => (
                     <FolderCard
                       key={folder.id}
@@ -273,13 +263,12 @@ export default function MediaGalleryPage() {
               </section>
             )}
 
-            {/* Files */}
             {displayedFiles.length > 0 && (
               <section>
-                <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">
+                <h2 className="mb-4 text-xs font-semibold uppercase tracking-widest text-gray-400">
                   Videos & Files
                 </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                   {displayedFiles.map((file) => (
                     <FileCard
                       key={file.id}
@@ -294,10 +283,9 @@ export default function MediaGalleryPage() {
         )}
       </div>
 
-      {/* Video Modal */}
       {previewFile && (
         <VideoModal file={previewFile} onClose={() => setPreviewFile(null)} />
       )}
-    </div>
+    </AdminPageShell>
   );
 }

@@ -22,11 +22,14 @@ import type {
 } from '@/types/admin-notifications';
 import { useEnsureDefaultDateRange } from '@/hooks/use-ensure-default-date-range';
 import { ensureDefaultDateParams } from '@/utils/default-date-range';
+import { IoNotificationsSharp } from 'react-icons/io5';
+import { adminPrimaryButtonClass } from '@/components/ui/admin-page-shell';
 
 type NotificationTab = 'send' | 'scheduled' | 'sent';
 
 const pageHeader = {
   title: 'Push Notifications',
+  description: 'Send, schedule, and review push notifications to app users',
   breadcrumb: [
     { href: '/', name: 'Home' },
     { name: 'Push Notifications' },
@@ -119,6 +122,8 @@ export default function NotificationsPage() {
   return (
     <TableLayout
       title={pageHeader.title}
+      description={pageHeader.description}
+      icon={<IoNotificationsSharp />}
       breadcrumb={pageHeader.breadcrumb}
       data={{ columns: [], rows: [] }}
       fileName="notifications/sent"
@@ -136,7 +141,7 @@ export default function NotificationsPage() {
       canImport={false}
       canCreate={activeTab !== 'sent'}
     >
-      <div className="mb-6 flex flex-wrap gap-2 border-b border-gray-200 pb-4">
+      <div className="mb-6 flex flex-wrap gap-2 border-b border-gray-100 pb-4">
         {(
           [
             { id: 'send', label: 'Send now' },
@@ -150,7 +155,7 @@ export default function NotificationsPage() {
             onClick={() => setTab(tab.id)}
             className={cn(
               activeTab === tab.id &&
-                'bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900'
+                'bg-[#143087] text-white hover:bg-[#0F2466]'
             )}
           >
             {tab.label}
@@ -159,12 +164,12 @@ export default function NotificationsPage() {
       </div>
 
       {activeTab === 'send' && (
-        <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 p-8 text-center dark:border-gray-700 dark:bg-gray-900/40">
-          <Text className="text-sm font-medium text-gray-800 dark:text-gray-200">
+        <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-8 text-center shadow-sm">
+          <Text className="text-sm font-medium text-gray-800">
             Queue an immediate push notification. Clients and doctors also get an in-app
             inbox entry; guests receive push only.
           </Text>
-          <Text className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+          <Text className="mt-2 text-xs text-gray-400">
             Success means jobs were queued — not that every device received the push.
             “Everyone” includes clients, doctors, and anonymous guest installs.
           </Text>
@@ -173,6 +178,7 @@ export default function NotificationsPage() {
               label="Send notification"
               view={<SendNotificationForm />}
               customSize="760px"
+              className={adminPrimaryButtonClass}
             />
           </div>
         </div>

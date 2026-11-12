@@ -1,4 +1,9 @@
 'use client';
+import {
+  ModalFormHeader,
+  ModalFormFooter,
+  modalFormClassName,
+} from '@/components/ui/modal-form-shell';
 
 import { forwardRef, useMemo, useRef, useState } from 'react';
 import {
@@ -1153,18 +1158,18 @@ export default function CreateOrUpdateCoupon({
         return (
           <>
             {/* Header */}
-            <div className="flex shrink-0 items-center justify-between border-b border-gray-200 px-6 py-4">
+            <div className="flex shrink-0 items-center justify-between border-b border-gray-100 px-6 py-4">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                  <PiTicket className="h-5 w-5 text-primary" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#143087] to-[#39519B] shadow">
+                  <PiTicket className="h-5 w-5 text-white" />
                 </div>
                 <div>
-                  <Title as="h4" className="text-lg font-semibold">
+                  <Title as="h4" className="text-lg font-bold text-gray-900">
                     {initValues ? 'Update Coupon' : 'Create Coupon'}
                   </Title>
                   <div className="mt-0.5 flex items-center gap-2">
                     {codePreview && (
-                      <span className="font-mono text-xs text-gray-500">
+                      <span className="font-mono text-xs text-gray-400">
                         {codePreview.toUpperCase()}
                       </span>
                     )}
@@ -1175,7 +1180,11 @@ export default function CreateOrUpdateCoupon({
                   </div>
                 </div>
               </div>
-              <Button variant="text" onClick={closeModal} className="shrink-0">
+              <Button
+                variant="outline"
+                onClick={closeModal}
+                className="shrink-0 rounded-lg border-gray-200 text-gray-500 hover:border-[#143087]/40 hover:bg-blue-50 hover:text-[#143087]"
+              >
                 <PiXBold className="h-5 w-5" />
               </Button>
             </div>
@@ -1198,8 +1207,8 @@ export default function CreateOrUpdateCoupon({
                           cn(
                             'relative flex items-center gap-2 rounded-t-lg px-4 py-3 text-sm font-medium outline-none transition-all',
                             selected
-                              ? 'border-b-2 border-primary bg-primary/5 text-primary'
-                              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                              ? 'border-b-2 border-[#143087] bg-blue-50/60 text-[#143087]'
+                              : 'text-gray-600 hover:bg-blue-50/40 hover:text-[#143087]'
                           )
                         }
                       >
@@ -1239,7 +1248,7 @@ export default function CreateOrUpdateCoupon({
             </Tabs>
 
             {/* Footer */}
-            <div className="flex shrink-0 items-center justify-between border-t border-gray-200 bg-white px-6 py-4">
+            <div className="flex shrink-0 items-center justify-between border-t border-gray-100 bg-gray-50/80 px-6 py-4">
               <div className="flex gap-2">
                 <Button
                   type="button"
@@ -1247,6 +1256,7 @@ export default function CreateOrUpdateCoupon({
                   size="sm"
                   disabled={activeTab === 0}
                   onClick={() => goToTab(activeTab - 1)}
+                  className="border-gray-200 hover:border-[#143087]/40 hover:text-[#143087]"
                 >
                   <PiCaretLeft className="me-1 h-4 w-4" />
                   Previous
@@ -1257,16 +1267,25 @@ export default function CreateOrUpdateCoupon({
                   size="sm"
                   disabled={activeTab === TABS.length - 1}
                   onClick={() => goToTab(activeTab + 1)}
+                  className="border-gray-200 hover:border-[#143087]/40 hover:text-[#143087]"
                 >
                   Next
                   <PiCaretRight className="ms-1 h-4 w-4" />
                 </Button>
               </div>
               <div className="flex gap-3">
-                <Button variant="outline" onClick={closeModal}>
+                <Button
+                  variant="outline"
+                  onClick={closeModal}
+                  className="border-gray-200 hover:border-[#143087]/40 hover:text-[#143087]"
+                >
                   Cancel
                 </Button>
-                <Button type="submit" isLoading={isCreating || isUpdating}>
+                <Button
+                  type="submit"
+                  isLoading={isCreating || isUpdating}
+                  className="bg-[#143087] hover:bg-[#0F2466]"
+                >
                   {initValues ? 'Save changes' : 'Create coupon'}
                 </Button>
               </div>

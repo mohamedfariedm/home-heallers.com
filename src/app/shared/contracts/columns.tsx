@@ -95,7 +95,7 @@ export const getColumns = ({
                 tag="span"
                 size="sm"
                 variant="outline"
-                className="hover:!border-gray-900 hover:text-gray-700"
+                className="hover:!border-[#143087] hover:text-[#143087]"
               >
                 <PencilIcon className="h-4 w-4" />
               </ActionIcon>
@@ -118,7 +118,7 @@ export const getColumns = ({
                 tag="span"
                 size="sm"
                 variant="outline"
-                className="hover:!border-gray-900 hover:text-gray-700"
+                className="hover:!border-[#143087] hover:text-[#143087]"
               >
                 <PiPaperclip className="h-4 w-4" />
               </ActionIcon>
@@ -141,7 +141,7 @@ export const getColumns = ({
                 tag="span"
                 size="sm"
                 variant="outline"
-                className="hover:!border-gray-900 hover:text-gray-700"
+                className="hover:!border-[#143087] hover:text-[#143087]"
               >
                 <PiChatCircle className="h-4 w-4" />
               </ActionIcon>
@@ -161,7 +161,7 @@ export const getColumns = ({
             size="sm"
             variant="outline"
             aria-label="Delete contract"
-            className="cursor-pointer hover:!border-gray-900 hover:text-gray-700"
+            className="cursor-pointer hover:!border-[#143087] hover:text-[#143087]"
           >
             <TrashIcon className="h-4 w-4" />
           </ActionIcon>

@@ -3,6 +3,7 @@
 import React from 'react';
 import { Megaphone } from 'lucide-react';
 import Spinner from '@/components/ui/spinner';
+import AdminPageShell from '@/components/ui/admin-page-shell';
 import OffersPopupsList from '@/components/offers-popups/OffersPopupsList';
 import { useSettings, useUpdateSettings } from '@/framework/site-settings';
 import { OfferPopup } from '@/types/settings';
@@ -28,40 +29,30 @@ export default function OffersPopupsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-teal-50/20 to-cyan-50/10">
-      <div className="border-b border-gray-100 bg-white shadow-sm">
-        <div className="mx-auto flex max-w-7xl items-center gap-4 px-6 py-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#0d7377] to-[#14919b] shadow">
-            <Megaphone className="h-5 w-5 text-white" />
+    <AdminPageShell
+      title="Offers Popups"
+      description="Configure lead-capture popups for offer pages on the website"
+      icon={<Megaphone />}
+      status={
+        isPending ? (
+          <div className="flex items-center gap-2 text-sm text-[#143087]">
+            <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-[#143087]" />
+            Saving…
           </div>
-          <div className="flex-1">
-            <h1 className="text-xl font-bold text-gray-900">Offers Popups</h1>
-            <p className="text-xs text-gray-400">
-              Configure lead-capture popups for offer pages on the website
-            </p>
-          </div>
-          {isPending ? (
-            <div className="flex items-center gap-2 text-sm text-[#0d7377]">
-              <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-[#0d7377]" />
-              Saving…
-            </div>
-          ) : null}
+        ) : null
+      }
+    >
+      {isLoading ? (
+        <div className="flex items-center justify-center py-32">
+          <Spinner size="lg" />
         </div>
-      </div>
-
-      <div className="mx-auto max-w-7xl px-6 py-8">
-        {isLoading ? (
-          <div className="flex items-center justify-center py-32">
-            <Spinner size="lg" />
-          </div>
-        ) : (
-          <OffersPopupsList
-            popups={popups}
-            onUpdate={handleUpdate}
-            isSaving={isPending}
-          />
-        )}
-      </div>
-    </div>
+      ) : (
+        <OffersPopupsList
+          popups={popups}
+          onUpdate={handleUpdate}
+          isSaving={isPending}
+        />
+      )}
+    </AdminPageShell>
   );
 }

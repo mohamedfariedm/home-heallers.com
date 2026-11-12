@@ -1,4 +1,5 @@
 'use client';
+import { PiListChecks } from 'react-icons/pi';
 import TableLayout from '@/app/[locale]/(hydrogen)/tables/table-layout';
 import Spinner from '@/components/ui/spinner';
 import { useSearchParams } from 'next/navigation';
@@ -34,6 +35,8 @@ export default function CouponsTablePage() {
   return (
     <TableLayout
       title={pageHeader.title}
+      description="Create and manage discount coupons"
+      icon={<PiListChecks />}
       breadcrumb={pageHeader.breadcrumb}
       data={{
         columns: selectedColumns

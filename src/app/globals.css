@@ -38,28 +38,28 @@
     --gray-1000: 0 0 0;
 
     /* ----------------------------------- */
-    /* primary/brand colors */
+    /* primary/brand colors — Home Healers blue (#143087) */
     /* ----------------------------------- */
-    /* For rgb(215 227 254 / <alpha-value>) = #D7E3FE */
-    --primary-lighter: 215 227 254;
-    /* For rgb(96 142 251 / <alpha-value>) = #608EFB */
-    --primary-light: 96 142 251;
-    /* For rgb(56 114 250 / <alpha-value>) = #3872FA */
-    --primary-default: 56 114 250;
-    /* For rgb(29 88 216 / <alpha-value>) = #1d58d8 */
-    --primary-dark: 29 88 216;
+    /* For rgb(232 236 245 / <alpha-value>) = #E8ECF5 */
+    --primary-lighter: 232 236 245;
+    /* For rgb(57 81 155 / <alpha-value>) = #39519B */
+    --primary-light: 57 81 155;
+    /* For rgb(20 48 135 / <alpha-value>) = #143087 */
+    --primary-default: 20 48 135;
+    /* For rgb(15 36 102 / <alpha-value>) = #0F2466 */
+    --primary-dark: 15 36 102;
 
     /* ----------------------------------- */
-    /* secondary colors */
+    /* secondary colors — soft blue companion */
     /* ----------------------------------- */
-    /* For rgb(227 215 252 / <alpha-value>) = #e3d7fc */
-    --secondary-lighter: 227 215 252;
-    /* For rgb(138 99 210 / <alpha-value>) = #8a63d2 */
-    --secondary-light: 138 99 210;
-    /* For rgb(121 40 202 / <alpha-value>) = #7928ca */
-    --secondary-default: 121 40 202;
-    /* For rgb(76 40 137 / <alpha-value>) = #4c2889 */
-    --secondary-dark: 76 40 137;
+    /* For rgb(232 236 245 / <alpha-value>) = #E8ECF5 */
+    --secondary-lighter: 232 236 245;
+    /* For rgb(74 97 164 / <alpha-value>) = #4A61A4 */
+    --secondary-light: 74 97 164;
+    /* For rgb(57 81 155 / <alpha-value>) = #39519B */
+    --secondary-default: 57 81 155;
+    /* For rgb(20 48 135 / <alpha-value>) = #143087 */
+    --secondary-dark: 20 48 135;
 
     /* ----------------------------------- */
     /* red/error colors */
@@ -483,12 +483,12 @@ input[type='checkbox']:checked ~ svg {
 .react-datepicker .react-datepicker__day--range-start,
 .react-datepicker .react-datepicker__day--range-end,
 .react-datepicker .react-datepicker__day--selected {
-  @apply rounded-full border-none bg-gray-900 font-normal leading-7 text-gray-0;
-  @apply hover:bg-gray-900/80 hover:text-gray-0;
+  @apply rounded-full border-none bg-[#143087] font-normal leading-7 text-gray-0;
+  @apply hover:bg-[#0F2466] hover:text-gray-0;
 }
 
 .react-datepicker .react-datepicker__year-text--range-end {
-  @apply border-none bg-gray-900 font-normal text-gray-0 hover:bg-gray-900/80 hover:text-gray-0;
+  @apply border-none bg-[#143087] font-normal text-gray-0 hover:bg-[#0F2466] hover:text-gray-0;
 }
 
 /* time list */
@@ -554,7 +554,7 @@ input[type='checkbox']:checked ~ svg {
 .react-datepicker .react-datepicker__month--range-start,
 .react-datepicker .react-datepicker__month--range-end,
 .react-datepicker .react-datepicker__month--selected {
-  @apply bg-gray-900 font-normal text-gray-0;
+  @apply bg-[#143087] font-normal text-gray-0;
 }
 
 /* hover on selected range start and end month */
@@ -564,7 +564,7 @@ input[type='checkbox']:checked ~ svg {
   .react-datepicker__month-text.react-datepicker__month--range-start:hover,
 .react-datepicker
   .react-datepicker__month-text.react-datepicker__month--range-end:hover {
-  @apply bg-gray-900/80 text-gray-0;
+  @apply bg-[#0F2466] text-gray-0;
 }
 
 /* year wrapper in year picker */
@@ -592,8 +592,8 @@ input[type='checkbox']:checked ~ svg {
   .react-datepicker__year-text.react-datepicker__year-text--selected,
 .react-datepicker
   .react-datepicker__month-text.react-datepicker__month-text--selected {
-  @apply bg-gray-900 text-gray-0;
-  @apply hover:bg-gray-900/80 hover:text-gray-0;
+  @apply bg-[#143087] text-gray-0;
+  @apply hover:bg-[#0F2466] hover:text-gray-0;
 }
 
 /* year and month dropdown arrow */
@@ -1208,7 +1208,7 @@ textarea::placeholder {
 }
 
 .rbc-toolbar button.rbc-active {
-  @apply border-gray-900 bg-gray-900 text-white shadow-none focus:border-gray-900 focus:bg-gray-900 focus:text-white dark:bg-gray-100;
+  @apply border-[#143087] bg-[#143087] text-white shadow-none focus:border-[#143087] focus:bg-[#143087] focus:text-white;
 }
 
 .rbc-toolbar-label {

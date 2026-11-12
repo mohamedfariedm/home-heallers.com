@@ -1,3 +1,8 @@
+import {
+  ModalFormHeader,
+  ModalFormFooter,
+  modalFormClassName,
+} from '@/components/ui/modal-form-shell';
 import React, { useMemo, useState } from 'react';
 import { useForm, SubmitHandler, Controller } from 'react-hook-form';
 import { PiXBold } from 'react-icons/pi';
@@ -248,17 +253,7 @@ export default function CreateOrUpdateDoctors({ initValues }: { initValues?: any
     >
       {({ register, formState: { errors }, watch, setValue, control }) => (
         <>
-          <div className="flex items-center justify-between">
-            <Title as="h4" className="font-semibold">
-              {initValues ? 'Update Doctor' : 'Create Doctor'}
-            </Title>
-            <ActionIcon size="sm" variant="text" onClick={closeModal}>
-              <PiXBold className="h-auto w-5" />
-            </ActionIcon>
-          </div>
-
-
-
+          <ModalFormHeader title={initValues ? 'Update Doctor' : 'Create Doctor'} />
           <Input
             key={"name.unified"}
             label="Name"
@@ -582,17 +577,11 @@ export default function CreateOrUpdateDoctors({ initValues }: { initValues?: any
             <label className="text-sm text-gray-700">Active Status</label>
           </div>
 
-          <div className="flex justify-end gap-4 mt-6">
-            <Button variant="outline" onClick={closeModal}>
-              Cancel
-            </Button>
-            <Button
-              isLoading={isCreating || isUpdating}
-              type="submit"
-            >
-              {initValues ? 'Update Doctor' : 'Create Doctor'}
-            </Button>
-          </div>
+          <ModalFormFooter
+            cancelLabel="Cancel"
+            isLoading={isCreating || isUpdating}
+            submitLabel={initValues ? 'Update Doctor' : 'Create Doctor'}
+          />
         </>
       )}
     </Form>

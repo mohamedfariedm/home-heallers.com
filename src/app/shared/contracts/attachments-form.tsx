@@ -1,4 +1,9 @@
 'use client';
+import {
+  ModalFormHeader,
+  ModalFormFooter,
+  modalFormClassName,
+} from '@/components/ui/modal-form-shell';
 
 import { useMemo, useState } from 'react';
 import {
@@ -229,7 +234,7 @@ export default function AttachmentsForm({ contract }: { contract: Contract }) {
                         href={item.file_url}
                         target="_blank"
                         rel="noreferrer"
-                        className="mt-1 inline-flex max-w-full items-center gap-1.5 text-sm font-medium text-gray-900 transition hover:text-gray-700"
+                        className="mt-1 inline-flex max-w-full items-center gap-1.5 text-sm font-medium text-gray-900 transition hover:text-[#143087]"
                       >
                         <span className="truncate">{item.file_name || 'Open file'}</span>
                         <PiArrowSquareOut className="h-3.5 w-3.5 shrink-0 opacity-0 transition group-hover:opacity-100" />
@@ -253,7 +258,7 @@ export default function AttachmentsForm({ contract }: { contract: Contract }) {
                           size="sm"
                           variant="outline"
                           tag="span"
-                          className="hover:!border-gray-900 hover:text-gray-800"
+                          className="hover:!border-[#143087] hover:text-[#143087]"
                         >
                           <PiArrowSquareOut className="h-4 w-4" />
                         </ActionIcon>
@@ -293,7 +298,7 @@ export default function AttachmentsForm({ contract }: { contract: Contract }) {
                 Drop files here or click to browse
               </Text>
               <Text className="text-xs text-gray-500">You can select multiple files at once</Text>
-              <span className="mt-1 inline-flex items-center gap-1 rounded-md bg-gray-900 px-3 py-1.5 text-xs font-medium text-white">
+              <span className="mt-1 inline-flex items-center gap-1 rounded-md bg-[#143087] px-3 py-1.5 text-xs font-medium text-white">
                 <PiPlusBold className="h-3.5 w-3.5" />
                 Choose files
               </span>
@@ -344,7 +349,7 @@ export default function AttachmentsForm({ contract }: { contract: Contract }) {
                           Document type
                         </Text>
                         <select
-                          className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900 outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
+                          className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900 outline-none focus:border-[#143087] focus:ring-2 focus:ring-[#143087]/20"
                           value={item.type}
                           onChange={(e) =>
                             updatePending(item.id, {

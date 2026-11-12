@@ -249,7 +249,7 @@ export default function HighlightForm({
                         );
                       }}
                       className={`rounded-full px-3 py-1 text-xs font-medium transition ${isSelected
-                        ? 'bg-gray-900 text-white'
+                        ? 'bg-[#143087] text-white'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
                     >

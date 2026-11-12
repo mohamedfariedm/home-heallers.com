@@ -1,10 +1,15 @@
 'use client';
 import LandingPagesSection from '@/components/LandingPagesSection';
 import Spinner from '@/components/ui/spinner';
+import AdminPageShell, {
+  adminPrimaryButtonClass,
+} from '@/components/ui/admin-page-shell';
 import { useSettings, useUpdateSettings } from '@/framework/site-settings';
 import { Settings, LandingPage, LandingPageSection } from '@/types/settings';
 import { useState, useEffect } from 'react';
 import { Sparkles } from 'lucide-react';
+import { PiBrowserDuotone } from 'react-icons/pi';
+import cn from '@/utils/class-names';
 
 export default function LandingPagesPage() {
   const { data, isLoading } = useSettings();
@@ -195,44 +200,44 @@ export default function LandingPagesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="w-full mx-auto">
-        {isLoading ? (
-          <div className="m-auto">
-            <Spinner size="lg" />
+    <AdminPageShell
+      title="Landing Pages"
+      description="Create and manage your landing pages with customizable sections"
+      icon={<PiBrowserDuotone />}
+      status={
+        isPending ? (
+          <div className="flex items-center gap-2 text-sm text-[#143087]">
+            <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-[#143087]" />
+            Saving…
           </div>
-        ) : (
-          <div className="bg-white rounded-lg shadow-lg overflow-hidden p-6">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Landing Pages Management</h3>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Create and manage your landing pages with customizable sections
-                  </p>
-                </div>
-                <button
-                  onClick={createLandingPageWithAllSections}
-                  className="flex items-center space-x-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-2 rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all shadow-md hover:shadow-lg"
-                  title="Create a landing page with all section types"
-                >
-                  <Sparkles className="w-4 h-4" />
-                  <span>Create Complete Landing Page</span>
-                </button>
-              </div>
-              <LandingPagesSection
-                landingPages={landingPages}
-                onUpdate={handleUpdate}
-              />
-            </div>
-            {isPending && (
-              <div className="fixed bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg z-50">
-                Saving...
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
+        ) : null
+      }
+      actions={
+        <button
+          onClick={createLandingPageWithAllSections}
+          className={cn(
+            adminPrimaryButtonClass,
+            'flex items-center gap-2 rounded-xl px-4 py-2 text-sm'
+          )}
+          title="Create a landing page with all section types"
+        >
+          <Sparkles className="h-4 w-4" />
+          <span>Create Complete Landing Page</span>
+        </button>
+      }
+    >
+      {isLoading ? (
+        <div className="flex items-center justify-center py-32">
+          <Spinner size="lg" />
+        </div>
+      ) : (
+        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          <LandingPagesSection
+            landingPages={landingPages}
+            onUpdate={handleUpdate}
+          />
+        </div>
+      )}
+    </AdminPageShell>
   );
 }

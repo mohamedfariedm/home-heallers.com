@@ -1,4 +1,5 @@
 'use client';
+import { PiBuildingsFill } from 'react-icons/pi';
 import CentersTable from '@/app/shared/centers/table';
 import TableLayout from '@/app/[locale]/(hydrogen)/tables/table-layout';
 import { useCenters } from '@/framework/centers';
@@ -32,6 +33,8 @@ console.log('data', data);
   return (
     <TableLayout
       title={pageHeader.title}
+      description="Manage treatment centers"
+      icon={<PiBuildingsFill />}
       breadcrumb={pageHeader.breadcrumb}
       data={{
         columns: selectedColumns

@@ -1,4 +1,5 @@
 'use client';
+import { PiStepsDuotone } from 'react-icons/pi';
 
 import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -40,6 +41,8 @@ export default function ExercisesPage() {
   return (
     <TableLayout
       title={pageHeader.title}
+      description="Manage physiotherapy exercises"
+      icon={<PiStepsDuotone />}
       breadcrumb={pageHeader.breadcrumb}
       data={{
         columns: selectedColumns

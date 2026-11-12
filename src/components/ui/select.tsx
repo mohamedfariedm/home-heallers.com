@@ -54,7 +54,7 @@ const selectClasses = {
       base: 'border bg-gray-0 focus:ring-[0.6px]',
       color: {
         DEFAULT:
-          'border-gray-900 focus:border-gray-1000 focus:ring-gray-1000 text-gray-1000',
+          'border-[#143087] focus:border-[#143087] focus:ring-[#143087] text-gray-1000',
         primary:
           'border-primary focus:border-primary focus:ring-primary text-primary-dark',
         secondary:
@@ -70,7 +70,7 @@ const selectClasses = {
     flat: {
       base: 'focus:ring-2 focus:bg-transparent border-0',
       color: {
-        DEFAULT: 'bg-gray-200/70 focus:ring-gray-900/20 text-gray-1000',
+        DEFAULT: 'bg-blue-50/80 focus:ring-[#143087]/20 text-gray-1000',
         primary:
           'bg-primary-lighter/70 focus:ring-primary/30 text-primary-dark',
         secondary:
@@ -85,7 +85,7 @@ const selectClasses = {
       base: 'bg-transparent focus:ring-[0.6px] border border-gray-300',
       color: {
         DEFAULT:
-          'hover:border-gray-1000 focus:border-gray-1000 focus:ring-gray-1000',
+          'hover:border-[#143087] focus:border-[#143087] focus:ring-[#143087]',
         primary: 'hover:border-primary focus:border-primary focus:ring-primary',
         secondary:
           'hover:border-secondary focus:border-secondary focus:ring-secondary',
@@ -98,7 +98,7 @@ const selectClasses = {
     text: {
       base: 'border-0 focus:ring-2 bg-transparent',
       color: {
-        DEFAULT: 'hover:text-gray-1000 focus:ring-gray-900/20',
+        DEFAULT: 'hover:text-[#143087] focus:ring-[#143087]/20',
         primary: 'hover:text-primary-dark focus:ring-primary/30 text-primary',
         secondary:
           'hover:text-secondary-dark focus:ring-secondary/30 text-secondary',
@@ -133,7 +133,7 @@ const optionClasses = {
   notFound:
     'relative cursor-default select-none text-center text-gray-500 whitespace-nowrap',
   color: {
-    DEFAULT: 'text-gray-900 bg-gray-100',
+    DEFAULT: 'text-[#143087] bg-blue-50',
     primary: 'text-primary-dark bg-primary-lighter',
     secondary: 'text-secondary-dark bg-secondary-lighter',
     danger: 'text-red-dark bg-red-lighter',
@@ -552,7 +552,7 @@ function Chip({
         'inline-flex items-center px-2 py-0.5 rounded-full text-xs whitespace-nowrap',
         muted
           ? 'bg-gray-100 text-gray-700'
-          : 'bg-gray-900/10 text-gray-900'
+          : 'bg-blue-50 text-[#143087]'
       )}
       title={typeof children === 'string' ? children : undefined}
     >

@@ -253,7 +253,7 @@ export default function KpiStatCard({
         'group relative flex h-full min-h-[158px] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition-all duration-200 dark:border-gray-700 dark:bg-gray-800',
         'hover:-translate-y-0.5 hover:border-gray-300 hover:shadow-md dark:hover:border-gray-600',
         interactive && !isHoveringCheckbox && 'cursor-pointer',
-        selected && 'border-blue-500 ring-2 ring-blue-500/20',
+        selected && 'border-[#143087] ring-2 ring-[#143087]/20',
         className
       )}
     >
@@ -271,7 +271,7 @@ export default function KpiStatCard({
               checkbox.onChange(event.target.checked);
             }}
             onClick={(event) => event.stopPropagation()}
-            className="h-4 w-4 cursor-pointer rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
+            className="h-4 w-4 cursor-pointer rounded border-gray-300 text-[#143087] focus:ring-[#143087] dark:border-gray-600 dark:bg-gray-700"
           />
         </div>
       ) : null}

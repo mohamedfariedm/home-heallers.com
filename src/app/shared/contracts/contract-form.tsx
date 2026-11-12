@@ -1,4 +1,9 @@
 'use client';
+import {
+  ModalFormHeader,
+  ModalFormFooter,
+  modalFormClassName,
+} from '@/components/ui/modal-form-shell';
 
 import { useMemo, useState } from 'react';
 import { SubmitHandler } from 'react-hook-form';
@@ -258,7 +263,7 @@ function SegmentedControl<T extends string>({
             className={cn(
               'flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors sm:flex-none',
               value === option.value
-                ? 'bg-gray-900 text-white'
+                ? 'bg-[#143087] text-white'
                 : 'text-gray-600 hover:bg-gray-100'
             )}
           >
@@ -557,7 +562,7 @@ export default function ContractForm({ initValues }: { initValues?: Contract }) 
                       Assigned To
                     </Text>
                     <select
-                      className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900 outline-none transition focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
+                      className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900 outline-none transition focus:border-[#143087] focus:ring-2 focus:ring-[#143087]/20"
                       value={
                         assignedTo != null && !Number.isNaN(Number(assignedTo))
                           ? String(assignedTo)
@@ -656,7 +661,7 @@ export default function ContractForm({ initValues }: { initValues?: Contract }) 
                                 href={item.file_url}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="block truncate text-sm font-medium text-gray-900 hover:underline"
+                                className="block truncate text-sm font-medium text-[#143087] hover:text-[#0F2466] hover:underline"
                               >
                                 {item.file_name || 'Open file'}
                               </a>
@@ -687,7 +692,7 @@ export default function ContractForm({ initValues }: { initValues?: Contract }) 
                     <Text className="text-xs text-gray-500">
                       You can select multiple files at once
                     </Text>
-                    <span className="mt-1 inline-flex items-center gap-1 rounded-md bg-gray-900 px-3 py-1.5 text-xs font-medium text-white">
+                    <span className="mt-1 inline-flex items-center gap-1 rounded-md bg-[#143087] px-3 py-1.5 text-xs font-medium text-white">
                       <PiPlusBold className="h-3.5 w-3.5" />
                       Choose files
                     </span>
@@ -740,7 +745,7 @@ export default function ContractForm({ initValues }: { initValues?: Contract }) 
                                 Document type
                               </Text>
                               <select
-                                className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900 outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
+                                className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900 outline-none focus:border-[#143087] focus:ring-2 focus:ring-[#143087]/20"
                                 value={item.type}
                                 onChange={(e) =>
                                   updatePending(item.id, {

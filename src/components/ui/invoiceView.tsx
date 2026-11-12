@@ -567,7 +567,7 @@ export default function InvoiceView({ invoiceData }: InvoiceViewProps) {
         <Button 
           onClick={handleDownloadPDF} 
           disabled={isGeneratingPDF}
-          className="mb-4 bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="mb-4 bg-[#143087] text-white hover:bg-[#0F2466] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isGeneratingPDF ? 'جاري إنشاء PDF...' : 'تحميل الفاتورة كـ PDF'}
         </Button>
@@ -701,7 +701,7 @@ export default function InvoiceView({ invoiceData }: InvoiceViewProps) {
               href={`https://home-healers.com/invoice/${invoiceData.id}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-blue-600 underline"
+              className="text-xs text-[#143087] underline"
             >
               رابط صفحة الفاتورة
             </a>

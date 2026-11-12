@@ -157,7 +157,7 @@ function ActivityLogDetailsContent({ log }: { log: ActivityLog }) {
           {subjectHref ? (
             <Link
               href={subjectHref}
-              className="font-medium text-blue-600 hover:underline dark:text-blue-400"
+              className="font-medium text-[#143087] hover:underline"
             >
               {formatSubjectLabel(log.subject.type, log.subject.id)}
             </Link>

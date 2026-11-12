@@ -168,7 +168,7 @@ export default function SupportTicketsInbox() {
               onClick={() => setParams({ tab: item.key === 'open' ? null : item.key })}
               className={cn(
                 'flex shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition',
-                active ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100'
+                active ? 'bg-[#143087] text-white' : 'text-gray-600 hover:bg-blue-50'
               )}
             >
               {t(`st_tab_${item.key}`)}

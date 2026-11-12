@@ -1,4 +1,5 @@
 'use client';
+import { IoWarningOutline } from 'react-icons/io5';
 import TableLayout from '@/app/[locale]/(hydrogen)/tables/table-layout';
 import Spinner from '@/components/ui/spinner';
 import { useSearchParams } from 'next/navigation';
@@ -56,6 +57,8 @@ export default function AbandonedReservationsTablePage() {
       ) : (
       <TableLayout
         title={pageHeader.title}
+        description="Follow up on incomplete reservation attempts"
+        icon={<IoWarningOutline />}
         breadcrumb={pageHeader.breadcrumb}
         data={{
           columns: selectedColumns

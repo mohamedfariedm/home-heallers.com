@@ -1,3 +1,8 @@
+import {
+  ModalFormHeader,
+  ModalFormFooter,
+  modalFormClassName,
+} from '@/components/ui/modal-form-shell';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PiXBold } from 'react-icons/pi';
 import { Controller, SubmitHandler } from 'react-hook-form';
@@ -125,7 +130,7 @@ function LeadCityStateFields({
                 setValue('state', '');
               }}
               disabled={isCitiesLoading}
-              className="h-10 w-full rounded-md border border-gray-300 bg-white p-2 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+              className="h-10 w-full rounded-md border border-gray-300 bg-white p-2 outline-none transition-all focus:border-[#143087] focus:ring-2 focus:ring-[#143087]/20"
             >
               <option value="">
                 {isCitiesLoading ? 'Loading cities...' : 'Select City'}
@@ -158,7 +163,7 @@ function LeadCityStateFields({
               value={value || ''}
               onChange={(e) => onChange(e.target.value)}
               disabled={isStatesLoading || !selectedCityId}
-              className="h-10 w-full rounded-md border border-gray-300 bg-white p-2 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+              className="h-10 w-full rounded-md border border-gray-300 bg-white p-2 outline-none transition-all focus:border-[#143087] focus:ring-2 focus:ring-[#143087]/20"
             >
               <option value="">
                 {isStatesLoading
@@ -533,7 +538,7 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
               </label>
               <select
                 {...register('status_reason')}
-                className="h-10 w-full rounded-md border border-gray-300 bg-white p-2 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                className="h-10 w-full rounded-md border border-gray-300 bg-white p-2 outline-none transition-all focus:border-[#143087] focus:ring-2 focus:ring-[#143087]/20"
               >
                 <option value="">Select reason</option>
                 {LEAD_STATUS_REASONS.map((option) => (
@@ -553,7 +558,7 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
               <label className="block text-sm font-medium text-gray-900 mb-1">Source <span className="text-red-500">*</span></label>
               <select 
                 {...register('source_campaign')} 
-                className="w-full border border-gray-300 rounded-md p-2 h-10 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                className="w-full border border-gray-300 rounded-md p-2 h-10 bg-white focus:ring-2 focus:ring-[#143087]/20 focus:border-[#143087] outline-none transition-all"
               >
                 <option value="">Select Source</option>
                 {sourceCampaignOptions.map((option) => (
@@ -570,7 +575,7 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
             <label className="block text-sm font-medium text-gray-900 mb-1">Communication Channel <span className="text-red-500">*</span></label>
             <select
               {...register('communication_channel')}
-              className="w-full border border-gray-300 rounded-md p-2 h-10 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+              className="w-full border border-gray-300 rounded-md p-2 h-10 bg-white focus:ring-2 focus:ring-[#143087]/20 focus:border-[#143087] outline-none transition-all"
             >
               {!isInbound && !isSeo && <option value="">Select Communication Channel</option>}
               {communicationChannelOptions.map((option) => (
@@ -586,7 +591,7 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
             <label className="mb-1 block text-sm font-medium text-gray-900">CC</label>
             <select
               {...register('cc')}
-              className="h-10 w-full rounded-md border border-gray-300 bg-white p-2 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+              className="h-10 w-full rounded-md border border-gray-300 bg-white p-2 outline-none transition-all focus:border-[#143087] focus:ring-2 focus:ring-[#143087]/20"
             >
               <option value="">Select CC</option>
               {CC_OPTIONS.map((option) => (
@@ -690,7 +695,7 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
               <label className="block text-sm font-medium text-gray-900 mb-1">Specialty 1</label>
               <select 
                 {...register('specialtie_1')} 
-                className="w-full border border-gray-300 rounded-md p-2 h-10 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                className="w-full border border-gray-300 rounded-md p-2 h-10 bg-white focus:ring-2 focus:ring-[#143087]/20 focus:border-[#143087] outline-none transition-all"
               >
                 <option value="">Select Specialty</option>
                 <option value="Physiotherapy">Physiotherapy</option>
@@ -705,7 +710,7 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
               <label className="block text-sm font-medium text-gray-900 mb-1">Specialty 2</label>
               <select 
                 {...register('specialtie_2')} 
-                className="w-full border border-gray-300 rounded-md p-2 h-10 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                className="w-full border border-gray-300 rounded-md p-2 h-10 bg-white focus:ring-2 focus:ring-[#143087]/20 focus:border-[#143087] outline-none transition-all"
               >
                 <option value="">Select Specialty</option>
                 <option value="Physiotherapy">Physiotherapy</option>
@@ -720,7 +725,7 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
               <label className="block text-sm font-medium text-gray-900 mb-1">Specialty 3</label>
               <select 
                 {...register('specialtie_3')} 
-                className="w-full border border-gray-300 rounded-md p-2 h-10 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                className="w-full border border-gray-300 rounded-md p-2 h-10 bg-white focus:ring-2 focus:ring-[#143087]/20 focus:border-[#143087] outline-none transition-all"
               >
                 <option value="">Select Specialty</option>
                 <option value="Physiotherapy">Physiotherapy</option>

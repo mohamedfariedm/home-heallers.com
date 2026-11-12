@@ -9,6 +9,7 @@ import { useRoles } from '@/framework/roles';
 import Spinner from '@/components/ui/spinner';
 import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
+import { PiPackageDuotone } from 'react-icons/pi';
 // export const metadata = {
 //   ...metaObject('Enhanced Table'),
 // };
@@ -39,6 +40,8 @@ export default function RolesTablePage() {
   return (
     <TableLayout
       title={pageHeader.title}
+      description="Manage user roles"
+      icon={<PiPackageDuotone />}
       breadcrumb={pageHeader.breadcrumb}
       data={{columns: selectedColumns.filter((column) => column !== 'checked' && column !== 'action').map((column: String) => column.replace(/\./g, '_').replace(/\s/g, '_')), rows: selectedRowKeys}}
       fileName="roles/index"

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   PiCalendarBlankBold,
+  PiChartBar,
   PiChartLineUpBold,
   PiCurrencyDollarBold,
   PiGearBold,
@@ -31,6 +32,7 @@ import { useSettings, useUpdateSettings } from '@/framework/site-settings';
 import type { RateColorsByMetric } from '@/types/settings';
 import cn from '@/utils/class-names';
 import { getLast10DaysRange } from '@/utils/default-date-range';
+import AdminPageShell from '@/components/ui/admin-page-shell';
 
 interface AggregateData {
   customer_support?: {
@@ -81,6 +83,11 @@ interface AggregateData {
   };
   doctors?: {
     total: number;
+    active_by_category?: Array<{
+      category_id: number | null;
+      name: string;
+      active_doctors: number;
+    }>;
   };
   clients?: {
     total: number;
@@ -352,7 +359,7 @@ export default function StatisticsDashboard() {
           <p className="mt-2 text-sm text-gray-500">{error}</p>
           <button
             onClick={() => fetchStatistics()}
-            className="mt-4 rounded-lg bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+            className="mt-4 rounded-lg bg-[#143087] px-4 py-2 text-white hover:bg-[#0F2466]"
           >
             {t('shared_try_again', 'Try Again')}
           </button>
@@ -362,19 +369,19 @@ export default function StatisticsDashboard() {
   }
 
   return (
-    <div className="@container">
-      <div className="mb-6 flex flex-col items-start justify-between gap-3 md:flex-row md:items-center">
-        <div>
-          <h1 className="text-[22px] font-semibold tracking-tight text-gray-900 lg:text-2xl @xl:text-[26px] dark:text-white">
-            {t('stats_title', 'Statistics Dashboard')}
-          </h1>
-          <p className="mt-1 text-sm text-gray-400 dark:text-gray-400">
-            {t('stats_subtitle', 'Switch between Market, Finance, Operations, and Calendar')}
-          </p>
-        </div>
-      </div>
-
-      <StatisticsFiltersComponent onFilter={handleFilter} className="mb-6" />
+    <AdminPageShell
+      title={t('stats_title', 'Statistics Dashboard')}
+      description={t(
+        'stats_subtitle',
+        'Switch between Market, Finance, Operations, and Calendar'
+      )}
+      icon={<PiChartBar />}
+      maxWidth="full"
+      className="@container"
+    >
+      {!isCalendarTab && (
+        <StatisticsFiltersComponent onFilter={handleFilter} className="mb-6" />
+      )}
 
       {loading && !isCalendarTab ? (
         <div className="flex min-h-[400px] items-center justify-center">
@@ -536,6 +543,46 @@ export default function StatisticsDashboard() {
                   isSavingRateColors={isSavingRateColors}
                 />
 
+                {hasPermission('dashboard.active_doctors') &&
+                  (aggregateData?.doctors?.active_by_category?.length ?? 0) > 0 && (
+                    <section className="space-y-4">
+                      <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                        {t('stats_active_doctors_by_category', 'Active doctors by department')}
+                      </h2>
+                      <div className="overflow-x-auto rounded-2xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+                        <table className="min-w-full text-sm">
+                          <thead className="bg-gray-50 text-left dark:bg-gray-900/40">
+                            <tr>
+                              <th className="px-3 py-2 font-medium">
+                                {t('stats_department', 'Department')}
+                              </th>
+                              <th className="px-3 py-2 font-medium">
+                                {t('stats_active_doctors', 'Active doctors')}
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {aggregateData?.doctors?.active_by_category?.map((row) => (
+                              <tr
+                                key={row.category_id ?? 'unassigned'}
+                                className="border-t border-gray-100 dark:border-gray-800"
+                              >
+                                <td className="px-3 py-2">{row.name}</td>
+                                <td className="px-3 py-2">{row.active_doctors}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        {t(
+                          'stats_active_doctors_by_category_hint',
+                          'Counted from the doctor active status. A doctor in more than one department is counted in each. This roster is not limited to the selected dates.'
+                        )}
+                      </p>
+                    </section>
+                  )}
+
                 {hasPermission('dashboard.reservations_by_status') &&
                   aggregateData?.reservations &&
                   aggregateData.reservations.by_status.length > 0 && (
@@ -642,17 +689,17 @@ export default function StatisticsDashboard() {
             aggregateData.reservations?.total === 0 &&
             aggregateData.customer_support?.total === 0 &&
             (aggregateData.leads?.total_leads ?? 0) === 0 && (
-              <div className="mt-6 rounded-lg border border-gray-200 bg-gray-50 p-12 text-center dark:border-gray-700 dark:bg-gray-800">
-                <p className="text-lg font-medium text-gray-900 dark:text-white">
+              <div className="mt-6 rounded-2xl border border-dashed border-gray-200 bg-white p-12 text-center shadow-sm">
+                <p className="text-lg font-medium text-gray-700">
                   {t('stats_no_data', 'No data found')}
                 </p>
-                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                <p className="mt-2 text-sm text-gray-400">
                   {t('stats_no_data_hint', 'Try adjusting your filters to see statistics')}
                 </p>
               </div>
             )}
         </Tabs>
       )}
-    </div>
+    </AdminPageShell>
   );
 }

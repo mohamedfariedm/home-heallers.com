@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { NotificationBellButton } from '@/layouts/notification-dropdown';
 import HamburgerButton from '@/layouts/hamburger-button';
@@ -32,15 +33,19 @@ export default function Header() {
   return (
     <header
       className={cn(
-        'sticky top-0 z-50 flex items-center bg-gray-0/80 px-4 py-3.5 backdrop-blur-xl dark:bg-gray-50/50 md:px-5 lg:px-6 2xl:py-4 3xl:px-8 4xl:px-10',
+        'sticky top-0 z-50 flex items-center bg-white/85 px-4 py-3.5 backdrop-blur-xl md:px-5 lg:px-6 2xl:py-4 3xl:px-8 4xl:px-10',
         ((isMounted && windowScroll.y) as number) > 2
-          ? 'border-b border-gray-200/70'
+          ? 'border-b border-gray-100 shadow-sm shadow-blue-900/5'
           : 'border-b border-transparent'
       )}
     >
       <div className="flex w-full max-w-2xl items-center">
         <HamburgerButton
-          view={<Sidebar className="static w-full 2xl:w-full" />}
+          view={
+            <Suspense fallback={null}>
+              <Sidebar className="static w-full 2xl:w-full" />
+            </Suspense>
+          }
         />
         <Link
           href={'/'}

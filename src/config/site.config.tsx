@@ -1,8 +1,5 @@
 import { Metadata } from 'next';
-import logoImg from '@public/Vertical Transperent-05.png';
 import { LAYOUT_OPTIONS } from '@/config/enums';
-import logoIconImg from '@public/Vertical Transperent-05.png';
-import logoIconLightImg from '@public/Vertical Transperent-05.png'
 import { OpenGraph } from 'next/dist/lib/metadata/types/opengraph-types';
 
 enum MODE {
@@ -13,9 +10,9 @@ enum MODE {
 export const siteConfig = {
   title: 'home-healers',
   description: `home-healers`,
-  logo: logoImg,
-  icon: logoIconImg,
-  iconLight: logoIconLightImg,
+  logo: '/logo-primary.png',
+  icon: '/logo-primary.svg',
+  iconLight: '/logo-primary.svg',
   mode: MODE.LIGHT,
   layout: LAYOUT_OPTIONS.HYDROGEN,
   // TODO: favicon

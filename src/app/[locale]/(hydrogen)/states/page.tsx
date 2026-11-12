@@ -1,4 +1,5 @@
 'use client';
+import { BsPinMapFill } from 'react-icons/bs';
 import TableLayout from '@/app/[locale]/(hydrogen)/tables/table-layout';
 import CreateOrUpdateState from '@/app/shared/states/states-form';
 import StatesTable from '@/app/shared/states/table';
@@ -36,6 +37,8 @@ export default function CitiesTablePage() {
   return (
     <TableLayout
       title={pageHeader.title}
+      description="Manage states master data"
+      icon={<BsPinMapFill />}
       breadcrumb={pageHeader.breadcrumb}
       data={{
         columns: selectedColumns

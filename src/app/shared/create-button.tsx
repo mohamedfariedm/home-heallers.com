@@ -3,6 +3,7 @@
 import { PiPlusBold } from 'react-icons/pi';
 import { useModal } from '@/app/shared/modal-views/use-modal';
 import { Button, type ButtonProps } from '@/components/ui/button';
+import { adminPrimaryButtonClass } from '@/components/ui/admin-page-shell';
 import cn from '@/utils/class-names';
 
 interface ModalButtonProps extends ButtonProps {
@@ -22,12 +23,14 @@ export default function CreateButton({
   ...rest
 }: ModalButtonProps) {
   const { openModal } = useModal();
+  const isIconOnly =
+    !label ||
+    className?.includes('bg-transparent') ||
+    className?.includes('m-0');
+
   return (
     <Button
-      className={cn(
-        // 'mt-5 w-full text-xs capitalize @lg:w-auto dark:bg-gray-100 dark:text-white dark:active:bg-gray-100 sm:text-sm lg:mt-0',
-        className
-      )}
+      className={cn(!isIconOnly && adminPrimaryButtonClass, className)}
       onClick={() =>
         openModal({
           view,

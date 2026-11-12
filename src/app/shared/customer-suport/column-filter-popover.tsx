@@ -29,7 +29,7 @@ const qualificationOperators = [
 ];
 
 const selectClassName =
-  'border border-gray-300 rounded-lg px-2 py-2 text-sm w-1/2 focus:ring-2 focus:ring-blue-500';
+  'border border-gray-300 rounded-lg px-2 py-2 text-sm w-1/2 focus:ring-2 focus:ring-[#143087]/20';
 
 function FilterValueControl({
   columnKey,
@@ -242,7 +242,7 @@ export default function ColumnFilterPopover({
 
             <div className="flex items-center gap-2 mb-4">
               <select
-                className="border border-gray-300 rounded-lg px-2 py-2 text-sm w-1/2 focus:ring-2 focus:ring-blue-500"
+                className="border border-gray-300 rounded-lg px-2 py-2 text-sm w-1/2 focus:ring-2 focus:ring-[#143087]/20"
                 value={cond1.op}
                 onChange={(e) => setCond1((s) => ({ ...s, op: e.target.value }))}
               >
@@ -269,7 +269,7 @@ export default function ColumnFilterPopover({
                   value="and"
                   checked={logic === 'and'}
                   onChange={() => setLogic('and')}
-                  className="accent-blue-600 w-4 h-4"
+                  className="accent-[#143087] w-4 h-4"
                 />
                 <span className="text-gray-700 font-medium">AND</span>
               </label>
@@ -280,7 +280,7 @@ export default function ColumnFilterPopover({
                   value="or"
                   checked={logic === 'or'}
                   onChange={() => setLogic('or')}
-                  className="accent-blue-600 w-4 h-4"
+                  className="accent-[#143087] w-4 h-4"
                 />
                 <span className="text-gray-700 font-medium">OR</span>
               </label>
@@ -288,7 +288,7 @@ export default function ColumnFilterPopover({
 
             <div className="flex items-center gap-2 mb-4">
               <select
-                className="border border-gray-300 rounded-lg px-2 py-2 text-sm w-1/2 focus:ring-2 focus:ring-blue-500"
+                className="border border-gray-300 rounded-lg px-2 py-2 text-sm w-1/2 focus:ring-2 focus:ring-[#143087]/20"
                 value={cond2.op}
                 onChange={(e) => setCond2((s) => ({ ...s, op: e.target.value }))}
               >
@@ -316,7 +316,7 @@ export default function ColumnFilterPopover({
               </button>
               <button
                 onClick={handleSave}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                className="px-4 py-2 text-sm font-medium text-white bg-[#143087] rounded-xl hover:bg-[#0F2466] transition-colors"
               >
                 Save
               </button>

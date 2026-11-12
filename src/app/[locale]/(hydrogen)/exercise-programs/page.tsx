@@ -1,4 +1,5 @@
 'use client';
+import { PiFileText } from 'react-icons/pi';
 
 import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -28,6 +29,8 @@ export default function ExerciseProgramsPage() {
   return (
     <TableLayout
       title={pageHeader.title}
+      description="Manage exercise programs"
+      icon={<PiFileText />}
       breadcrumb={pageHeader.breadcrumb}
       data={{
         columns: selectedColumns

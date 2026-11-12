@@ -1,4 +1,5 @@
 'use client';
+import { PiLockKeyDuotone } from 'react-icons/pi';
 
 import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -39,6 +40,8 @@ export default function OtpCodesPage() {
   return (
     <TableLayout
       title={pageHeader.title}
+      description="View OTP verification codes"
+      icon={<PiLockKeyDuotone />}
       breadcrumb={pageHeader.breadcrumb}
       data={{
         columns: selectedColumns

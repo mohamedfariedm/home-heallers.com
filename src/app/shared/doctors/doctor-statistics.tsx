@@ -8,12 +8,54 @@ import {
   PiCheckCircleBold,
   PiMapPinBold,
 } from 'react-icons/pi';
-import type { DoctorListStatistics } from '@/types/dashboard-statistics';
+import type {
+  ActiveDoctorsByCategoryRow,
+  DoctorListStatistics,
+} from '@/types/dashboard-statistics';
 import KpiStatCard, { KPI_STAT_GRID_CLASS } from '@/app/shared/kpis/kpi-stat-card';
 
 interface DoctorStatisticsProps {
   statistics?: DoctorListStatistics | null;
   className?: string;
+}
+
+function ActiveDoctorsByCategory({
+  rows,
+}: {
+  rows: ActiveDoctorsByCategoryRow[];
+}) {
+  return (
+    <section className="space-y-4">
+      <h4 className="text-base font-semibold text-gray-900 dark:text-white">
+        Active doctors by department
+      </h4>
+      <div className="overflow-x-auto rounded-2xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+        <table className="min-w-full text-sm">
+          <thead className="bg-gray-50 text-left dark:bg-gray-900/40">
+            <tr>
+              <th className="px-3 py-2 font-medium">Department</th>
+              <th className="px-3 py-2 font-medium">Active doctors</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr
+                key={row.category_id ?? 'unassigned'}
+                className="border-t border-gray-100 dark:border-gray-800"
+              >
+                <td className="px-3 py-2">{row.name}</td>
+                <td className="px-3 py-2">{row.active_doctors}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="text-xs text-gray-500">
+        Uses the doctor status column. A doctor who works in more than one
+        department is counted in each. This is not limited to the session dates.
+      </p>
+    </section>
+  );
 }
 
 function convertApiLinkToQueryParams(apiLink: string | undefined): string {
@@ -82,6 +124,7 @@ export default function DoctorStatistics({
 
   const byDoctor = statistics.by_doctor || [];
   const byCity = statistics.by_city || [];
+  const byCategory = statistics.active_doctors_by_category || [];
 
   return (
     <div className={cn('w-full space-y-8', className)}>
@@ -95,6 +138,10 @@ export default function DoctorStatistics({
           ))}
         </div>
       </section>
+
+      {byCategory.length > 0 && (
+        <ActiveDoctorsByCategory rows={byCategory} />
+      )}
 
       {byDoctor.length > 0 && (
         <section className="space-y-4">

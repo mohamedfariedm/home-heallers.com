@@ -16,14 +16,14 @@ export type ExtractProps<T> = T extends React.ComponentType<infer P> ? P : T;
 
 const classes = {
   table:
-    '[&_.rc-table-content]:overflow-x-auto [&_table]:w-full [&_.rc-table-row:hover]:bg-gray-50/80 [&_.rc-table-row-expand-icon-cell]:w-14',
+    '[&_.rc-table-content]:overflow-x-auto [&_table]:w-full [&_.rc-table-row:hover]:bg-gray-50/60 [&_.rc-table-row-expand-icon-cell]:w-14',
   thead:
-    '[&_thead]:text-left [&_thead]:rtl:text-right [&_th.rc-table-cell]:uppercase [&_th.rc-table-cell]:text-xs [&_th.rc-table-cell]:font-semibold [&_th.rc-table-cell]:tracking-wider [&_th.rc-table-cell]:text-gray-500',
+    '[&_thead]:text-left [&_thead]:rtl:text-right [&_th.rc-table-cell]:uppercase [&_th.rc-table-cell]:text-xs [&_th.rc-table-cell]:font-semibold [&_th.rc-table-cell]:tracking-wide [&_th.rc-table-cell]:text-gray-500',
   tCell:
-    '[&_.rc-table-cell]:px-3 [&_th.rc-table-cell]:py-3 [&_td.rc-table-cell]:py-4',
+    '[&_.rc-table-cell]:px-4 [&_th.rc-table-cell]:py-3 [&_td.rc-table-cell]:py-3',
   variants: {
     classic:
-      '[&_thead]:bg-gray-50 [&_.rc-table-container]:border-x [&_.rc-table-container]:border-gray-200/60 [&_td.rc-table-cell]:border-b [&_td.rc-table-cell]:border-gray-200/60 [&_thead]:border-y [&_thead]:border-gray-200/60',
+      'overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm [&_thead]:bg-gray-50 [&_thead]:border-b [&_thead]:border-gray-100 [&_td.rc-table-cell]:border-b [&_td.rc-table-cell]:border-gray-100 [&_.rc-table-row:last-child_td.rc-table-cell]:border-b-0',
     modern:
       '[&_thead_th]:bg-gray-50 [&_td.rc-table-cell]:border-b [&_td.rc-table-cell]:border-gray-200/60 [&_thead_.rc-table-row-expand-icon-cell]:bg-gray-50',
     minimal:
@@ -74,8 +74,14 @@ export default function Table({
       )}
       emptyText={
         emptyText || (
-          <div className="py-5 text-center lg:py-8">
-            <Empty /> <Text className="mt-3">No Data</Text>
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50">
+              <Empty />
+            </div>
+            <Text className="text-sm font-medium text-gray-700">No Data</Text>
+            <Text className="mt-1 text-xs text-gray-400">
+              Nothing to show here yet
+            </Text>
           </div>
         )
       }
@@ -216,9 +222,13 @@ export function ToggleColumns<T>({
         )}
         shadow="sm"
         placement="bottom-end"
-        className="dark:bg-gray-100 [&>svg]:dark:fill-gray-100"
+        className="rounded-2xl border border-gray-200 bg-white dark:bg-gray-100 [&>svg]:dark:fill-gray-100"
       >
-        <ActionIcon variant="outline" title={'Toggle Columns'}>
+        <ActionIcon
+          variant="outline"
+          title={'Toggle Columns'}
+          className="rounded-xl border-gray-200 hover:border-[#143087]/40 hover:bg-blue-50 hover:text-[#143087]"
+        >
           <PiTextColumns strokeWidth={3} className=" h-6 w-6" />
         </ActionIcon>
       </Popover>

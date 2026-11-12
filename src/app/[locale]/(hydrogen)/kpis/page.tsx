@@ -1,4 +1,5 @@
 'use client';
+import { PiChartLineUpDuotone } from 'react-icons/pi';
 
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
@@ -211,6 +212,8 @@ export default function KpisPage() {
   return (
     <TableLayout
       title={pageHeader.title}
+      description="Monitor team and doctor KPI reports"
+      icon={<PiChartLineUpDuotone />}
       breadcrumb={pageHeader.breadcrumb}
       data={{
         columns: selectedColumns

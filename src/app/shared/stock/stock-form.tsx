@@ -1,4 +1,9 @@
 'use client';
+import {
+  ModalFormHeader,
+  ModalFormFooter,
+  modalFormClassName,
+} from '@/components/ui/modal-form-shell';
 
 import { useState } from 'react';
 import { PiXBold } from 'react-icons/pi';
@@ -81,14 +86,7 @@ export default function UpdateCreateStock({ initValues }: {
             {({ register, control, getValues , formState: { errors } }) => {
                 return (
                 <>
-                    <div className="flex items-center justify-between">
-                        <Title as="h4" className="font-semibold">
-                            {initValues ? 'Update Stock' : 'Add a new Stock'}
-                        </Title>
-                        <ActionIcon size="sm" variant="text" onClick={closeModal}>
-                            <PiXBold className="h-auto w-5" />
-                        </ActionIcon>
-                    </div>
+                    <ModalFormHeader title={initValues ? 'Update Stock' : 'Add a new Stock'} />
                     <FormGroup
                         title="Stores"
                         className="pt-2 @2xl:pt-2 @3xl:grid-cols-12 @3xl:pt-11"
@@ -169,22 +167,11 @@ export default function UpdateCreateStock({ initValues }: {
 
 
 
-                    <div className="flex items-center justify-end gap-4">
-                    <Button
-                        variant="outline"
-                        onClick={closeModal}
-                        className="w-full @xl:w-auto"
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        type="submit"
-                        isLoading={isLoading}
-                        className="w-full @xl:w-auto"
-                    >
-                        {initValues ? 'Update Stock' : 'Create Stock'}
-                    </Button>
-                    </div>
+                    <ModalFormFooter
+                cancelLabel="Cancel"
+                isLoading={isLoading}
+                submitLabel={initValues ? 'Update Stock' : 'Create Stock'}
+            />
                 </>
                 );
             }}

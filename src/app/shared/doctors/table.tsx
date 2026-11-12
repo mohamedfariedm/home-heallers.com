@@ -278,7 +278,7 @@ export default function DoctorsTable({
         </button>
         <button
           onClick={applyAllFilters}
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white transition hover:bg-blue-700"
+          className="rounded-xl bg-[#143087] px-4 py-2 text-sm text-white transition hover:bg-[#0F2466]"
         >
           Apply Filters
         </button>

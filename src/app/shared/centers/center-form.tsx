@@ -1,4 +1,9 @@
 'use client';
+import {
+  ModalFormHeader,
+  ModalFormFooter,
+  modalFormClassName,
+} from '@/components/ui/modal-form-shell';
 
 import { useState } from 'react';
 import { PiXBold } from 'react-icons/pi';
@@ -129,7 +134,7 @@ export default function CenterForm({ initValues }: { initValues?: any }) {
               </label>
               <select
                 {...register('status')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#143087]/20"
               >
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>

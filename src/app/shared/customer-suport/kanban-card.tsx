@@ -259,7 +259,7 @@ export default function KanbanCard({
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
       className={cn(
-        'group relative cursor-grab rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all hover:shadow-md dark:border-gray-700 dark:bg-gray-800',
+        'group relative cursor-grab rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition-all hover:border-[#143087]/40 hover:shadow-md dark:border-gray-700 dark:bg-gray-800',
         isSortableDragging && 'cursor-grabbing opacity-50',
         isDragging && 'rotate-3 shadow-xl'
       )}
@@ -271,40 +271,40 @@ export default function KanbanCard({
             <button
               onClick={handleEditClick}
               onPointerDown={(e) => e.stopPropagation()}
-              className="rounded-full bg-gray-100 p-1.5 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
+              className="rounded-full bg-blue-50 p-1.5 text-[#143087] hover:bg-blue-100 dark:bg-blue-900/30 dark:hover:bg-blue-900/50"
               title="Edit"
             >
-              <PiPencilSimpleBold className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+              <PiPencilSimpleBold className="h-4 w-4" />
             </button>
           )}
           {canViewDetails && (
             <button
               onClick={handleViewClick}
               onPointerDown={(e) => e.stopPropagation()}
-              className="rounded-full bg-gray-100 p-1.5 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
+              className="rounded-full bg-blue-50 p-1.5 text-[#143087] hover:bg-blue-100 dark:bg-blue-900/30 dark:hover:bg-blue-900/50"
               title="View"
             >
-              <PiEye className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+              <PiEye className="h-4 w-4" />
             </button>
           )}
           {canViewActivityLogs && (
             <button
               onClick={handleActivityLogsClick}
               onPointerDown={(e) => e.stopPropagation()}
-              className="rounded-full bg-gray-100 p-1.5 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
+              className="rounded-full bg-blue-50 p-1.5 text-[#143087] hover:bg-blue-100 dark:bg-blue-900/30 dark:hover:bg-blue-900/50"
               title="Activity Logs"
             >
-              <PiClock className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+              <PiClock className="h-4 w-4" />
             </button>
           )}
           {canViewQualifications && (
             <button
               onClick={handleQualificationClick}
               onPointerDown={(e) => e.stopPropagation()}
-              className="rounded-full bg-gray-100 p-1.5 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
+              className="rounded-full bg-blue-50 p-1.5 text-[#143087] hover:bg-blue-100 dark:bg-blue-900/30 dark:hover:bg-blue-900/50"
               title="Lead Qualification"
             >
-              <PiListChecks className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+              <PiListChecks className="h-4 w-4" />
             </button>
           )}
         </div>
@@ -363,7 +363,7 @@ export default function KanbanCard({
         )}
 
         {item.offer && (
-          <div className="rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+          <div className="rounded-lg bg-blue-50 px-2 py-1 text-xs font-medium text-[#143087] dark:bg-blue-900/30 dark:text-blue-300">
             Offer: {item.offer}
           </div>
         )}
@@ -377,7 +377,7 @@ export default function KanbanCard({
         {(Number(item.communication_times) > 0 || Number(item.rework) > 0) && (
           <div className="flex flex-wrap gap-1.5">
             {Number(item.communication_times) > 0 && (
-              <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+              <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-[#143087] dark:bg-blue-900/30 dark:text-blue-300">
                 Contacts: {item.communication_times}
               </span>
             )}
@@ -415,7 +415,7 @@ export default function KanbanCard({
 
       {/* Notes Preview */}
       {item.notes && (
-        <div className="mt-3 border-t border-gray-100 pt-2 dark:border-gray-700">
+        <div className="mt-3 border-t border-gray-200 pt-2 dark:border-gray-700">
           <p className="line-clamp-2 text-xs text-gray-500 dark:text-gray-400">
             {item.notes}
           </p>

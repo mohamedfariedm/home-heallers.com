@@ -13,7 +13,30 @@ import {
 function getLocalStoragePreset() {
   if (typeof window !== 'undefined') {
     const localStorageValue = localStorage.getItem('isomorphic-preset');
-    return JSON.parse(String(localStorageValue));
+    const presetName = localStorage.getItem('isomorphic-preset-name');
+    // Migrate old rose/teal caches to Home Healers blue once
+    if (
+      !localStorageValue ||
+      localStorageValue === 'null' ||
+      presetName === 'rose' ||
+      presetName === 'blue' ||
+      presetName === 'teal'
+    ) {
+      localStorage.setItem(
+        'isomorphic-preset',
+        JSON.stringify(DEFAULT_PRESET_COLORS)
+      );
+      localStorage.setItem(
+        'isomorphic-preset-name',
+        DEFAULT_PRESET_COLOR_NAME
+      );
+      return DEFAULT_PRESET_COLORS;
+    }
+    try {
+      return JSON.parse(String(localStorageValue));
+    } catch {
+      return DEFAULT_PRESET_COLORS;
+    }
   }
 }
 

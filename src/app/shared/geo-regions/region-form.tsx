@@ -466,7 +466,7 @@ export default function RegionForm({ initialValues }: RegionFormProps) {
                 onClick={() => setPreviewLang(key)}
                 className={`rounded-md px-3 py-1 text-sm font-medium transition ${
                   previewLang === key
-                    ? 'bg-gray-900 text-white'
+                    ? 'bg-[#143087] text-white'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >

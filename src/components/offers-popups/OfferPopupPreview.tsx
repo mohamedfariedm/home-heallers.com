@@ -44,7 +44,7 @@ export default function OfferPopupPreview({
         dir={isRtl ? 'rtl' : 'ltr'}
         className="mx-auto w-full max-w-[280px] overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-lg"
       >
-        <div className="bg-gradient-to-br from-[#0d7377] to-[#14919b] px-4 pb-5 pt-4 text-white">
+        <div className="bg-gradient-to-br from-[#143087] to-[#39519B] px-4 pb-5 pt-4 text-white">
           {badge ? (
             <span className="mb-3 inline-block rounded-full bg-white/20 px-2.5 py-0.5 text-[10px] font-medium backdrop-blur">
               {badge}
@@ -99,7 +99,7 @@ export default function OfferPopupPreview({
           ) : null}
           <button
             type="button"
-            className="w-full rounded-lg bg-[#0d7377] py-2.5 text-xs font-semibold text-white"
+            className="w-full rounded-lg bg-[#143087] py-2.5 text-xs font-semibold text-white"
           >
             {button || (isRtl ? 'احصل على العرض' : 'Get the offer')}
           </button>

@@ -1,4 +1,5 @@
 'use client';
+import { PiListChecks } from 'react-icons/pi';
 import CategoriesTable from '@/app/shared/maincategories/table';
 import TableLayout from '@/app/[locale]/(hydrogen)/tables/table-layout';
 import { useMainCategories } from '@/framework/maincategories ';
@@ -34,6 +35,8 @@ export default function CategoriesTablePage() {
   return (
     <TableLayout
       title={pageHeader.title}
+      description="Organize services into categories"
+      icon={<PiListChecks />}
       breadcrumb={pageHeader.breadcrumb}
       data={{
         columns: selectedColumns

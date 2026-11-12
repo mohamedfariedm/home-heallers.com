@@ -1,4 +1,5 @@
 'use client';
+import { IoHelpCircle } from 'react-icons/io5';
 import TableLayout from '@/app/[locale]/(hydrogen)/tables/table-layout';
 import FaqForm from '@/app/shared/faqs/faq-form';
 import FaqsTable from '@/app/shared/faqs/table';
@@ -39,6 +40,8 @@ export default function FaqsTablePage() {
         {
           <TableLayout
             title={pageHeader.title}
+            description="Manage frequently asked questions for the website"
+            icon={<IoHelpCircle />}
             breadcrumb={pageHeader.breadcrumb}
             data={{
               columns: selectedColumns

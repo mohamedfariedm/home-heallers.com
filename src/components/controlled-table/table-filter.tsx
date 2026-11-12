@@ -104,7 +104,7 @@ function FilterDrawerView({
       isOpen={isOpen ?? false}
       onClose={() => setOpenDrawer(false)}
       overlayClassName="dark:bg-opacity-20 backdrop-blur-md"
-      containerClassName="dark:bg-gray-100 overflow-y-scroll"
+      containerClassName="overflow-y-scroll bg-white dark:bg-gray-100"
     >
       <div className="flex h-full flex-col p-5">
         <div className="-mx-5 mb-6 flex items-center justify-between border-b border-gray-200 px-5 pb-4">
@@ -114,20 +114,21 @@ function FilterDrawerView({
             rounded="full"
             variant="text"
             title={'Close Filter'}
+            className="text-gray-500 hover:bg-blue-50 hover:text-[#143087]"
             onClick={() => setOpenDrawer(false)}
           >
             <PiXBold className="h-4 w-4" />
           </ActionIcon>
         </div>
         <div className="flex-grow">
-          <div className="grid grid-cols-1 gap-6 [&_.price-field>span.mr-2]:mb-1.5 [&_.price-field]:flex-col [&_.price-field]:items-start [&_.react-datepicker-wrapper]:w-full [&_.react-datepicker-wrapper_.w-72]:w-full [&_.text-gray-500]:text-gray-700 [&_button.h-9]:h-10 sm:[&_button.h-9]:h-11 [&_label>.h-9]:h-10 sm:[&_label>.h-9]:h-11 [&_label>.w-24.h-9]:w-full">
+          <div className="grid grid-cols-1 gap-6 [&_.price-field>span.mr-2]:mb-1.5 [&_.price-field]:flex-col [&_.price-field]:items-start [&_.react-datepicker-wrapper]:w-full [&_.react-datepicker-wrapper_.w-72]:w-full [&_.text-gray-500]:text-gray-700 [&_button.h-9]:h-10 sm:[&_button.h-9]:h-11 [&_label>.h-9]:h-10 sm:[&_label>.h-9]:h-11 [&_label>.w-24.h-9]:w-full [&_input]:rounded-xl [&_button]:rounded-xl">
             {children}
           </div>
         </div>
         <Button
           size="lg"
           onClick={handleShowResults}
-          className="mt-5 h-11 w-full text-sm"
+          className="mt-5 h-11 w-full rounded-xl bg-[#143087] text-sm text-white hover:bg-[#0F2466]"
         >
           Show Results
         </Button>
@@ -192,7 +193,7 @@ useEffect(()=>{
 },[])
 
   return (
-    <div className="table-filter mb-4 flex items-center justify-between gap-3 rounded-xl border border-gray-200/80 bg-white/80 px-3 py-2.5 shadow-sm dark:border-gray-200/60 dark:bg-gray-50/80">
+    <div className="table-filter mb-4 flex items-center justify-between gap-3 rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
       <div className="flex flex-wrap items-center gap-3">
         {!showSearchOnTheRight ? <>
           <Input
@@ -205,13 +206,13 @@ useEffect(()=>{
             onChange={(event)=>{
               setTerm(event.target.value)
             }}
-            inputClassName="h-9"
+            inputClassName="h-9 rounded-xl border-gray-200 ring-[#143087]/20 focus:border-[#143087] focus:ring-[#143087]/20"
             clearable={true}
             prefix={<PiMagnifyingGlassBold onClick={()=>{
               params.set("page","1")
               params.set("name",term)
               push(`${pathName}?${params.toString()}`)
-            }}  className="h-4 w-4 cursor-pointer" />}
+            }}  className="h-4 w-4 cursor-pointer text-gray-400 hover:text-[#143087]" />}
           />
         </>
 
@@ -248,9 +249,9 @@ useEffect(()=>{
             value={searchTerm}
             onClear={onSearchClear}
             onChange={onSearchChange}
-            inputClassName="h-9"
+            inputClassName="h-9 rounded-xl border-gray-200 ring-[#143087]/20 focus:border-[#143087] focus:ring-[#143087]/20"
             clearable={true}
-            prefix={<PiMagnifyingGlassBold className="h-4 w-4" />}
+            prefix={<PiMagnifyingGlassBold className="h-4 w-4 text-gray-400" />}
             className="me-2.5"
           />
         ) : null}
@@ -277,10 +278,10 @@ useEffect(()=>{
               : { onClick: () => setShowFilters(() => !showFilters) })}
             variant={'outline'}
             className={cn(
-              'me-2.5 h-9 pe-3 ps-2.5',
+              'me-2.5 h-9 rounded-xl border-gray-200 pe-3 ps-2.5 hover:border-[#143087]/40 hover:bg-blue-50 hover:text-[#143087]',
               !(isMediumScreen || enableDrawerFilter) &&
                 showFilters &&
-                'border-dashed border-gray-700'
+                'border-[#143087]/40 bg-blue-50 text-[#143087]'
             )}
           >
             <PiFunnel className="me-1.5 h-[18px] w-[18px]" strokeWidth={1.7} />
