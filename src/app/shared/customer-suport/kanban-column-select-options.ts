@@ -24,6 +24,12 @@ export const kanbanCommunicationChannelOptions = [
   { label: 'Lead Form', value: 'Lead Form' },
 ];
 
+/** Outbound (marketing) create/update — Call + WhatsApp only. */
+export const kanbanOutboundCommunicationChannelOptions = [
+  { label: 'Call', value: 'Call' },
+  { label: 'WhatsApp', value: 'WhatsApp' },
+];
+
 export const kanbanOperationCommunicationChannelOptions = [
   { label: 'Call', value: 'Call' },
 ];

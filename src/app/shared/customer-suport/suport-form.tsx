@@ -29,7 +29,7 @@ import { CC_OPTIONS } from '@/app/shared/cc-options';
 import { SOURCE_CAMPAIGN_OPTIONS } from '@/app/shared/source-campaign-options';
 import { LEAD_STATUS_REASONS } from '@/config/dashboard-enums';
 import {
-  kanbanCommunicationChannelOptions,
+  kanbanOutboundCommunicationChannelOptions,
   kanbanOperationCommunicationChannelOptions,
   kanbanSeoCommunicationChannelOptions,
 } from '@/app/shared/customer-suport/kanban-column-select-options';
@@ -308,7 +308,7 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
     ? kanbanSeoCommunicationChannelOptions
     : isInbound
       ? kanbanOperationCommunicationChannelOptions
-      : kanbanCommunicationChannelOptions;
+      : kanbanOutboundCommunicationChannelOptions;
   const [lang, setLang] = useState<'en' | 'ar'>('en');
     const { mutate: createSupport, isPending: isCreating } = useCreateCustomerSupport();
     const { mutate: updateSupport, isPending: isUpdating } = useUpdateCustomerSupport();
