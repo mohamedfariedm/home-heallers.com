@@ -63,6 +63,7 @@ import {
   PiTarget,
   PiWallet,
   PiMapTrifoldDuotone,
+  PiMegaphoneDuotone,
   PiLifebuoyDuotone,
   PiChatTeardropTextDuotone,
 } from 'react-icons/pi';
@@ -232,6 +233,12 @@ export const menuItemsHaydrogen = [
 
   // Journey order: Contact Center → Reservations → Patients → Doctors → Finance → KPIs → Master Data
   { name: 'Contact Center' },
+  {
+    name: 'Campaigns',
+    href: routes.campaigns.index,
+    icon: <PiMegaphoneDuotone />,
+    permissions: 'campaigns',
+  },
   {
     name: 'Inbound',
     href: '/customer-supports-operation-kanban',
