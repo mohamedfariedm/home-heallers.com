@@ -21,8 +21,6 @@ import {
 import { SUPPORT_INBOX_CHANNEL } from '@/lib/support-tickets/realtime';
 import type { SupportTicketsStats } from '@/types/support-tickets';
 import TicketRow from './ticket-row';
-import { useEnsureDefaultDateRange } from '@/hooks/use-ensure-default-date-range';
-import { ensureDefaultDateParams } from '@/utils/default-date-range';
 
 type TabKey =
   | 'open'
@@ -57,12 +55,6 @@ export default function SupportTicketsInbox() {
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
 
-  const { defaults: dateDefaults } = useEnsureDefaultDateRange({
-    mode: 'last10Days',
-    fromKey: 'from',
-    toKey: 'to',
-  });
-
   const tabKey = (searchParams.get('tab') as TabKey) || 'open';
   const tab = TABS.find((x) => x.key === tabKey) ?? TABS[0];
   const page = Number(searchParams.get('page') || 1);
@@ -90,11 +82,6 @@ export default function SupportTicketsInbox() {
     });
     params.set('page', String(page));
     params.set('per_page', String(perPage));
-    ensureDefaultDateParams(params, {
-      mode: 'last10Days',
-      fromKey: 'from',
-      toKey: 'to',
-    });
     return params.toString();
   }, [tab, searchParams, page, perPage]);
 
@@ -216,32 +203,16 @@ export default function SupportTicketsInbox() {
           {t('st_filter_from')}
           <Input
             type="date"
-            value={
-              searchParams.get('from') ??
-              (searchParams.get('all_dates') ? '' : dateDefaults.from)
-            }
-            onChange={(e) =>
-              setParams({
-                from: e.target.value || null,
-                ...(e.target.value ? { all_dates: null } : {}),
-              })
-            }
+            value={searchParams.get('from') ?? ''}
+            onChange={(e) => setParams({ from: e.target.value || null })}
           />
         </label>
         <label className="flex items-center gap-1 text-xs text-gray-600">
           {t('st_filter_to')}
           <Input
             type="date"
-            value={
-              searchParams.get('to') ??
-              (searchParams.get('all_dates') ? '' : dateDefaults.to)
-            }
-            onChange={(e) =>
-              setParams({
-                to: e.target.value || null,
-                ...(e.target.value ? { all_dates: null } : {}),
-              })
-            }
+            value={searchParams.get('to') ?? ''}
+            onChange={(e) => setParams({ to: e.target.value || null })}
           />
         </label>
         <label className="flex h-10 cursor-pointer items-center gap-2 text-sm text-gray-700">
@@ -269,7 +240,7 @@ export default function SupportTicketsInbox() {
               const next = new URLSearchParams(searchParams.toString());
               FILTER_KEYS.forEach((key) => next.delete(key));
               next.delete('page');
-              next.set('all_dates', '1');
+              next.delete('all_dates');
               const qs = next.toString();
               router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
             }}
