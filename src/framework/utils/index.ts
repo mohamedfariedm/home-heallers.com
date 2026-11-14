@@ -212,6 +212,23 @@ class Client {
             },
         }),
         sendWhatsApp: (input: { status: string; message: string }) => HttpClient.post('/customer-supports/send-whatsapp', input),
+        assignableUsers: (param = '') =>
+            HttpClient.get(
+                `${routes.customerSupport.index}/assignable-users${param ? `?${param}` : ''}`
+            ),
+        assign: (input: {
+            id: string | number;
+            assigned_to_id: number | null;
+            note?: string;
+        }) => {
+            const { id, ...body } = input;
+            return HttpClient.post(`${routes.customerSupport.index}/${id}/assign`, body);
+        },
+        bulkAssign: (input: {
+            lead_ids: number[];
+            assigned_to_id: number | null;
+            note?: string;
+        }) => HttpClient.post(`${routes.customerSupport.index}/bulk-assign`, input),
     }
     leadsQualifications = {
         all: (param?: string) =>

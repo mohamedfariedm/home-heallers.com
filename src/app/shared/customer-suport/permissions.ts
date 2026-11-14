@@ -10,6 +10,7 @@ export interface CustomerSupportKanbanPermissions {
   sendWhatsapp: boolean;
   viewDetails: boolean;
   viewActivityLogs: boolean;
+  assign: boolean;
 }
 
 const actionKeysByScope = {
@@ -23,6 +24,7 @@ const actionKeysByScope = {
     sendWhatsapp: 'customer_supports_outbound_whatsapp',
     viewDetails: 'customer_supports_outbound_view_details',
     viewActivityLogs: 'customer_supports_outbound_view_activity_logs',
+    assign: 'customer_supports_outbound_assign',
   },
   operation: {
     base: 'customer_supports_inbound',
@@ -34,6 +36,7 @@ const actionKeysByScope = {
     sendWhatsapp: 'customer_supports_inbound_whatsapp',
     viewDetails: 'customer_supports_inbound_view_details',
     viewActivityLogs: 'customer_supports_inbound_view_activity_logs',
+    assign: 'customer_supports_inbound_assign',
   },
   seo: {
     base: 'customer_supports_seo',
@@ -45,6 +48,7 @@ const actionKeysByScope = {
     sendWhatsapp: 'customer_supports_seo_whatsapp',
     viewDetails: 'customer_supports_seo_view_details',
     viewActivityLogs: 'customer_supports_seo_view_activity_logs',
+    assign: 'customer_supports_seo_assign',
   },
 } as const;
 
@@ -68,5 +72,6 @@ export function resolveCustomerSupportKanbanPermissions(
     sendWhatsapp: hasAny(userPermissions, [keys.sendWhatsapp]),
     viewDetails: hasAny(userPermissions, [keys.viewDetails]),
     viewActivityLogs: hasAny(userPermissions, [keys.viewActivityLogs]),
+    assign: hasAny(userPermissions, [keys.assign]),
   };
 }

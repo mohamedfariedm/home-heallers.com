@@ -13,9 +13,9 @@ export type ModalFormTabItem = {
   hasError?: boolean;
 };
 
-/** Outer form class: fixed modal height, header/tabs/footer stay put */
+/** Outer form class: tall modal so tab panels fit with less inner scroll */
 export const modalFormTabsClassName =
-  'flex h-[85vh] max-h-[85vh] flex-col overflow-hidden';
+  'flex h-[92vh] max-h-[92vh] flex-col overflow-hidden';
 
 export function ModalFormTabPanelCard({
   title,
@@ -99,7 +99,7 @@ export function ModalFormTabs({
         </TabList>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
+      <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
         <TabPanels>{children}</TabPanels>
       </div>
     </Tabs>

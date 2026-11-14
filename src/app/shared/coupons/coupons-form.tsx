@@ -1126,7 +1126,7 @@ export default function CreateOrUpdateCoupon({
           patient_segments: initValues?.patient_segments ?? [],
         },
       }}
-      className="flex h-[85vh] max-h-[85vh] flex-col overflow-hidden"
+      className="flex h-[92vh] max-h-[92vh] flex-col overflow-hidden"
     >
       {({ register, control, watch, setValue, setError, formState: { errors } }) => {
         formMethodsRef.current = { setError };

@@ -18,6 +18,7 @@ import KanbanCardModal from './kanban-card-modal';
 import KanbanCardViewModal from './kanban-card-view-modal';
 import ActivityLogsModal from './activity-logs-modal';
 import LeadsQualificationModal from './leads-qualification-modal';
+import KanbanAssignFlag from './kanban-assign-flag';
 import { useState, useRef } from 'react';
 
 interface KanbanItem {
@@ -58,6 +59,11 @@ interface KanbanCardProps {
   canViewDetails?: boolean;
   canViewActivityLogs?: boolean;
   canViewQualifications?: boolean;
+  canAssign?: boolean;
+  canSelfAssign?: boolean;
+  isAdmin?: boolean;
+  currentUserId?: string | number | null;
+  supportType?: string;
 }
 
 export default function KanbanCard({
@@ -67,6 +73,11 @@ export default function KanbanCard({
   canViewDetails = true,
   canViewActivityLogs = true,
   canViewQualifications = true,
+  canAssign = false,
+  canSelfAssign = false,
+  isAdmin = false,
+  currentUserId = null,
+  supportType,
 }: KanbanCardProps) {
   const { openModal } = useModal();
   const [hasMoved, setHasMoved] = useState(false);
@@ -98,7 +109,13 @@ export default function KanbanCard({
     e.stopPropagation();
     e.preventDefault();
     openModal({
-      view: <KanbanCardModal item={item} canEdit={canEdit} />,
+      view: (
+        <KanbanCardModal
+          item={item}
+          canEdit={canEdit}
+          supportType={supportType}
+        />
+      ),
       customSize: '90vw',
     });
   };
@@ -159,7 +176,13 @@ export default function KanbanCard({
         e.stopPropagation();
         if (canEdit) {
           openModal({
-            view: <KanbanCardModal item={item} canEdit={canEdit} />,
+            view: (
+              <KanbanCardModal
+                item={item}
+                canEdit={canEdit}
+                supportType={supportType}
+              />
+            ),
             customSize: '90vw',
           });
         } else if (canViewDetails) {
@@ -179,7 +202,11 @@ export default function KanbanCard({
       if (!canEdit && !canViewDetails) return;
       openModal({
         view: canEdit ? (
-          <KanbanCardModal item={item} canEdit={canEdit} />
+          <KanbanCardModal
+            item={item}
+            canEdit={canEdit}
+            supportType={supportType}
+          />
         ) : (
           <KanbanCardViewModal item={item} canEdit={canEdit} />
         ),
@@ -320,6 +347,15 @@ export default function KanbanCard({
             Agent: {item.agent_name}
           </p>
         )}
+        <KanbanAssignFlag
+          leadId={item.id}
+          assignedToId={item.assigned_to_id ?? null}
+          assignment={item.assignment ?? null}
+          canAssign={canAssign}
+          canSelfAssign={canSelfAssign}
+          isAdmin={isAdmin}
+          currentUserId={currentUserId}
+        />
       </div>
 
       {/* Card Content */}

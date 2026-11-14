@@ -6,10 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ActionIcon } from '@/components/ui/action-icon';
 import { Title } from '@/components/ui/text';
+import StatusField from '@/components/controlled-table/status-field';
 import ColumnFilterPopover from './column-filter-popover';
 import cn from '@/utils/class-names';
 import dynamic from 'next/dynamic';
 import { usePackages } from '@/framework/packages';
+import { useAssignableUsers } from '@/framework/customer-suport';
 import {
   KANBAN_FILTERABLE_COLUMNS,
   getKanbanFilterColumnLabel,
@@ -20,20 +22,37 @@ const Drawer = dynamic(
   { ssr: false }
 );
 
+export type KanbanAssignmentFilters = {
+  assigned_to_id?: string;
+  assignment_state?: string;
+};
+
 interface KanbanFiltersProps {
-  onFilterChange: (filters: Record<string, any>, dates?: { date_from?: string; date_to?: string }) => void;
+  onFilterChange: (
+    filters: Record<string, any>,
+    dates?: { date_from?: string; date_to?: string },
+    assignment?: KanbanAssignmentFilters
+  ) => void;
   onClearFilters: () => void;
   currentFilters?: Record<string, any>;
   currentDates?: { date_from?: string; date_to?: string };
+  currentAssignment?: KanbanAssignmentFilters;
   /** Range restored on Clear All (page default). */
   defaultDates?: { date_from?: string; date_to?: string };
 }
+
+const ASSIGNMENT_STATE_OPTIONS = [
+  { value: '', name: 'All' },
+  { value: 'assigned', name: 'Assigned' },
+  { value: 'unassigned', name: 'Unassigned' },
+];
 
 export default function KanbanFilters({
   onFilterChange,
   onClearFilters,
   currentFilters = {},
   currentDates,
+  currentAssignment,
   defaultDates,
 }: KanbanFiltersProps) {
   const { data: packagesData, isLoading: offerOptionsLoading } = usePackages('limit=1000');
@@ -51,8 +70,42 @@ export default function KanbanFilters({
   const [filters, setFilters] = useState<Record<string, any>>({});
   const [dateFrom, setDateFrom] = useState(currentDates?.date_from || '');
   const [dateTo, setDateTo] = useState(currentDates?.date_to || '');
+  const [assignedToId, setAssignedToId] = useState(
+    currentAssignment?.assigned_to_id || ''
+  );
+  const [assignmentState, setAssignmentState] = useState(
+    currentAssignment?.assignment_state || ''
+  );
   const [isOpen, setIsOpen] = useState(false);
   const [resetKey, setResetKey] = useState(0);
+
+  const { data: assignableUsers = [], isLoading: assignableUsersLoading } =
+    useAssignableUsers(isOpen);
+
+  const assignToOptions = useMemo(
+    () => [
+      { value: '', name: 'All users' },
+      ...assignableUsers.map((user) => ({
+        value: String(user.id),
+        name:
+          typeof user.open_assigned_count === 'number'
+            ? `${user.name} (${user.open_assigned_count})`
+            : user.name,
+      })),
+    ],
+    [assignableUsers]
+  );
+
+  // Keep assignment badge in sync with URL while the drawer is closed
+  useEffect(() => {
+    if (isOpen) return;
+    setAssignedToId(currentAssignment?.assigned_to_id || '');
+    setAssignmentState(currentAssignment?.assignment_state || '');
+  }, [
+    isOpen,
+    currentAssignment?.assigned_to_id,
+    currentAssignment?.assignment_state,
+  ]);
 
   // Sync local filters with current applied filters when drawer opens
   useEffect(() => {
@@ -65,6 +118,8 @@ export default function KanbanFilters({
     }
     setDateFrom(currentDates?.date_from || '');
     setDateTo(currentDates?.date_to || '');
+    setAssignedToId(currentAssignment?.assigned_to_id || '');
+    setAssignmentState(currentAssignment?.assignment_state || '');
     // Only re-sync when the drawer opens; avoid wiping in-progress edits.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
@@ -77,7 +132,14 @@ export default function KanbanFilters({
   };
 
   const handleApplyFilters = () => {
-    onFilterChange(filters, { date_from: dateFrom, date_to: dateTo });
+    onFilterChange(
+      filters,
+      { date_from: dateFrom, date_to: dateTo },
+      {
+        assigned_to_id: assignedToId || undefined,
+        assignment_state: assignmentState || undefined,
+      }
+    );
     setIsOpen(false);
   };
 
@@ -86,6 +148,8 @@ export default function KanbanFilters({
     setFilters({});
     setDateFrom('');
     setDateTo('');
+    setAssignedToId('');
+    setAssignmentState('');
 
     setResetKey((prev) => prev + 1);
 
@@ -110,19 +174,24 @@ export default function KanbanFilters({
     return result;
   }, [filters, currentFilters]);
 
+  const hasAssignmentFilters = !!assignedToId || !!assignmentState;
+
   const hasActiveFilters =
     Object.keys(mergedFilters).some(
       (key) => mergedFilters[key]?.c1?.value || mergedFilters[key]?.c2?.value
     ) ||
     !!dateFrom ||
-    !!dateTo;
+    !!dateTo ||
+    hasAssignmentFilters;
 
   const activeFilterCount =
     Object.keys(mergedFilters).filter(
       (key) => mergedFilters[key]?.c1?.value || mergedFilters[key]?.c2?.value
     ).length +
     (dateFrom ? 1 : 0) +
-    (dateTo ? 1 : 0);
+    (dateTo ? 1 : 0) +
+    (assignedToId ? 1 : 0) +
+    (assignmentState ? 1 : 0);
 
   return (
     <>
@@ -205,6 +274,88 @@ export default function KanbanFilters({
                   onChange={(e) => setDateTo(e.target.value)}
                   className="w-full"
                   inputClassName="border-gray-200 dark:border-gray-700 focus:ring-[#143087]/20 rounded-lg h-9"
+                />
+              </div>
+            </div>
+
+            {/* Assignment Filters */}
+            <div className="mb-6 grid grid-cols-2 gap-4">
+              <div
+                className={cn(
+                  'rounded-2xl border p-4 shadow-sm transition-colors',
+                  assignmentState
+                    ? 'border-[#143087]/40 bg-blue-50 dark:border-blue-700/50 dark:bg-blue-900/20'
+                    : 'border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-50'
+                )}
+              >
+                <div className="mb-3 flex items-center justify-between">
+                  <label className="text-sm font-semibold text-gray-900 dark:text-gray-900">
+                    Assignment State
+                  </label>
+                  {assignmentState && (
+                    <span className="rounded-full bg-[#143087] px-2 py-0.5 text-xs font-medium text-white">
+                      Active
+                    </span>
+                  )}
+                </div>
+                <StatusField
+                  key={`assignment-state-${resetKey}`}
+                  options={ASSIGNMENT_STATE_OPTIONS}
+                  value={assignmentState}
+                  onChange={(value: string) => {
+                    const next = String(value ?? '');
+                    setAssignmentState(next);
+                    if (next === 'unassigned') setAssignedToId('');
+                  }}
+                  getOptionValue={(option) => option.value}
+                  displayValue={(selected: string) =>
+                    ASSIGNMENT_STATE_OPTIONS.find((o) => o.value === selected)
+                      ?.name ?? 'All'
+                  }
+                  placeholder="All"
+                />
+              </div>
+
+              <div
+                className={cn(
+                  'rounded-2xl border p-4 shadow-sm transition-colors',
+                  assignedToId
+                    ? 'border-[#143087]/40 bg-blue-50 dark:border-blue-700/50 dark:bg-blue-900/20'
+                    : 'border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-50'
+                )}
+              >
+                <div className="mb-3 flex items-center justify-between">
+                  <label className="text-sm font-semibold text-gray-900 dark:text-gray-900">
+                    Assign To
+                  </label>
+                  {assignedToId && (
+                    <span className="rounded-full bg-[#143087] px-2 py-0.5 text-xs font-medium text-white">
+                      Active
+                    </span>
+                  )}
+                </div>
+                <StatusField
+                  key={`assigned-to-${resetKey}`}
+                  options={assignToOptions}
+                  value={assignedToId}
+                  disabled={
+                    assignableUsersLoading || assignmentState === 'unassigned'
+                  }
+                  onChange={(value: string) => {
+                    const next = String(value ?? '');
+                    setAssignedToId(next);
+                    if (next && assignmentState === 'unassigned') {
+                      setAssignmentState('assigned');
+                    }
+                  }}
+                  getOptionValue={(option) => option.value}
+                  displayValue={(selected: string) =>
+                    assignToOptions.find((o) => o.value === selected)?.name ??
+                    'All users'
+                  }
+                  placeholder={
+                    assignableUsersLoading ? 'Loading users...' : 'All users'
+                  }
                 />
               </div>
             </div>

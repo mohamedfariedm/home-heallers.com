@@ -62,6 +62,11 @@ interface CustomerSupportKanbanProps {
   canViewDetails?: boolean;
   canViewActivityLogs?: boolean;
   canViewQualifications?: boolean;
+  canAssign?: boolean;
+  canSelfAssign?: boolean;
+  isAdmin?: boolean;
+  currentUserId?: string | number | null;
+  supportType?: string;
 }
 
 export default function CustomerSupportKanban({
@@ -74,6 +79,11 @@ export default function CustomerSupportKanban({
   canViewDetails = true,
   canViewActivityLogs = true,
   canViewQualifications = true,
+  canAssign = false,
+  canSelfAssign = false,
+  isAdmin = false,
+  currentUserId = null,
+  supportType,
 }: CustomerSupportKanbanProps) {
   const [activeId, setActiveId] = useState<number | null>(null);
   const [oldStatusMap, setOldStatusMap] = useState<Record<number, string>>({});
@@ -324,6 +334,11 @@ export default function CustomerSupportKanban({
               canViewDetails={canViewDetails}
               canViewActivityLogs={canViewActivityLogs}
               canViewQualifications={canViewQualifications}
+              canAssign={canAssign}
+              canSelfAssign={canSelfAssign}
+              isAdmin={isAdmin}
+              currentUserId={currentUserId}
+              supportType={supportType}
               onStatusChange={(itemId, newStatus) =>
                 onStatusChange(itemId, newStatus, column.status)
               }

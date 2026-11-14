@@ -120,3 +120,64 @@ export const useCreateCustomerSupport = () => {
       }
     });
   }
+
+export type AssignableUser = {
+  id: number;
+  name: string;
+  email: string;
+  roles?: string[];
+  is_active?: boolean;
+  is_deleted?: boolean;
+  open_assigned_count?: number;
+};
+
+const unwrapList = <T>(res: any): T[] => {
+  const body =
+    res && typeof res === 'object' && 'status' in res && 'headers' in res
+      ? res.data
+      : res;
+  const data = body?.data ?? body;
+  return Array.isArray(data) ? data : [];
+};
+
+const assignErrorMessage = (error: any, fallback: string) =>
+  error?.response?.data?.message || error?.message || fallback;
+
+export function useAssignableUsers(enabled = true, search = '') {
+  const param = search ? `search=${encodeURIComponent(search)}` : '';
+  return useQuery<AssignableUser[], Error>({
+    queryKey: [routes.customerSupport.index, 'assignable-users', search],
+    queryFn: async () =>
+      unwrapList<AssignableUser>(
+        await client.customerSupport.assignableUsers(param)
+      ),
+    enabled,
+    staleTime: 60_000,
+  });
+}
+
+export const useAssignCustomerSupport = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: {
+      id: string | number;
+      assigned_to_id: number | null;
+      note?: string;
+    }) => client.customerSupport.assign(input),
+    onSuccess: (res: any) => {
+      queryClient.invalidateQueries({
+        queryKey: [routes.customerSupport.index],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [routes.customerSupport.index, 'assignable-users'],
+      });
+      const message =
+        res?.data?.message || res?.message || 'Lead assigned successfully';
+      toast.success(message);
+    },
+    onError: (error: any) => {
+      toast.error(assignErrorMessage(error, 'Failed to update assignment'));
+    },
+  });
+};

@@ -22,11 +22,13 @@ import toast from 'react-hot-toast';
 interface KanbanCardModalProps {
   item: any;
   canEdit?: boolean;
+  supportType?: string;
 }
 
 export default function KanbanCardModal({
   item,
   canEdit = false,
+  supportType: supportTypeProp,
 }: KanbanCardModalProps) {
   const { closeModal } = useModal();
   const { permissions } = usePermissions();
@@ -38,8 +40,8 @@ export default function KanbanCardModal({
   const [isLoadingReservation, setIsLoadingReservation] = useState(false);
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   
-  // Determine type from item or default to 'operation'
-  const supportType = item?.type || 'operation';
+  // Prefer page scope (e.g. marketing), then item type, then inbound default
+  const supportType = supportTypeProp || item?.type || 'operation';
 
   // Function to fetch reservations
   const fetchReservations = async (forceRefresh = false) => {

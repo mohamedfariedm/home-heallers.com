@@ -35,6 +35,11 @@ import {
   ensureDefaultDateParams,
 } from '@/utils/default-date-range';
 import cn from '@/utils/class-names';
+import { useSession } from 'next-auth/react';
+import {
+  isAdminRole,
+  resolveEffectiveRoles,
+} from '@/utils/kpi-export';
 
 const pageHeader = {
   title: 'Inbound Customer Supports',
@@ -62,10 +67,18 @@ export default function CustomerSupportsOperationKanbanPage() {
   const router = useRouter();
   const { openModal } = useModal();
   const { permissions } = usePermissions();
+  const { data: session } = useSession();
   const kanbanPermissions = resolveCustomerSupportKanbanPermissions(
     permissions,
     'operation'
   );
+  const sessionUser = session?.user as
+    | { id?: string | number; roles?: string[] }
+    | undefined;
+  const isAdmin = isAdminRole(
+    resolveEffectiveRoles(sessionUser?.roles ?? [])
+  );
+  const currentUserId = sessionUser?.id ?? null;
 
   const { defaults: dateDefaults, skip: skipDateDefault } =
     useEnsureDefaultDateRange({
@@ -205,7 +218,11 @@ export default function CustomerSupportsOperationKanbanPage() {
     });
   };
 
-  const handleFilterChange = (newFilters: Record<string, any>, dates?: { date_from?: string; date_to?: string }) => {
+  const handleFilterChange = (
+    newFilters: Record<string, any>,
+    dates?: { date_from?: string; date_to?: string },
+    assignment?: { assigned_to_id?: string; assignment_state?: string }
+  ) => {
     setFilters(newFilters);
     setPage(1); // Reset to first page when filters change
 
@@ -231,6 +248,15 @@ export default function CustomerSupportsOperationKanbanPage() {
       if (c2?.value)
         params.set(`${key}_${c2.op}_${logic === 'or' ? 'or' : 'and'}`, c2.value);
     });
+
+    params.delete('assigned_to_id');
+    params.delete('assignment_state');
+    if (assignment?.assigned_to_id) {
+      params.set('assigned_to_id', assignment.assigned_to_id);
+    }
+    if (assignment?.assignment_state) {
+      params.set('assignment_state', assignment.assignment_state);
+    }
 
     params.set('type', KANBAN_TYPE);
     router.push(`?${params.toString()}`, { scroll: false });
@@ -294,6 +320,10 @@ export default function CustomerSupportsOperationKanbanPage() {
                   searchParams.get('date_to') ||
                   (!skipDateDefault ? defaultDates.date_to : undefined),
               }}
+              currentAssignment={{
+                assigned_to_id: searchParams.get('assigned_to_id') || '',
+                assignment_state: searchParams.get('assignment_state') || '',
+              }}
             />
           )}
           {kanbanPermissions.export && (
@@ -341,6 +371,10 @@ export default function CustomerSupportsOperationKanbanPage() {
               canViewQualifications={
                 kanbanPermissions.update || kanbanPermissions.moveStatus
               }
+              canAssign={kanbanPermissions.assign}
+              canSelfAssign={kanbanPermissions.assign}
+              isAdmin={isAdmin}
+              currentUserId={currentUserId}
             />
           </div>
 

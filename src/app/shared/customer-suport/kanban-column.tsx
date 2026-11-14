@@ -48,6 +48,11 @@ interface KanbanColumnProps {
   canViewDetails?: boolean;
   canViewActivityLogs?: boolean;
   canViewQualifications?: boolean;
+  canAssign?: boolean;
+  canSelfAssign?: boolean;
+  isAdmin?: boolean;
+  currentUserId?: string | number | null;
+  supportType?: string;
 }
 
 const columnColors: Record<
@@ -99,6 +104,11 @@ export default function KanbanColumn({
   canViewDetails = true,
   canViewActivityLogs = true,
   canViewQualifications = true,
+  canAssign = false,
+  canSelfAssign = false,
+  isAdmin = false,
+  currentUserId = null,
+  supportType,
 }: KanbanColumnProps) {
   const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
   const { setNodeRef, isOver } = useDroppable({
@@ -174,6 +184,11 @@ export default function KanbanColumn({
                   canViewDetails={canViewDetails}
                   canViewActivityLogs={canViewActivityLogs}
                   canViewQualifications={canViewQualifications}
+                  canAssign={canAssign}
+                  canSelfAssign={canSelfAssign}
+                  isAdmin={isAdmin}
+                  currentUserId={currentUserId}
+                  supportType={supportType}
                 />
               ))}
             </div>
