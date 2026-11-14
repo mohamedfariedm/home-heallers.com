@@ -93,6 +93,7 @@ export const getColumns = ({
             view={<FaqForm initValues={row} />}
             label=""
             className="m-0 bg-transparent p-0 text-gray-700"
+            customSize="960px"
           />
         </Tooltip>
         <DeletePopover

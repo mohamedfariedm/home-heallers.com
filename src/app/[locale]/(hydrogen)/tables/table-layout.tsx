@@ -44,7 +44,7 @@ export default function TableLayout({
   importButton,
   createName,
   isLoading,
-  customSize,
+  customSize = '960px',
   role,
   type,
   canExport = true,

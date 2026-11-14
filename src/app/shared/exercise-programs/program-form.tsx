@@ -1,9 +1,4 @@
 'use client';
-import {
-  ModalFormHeader,
-  ModalFormFooter,
-  modalFormClassName,
-} from '@/components/ui/modal-form-shell';
 
 import { useMemo, useState } from 'react';
 import {
@@ -15,14 +10,28 @@ import {
   type UseFormRegister,
   type UseFormSetValue,
 } from 'react-hook-form';
-import { PiPlusBold, PiTrashDuotone, PiXBold } from 'react-icons/pi';
-import { Switch, Textarea, Checkbox } from 'rizzui';
+import {
+  PiPlusBold,
+  PiTrashDuotone,
+  PiXBold,
+  PiClipboardText,
+  PiBarbell,
+  PiGearSix,
+} from 'react-icons/pi';
+import { Switch, Textarea, Checkbox, ActionIcon } from 'rizzui';
 import { Form } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Title, Text } from '@/components/ui/text';
+import { Text } from '@/components/ui/text';
 import SelectBox, { type SelectOption } from '@/components/ui/select';
-import Spinner from '@/components/ui/spinner';
+import {
+  ModalFormTabs,
+  ModalFormTabPanel,
+  ModalFormTabPanelCard,
+  ModalFormTabsFooter,
+  modalFormTabsClassName,
+  type ModalFormTabItem,
+} from '@/components/ui/modal-form-tabs';
 import { useModal } from '@/app/shared/modal-views/use-modal';
 import { useDoctors } from '@/framework/doctors';
 import {
@@ -40,6 +49,49 @@ import {
 } from '@/utils/validators/exercise-program-form.schema';
 import { resolveLocalizedName } from '@/utils/resolve-localized-name';
 import type { ExerciseProgram } from '@/types/admin-exercise-programs';
+
+type ProgramTabId = 'program' | 'exercises' | 'settings';
+
+const PROGRAM_TABS: {
+  id: ProgramTabId;
+  label: string;
+  icon: typeof PiClipboardText;
+}[] = [
+  { id: 'program', label: 'Program', icon: PiClipboardText },
+  { id: 'exercises', label: 'Exercises', icon: PiBarbell },
+  { id: 'settings', label: 'Settings', icon: PiGearSix },
+];
+
+const PROGRAM_ERROR_KEYS = [
+  'doctor_id',
+  'client_id',
+  'reservation_date_id',
+  'title',
+  'instructions',
+  'start_date',
+  'end_date',
+];
+const EXERCISES_ERROR_KEYS = ['items'];
+const SETTINGS_ERROR_KEYS = ['send_after_save'];
+
+function programTabHasErrors(
+  tabId: ProgramTabId,
+  errors: FieldErrors<ExerciseProgramFormInput> | Record<string, unknown>
+): boolean {
+  const has = (keys: string[]) =>
+    keys.some((key) => Boolean((errors as Record<string, unknown>)?.[key]));
+
+  switch (tabId) {
+    case 'program':
+      return has(PROGRAM_ERROR_KEYS);
+    case 'exercises':
+      return has(EXERCISES_ERROR_KEYS);
+    case 'settings':
+      return has(SETTINGS_ERROR_KEYS);
+    default:
+      return false;
+  }
+}
 
 function selectedOption(options: SelectOption[], value?: string | null) {
   return (
@@ -133,9 +185,9 @@ function ProgramItemsEditor({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <Title as="h5" className="font-semibold">
+        <Text className="text-sm font-semibold text-gray-900">
           Exercise items
-        </Title>
+        </Text>
         <Button
           type="button"
           size="sm"
@@ -285,6 +337,7 @@ export default function CreateOrUpdateExerciseProgram({
   const { data: doctorsData, isLoading: doctorsLoading } = useDoctors(
     'page=1&limit=200'
   );
+  const [activeTab, setActiveTab] = useState(0);
 
   const [doctorId, setDoctorId] = useState(
     initValues?.doctor_id ? String(initValues.doctor_id) : ''
@@ -362,17 +415,21 @@ export default function CreateOrUpdateExerciseProgram({
     }
   };
 
-  if (isCreating || isUpdating) {
-    return (
-      <div className="m-auto p-10">
-        <Spinner size="lg" />
-      </div>
+  const onInvalid = (formErrors: FieldErrors<ExerciseProgramFormInput>) => {
+    const tabIndex = PROGRAM_TABS.findIndex((tab) =>
+      programTabHasErrors(tab.id, formErrors)
     );
-  }
+    if (tabIndex >= 0) setActiveTab(tabIndex);
+  };
+
+  const goToTab = (index: number) => {
+    setActiveTab(Math.max(0, Math.min(PROGRAM_TABS.length - 1, index)));
+  };
 
   return (
     <Form<ExerciseProgramFormInput>
       onSubmit={onSubmit}
+      onInvalid={onInvalid}
       validationSchema={exerciseProgramFormSchema}
       useFormProps={{
         defaultValues: {
@@ -412,7 +469,7 @@ export default function CreateOrUpdateExerciseProgram({
             : [emptyItem()],
         },
       }}
-      className="flex flex-grow flex-col gap-5 p-6"
+      className={modalFormTabsClassName}
     >
       {({
         register,
@@ -429,174 +486,244 @@ export default function CreateOrUpdateExerciseProgram({
       }) => {
         const watchedDoctorId = String(watch('doctor_id') || doctorId || '');
         const watchedClientId = String(watch('client_id') || clientId || '');
+        const tabsWithErrors: ModalFormTabItem[] = PROGRAM_TABS.map((tab) => ({
+          ...tab,
+          hasError: programTabHasErrors(tab.id, errors),
+        }));
 
         return (
           <>
-            <div className="flex items-center justify-between">
-              <Title as="h4" className="font-semibold">
-                {initValues
-                  ? 'Update Exercise Program'
-                  : 'Create Exercise Program'}
-              </Title>
-              <Button variant="text" onClick={closeModal}>
+            <div className="flex shrink-0 items-center justify-between border-b border-gray-100 px-6 py-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#143087] to-[#39519B] shadow">
+                  <PiClipboardText className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <h4 className="text-lg font-bold text-gray-900">
+                    {initValues
+                      ? 'Update Exercise Program'
+                      : 'Create Exercise Program'}
+                  </h4>
+                  <p className="mt-0.5 text-xs text-gray-400">
+                    Fill each tab — save stays available on every step
+                  </p>
+                </div>
+              </div>
+              <ActionIcon
+                size="sm"
+                variant="outline"
+                onClick={closeModal}
+                className="rounded-lg border-gray-200 text-gray-500 hover:border-[#143087]/40 hover:bg-blue-50 hover:text-[#143087]"
+              >
                 <PiXBold className="h-4 w-4" />
-              </Button>
+              </ActionIcon>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Controller
-                name="doctor_id"
-                control={control}
-                render={({ field: { value, onChange } }) => (
-                  <SelectBox
-                    label="Doctor"
-                    placeholder="Select doctor"
-                    options={doctorOptions}
-                    value={selectedOption(doctorOptions, value)}
-                    onChange={(option: SelectOption) => {
-                      const next = option?.value ? String(option.value) : '';
-                      onChange(next);
-                      setDoctorId(next);
-                      if (!initValues) {
-                        setClientId('');
-                        setValue('client_id', '');
-                        setValue('reservation_date_id', '');
-                      }
-                    }}
-                    disabled={doctorsLoading || Boolean(initValues)}
-                    error={errors.doctor_id?.message}
-                    displayValue={(option: SelectOption) =>
-                      option?.label ?? option?.name ?? ''
-                    }
-                  />
-                )}
-              />
-
-              <Controller
-                name="client_id"
-                control={control}
-                render={({ field: { value, onChange } }) => (
-                  <SelectBox
-                    label="Patient"
-                    placeholder={
-                      watchedDoctorId
-                        ? 'Select patient'
-                        : 'Select a doctor first'
-                    }
-                    options={clientOptions}
-                    value={selectedOption(clientOptions, value)}
-                    onChange={(option: SelectOption) => {
-                      const next = option?.value ? String(option.value) : '';
-                      onChange(next);
-                      setClientId(next);
-                      if (!initValues) {
-                        setValue('reservation_date_id', '');
-                      }
-                    }}
-                    disabled={
-                      !watchedDoctorId || clientsLoading || Boolean(initValues)
-                    }
-                    error={errors.client_id?.message}
-                    displayValue={(option: SelectOption) =>
-                      option?.label ?? option?.name ?? ''
-                    }
-                  />
-                )}
-              />
-
-              <Controller
-                name="reservation_date_id"
-                control={control}
-                render={({ field: { value, onChange } }) => (
-                  <SelectBox
-                    label="Session"
-                    placeholder={
-                      watchedClientId
-                        ? 'Select session'
-                        : 'Select a patient first'
-                    }
-                    options={sessionOptions}
-                    value={selectedOption(sessionOptions, value)}
-                    onChange={(option: SelectOption) =>
-                      onChange(option?.value ? String(option.value) : '')
-                    }
-                    disabled={
-                      !watchedClientId ||
-                      sessionsLoading ||
-                      Boolean(initValues)
-                    }
-                    error={errors.reservation_date_id?.message}
-                    displayValue={(option: SelectOption) =>
-                      option?.label ?? option?.name ?? ''
-                    }
-                  />
-                )}
-              />
-
-              <Input
-                label="Title"
-                {...register('title')}
-                error={errors.title?.message}
-              />
-            </div>
-
-            <Textarea
-              label="Instructions"
-              rows={3}
-              {...register('instructions')}
-              error={errors.instructions?.message}
-            />
-
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Input
-                label="Start date"
-                type="date"
-                {...register('start_date')}
-                error={errors.start_date?.message}
-              />
-              <Input
-                label="End date"
-                type="date"
-                {...register('end_date')}
-                error={errors.end_date?.message}
-              />
-            </div>
-
-            <ProgramItemsEditor
-              control={control}
-              register={register}
-              errors={errors}
-              doctorId={watchedDoctorId}
-            />
-
-            {!initValues && (
-              <Controller
-                name="send_after_save"
-                control={control}
-                render={({ field: { value, onChange } }) => (
-                  <div>
-                    <Switch
-                      label="Send to patient now"
-                      checked={Boolean(value)}
-                      onChange={onChange}
+            <ModalFormTabs
+              tabs={tabsWithErrors}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+            >
+              <ModalFormTabPanel>
+                <div className="space-y-5">
+                  <ModalFormTabPanelCard
+                    title="Assignment"
+                    description="Doctor, patient, and session"
+                  >
+                    <Controller
+                      name="doctor_id"
+                      control={control}
+                      render={({ field: { value, onChange } }) => (
+                        <SelectBox
+                          label="Doctor"
+                          placeholder="Select doctor"
+                          options={doctorOptions}
+                          value={selectedOption(doctorOptions, value)}
+                          onChange={(option: SelectOption) => {
+                            const next = option?.value
+                              ? String(option.value)
+                              : '';
+                            onChange(next);
+                            setDoctorId(next);
+                            if (!initValues) {
+                              setClientId('');
+                              setValue('client_id', '');
+                              setValue('reservation_date_id', '');
+                            }
+                          }}
+                          disabled={doctorsLoading || Boolean(initValues)}
+                          error={errors.doctor_id?.message}
+                          displayValue={(option: SelectOption) =>
+                            option?.label ?? option?.name ?? ''
+                          }
+                        />
+                      )}
                     />
-                    <Text className="mt-1 text-xs text-gray-500">
-                      Off saves as draft (patient cannot see it). On creates and
-                      sends immediately.
-                    </Text>
-                  </div>
-                )}
-              />
-            )}
 
-            <div className="mt-2 flex justify-end gap-3">
-              <Button variant="outline" onClick={closeModal}>
-                Cancel
-              </Button>
-              <Button type="submit" isLoading={isCreating || isUpdating}>
-                {initValues ? 'Update Program' : 'Create Program'}
-              </Button>
-            </div>
+                    <Controller
+                      name="client_id"
+                      control={control}
+                      render={({ field: { value, onChange } }) => (
+                        <SelectBox
+                          label="Patient"
+                          placeholder={
+                            watchedDoctorId
+                              ? 'Select patient'
+                              : 'Select a doctor first'
+                          }
+                          options={clientOptions}
+                          value={selectedOption(clientOptions, value)}
+                          onChange={(option: SelectOption) => {
+                            const next = option?.value
+                              ? String(option.value)
+                              : '';
+                            onChange(next);
+                            setClientId(next);
+                            if (!initValues) {
+                              setValue('reservation_date_id', '');
+                            }
+                          }}
+                          disabled={
+                            !watchedDoctorId ||
+                            clientsLoading ||
+                            Boolean(initValues)
+                          }
+                          error={errors.client_id?.message}
+                          displayValue={(option: SelectOption) =>
+                            option?.label ?? option?.name ?? ''
+                          }
+                        />
+                      )}
+                    />
+
+                    <Controller
+                      name="reservation_date_id"
+                      control={control}
+                      render={({ field: { value, onChange } }) => (
+                        <SelectBox
+                          label="Session"
+                          placeholder={
+                            watchedClientId
+                              ? 'Select session'
+                              : 'Select a patient first'
+                          }
+                          options={sessionOptions}
+                          value={selectedOption(sessionOptions, value)}
+                          onChange={(option: SelectOption) =>
+                            onChange(
+                              option?.value ? String(option.value) : ''
+                            )
+                          }
+                          disabled={
+                            !watchedClientId ||
+                            sessionsLoading ||
+                            Boolean(initValues)
+                          }
+                          error={errors.reservation_date_id?.message}
+                          displayValue={(option: SelectOption) =>
+                            option?.label ?? option?.name ?? ''
+                          }
+                        />
+                      )}
+                    />
+
+                    <Input
+                      label="Title"
+                      {...register('title')}
+                      error={errors.title?.message}
+                    />
+                  </ModalFormTabPanelCard>
+
+                  <ModalFormTabPanelCard
+                    title="Schedule & instructions"
+                    description="Optional date range and program notes"
+                    contentClassName="sm:grid-cols-2"
+                  >
+                    <div className="sm:col-span-2">
+                      <Textarea
+                        label="Instructions"
+                        rows={3}
+                        {...register('instructions')}
+                        error={errors.instructions?.message}
+                      />
+                    </div>
+                    <Input
+                      label="Start date"
+                      type="date"
+                      {...register('start_date')}
+                      error={errors.start_date?.message}
+                    />
+                    <Input
+                      label="End date"
+                      type="date"
+                      {...register('end_date')}
+                      error={errors.end_date?.message}
+                    />
+                  </ModalFormTabPanelCard>
+                </div>
+              </ModalFormTabPanel>
+
+              <ModalFormTabPanel>
+                <div className="space-y-5">
+                  <ModalFormTabPanelCard
+                    title="Exercises"
+                    description="Add sets, reps, days, and notes per exercise"
+                    contentClassName="sm:grid-cols-1"
+                  >
+                    <ProgramItemsEditor
+                      control={control}
+                      register={register}
+                      errors={errors}
+                      doctorId={watchedDoctorId}
+                    />
+                  </ModalFormTabPanelCard>
+                </div>
+              </ModalFormTabPanel>
+
+              <ModalFormTabPanel>
+                <div className="space-y-5">
+                  <ModalFormTabPanelCard
+                    title="Delivery"
+                    description="How the program is saved for the patient"
+                    contentClassName="sm:grid-cols-1"
+                  >
+                    {!initValues ? (
+                      <Controller
+                        name="send_after_save"
+                        control={control}
+                        render={({ field: { value, onChange } }) => (
+                          <div>
+                            <Switch
+                              label="Send to patient now"
+                              checked={Boolean(value)}
+                              onChange={onChange}
+                            />
+                            <Text className="mt-1 text-xs text-gray-500">
+                              Off saves as draft (patient cannot see it). On
+                              creates and sends immediately.
+                            </Text>
+                          </div>
+                        )}
+                      />
+                    ) : (
+                      <Text className="text-sm text-gray-500">
+                        Draft programs can be sent from the list after saving.
+                      </Text>
+                    )}
+                  </ModalFormTabPanelCard>
+                </div>
+              </ModalFormTabPanel>
+            </ModalFormTabs>
+
+            <ModalFormTabsFooter
+              activeTab={activeTab}
+              tabCount={PROGRAM_TABS.length}
+              onPrev={() => goToTab(activeTab - 1)}
+              onNext={() => goToTab(activeTab + 1)}
+              onCancel={closeModal}
+              isLoading={isCreating || isUpdating}
+              submitLabel={initValues ? 'Update Program' : 'Create Program'}
+            />
           </>
         );
       }}

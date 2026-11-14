@@ -1,24 +1,35 @@
 'use client';
-import {
-  ModalFormHeader,
-  ModalFormFooter,
-  modalFormClassName,
-} from '@/components/ui/modal-form-shell';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   useForm,
   type SubmitHandler,
   Controller,
   useWatch,
+  type FieldErrors,
 } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
-import { PiXBold } from 'react-icons/pi';
+import {
+  PiXBold,
+  PiUser,
+  PiCalendarBlank,
+  PiCurrencyDollar,
+  PiNotePencil,
+  PiClock,
+} from 'react-icons/pi';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { ActionIcon } from 'rizzui';
+import {
+  ModalFormTabs,
+  ModalFormTabPanel,
+  ModalFormTabPanelCard,
+  ModalFormTabsFooter,
+  modalFormTabsClassName,
+  type ModalFormTabItem,
+} from '@/components/ui/modal-form-tabs';
 import { useModal } from '../modal-views/use-modal';
 import {
   useCreateReservation,
@@ -139,6 +150,96 @@ const firstErrorMessage = (
   return null;
 };
 
+type ReservationTabId =
+  | 'patient'
+  | 'booking'
+  | 'billing'
+  | 'details'
+  | 'sessions';
+
+const RESERVATION_TABS: {
+  id: ReservationTabId;
+  label: string;
+  icon: typeof PiUser;
+}[] = [
+  { id: 'patient', label: 'Patient', icon: PiUser },
+  { id: 'booking', label: 'Booking', icon: PiCalendarBlank },
+  { id: 'billing', label: 'Billing', icon: PiCurrencyDollar },
+  { id: 'details', label: 'Details', icon: PiNotePencil },
+  { id: 'sessions', label: 'Sessions', icon: PiClock },
+];
+
+const PATIENT_ERROR_KEYS = [
+  'reservation_type',
+  'patient_id',
+  'patient_name',
+  'patient_email',
+  'patient_national_id',
+  'patient_gender',
+  'patient_country',
+  'patient_mobile',
+  'patient_city',
+  'patient_state',
+  'patient_date_of_birth',
+];
+
+const BOOKING_ERROR_KEYS = [
+  'service_id',
+  'doctor_id',
+  'category_id',
+  'address_city',
+  'address_state',
+  'address_link',
+];
+
+const BILLING_ERROR_KEYS = [
+  'sessions_count',
+  'session_price',
+  'sub_total',
+  'fees',
+  'fees_type',
+  'remaining_payment',
+  'total_amount',
+  'transaction_reference',
+  'customer_tier',
+  'cc',
+  'source_campaign',
+  'center_id',
+  'paid',
+];
+
+const DETAILS_ERROR_KEYS = [
+  'status',
+  'status_reason',
+  'pain_location',
+  'notes',
+  'operation_notes',
+  'rework',
+];
+
+function reservationTabHasErrors(
+  tabId: ReservationTabId,
+  errors: FieldErrors<ReservationFormInput> | Record<string, unknown>
+): boolean {
+  const has = (keys: string[]) =>
+    keys.some((key) => Boolean((errors as Record<string, unknown>)?.[key]));
+
+  switch (tabId) {
+    case 'patient':
+      return has(PATIENT_ERROR_KEYS);
+    case 'booking':
+      return has(BOOKING_ERROR_KEYS);
+    case 'billing':
+      return has(BILLING_ERROR_KEYS);
+    case 'details':
+      return has(DETAILS_ERROR_KEYS);
+    case 'sessions':
+      return Boolean((errors as Record<string, unknown>)?.dates);
+    default:
+      return false;
+  }
+}
+
 // The API serialises stored (UTC) datetimes as ISO; the backend stores "Y-m-d H:i:s".
 const toStoredDateTime = (iso?: string | null) =>
   typeof iso === 'string' ? iso.replace('T', ' ').slice(0, 19) : undefined;
@@ -191,6 +292,8 @@ export default function CreateOrUpdateReservation({
   onSuccess?: () => void;
 }) {
   const { permissions } = usePermissions();
+
+  const [activeTab, setActiveTab] = useState(0);
 
   // ── Cascading location state ──────────────────────────────────
   const [selectedCountryId, setSelectedCountryId] = useState<number | null>(null);
@@ -421,6 +524,10 @@ export default function CreateOrUpdateReservation({
   const onInvalid = (formErrors: any) => {
     // eslint-disable-next-line no-console
     console.log('Reservation Form Submit Errors:', formErrors);
+    const tabIndex = RESERVATION_TABS.findIndex((tab) =>
+      reservationTabHasErrors(tab.id, formErrors)
+    );
+    if (tabIndex >= 0) setActiveTab(tabIndex);
     const first = firstErrorMessage(formErrors);
     toast.error(
       first
@@ -428,7 +535,19 @@ export default function CreateOrUpdateReservation({
         : 'Reservation not saved — please check the form fields.'
     );
   };
-  const lang: 'en' | 'ar' = 'en';
+
+  const goToTab = (index: number) => {
+    setActiveTab(Math.max(0, Math.min(RESERVATION_TABS.length - 1, index)));
+  };
+
+  const tabsWithErrors: ModalFormTabItem[] = useMemo(
+    () =>
+      RESERVATION_TABS.map((tab) => ({
+        ...tab,
+        hasError: reservationTabHasErrors(tab.id, errors),
+      })),
+    [errors]
+  );
 
   // Pretty badge (same mapping as table) for live preview
   function CustomerTierBadge({ value }: { value?: string }) {
@@ -876,724 +995,283 @@ export default function CreateOrUpdateReservation({
   ) : (
     <form
       onSubmit={handleSubmit(onSubmit as any, onInvalid)}
-      className="flex flex-grow flex-col gap-6 overflow-y-auto p-6"
+      className={modalFormTabsClassName}
     >
       <input type="hidden" {...register('reservation_source')} />
-      <div className="flex items-center justify-between">
-        <h4 className="text-lg font-semibold">
-          {initValues ? 'Update Reservation' : 'Create Reservation'}
-        </h4>
-        <ActionIcon size="sm" variant="text" onClick={closeModal}>
-          <PiXBold className="h-auto w-5" />
+
+      <div className="flex shrink-0 items-center justify-between border-b border-gray-100 px-6 py-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#143087] to-[#39519B] shadow">
+            <PiCalendarBlank className="h-5 w-5 text-white" />
+          </div>
+          <div>
+            <h4 className="text-lg font-bold text-gray-900">
+              {initValues ? 'Update Reservation' : 'Create Reservation'}
+            </h4>
+            <p className="mt-0.5 text-xs text-gray-400">
+              Fill each tab — save stays available on every step
+            </p>
+          </div>
+        </div>
+        <ActionIcon
+          size="sm"
+          variant="outline"
+          onClick={closeModal}
+          className="rounded-lg border-gray-200 text-gray-500 hover:border-[#143087]/40 hover:bg-blue-50 hover:text-[#143087]"
+        >
+          <PiXBold className="h-4 w-4" />
         </ActionIcon>
       </div>
 
-      {/* Reservation Type Radios - Controller ensures immediate updates */}
-      {!initValues && !hasExistingReservations && (
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">
-            Reservation Type
-          </label>
-          <Controller
-            name="reservation_type"
-            control={control}
-            render={({ field: { value, onChange } }) => (
-              <div className="flex gap-4">
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    value="guest"
-                    checked={value === 'guest'}
-                    onChange={() => onChange('guest')}
-                    className="h-4 w-4"
-                  />
-                  <span className="text-sm">Guest Reservation</span>
-                </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    value="existing"
-                    checked={value === 'existing'}
-                    onChange={() => onChange('existing')}
-                    className="h-4 w-4"
-                  />
-                  <span className="text-sm">Existing Patient</span>
-                </label>
-              </div>
-            )}
-          />
-        </div>
-      )}
-
-      {reservationType === 'guest' ? (
-        // key forces a remount so the very first toggle always re-renders fresh
-        <div key="guest" className="space-y-4 border-l-4 border-[#143087] pl-4">
-          <h5 className="text-sm font-semibold">Guest Patient Information</h5>
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              label={`Patient Name${isGuestCreate ? ' *' : ''}`}
-              {...inputProps}
-              placeholder="e.g., أحمد محمد"
-              {...register('patient_name', {
-                required: isGuestCreate ? 'Patient Name is required' : false,
-              })}
-              error={errors.patient_name?.message}
-            />
-            <Input
-              label={`Patient Email${reservationType === 'guest' ? ' *' : ''}`}
-              type="email"
-              {...inputProps}
-              placeholder="e.g., ah1med@example.com"
-              {...register('patient_email', {
-                required: reservationType === 'guest' ? 'Patient Email is required' : false,
-                validate: (val) => {
-                  if (reservationType !== 'guest' || !val) return true;
-                  // basic email check
-                  return /\S+@\S+\.\S+/.test(val) || 'Enter a valid email';
-                },
-              })}
-              error={errors.patient_email?.message}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              label={`National ID${isGuestCreate ? ' *' : ''}`}
-              {...inputProps}
-              placeholder="e.g., 12134567890"
-              {...register('patient_national_id', {
-                required: isGuestCreate ? 'National ID is required' : false,
-              })}
-              error={errors.patient_national_id?.message}
-            />
-            <div>
-              <label className="text-sm text-gray-700">Gender</label>
-              <select
-                {...inputProps}
-                {...register('patient_gender')}
-                className="w-full rounded-lg border border-gray-300 p-2"
+      <ModalFormTabs
+        tabs={tabsWithErrors}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      >
+        {/* ── Patient ── */}
+        <ModalFormTabPanel>
+          <div className="space-y-5">
+            {!initValues && !hasExistingReservations && (
+              <ModalFormTabPanelCard
+                title="Reservation type"
+                description="Guest walk-in or an existing patient record"
+                contentClassName="sm:grid-cols-1"
               >
-                {genderOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
+                <Controller
+                  name="reservation_type"
+                  control={control}
+                  render={({ field: { value, onChange } }) => (
+                    <div className="flex flex-wrap gap-4">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          value="guest"
+                          checked={value === 'guest'}
+                          onChange={() => onChange('guest')}
+                          className="h-4 w-4"
+                        />
+                        <span className="text-sm">Guest Reservation</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          value="existing"
+                          checked={value === 'existing'}
+                          onChange={() => onChange('existing')}
+                          className="h-4 w-4"
+                        />
+                        <span className="text-sm">Existing Patient</span>
+                      </label>
+                    </div>
+                  )}
+                />
+              </ModalFormTabPanelCard>
+            )}
 
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              {...inputProps}
-              label={`Mobile${isGuestCreate ? ' *' : ''}`}
-              placeholder="e.g., 05101234567"
-              {...register('patient_mobile', {
-                required: isGuestCreate ? 'Mobile is required' : false,
-              })}
-              error={errors.patient_mobile?.message}
-            />
-            <Input
-              {...inputProps}
-              label={`Date of Birth${isGuestCreate ? ' *' : ''}`}
-              type="date"
-              {...register('patient_date_of_birth', {
-                required: isGuestCreate ? 'Date of Birth is required' : false,
-              })}
-              error={errors.patient_date_of_birth?.message}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm text-gray-700">Country</label>
-              <Controller
-                name="patient_country"
-                control={control}
-                render={({ field: { value, onChange } }) => (
+            {reservationType === 'guest' ? (
+              <ModalFormTabPanelCard
+                key="guest"
+                title="Guest patient information"
+                description="Contact and identity details for a guest booking"
+              >
+                <Input
+                  label={`Patient Name${isGuestCreate ? ' *' : ''}`}
+                  {...inputProps}
+                  placeholder="e.g., أحمد محمد"
+                  {...register('patient_name', {
+                    required: isGuestCreate ? 'Patient Name is required' : false,
+                  })}
+                  error={errors.patient_name?.message}
+                />
+                <Input
+                  label={`Patient Email${reservationType === 'guest' ? ' *' : ''}`}
+                  type="email"
+                  {...inputProps}
+                  placeholder="e.g., ah1med@example.com"
+                  {...register('patient_email', {
+                    required:
+                      reservationType === 'guest'
+                        ? 'Patient Email is required'
+                        : false,
+                    validate: (val) => {
+                      if (reservationType !== 'guest' || !val) return true;
+                      return /\S+@\S+\.\S+/.test(val) || 'Enter a valid email';
+                    },
+                  })}
+                  error={errors.patient_email?.message}
+                />
+                <Input
+                  label={`National ID${isGuestCreate ? ' *' : ''}`}
+                  {...inputProps}
+                  placeholder="e.g., 12134567890"
+                  {...register('patient_national_id', {
+                    required: isGuestCreate ? 'National ID is required' : false,
+                  })}
+                  error={errors.patient_national_id?.message}
+                />
+                <div>
+                  <label className="text-sm text-gray-700">Gender</label>
                   <select
                     {...inputProps}
-                    value={value || ''}
-                    onChange={(e) => {
-                      const opt = e.target.options[e.target.selectedIndex];
-                      onChange(e.target.value);
-                      setSelectedCountryId(opt.dataset.id ? Number(opt.dataset.id) : null);
-                      // Reset dependent fields
-                      setValue('address_city', '');
-                      setValue('address_state', '');
-                      setSelectedCityId(null);
-                    }}
-                    disabled={isCountriesLoading || !canEdit}
+                    {...register('patient_gender')}
                     className="w-full rounded-lg border border-gray-300 p-2"
                   >
-                    <option value="">
-                      {isCountriesLoading ? 'Loading countries...' : 'Select Country'}
-                    </option>
-                    {activeCountries.map((country: any) => {
-                      const label = getName(country.name);
-                      return (
-                        <option
-                          key={country.id}
-                          value={label}
-                          data-id={country.id}
-                        >
-                          {label}
+                    {genderOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <Input
+                  {...inputProps}
+                  label={`Mobile${isGuestCreate ? ' *' : ''}`}
+                  placeholder="e.g., 05101234567"
+                  {...register('patient_mobile', {
+                    required: isGuestCreate ? 'Mobile is required' : false,
+                  })}
+                  error={errors.patient_mobile?.message}
+                />
+                <Input
+                  {...inputProps}
+                  label={`Date of Birth${isGuestCreate ? ' *' : ''}`}
+                  type="date"
+                  {...register('patient_date_of_birth', {
+                    required: isGuestCreate ? 'Date of Birth is required' : false,
+                  })}
+                  error={errors.patient_date_of_birth?.message}
+                />
+                <div>
+                  <label className="text-sm text-gray-700">Country</label>
+                  <Controller
+                    name="patient_country"
+                    control={control}
+                    render={({ field: { value, onChange } }) => (
+                      <select
+                        {...inputProps}
+                        value={value || ''}
+                        onChange={(e) => {
+                          const opt = e.target.options[e.target.selectedIndex];
+                          onChange(e.target.value);
+                          setSelectedCountryId(
+                            opt.dataset.id ? Number(opt.dataset.id) : null
+                          );
+                          setValue('address_city', '');
+                          setValue('address_state', '');
+                          setSelectedCityId(null);
+                        }}
+                        disabled={isCountriesLoading || !canEdit}
+                        className="w-full rounded-lg border border-gray-300 p-2"
+                      >
+                        <option value="">
+                          {isCountriesLoading
+                            ? 'Loading countries...'
+                            : 'Select Country'}
                         </option>
-                      );
-                    })}
-                  </select>
-                )}
-              />
-              {errors.patient_country && (
-                <p className="text-sm text-red-500">{errors.patient_country.message}</p>
-              )}
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div key="existing">
-          <label className="text-sm text-gray-700">
-            Select Existing Patient
-          </label>
-          <select
-            {...inputProps}
-            {...register('patient_id')}
-            className="w-full rounded-lg border border-gray-300 p-2"
-            disabled={isPatientsLoading || !canEdit}
-          >
-            <option value="">
-              {isPatientsLoading ? 'Loading patients...' : 'Select Patient'}
-            </option>
-            {patients?.data?.map((patient: any) => (
-              <option key={patient.id} value={String(patient.id)}>
-                {getName(patient.name) || `Patient #${patient.id}`}
-              </option>
-            ))}
-          </select>
-          {errors.patient_id && (
-            <p className="text-sm text-red-500">{errors.patient_id.message}</p>
-          )}
-        </div>
-      )}
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="text-sm text-gray-700">Service</label>
-          <select
-            {...register('service_id')}
-            className="w-full rounded-lg border border-gray-300 p-2"
-            disabled={isServicesLoading || !canEdit}
-          >
-            <option value="">
-              {isServicesLoading ? 'Loading services...' : 'Select Service'}
-            </option>
-            {withSelectedRecord(
-              asRecordList(services?.data ?? services),
-              loadedService,
-              watch('service_id')
-            ).map((service: any) => (
-              <option key={service.id} value={String(service.id)}>
-                {resolveLocalizedName(service.name) || `Service #${service.id}`}
-              </option>
-            ))}
-          </select>
-          {errors.service_id && (
-            <p className="text-sm text-red-500">{errors.service_id.message}</p>
-          )}
-        </div>
-        <div>
-          <label className="text-sm text-gray-700">Doctor</label>
-          <select
-            {...register('doctor_id')}
-            className="w-full rounded-lg border border-gray-300 p-2"
-            disabled={isDoctorsLoading || !canEdit}
-          >
-            <option value="">
-              {isDoctorsLoading ? 'Loading doctors...' : 'Select Doctor'}
-            </option>
-            {doctors?.data?.map((doctor: any) => (
-              <option key={doctor.id} value={doctor.id}>
-                {doctor.name?.en}
-              </option>
-            ))}
-          </select>
-          {errors.doctor_id && (
-            <p className="text-sm text-red-500">{errors.doctor_id.message}</p>
-          )}
-        </div>
-      </div>
-
-      <div>
-        <label className="text-sm text-gray-700">Category</label>
-        <select
-          {...inputProps}
-          {...register('category_id')}
-          className="w-full rounded-lg border border-gray-300 p-2"
-        >
-          <option value="">
-            {isCategoriesLoading ? 'Loading categories...' : 'Select Category'}
-          </option>
-          {withSelectedRecord(
-            asRecordList(categories?.data ?? categories),
-            loadedCategory,
-            watch('category_id')
-          ).map((category: any) => (
-            <option key={category.id} value={String(category.id)}>
-              {resolveLocalizedName(category.name) || `Category #${category.id}`}
-            </option>
-          ))}
-        </select>
-        {errors.category_id && (
-          <p className="text-sm text-red-500">{errors.category_id.message}</p>
-        )}
-      </div>
-
-      <div className="space-y-4 border-l-4 border-green-500 pl-4">
-        <h5 className="text-sm font-semibold">Address Information</h5>
-        <div className="grid grid-cols-2 gap-4">
-
-          {/* City — filtered by selected country */}
-          <div>
-            <label className="text-sm text-gray-700">City</label>
-            <Controller
-              name="address_city"
-              control={control}
-              render={({ field: { value, onChange } }) => (
-                <select
-                  {...inputProps}
-                  value={value || ''}
-                  onChange={(e) => {
-                    const opt = e.target.options[e.target.selectedIndex];
-                    onChange(e.target.value);
-                    setSelectedCityId(opt.dataset.id ? Number(opt.dataset.id) : null);
-                    // Reset state when city changes
-                    setValue('address_state', '');
-                  }}
-                  disabled={isCitiesLoading || !canEdit}
-                  className="w-full rounded-lg border border-gray-300 p-2"
-                >
-                  <option value="">
-                    {isCitiesLoading ? 'Loading cities...' : 'Select City'}
-                  </option>
-                  {filteredCities.map((city: any) => {
-                    const label = getName(city.name);
-                    return (
-                      <option
-                        key={city.id}
-                        value={label}
-                        data-id={city.id}
-                      >
-                        {label}
-                      </option>
-                    );
-                  })}
-                </select>
-              )}
-            />
-            {errors.address_city && (
-              <p className="text-sm text-red-500">{errors.address_city.message}</p>
-            )}
-          </div>
-
-          {/* State — filtered by selected city */}
-          <div>
-            <label className="text-sm text-gray-700">State/Region</label>
-            <Controller
-              name="address_state"
-              control={control}
-              render={({ field: { value, onChange } }) => (
-                <select
-                  {...inputProps}
-                  value={value || ''}
-                  onChange={(e) => onChange(e.target.value)}
-                  disabled={isStatesLoading || !canEdit}
-                  className="w-full rounded-lg border border-gray-300 p-2"
-                >
-                  <option value="">
-                    {isStatesLoading
-                      ? 'Loading states...'
-                      : selectedCityId
-                        ? 'Select State'
-                        : 'Select a city first'}
-                  </option>
-                  {filteredStates.map((state: any) => {
-                    const label = getName(state.name);
-                    return (
-                      <option
-                        key={state.id}
-                        value={label}
-                      >
-                        {label}
-                      </option>
-                    );
-                  })}
-                </select>
-              )}
-            />
-            {errors.address_state && (
-              <p className="text-sm text-red-500">{errors.address_state.message}</p>
-            )}
-          </div>
-
-        </div>
-        <Input
-          {...inputProps}
-          label="Address Link (Maps)"
-          type="url"
-          placeholder="https://maps.google.com/?q=24.7136,46.6753"
-          {...register('address_link')}
-          error={errors.address_link?.message}
-        />
-      </div>
-
-      <div className="space-y-4 border-l-4 border-purple-500 pl-4">
-        <h5 className="text-sm font-semibold">Billing Information</h5>
-        <div className="grid grid-cols-2 gap-4">
-          <Input
-            {...inputProps}
-            label="Sessions Count"
-            type="tel"
-            {...register('sessions_count')}
-            error={errors.sessions_count?.message}
-          />
-          <Input
-            {...inputProps}
-            label="Session Price"
-            type="tel"
-            {...register('session_price')}
-            error={errors.session_price?.message}
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <Input
-            {...inputProps}
-            label="Sub Total"
-            type="tel"
-            {...register('sub_total')}
-            error={errors.sub_total?.message}
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="text-sm text-gray-700">Fees Type</label>
-            <select
-              {...inputProps}
-              {...register('fees_type')}
-              className="w-full rounded-lg border border-gray-300 p-2"
-              disabled={!canEdit}
-            >
-              {feesTypeOptions.map((item) => (
-                <option key={item.value} value={item.value}>
-                  {item.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <Input
-              {...inputProps}
-              label="Total Amount"
-              type="tel"
-              {...register('total_amount')}
-              error={errors.total_amount?.message}
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              {Number(watchFees) > 0
-                ? 'Sub total + VAT (15%)'
-                : 'Sub total only (no VAT)'}
-            </p>
-          </div>
-        </div>
-
-        <Input
-          {...inputProps}
-          label="Remaining Payment"
-          type="tel"
-          {...register('remaining_payment')}
-          error={errors.remaining_payment?.message}
-        />
-
-        <div>
-          <label className="text-sm text-gray-700">Transaction Reference</label>
-          <select
-            {...register('transaction_reference')}
-            disabled={!canEdit || isLockedSource}
-            className="w-full rounded-lg border border-gray-300 p-2 disabled:cursor-not-allowed disabled:bg-gray-100"
-          >
-            <option value="">Select Transaction Type</option>
-            <option value="تحويل بنكي">تحويل بنكي</option>
-            <option value="تيلر">تيلر</option>
-            <option value="كاش">كاش</option>
-          </select>
-          {errors.transaction_reference && (
-            <p className="text-sm text-red-500">
-              {errors.transaction_reference.message}
-            </p>
-          )}
-        </div>
-
-        <div>
-          <label className="text-sm text-gray-700">Customer Tier</label>
-          <select
-            {...inputProps}
-            value={(watchCustomerTier as any) ?? (initValues?.customer_tier || 'عادي')}
-            onChange={(e) => setValue('customer_tier' as any, e.target.value, { shouldValidate: false })}
-            className="w-full rounded-lg border border-gray-300 p-2"
-          >
-            {customerTierOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          <div className="mt-2">
-            <CustomerTierBadge value={(watchCustomerTier as any) ?? (initValues?.customer_tier || 'عادي')} />
-          </div>
-        </div>
-
-        <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">CC</label>
-          <select
-            {...inputProps}
-            {...register('cc')}
-            className="w-full rounded-lg border border-gray-300 p-2"
-          >
-            <option value="">Select CC</option>
-            {CC_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          {errors.cc && (
-            <p className="mt-1 text-sm text-red-500">{errors.cc.message}</p>
-          )}
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
-              Source Campaign
-            </label>
-            <select
-              {...inputProps}
-              {...register('source_campaign')}
-              className="w-full rounded-lg border border-gray-300 p-2"
-            >
-              <option value="">Select Source</option>
-              {SOURCE_CAMPAIGN_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
-          
-          {watchSourceCampaign === 'center' && (
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
-                Center <span className="text-red-500">*</span>
-              </label>
-              <select
-                {...inputProps}
-                {...register('center_id')}
-                className="w-full rounded-lg border border-gray-300 p-2"
-                disabled={isCentersLoading || !canEdit}
+                        {activeCountries.map((country: any) => {
+                          const label = getName(country.name);
+                          return (
+                            <option
+                              key={country.id}
+                              value={label}
+                              data-id={country.id}
+                            >
+                              {label}
+                            </option>
+                          );
+                        })}
+                      </select>
+                    )}
+                  />
+                  {errors.patient_country && (
+                    <p className="text-sm text-red-500">
+                      {errors.patient_country.message}
+                    </p>
+                  )}
+                </div>
+              </ModalFormTabPanelCard>
+            ) : (
+              <ModalFormTabPanelCard
+                key="existing"
+                title="Existing patient"
+                description="Select the patient linked to this reservation"
+                contentClassName="sm:grid-cols-1"
               >
-                <option value="">
-                  {isCentersLoading ? 'Loading centers...' : 'Select Center'}
-                </option>
-                {centers?.data?.map((center: any) => (
-                  <option key={center.id} value={String(center.id)}>
-                    {center.name?.en || center.name?.ar || `Center #${center.id}`}
-                  </option>
-                ))}
-              </select>
-              {errors.center_id && (
-                <p className="mt-1 text-sm text-red-500">{errors.center_id.message}</p>
-              )}
-            </div>
-          )}
-
-          <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
-              Paid Status
-            </label>
-            <Controller
-              name="paid"
-              control={control}
-              render={({ field: { value, onChange } }) => {
-                // Safely convert value to number, default to 0 if undefined/null
-                const paidValue = value !== undefined && value !== null ? Number(value) : 0;
-                
-                return (
+                <div>
+                  <label className="text-sm text-gray-700">
+                    Select Existing Patient
+                  </label>
                   <select
-                    value={paidValue}
-                    onChange={(e) => {
-                      const newValue = Number(e.target.value);
-                      onChange(newValue);
-                    }}
-                    className="w-full rounded-lg border border-gray-300 p-2 focus:ring-2 focus:ring-[#143087]/20 focus:border-[#143087] outline-none transition-all"
+                    {...inputProps}
+                    {...register('patient_id')}
+                    className="w-full rounded-lg border border-gray-300 p-2"
+                    disabled={isPatientsLoading || !canEdit}
                   >
-                    <option value={0}>Unpaid</option>
-                    <option value={1}>Paid</option>
+                    <option value="">
+                      {isPatientsLoading
+                        ? 'Loading patients...'
+                        : 'Select Patient'}
+                    </option>
+                    {patients?.data?.map((patient: any) => (
+                      <option key={patient.id} value={String(patient.id)}>
+                        {getName(patient.name) || `Patient #${patient.id}`}
+                      </option>
+                    ))}
                   </select>
-                );
-              }}
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="text-sm text-gray-700">Status</label>
-          <select
-            {...inputProps}
-            {...register('status')}
-            className="w-full rounded-lg border border-gray-300 p-2"
-            onChange={(e) => {
-              const next = e.target.value;
-              setValue('status', next as any, { shouldValidate: true });
-              if (Number(next) !== 4 && Number(next) !== 6) {
-                setValue('status_reason', '', { shouldValidate: false });
-              }
-            }}
-          >
-            <option value="">Select Status</option>
-            {statusOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.en}
-              </option>
-            ))}
-          </select>
-          {errors.status && (
-            <p className="text-sm text-red-500">{errors.status.message}</p>
-          )}
-        </div>
-        <Input
-          {...inputProps}
-          label="Pain Location"
-          placeholder="e.g., ألم في الرقبة"
-          {...register('pain_location')}
-          error={errors.pain_location?.message}
-        />
-      </div>
-
-      {isCancelOrFail && (
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="text-sm text-gray-700">
-              Status Reason <span className="text-red-500">*</span>
-            </label>
-            <select
-              {...inputProps}
-              {...register('status_reason')}
-              className="w-full rounded-lg border border-gray-300 p-2"
-            >
-              <option value="">Select reason</option>
-              {RESERVATION_STATUS_REASONS.map((r) => (
-                <option key={r.value} value={r.value}>
-                  {r.label}
-                </option>
-              ))}
-              {watchStatusReason === 'payment_timeout' && (
-                <option value="payment_timeout" disabled>
-                  {formatStatusReasonLabel('payment_timeout')}
-                </option>
-              )}
-            </select>
-            {errors.status_reason && (
-              <p className="mt-1 text-sm text-red-500">
-                {errors.status_reason.message}
-              </p>
+                  {errors.patient_id && (
+                    <p className="text-sm text-red-500">
+                      {errors.patient_id.message}
+                    </p>
+                  )}
+                </div>
+              </ModalFormTabPanelCard>
             )}
           </div>
-          {watchStatusReason === 'other' && (
-            <div className="col-span-2">
-              <p className="text-xs text-gray-600">
-                Operation notes are required when reason is Other.
-              </p>
-            </div>
-          )}
-        </div>
-      )}
+        </ModalFormTabPanel>
 
-      <Input
-        {...inputProps}
-        label="Notes"
-        placeholder="e.g., حجز ضيف جديد"
-        {...register('notes')}
-        error={errors.notes?.message}
-      />
-
-      <Textarea
-        {...inputProps}
-        label="Operation Notes"
-        placeholder="e.g., ملاحظات العملية"
-        rows={4}
-        {...register('operation_notes')}
-        error={errors.operation_notes?.message}
-      />
-
-      <Input
-        {...inputProps}
-        label="Rework"
-        type="number"
-        min={0}
-        {...register('rework', { valueAsNumber: true })}
-        error={errors.rework?.message}
-      />
-
-      <div className="space-y-4 border-l-4 border-orange-500 pl-4">
-        <h5 className="text-sm font-semibold">Reservation Dates</h5>
-
-        {watchDates?.map((_, index) => (
-          <div key={index} className="space-y-3 rounded-lg border p-4">
-            <div className="grid grid-cols-2 gap-4">
-              <Input
-                {...inputProps}
-                label="Date"
-                type="date"
-                {...register(`dates.${index}.date` as const)}
-                error={errors.dates?.[index]?.date?.message}
-              />
-              <Input
-                {...inputProps}
-                label="Time"
-                type="time"
-                {...register(`dates.${index}.time` as const)}
-                error={errors.dates?.[index]?.time?.message}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
+        {/* ── Booking ── */}
+        <ModalFormTabPanel>
+          <div className="space-y-5">
+            <ModalFormTabPanelCard
+              title="Service assignment"
+              description="Service, doctor, and category for this booking"
+            >
               <div>
-                <label className="text-sm text-gray-700">Time Period</label>
+                <label className="text-sm text-gray-700">Service</label>
                 <select
-                  {...inputProps}
-                  {...register(`dates.${index}.time_period` as const)}
+                  {...register('service_id')}
                   className="w-full rounded-lg border border-gray-300 p-2"
+                  disabled={isServicesLoading || !canEdit}
                 >
-                  {timePeriodOptions(watchDates?.[index]?.time_period).map((period) => (
-                    <option key={period.id} value={period.id}>
-                      {period.name}
+                  <option value="">
+                    {isServicesLoading ? 'Loading services...' : 'Select Service'}
+                  </option>
+                  {withSelectedRecord(
+                    asRecordList(services?.data ?? services),
+                    loadedService,
+                    watch('service_id')
+                  ).map((service: any) => (
+                    <option key={service.id} value={String(service.id)}>
+                      {resolveLocalizedName(service.name) ||
+                        `Service #${service.id}`}
                     </option>
                   ))}
                 </select>
+                {errors.service_id && (
+                  <p className="text-sm text-red-500">
+                    {errors.service_id.message}
+                  </p>
+                )}
               </div>
-
               <div>
                 <label className="text-sm text-gray-700">Doctor</label>
                 <select
-                  {...inputProps}
-                  {...register(`dates.${index}.doctor_id` as const)}
+                  {...register('doctor_id')}
                   className="w-full rounded-lg border border-gray-300 p-2"
-                  disabled={isDoctorsLoading}
+                  disabled={isDoctorsLoading || !canEdit}
                 >
                   <option value="">
-                    {isDoctorsLoading ? 'Loading...' : 'Select Doctor'}
+                    {isDoctorsLoading ? 'Loading doctors...' : 'Select Doctor'}
                   </option>
                   {doctors?.data?.map((doctor: any) => (
                     <option key={doctor.id} value={doctor.id}>
@@ -1601,72 +1279,603 @@ export default function CreateOrUpdateReservation({
                     </option>
                   ))}
                 </select>
+                {errors.doctor_id && (
+                  <p className="text-sm text-red-500">
+                    {errors.doctor_id.message}
+                  </p>
+                )}
               </div>
-            </div>
-
-            <div>
-              <label className="text-sm text-gray-700">Status</label>
-              <select
-                {...inputProps}
-                {...register(`dates.${index}.status` as const)}
-                className="w-full rounded-lg border border-gray-300 p-2"
-              >
-                {dateStatusOptions.map((s) => (
-                  <option key={s.value} value={s.value}>
-                    {s.en}
+              <div className="sm:col-span-2">
+                <label className="text-sm text-gray-700">Category</label>
+                <select
+                  {...inputProps}
+                  {...register('category_id')}
+                  className="w-full rounded-lg border border-gray-300 p-2"
+                >
+                  <option value="">
+                    {isCategoriesLoading
+                      ? 'Loading categories...'
+                      : 'Select Category'}
                   </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        ))}
+                  {withSelectedRecord(
+                    asRecordList(categories?.data ?? categories),
+                    loadedCategory,
+                    watch('category_id')
+                  ).map((category: any) => (
+                    <option key={category.id} value={String(category.id)}>
+                      {resolveLocalizedName(category.name) ||
+                        `Category #${category.id}`}
+                    </option>
+                  ))}
+                </select>
+                {errors.category_id && (
+                  <p className="text-sm text-red-500">
+                    {errors.category_id.message}
+                  </p>
+                )}
+              </div>
+            </ModalFormTabPanelCard>
 
-        {watchDates && watchDates.length > 1 && (
-          <div className="mt-4 flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              {...inputProps}
-              size="sm"
-              onClick={() => {
-                const currentStatus = watch(`dates.0.status`);
-                if (currentStatus) {
-                  applyStatusToAllDates(currentStatus);
-                }
-              }}
+            <ModalFormTabPanelCard
+              title="Address"
+              description="Visit location for home or center service"
             >
-              Apply First Date Status to All
-            </Button>
-            <Button
-              type="button"
-              {...inputProps}
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                const currentDoctor = watch(`dates.0.doctor_id`);
-                if (currentDoctor) {
-                  applyDoctorToAllDates(currentDoctor);
-                }
-              }}
-            >
-              Apply First Date Doctor to All
-            </Button>
+              <div>
+                <label className="text-sm text-gray-700">City</label>
+                <Controller
+                  name="address_city"
+                  control={control}
+                  render={({ field: { value, onChange } }) => (
+                    <select
+                      {...inputProps}
+                      value={value || ''}
+                      onChange={(e) => {
+                        const opt = e.target.options[e.target.selectedIndex];
+                        onChange(e.target.value);
+                        setSelectedCityId(
+                          opt.dataset.id ? Number(opt.dataset.id) : null
+                        );
+                        setValue('address_state', '');
+                      }}
+                      disabled={isCitiesLoading || !canEdit}
+                      className="w-full rounded-lg border border-gray-300 p-2"
+                    >
+                      <option value="">
+                        {isCitiesLoading ? 'Loading cities...' : 'Select City'}
+                      </option>
+                      {filteredCities.map((city: any) => {
+                        const label = getName(city.name);
+                        return (
+                          <option
+                            key={city.id}
+                            value={label}
+                            data-id={city.id}
+                          >
+                            {label}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  )}
+                />
+                {errors.address_city && (
+                  <p className="text-sm text-red-500">
+                    {errors.address_city.message}
+                  </p>
+                )}
+              </div>
+              <div>
+                <label className="text-sm text-gray-700">State/Region</label>
+                <Controller
+                  name="address_state"
+                  control={control}
+                  render={({ field: { value, onChange } }) => (
+                    <select
+                      {...inputProps}
+                      value={value || ''}
+                      onChange={(e) => onChange(e.target.value)}
+                      disabled={isStatesLoading || !canEdit}
+                      className="w-full rounded-lg border border-gray-300 p-2"
+                    >
+                      <option value="">
+                        {isStatesLoading
+                          ? 'Loading states...'
+                          : selectedCityId
+                            ? 'Select State'
+                            : 'Select a city first'}
+                      </option>
+                      {filteredStates.map((state: any) => {
+                        const label = getName(state.name);
+                        return (
+                          <option key={state.id} value={label}>
+                            {label}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  )}
+                />
+                {errors.address_state && (
+                  <p className="text-sm text-red-500">
+                    {errors.address_state.message}
+                  </p>
+                )}
+              </div>
+              <div className="sm:col-span-2">
+                <Input
+                  {...inputProps}
+                  label="Address Link (Maps)"
+                  type="url"
+                  placeholder="https://maps.google.com/?q=24.7136,46.6753"
+                  {...register('address_link')}
+                  error={errors.address_link?.message}
+                />
+              </div>
+            </ModalFormTabPanelCard>
           </div>
-        )}
+        </ModalFormTabPanel>
 
-        {errors.dates && typeof errors.dates?.message === 'string' && (
-          <p className="text-sm text-red-500">{errors.dates.message}</p>
-        )}
-      </div>
+        {/* ── Billing ── */}
+        <ModalFormTabPanel>
+          <div className="space-y-5">
+            <ModalFormTabPanelCard
+              title="Pricing"
+              description="Sessions, amounts, and fees"
+            >
+              <Input
+                {...inputProps}
+                label="Sessions Count"
+                type="tel"
+                {...register('sessions_count')}
+                error={errors.sessions_count?.message}
+              />
+              <Input
+                {...inputProps}
+                label="Session Price"
+                type="tel"
+                {...register('session_price')}
+                error={errors.session_price?.message}
+              />
+              <Input
+                {...inputProps}
+                label="Sub Total"
+                type="tel"
+                {...register('sub_total')}
+                error={errors.sub_total?.message}
+              />
+              <div>
+                <label className="text-sm text-gray-700">Fees Type</label>
+                <select
+                  {...inputProps}
+                  {...register('fees_type')}
+                  className="w-full rounded-lg border border-gray-300 p-2"
+                  disabled={!canEdit}
+                >
+                  {feesTypeOptions.map((item) => (
+                    <option key={item.value} value={item.value}>
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <Input
+                  {...inputProps}
+                  label="Total Amount"
+                  type="tel"
+                  {...register('total_amount')}
+                  error={errors.total_amount?.message}
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  {Number(watchFees) > 0
+                    ? 'Sub total + VAT (15%)'
+                    : 'Sub total only (no VAT)'}
+                </p>
+              </div>
+              <Input
+                {...inputProps}
+                label="Remaining Payment"
+                type="tel"
+                {...register('remaining_payment')}
+                error={errors.remaining_payment?.message}
+              />
+            </ModalFormTabPanelCard>
 
-      <div className="mt-6 flex justify-end gap-4">
-        <Button variant="outline" onClick={closeModal}>
-          Cancel
-        </Button>
-        <Button type="submit" disabled={isCreating || isUpdating || !canEdit}>
-          {initValues ? 'Update Reservation' : 'Create Reservation'}
-        </Button>
-      </div>
+            <ModalFormTabPanelCard
+              title="Payment & source"
+              description="How this booking was paid and where it came from"
+            >
+              <div>
+                <label className="text-sm text-gray-700">
+                  Transaction Reference
+                </label>
+                <select
+                  {...register('transaction_reference')}
+                  disabled={!canEdit || isLockedSource}
+                  className="w-full rounded-lg border border-gray-300 p-2 disabled:cursor-not-allowed disabled:bg-gray-100"
+                >
+                  <option value="">Select Transaction Type</option>
+                  <option value="تحويل بنكي">تحويل بنكي</option>
+                  <option value="تيلر">تيلر</option>
+                  <option value="كاش">كاش</option>
+                </select>
+                {errors.transaction_reference && (
+                  <p className="text-sm text-red-500">
+                    {errors.transaction_reference.message}
+                  </p>
+                )}
+              </div>
+              <div>
+                <label className="text-sm text-gray-700">Customer Tier</label>
+                <select
+                  {...inputProps}
+                  value={
+                    (watchCustomerTier as any) ??
+                    (initValues?.customer_tier || 'عادي')
+                  }
+                  onChange={(e) =>
+                    setValue('customer_tier' as any, e.target.value, {
+                      shouldValidate: false,
+                    })
+                  }
+                  className="w-full rounded-lg border border-gray-300 p-2"
+                >
+                  {customerTierOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <div className="mt-2">
+                  <CustomerTierBadge
+                    value={
+                      (watchCustomerTier as any) ??
+                      (initValues?.customer_tier || 'عادي')
+                    }
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  CC
+                </label>
+                <select
+                  {...inputProps}
+                  {...register('cc')}
+                  className="w-full rounded-lg border border-gray-300 p-2"
+                >
+                  <option value="">Select CC</option>
+                  {CC_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                {errors.cc && (
+                  <p className="mt-1 text-sm text-red-500">{errors.cc.message}</p>
+                )}
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  Source Campaign
+                </label>
+                <select
+                  {...inputProps}
+                  {...register('source_campaign')}
+                  className="w-full rounded-lg border border-gray-300 p-2"
+                >
+                  <option value="">Select Source</option>
+                  {SOURCE_CAMPAIGN_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {watchSourceCampaign === 'center' && (
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">
+                    Center <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    {...inputProps}
+                    {...register('center_id')}
+                    className="w-full rounded-lg border border-gray-300 p-2"
+                    disabled={isCentersLoading || !canEdit}
+                  >
+                    <option value="">
+                      {isCentersLoading
+                        ? 'Loading centers...'
+                        : 'Select Center'}
+                    </option>
+                    {centers?.data?.map((center: any) => (
+                      <option key={center.id} value={String(center.id)}>
+                        {center.name?.en ||
+                          center.name?.ar ||
+                          `Center #${center.id}`}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.center_id && (
+                    <p className="mt-1 text-sm text-red-500">
+                      {errors.center_id.message}
+                    </p>
+                  )}
+                </div>
+              )}
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  Paid Status
+                </label>
+                <Controller
+                  name="paid"
+                  control={control}
+                  render={({ field: { value, onChange } }) => {
+                    const paidValue =
+                      value !== undefined && value !== null ? Number(value) : 0;
+                    return (
+                      <select
+                        value={paidValue}
+                        onChange={(e) => {
+                          onChange(Number(e.target.value));
+                        }}
+                        className="w-full rounded-lg border border-gray-300 p-2 outline-none transition-all focus:border-[#143087] focus:ring-2 focus:ring-[#143087]/20"
+                      >
+                        <option value={0}>Unpaid</option>
+                        <option value={1}>Paid</option>
+                      </select>
+                    );
+                  }}
+                />
+              </div>
+            </ModalFormTabPanelCard>
+          </div>
+        </ModalFormTabPanel>
+
+        {/* ── Details ── */}
+        <ModalFormTabPanel>
+          <div className="space-y-5">
+            <ModalFormTabPanelCard
+              title="Status"
+              description="Reservation status and clinical notes"
+            >
+              <div>
+                <label className="text-sm text-gray-700">Status</label>
+                <select
+                  {...inputProps}
+                  {...register('status')}
+                  className="w-full rounded-lg border border-gray-300 p-2"
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    setValue('status', next as any, { shouldValidate: true });
+                    if (Number(next) !== 4 && Number(next) !== 6) {
+                      setValue('status_reason', '', { shouldValidate: false });
+                    }
+                  }}
+                >
+                  <option value="">Select Status</option>
+                  {statusOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.en}
+                    </option>
+                  ))}
+                </select>
+                {errors.status && (
+                  <p className="text-sm text-red-500">{errors.status.message}</p>
+                )}
+              </div>
+              <Input
+                {...inputProps}
+                label="Pain Location"
+                placeholder="e.g., ألم في الرقبة"
+                {...register('pain_location')}
+                error={errors.pain_location?.message}
+              />
+              {isCancelOrFail && (
+                <>
+                  <div>
+                    <label className="text-sm text-gray-700">
+                      Status Reason <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      {...inputProps}
+                      {...register('status_reason')}
+                      className="w-full rounded-lg border border-gray-300 p-2"
+                    >
+                      <option value="">Select reason</option>
+                      {RESERVATION_STATUS_REASONS.map((r) => (
+                        <option key={r.value} value={r.value}>
+                          {r.label}
+                        </option>
+                      ))}
+                      {watchStatusReason === 'payment_timeout' && (
+                        <option value="payment_timeout" disabled>
+                          {formatStatusReasonLabel('payment_timeout')}
+                        </option>
+                      )}
+                    </select>
+                    {errors.status_reason && (
+                      <p className="mt-1 text-sm text-red-500">
+                        {errors.status_reason.message}
+                      </p>
+                    )}
+                  </div>
+                  {watchStatusReason === 'other' && (
+                    <div className="sm:col-span-2">
+                      <p className="text-xs text-gray-600">
+                        Operation notes are required when reason is Other.
+                      </p>
+                    </div>
+                  )}
+                </>
+              )}
+              <div className="sm:col-span-2">
+                <Input
+                  {...inputProps}
+                  label="Notes"
+                  placeholder="e.g., حجز ضيف جديد"
+                  {...register('notes')}
+                  error={errors.notes?.message}
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <Textarea
+                  {...inputProps}
+                  label="Operation Notes"
+                  placeholder="e.g., ملاحظات العملية"
+                  rows={4}
+                  {...register('operation_notes')}
+                  error={errors.operation_notes?.message}
+                />
+              </div>
+              <Input
+                {...inputProps}
+                label="Rework"
+                type="number"
+                min={0}
+                {...register('rework', { valueAsNumber: true })}
+                error={errors.rework?.message}
+              />
+            </ModalFormTabPanelCard>
+          </div>
+        </ModalFormTabPanel>
+
+        {/* ── Sessions ── */}
+        <ModalFormTabPanel>
+          <div className="space-y-5">
+            <ModalFormTabPanelCard
+              title="Reservation dates"
+              description="One row per session — count comes from Billing"
+              contentClassName="sm:grid-cols-1"
+            >
+              {watchDates?.map((_, index) => (
+                <div
+                  key={index}
+                  className="space-y-3 rounded-lg border border-gray-200 bg-white p-4"
+                >
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    Session {index + 1}
+                  </p>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <Input
+                      {...inputProps}
+                      label="Date"
+                      type="date"
+                      {...register(`dates.${index}.date` as const)}
+                      error={errors.dates?.[index]?.date?.message}
+                    />
+                    <Input
+                      {...inputProps}
+                      label="Time"
+                      type="time"
+                      {...register(`dates.${index}.time` as const)}
+                      error={errors.dates?.[index]?.time?.message}
+                    />
+                    <div>
+                      <label className="text-sm text-gray-700">Time Period</label>
+                      <select
+                        {...inputProps}
+                        {...register(`dates.${index}.time_period` as const)}
+                        className="w-full rounded-lg border border-gray-300 p-2"
+                      >
+                        {timePeriodOptions(
+                          watchDates?.[index]?.time_period
+                        ).map((period) => (
+                          <option key={period.id} value={period.id}>
+                            {period.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-sm text-gray-700">Doctor</label>
+                      <select
+                        {...inputProps}
+                        {...register(`dates.${index}.doctor_id` as const)}
+                        className="w-full rounded-lg border border-gray-300 p-2"
+                        disabled={isDoctorsLoading}
+                      >
+                        <option value="">
+                          {isDoctorsLoading ? 'Loading...' : 'Select Doctor'}
+                        </option>
+                        {doctors?.data?.map((doctor: any) => (
+                          <option key={doctor.id} value={doctor.id}>
+                            {doctor.name?.en}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="text-sm text-gray-700">Status</label>
+                      <select
+                        {...inputProps}
+                        {...register(`dates.${index}.status` as const)}
+                        className="w-full rounded-lg border border-gray-300 p-2"
+                      >
+                        {dateStatusOptions.map((s) => (
+                          <option key={s.value} value={s.value}>
+                            {s.en}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {watchDates && watchDates.length > 1 && (
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    {...inputProps}
+                    size="sm"
+                    onClick={() => {
+                      const currentStatus = watch(`dates.0.status`);
+                      if (currentStatus) {
+                        applyStatusToAllDates(currentStatus);
+                      }
+                    }}
+                  >
+                    Apply First Date Status to All
+                  </Button>
+                  <Button
+                    type="button"
+                    {...inputProps}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const currentDoctor = watch(`dates.0.doctor_id`);
+                      if (currentDoctor) {
+                        applyDoctorToAllDates(currentDoctor);
+                      }
+                    }}
+                  >
+                    Apply First Date Doctor to All
+                  </Button>
+                </div>
+              )}
+
+              {errors.dates && typeof errors.dates?.message === 'string' && (
+                <p className="text-sm text-red-500">{errors.dates.message}</p>
+              )}
+            </ModalFormTabPanelCard>
+          </div>
+        </ModalFormTabPanel>
+      </ModalFormTabs>
+
+      <ModalFormTabsFooter
+        activeTab={activeTab}
+        tabCount={RESERVATION_TABS.length}
+        onPrev={() => goToTab(activeTab - 1)}
+        onNext={() => goToTab(activeTab + 1)}
+        onCancel={closeModal}
+        isLoading={isCreating || isUpdating}
+        disabled={isCreating || isUpdating || !canEdit}
+        submitLabel={
+          initValues ? 'Update Reservation' : 'Create Reservation'
+        }
+      />
     </form>
   );
 }

@@ -1,33 +1,23 @@
 'use client';
-import {
-  ModalFormHeader,
-  ModalFormFooter,
-  modalFormClassName,
-} from '@/components/ui/modal-form-shell';
 
 import { useModal } from '@/app/shared/modal-views/use-modal';
-import { ActionIcon } from '@/components/ui/action-icon';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Form } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Title } from '@/components/ui/text';
-
 import { useState } from 'react';
-import { Controller, SubmitHandler } from 'react-hook-form';
-import { PiXBold } from 'react-icons/pi';
-import CreatableSelect from 'react-select';
-import { Textarea } from 'rizzui';
-
-import { DatePicker } from '@/components/ui/datepicker';
+import { Controller, SubmitHandler, type FieldErrors } from 'react-hook-form';
+import {
+  PiXBold,
+  PiUser,
+  PiTextT,
+  PiImage,
+} from 'react-icons/pi';
+import { ActionIcon, Textarea } from 'rizzui';
 import Spinner from '@/components/ui/spinner';
 import Upload from '@/components/ui/upload';
-import { formatDate } from '@/utils/format-date';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import toast from 'react-hot-toast';
 import FormGroup from '../form-group';
-import { useCreateBrand, useUpdateBrand } from '@/framework/brand';
 import {
   ReviewFormInput,
   ReviewFormSchema,
@@ -37,6 +27,56 @@ import {
   useUpdateClientReview,
 } from '@/framework/client-review';
 import { useTranslation } from 'react-i18next';
+import {
+  ModalFormTabs,
+  ModalFormTabPanel,
+  ModalFormTabPanelCard,
+  ModalFormTabsFooter,
+  modalFormTabsClassName,
+  type ModalFormTabItem,
+} from '@/components/ui/modal-form-tabs';
+
+type ReviewTabId = 'general' | 'content' | 'media';
+
+const REVIEW_TABS: {
+  id: ReviewTabId;
+  label: string;
+  icon: typeof PiUser;
+}[] = [
+  { id: 'general', label: 'General', icon: PiUser },
+  { id: 'content', label: 'Content', icon: PiTextT },
+  { id: 'media', label: 'Media', icon: PiImage },
+];
+
+const GENERAL_ERROR_KEYS = [
+  'titleEN',
+  'titleAR',
+  'nameEN',
+  'nameAR',
+  'positionEN',
+  'positionAR',
+  'rate',
+];
+const CONTENT_ERROR_KEYS = ['textEN', 'textAR'];
+
+function reviewTabHasErrors(
+  tabId: ReviewTabId,
+  errors: FieldErrors<ReviewFormInput> | Record<string, unknown>
+): boolean {
+  const has = (keys: string[]) =>
+    keys.some((key) => Boolean((errors as Record<string, unknown>)?.[key]));
+
+  switch (tabId) {
+    case 'general':
+      return has(GENERAL_ERROR_KEYS);
+    case 'content':
+      return has(CONTENT_ERROR_KEYS);
+    case 'media':
+      return false;
+    default:
+      return false;
+  }
+}
 
 export default function UpdateCreateBrand({
   initValues,
@@ -49,8 +89,12 @@ export default function UpdateCreateBrand({
   const { mutate: update } = useUpdateClientReview();
   const { mutate: create, isPending } = useCreateClientReview();
   const [isoading, setLoading] = useState(false);
-  const [isImageData, setImage] = useState(initValues ? initValues?.image : null);
+  const [activeTab, setActiveTab] = useState(0);
+  const [isImageData, setImage] = useState(
+    initValues ? initValues?.image : null
+  );
   let [imageError, setImageError] = useState(0);
+
   const handleFileUpload = (event: any, type: 'Image' | 'File') => {
     setLoading(true);
     const file = event.target.files?.[0];
@@ -70,7 +114,11 @@ export default function UpdateCreateBrand({
         }
         toast.success(
           t('client_review_uploaded', {
-            type: t(type === 'Image' ? 'client_review_type_image' : 'client_review_type_file'),
+            type: t(
+              type === 'Image'
+                ? 'client_review_type_image'
+                : 'client_review_type_file'
+            ),
           })
         );
       })
@@ -84,67 +132,9 @@ export default function UpdateCreateBrand({
   };
 
   const onSubmit: SubmitHandler<ReviewFormInput> = (data) => {
-
     console.log(data);
-    // if (!isImageData) {
-    //   setImageError(1);
-    // } else {
-    //   if (initValues) {
-    //     // lang == 'en' ? setNameEn(data.name) : setNameAr(data.name)
-    //     update({
-    //       ...data,
-    //       title: {
-    //         en: data.titleEN,
-    //         ar: data.titleAR,
-    //       },
-    //       name: {
-    //         en: data.nameEN,
-    //         ar: data.nameAR,
-    //       },
-    //       position: {
-    //         en: data.positionEN,
-    //         ar: data.positionAR,
-    //       },
-    //       text: {
-    //         en: data.textEN,
-    //         ar: data.textAR,
-    //       },
-    //       rate: data.rate,
-    //       image: isImageData || initValues.image,
-    //       brand_id: initValues.id,
-    //     });
-    //   } else {
-    //     create({
-    //       ...data,
-    //       title: {
-    //         en: data.titleEN,
-    //         ar: data.titleAR,
-    //       },
-    //       name: {
-    //         en: data.nameEN,
-    //         ar: data.nameAR,
-    //       },
-    //       position: {
-    //         en: data.positionEN,
-    //         ar: data.positionAR,
-    //       },
-    //       text: {
-    //         en: data.textEN,
-    //         ar: data.textAR,
-    //       },
-    //       rate: data.rate,
-    //       image: isImageData,
-    //     });
-    //   }
-    //   setReset({
-    //     roleName: '',
-    //   });
-
-    //   closeModal();
-    // }
 
     if (initValues) {
-      // lang == 'en' ? setNameEn(data.name) : setNameAr(data.name)
       update({
         ...data,
         title: {
@@ -192,171 +182,259 @@ export default function UpdateCreateBrand({
     }
   };
 
+  const onInvalid = (formErrors: FieldErrors<ReviewFormInput>) => {
+    const tabIndex = REVIEW_TABS.findIndex((tab) =>
+      reviewTabHasErrors(tab.id, formErrors)
+    );
+    if (tabIndex >= 0) setActiveTab(tabIndex);
+  };
+
+  const goToTab = (index: number) => {
+    setActiveTab(Math.max(0, Math.min(REVIEW_TABS.length - 1, index)));
+  };
+
   return (
-    <>
-      <Form<ReviewFormInput>
-        resetValues={reset}
-        onSubmit={onSubmit}
-        validationSchema={ReviewFormSchema}
-        useFormProps={{
-          defaultValues: {
-            titleEN: initValues?.title?.en || '',
-            titleAR: initValues?.title?.ar || '',
-            nameEN: initValues?.name?.en || '',
-            nameAR: initValues?.name?.ar || '',
-            positionEN: initValues?.position?.en || '',
-            positionAR: initValues?.position?.ar || '',
-            textEN: initValues?.text?.en || '',
-            textAR: initValues?.text?.ar || '',
-            rate: initValues?.rate
-          },
-        }}
-        className={modalFormClassName}
-      >
-        {({
-          register,
-          getValues,
-          control,
-          setValue,
-          formState: { errors, isLoading },
-        }) => {
-          return (
-            <>
-              <ModalFormHeader title={initValues ? t('client_review_update') : t('client_review_add')} />
-              <Input
-                label={t('client_review_title_en')}
-                placeholder={t('client_review_title_en')}
-                {...register('titleEN')}
-                error={errors.titleEN?.message}
-              />
-              <Input
-                label={t('client_review_title_ar')}
-                placeholder={t('client_review_title_ar')}
-                {...register('titleAR')}
-                error={errors.titleAR?.message}
-              />
+    <Form<ReviewFormInput>
+      resetValues={reset}
+      onSubmit={onSubmit}
+      onInvalid={onInvalid}
+      validationSchema={ReviewFormSchema}
+      useFormProps={{
+        defaultValues: {
+          titleEN: initValues?.title?.en || '',
+          titleAR: initValues?.title?.ar || '',
+          nameEN: initValues?.name?.en || '',
+          nameAR: initValues?.name?.ar || '',
+          positionEN: initValues?.position?.en || '',
+          positionAR: initValues?.position?.ar || '',
+          textEN: initValues?.text?.en || '',
+          textAR: initValues?.text?.ar || '',
+          rate: initValues?.rate,
+        },
+      }}
+      className={modalFormTabsClassName}
+    >
+      {({ register, control, formState: { errors, isLoading } }) => {
+        const tabsWithErrors: ModalFormTabItem[] = REVIEW_TABS.map((tab) => ({
+          ...tab,
+          hasError: reviewTabHasErrors(tab.id, errors),
+        }));
 
-              <Input
-                label={t('client_review_name_en')}
-                placeholder={t('client_review_name_en')}
-                {...register('nameEN')}
-                error={errors.nameEN?.message}
-              />
-              <Input
-                label={t('client_review_name_ar')}
-                placeholder={t('client_review_name_ar')}
-                {...register('nameAR')}
-                error={errors.nameAR?.message}
-              />
-
-              <Input
-                label={t('client_review_position_en')}
-                placeholder={t('client_review_position_en')}
-                {...register('positionEN')}
-                error={errors.positionEN?.message}
-              />
-              <Input
-                label={t('client_review_position_ar')}
-                placeholder={t('client_review_position_ar')}
-                {...register('positionAR')}
-                error={errors.positionAR?.message}
-              />
-
-              <div>
-                <label className="text-sm text-gray-700">{t('client_review_rate')}</label>
-                <Controller
-                  name="rate"
-                  control={control}
-                  render={({ field }) => (
-                    <select
-                      className="w-full border border-gray-300 rounded-lg p-2"
-                      value={field.value != null ? String(field.value) : ''}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        field.onChange(v ? parseInt(v, 10) : undefined);
-                      }}
-                    >
-                      <option value="">{t('client_review_rate_placeholder')}</option>
-                      <option value="1">1</option>
-                      <option value="2">2</option>
-                      <option value="3">3</option>
-                      <option value="4">4</option>
-                      <option value="5">5</option>
-                    </select>
-                  )}
-                />
-                {errors.rate && (
-                  <p className="text-sm text-red-500">{errors.rate.message as any}</p>
-                )}
-              </div>
-
-
-              <Textarea
-                label={t('client_review_text_en')}
-                placeholder={t('client_review_text_en')}
-                {...register('textEN')}
-                error={errors.textEN?.message}
-              />
-              <Textarea
-                label={t('client_review_text_ar')}
-                placeholder={t('client_review_text_ar')}
-                {...register('textAR')}
-                error={errors.textAR?.message}
-              />
-              
-              <FormGroup
-                title={t('client_review_image')}
-                className="relative pt-7 @2xl:pt-9 @3xl:grid-cols-12 @3xl:pt-11"
-              >
-                {isoading && (
-                  <div className="absolute z-10 m-auto flex h-[100%] w-[100%] items-center justify-center ">
-                    <Spinner size="xl" />
-                  </div>
-                )}
-                <Upload
-                  title={t('client_review_image')}
-                  accept="img"
-                  onChange={(e) => {
-                    setImageError(0);
-                    handleFileUpload(e, 'Image');
-                  }}
-                />
-                {imageError ? (
-                  // "faried Error"
-                  <p className="rizzui-input-error-text mt-0.5 text-xs text-red">
-                    {t('client_review_image_required')}
+        return (
+          <>
+            <div className="flex shrink-0 items-center justify-between border-b border-gray-100 px-6 py-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#143087] to-[#39519B] shadow">
+                  <PiUser className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <h4 className="text-lg font-bold text-gray-900">
+                    {initValues
+                      ? t('client_review_update')
+                      : t('client_review_add')}
+                  </h4>
+                  <p className="mt-0.5 text-xs text-gray-400">
+                    Fill each tab — save stays available on every step
                   </p>
-                ) : (
-                  ''
-                )}
-                {(isImageData?.[0]?.thumbnail || isImageData?.[0]?.original) && (
-                  <div className="relative flex justify-center items-center w-full mt-2">
-                    <img
-                      src={isImageData[0].thumbnail || isImageData[0].original}
-                      alt={t('client_review_preview_alt')}
-                      className="w-48 h-auto rounded border border-gray-200 shadow-sm"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setImage(null)}
-                      className="absolute -top-2 -right-2 bg-white border border-gray-300 rounded-full p-1 shadow hover:bg-red-50"
-                      title={t('client_review_remove_image')}
-                    >
-                      <PiXBold className="w-4 h-4 text-red-500" />
-                    </button>
-                  </div>
-                )}
-              </FormGroup>
+                </div>
+              </div>
+              <ActionIcon
+                size="sm"
+                variant="outline"
+                onClick={closeModal}
+                className="rounded-lg border-gray-200 text-gray-500 hover:border-[#143087]/40 hover:bg-blue-50 hover:text-[#143087]"
+              >
+                <PiXBold className="h-4 w-4" />
+              </ActionIcon>
+            </div>
 
-              <ModalFormFooter
-                cancelLabel={t('client_review_cancel')}
-                isLoading={isLoading}
-                submitLabel={initValues ? t('client_review_update') : t('client_review_create')}
+            <ModalFormTabs
+              tabs={tabsWithErrors}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+            >
+              <ModalFormTabPanel>
+                <div className="space-y-5">
+                  <ModalFormTabPanelCard
+                    title="General"
+                    description="Reviewer identity and rating"
+                  >
+                    <Input
+                      label={t('client_review_title_en')}
+                      placeholder={t('client_review_title_en')}
+                      {...register('titleEN')}
+                      error={errors.titleEN?.message}
+                    />
+                    <Input
+                      label={t('client_review_title_ar')}
+                      placeholder={t('client_review_title_ar')}
+                      {...register('titleAR')}
+                      error={errors.titleAR?.message}
+                    />
+                    <Input
+                      label={t('client_review_name_en')}
+                      placeholder={t('client_review_name_en')}
+                      {...register('nameEN')}
+                      error={errors.nameEN?.message}
+                    />
+                    <Input
+                      label={t('client_review_name_ar')}
+                      placeholder={t('client_review_name_ar')}
+                      {...register('nameAR')}
+                      error={errors.nameAR?.message}
+                    />
+                    <Input
+                      label={t('client_review_position_en')}
+                      placeholder={t('client_review_position_en')}
+                      {...register('positionEN')}
+                      error={errors.positionEN?.message}
+                    />
+                    <Input
+                      label={t('client_review_position_ar')}
+                      placeholder={t('client_review_position_ar')}
+                      {...register('positionAR')}
+                      error={errors.positionAR?.message}
+                    />
+                    <div className="sm:col-span-2">
+                      <label className="text-sm text-gray-700">
+                        {t('client_review_rate')}
+                      </label>
+                      <Controller
+                        name="rate"
+                        control={control}
+                        render={({ field }) => (
+                          <select
+                            className="w-full rounded-lg border border-gray-300 p-2"
+                            value={
+                              field.value != null ? String(field.value) : ''
+                            }
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              field.onChange(
+                                v ? parseInt(v, 10) : undefined
+                              );
+                            }}
+                          >
+                            <option value="">
+                              {t('client_review_rate_placeholder')}
+                            </option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                          </select>
+                        )}
+                      />
+                      {errors.rate && (
+                        <p className="text-sm text-red-500">
+                          {errors.rate.message as any}
+                        </p>
+                      )}
+                    </div>
+                  </ModalFormTabPanelCard>
+                </div>
+              </ModalFormTabPanel>
+
+              <ModalFormTabPanel>
+                <div className="space-y-5">
+                  <ModalFormTabPanelCard
+                    title="Content"
+                    description="Review text in both languages"
+                    contentClassName="grid gap-4 sm:grid-cols-1"
+                  >
+                    <Textarea
+                      label={t('client_review_text_en')}
+                      placeholder={t('client_review_text_en')}
+                      {...register('textEN')}
+                      error={errors.textEN?.message}
+                    />
+                    <Textarea
+                      label={t('client_review_text_ar')}
+                      placeholder={t('client_review_text_ar')}
+                      {...register('textAR')}
+                      error={errors.textAR?.message}
+                    />
+                  </ModalFormTabPanelCard>
+                </div>
+              </ModalFormTabPanel>
+
+              <ModalFormTabPanel>
+                <div className="space-y-5">
+                  <ModalFormTabPanelCard
+                    title="Media"
+                    description="Reviewer photo"
+                    contentClassName="grid gap-4 sm:grid-cols-1"
+                  >
+                    <FormGroup
+                      title={t('client_review_image')}
+                      className="relative pt-2 @3xl:grid-cols-12"
+                    >
+                      {isoading && (
+                        <div className="absolute z-10 m-auto flex h-[100%] w-[100%] items-center justify-center ">
+                          <Spinner size="xl" />
+                        </div>
+                      )}
+                      <Upload
+                        title={t('client_review_image')}
+                        accept="img"
+                        onChange={(e) => {
+                          setImageError(0);
+                          handleFileUpload(e, 'Image');
+                        }}
+                      />
+                      {imageError ? (
+                        <p className="rizzui-input-error-text mt-0.5 text-xs text-red">
+                          {t('client_review_image_required')}
+                        </p>
+                      ) : (
+                        ''
+                      )}
+                      {(isImageData?.[0]?.thumbnail ||
+                        isImageData?.[0]?.original) && (
+                        <div className="relative mt-2 flex w-full items-center justify-center">
+                          <img
+                            src={
+                              isImageData[0].thumbnail ||
+                              isImageData[0].original
+                            }
+                            alt={t('client_review_preview_alt')}
+                            className="h-auto w-48 rounded border border-gray-200 shadow-sm"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setImage(null)}
+                            className="absolute -right-2 -top-2 rounded-full border border-gray-300 bg-white p-1 shadow hover:bg-red-50"
+                            title={t('client_review_remove_image')}
+                          >
+                            <PiXBold className="h-4 w-4 text-red-500" />
+                          </button>
+                        </div>
+                      )}
+                    </FormGroup>
+                  </ModalFormTabPanelCard>
+                </div>
+              </ModalFormTabPanel>
+            </ModalFormTabs>
+
+            <ModalFormTabsFooter
+              activeTab={activeTab}
+              tabCount={REVIEW_TABS.length}
+              onPrev={() => goToTab(activeTab - 1)}
+              onNext={() => goToTab(activeTab + 1)}
+              onCancel={closeModal}
+              cancelLabel={t('client_review_cancel')}
+              isLoading={isLoading || isPending}
+              disabled={isLoading || isPending}
+              submitLabel={
+                initValues
+                  ? t('client_review_update')
+                  : t('client_review_create')
+              }
             />
-            </>
-          );
-        }}
-      </Form>
-    </>
+          </>
+        );
+      }}
+    </Form>
   );
 }

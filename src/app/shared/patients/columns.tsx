@@ -81,6 +81,7 @@ export const getColumns = ({
         </Tooltip>
         <Tooltip size="sm" content={() => 'Edit'} placement="top" color="invert">
           <CreateButton
+            customSize="960px"
             icon={
               <ActionIcon
                 tag="span"

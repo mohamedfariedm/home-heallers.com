@@ -55,6 +55,7 @@ export default function FaqsTablePage() {
             header="User,Created At"
             createName={t('faqs_create')}
             createElementButton={<FaqForm />}
+            customSize="960px"
           >
             {isLoading ? (
               <div className="m-auto">

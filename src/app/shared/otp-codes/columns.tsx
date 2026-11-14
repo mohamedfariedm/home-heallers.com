@@ -46,6 +46,7 @@ export const getColumns = ({ onExtend, extendingId }: Columns) => [
             view={<OtpCodeForm initValues={row} />}
             label=""
             className="m-0 bg-transparent p-0 text-gray-700"
+            customSize="960px"
           />
         </Tooltip>
         <Tooltip

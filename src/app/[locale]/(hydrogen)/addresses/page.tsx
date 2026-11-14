@@ -40,6 +40,7 @@ export default function AddressesTablePage() {
       header="Street,Created At"
       createName="Create Address"
       createElementButton={<AddressForm />}
+      customSize="960px"
     >
       {isLoading ? (
         <div className="m-auto"><Spinner size="lg" /></div>

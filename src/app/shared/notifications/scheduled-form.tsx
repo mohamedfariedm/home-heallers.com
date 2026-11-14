@@ -1,20 +1,20 @@
 'use client';
-import {
-  ModalFormHeader,
-  ModalFormFooter,
-  modalFormClassName,
-} from '@/components/ui/modal-form-shell';
 
-import { useMemo } from 'react';
-import { Controller, type SubmitHandler, useForm } from 'react-hook-form';
+import { useMemo, useState } from 'react';
+import { Controller, type SubmitHandler, useForm, type FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
-import { PiXBold } from 'react-icons/pi';
+import { PiUsers, PiArticle, PiXBold } from 'react-icons/pi';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { ActionIcon } from '@/components/ui/action-icon';
-import { Title } from '@/components/ui/text';
-import FormGroup from '@/app/shared/form-group';
+import { ActionIcon } from 'rizzui';
+import {
+  ModalFormTabs,
+  ModalFormTabPanel,
+  ModalFormTabPanelCard,
+  ModalFormTabsFooter,
+  modalFormTabsClassName,
+  type ModalFormTabItem,
+} from '@/components/ui/modal-form-tabs';
 import SelectBox from '@/components/ui/select';
 import { useModal } from '@/app/shared/modal-views/use-modal';
 import {
@@ -34,7 +34,11 @@ import {
   createScheduledNotificationSchema,
   type ScheduledNotificationInput,
 } from '@/utils/validators/notification-form.schema';
-import type { ScheduledNotification } from '@/types/admin-notifications';
+import type {
+  NotificationRecipientRef,
+  ScheduledNotification,
+} from '@/types/admin-notifications';
+import cn from '@/utils/class-names';
 
 function toDatetimeLocalValue(value?: string | null) {
   if (!value) return '';
@@ -52,7 +56,6 @@ function toApiDatetime(value: string) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
 }
 
-/** Normalize stored deep_link (id, path, or URL) to the entity id used by the picker. */
 function normalizeDeepLinkId(
   deepLink?: string | null,
   url?: string | null,
@@ -98,15 +101,61 @@ function firstErrorMessage(errors: Record<string, unknown>): string {
   return 'Please fix the form errors';
 }
 
+type ScheduledTabId = 'audience' | 'content';
+
+const SCHEDULED_TABS: {
+  id: ScheduledTabId;
+  label: string;
+  icon: typeof PiUsers;
+}[] = [
+  { id: 'audience', label: 'Audience', icon: PiUsers },
+  { id: 'content', label: 'Content', icon: PiArticle },
+];
+
+const AUDIENCE_ERROR_KEYS = [
+  'recipient_type',
+  'recipients',
+  'scheduled_at',
+];
+const CONTENT_ERROR_KEYS = [
+  'title',
+  'body',
+  'lang',
+  'type',
+  'deep_link',
+  'url',
+  'extra_data_json',
+];
+
+function scheduledTabHasErrors(
+  tabId: ScheduledTabId,
+  errors: FieldErrors<ScheduledNotificationInput> | Record<string, unknown>
+): boolean {
+  const has = (keys: string[]) =>
+    keys.some((key) => Boolean((errors as Record<string, unknown>)?.[key]));
+
+  switch (tabId) {
+    case 'audience':
+      return has(AUDIENCE_ERROR_KEYS);
+    case 'content':
+      return has(CONTENT_ERROR_KEYS);
+    default:
+      return false;
+  }
+}
+
 export default function ScheduledNotificationForm({
   initValues,
 }: {
   initValues?: ScheduledNotification;
 }) {
   const { closeModal } = useModal();
-  const { mutate: create, isPending: isCreating } = useCreateScheduledNotification();
-  const { mutate: update, isPending: isUpdating } = useUpdateScheduledNotification();
+  const { mutate: create, isPending: isCreating } =
+    useCreateScheduledNotification();
+  const { mutate: update, isPending: isUpdating } =
+    useUpdateScheduledNotification();
   const isEdit = Boolean(initValues?.id);
+  const [activeTab, setActiveTab] = useState(0);
 
   const schema = useMemo(
     () => createScheduledNotificationSchema({ requireFuture: !isEdit }),
@@ -183,83 +232,156 @@ export default function ScheduledNotificationForm({
     create(payload);
   };
 
+  const onInvalid = (
+    formErrors: FieldErrors<ScheduledNotificationInput>
+  ) => {
+    toast.error(firstErrorMessage(formErrors as Record<string, unknown>));
+    const tabIndex = SCHEDULED_TABS.findIndex((tab) =>
+      scheduledTabHasErrors(tab.id, formErrors)
+    );
+    if (tabIndex >= 0) setActiveTab(tabIndex);
+  };
+
+  const goToTab = (index: number) => {
+    setActiveTab(Math.max(0, Math.min(SCHEDULED_TABS.length - 1, index)));
+  };
+
+  const tabsWithErrors: ModalFormTabItem[] = SCHEDULED_TABS.map((tab) => ({
+    ...tab,
+    hasError: scheduledTabHasErrors(tab.id, errors),
+  }));
+
   return (
     <form
       noValidate
-      onSubmit={handleSubmit(onSubmit, (formErrors) => {
-        toast.error(firstErrorMessage(formErrors as Record<string, unknown>));
-      })}
-      className="flex flex-grow flex-col gap-5 p-6 @container [&_.rizzui-input-label]:font-medium [&_.rizzui-input-label]:text-gray-900"
+      onSubmit={handleSubmit(onSubmit, onInvalid)}
+      className={cn(
+        modalFormTabsClassName,
+        '@container [&_.rizzui-input-label]:font-medium [&_.rizzui-input-label]:text-gray-900'
+      )}
     >
-      <ModalFormHeader title={initValues ? 'Edit scheduled notification' : 'Schedule notification'} />
-      <FormGroup title="Audience">
-        <Controller
-          control={control}
-          name="recipient_type"
-          render={({ field: { value, onChange } }) => (
-            <SelectBox
-              placeholder="Audience"
-              options={AUDIENCE_OPTIONS.map((option) => ({
-                ...option,
-                name: option.value,
-              }))}
-              value={value}
-              onChange={onChange}
-              getOptionValue={(option) => option.value}
-              displayValue={(selected) =>
-                AUDIENCE_OPTIONS.find((option) => option.value === selected)?.label ??
-                String(selected)
-              }
-              error={errors.recipient_type?.message as string}
-            />
-          )}
-        />
-      </FormGroup>
-
-      {watchedRecipientType === 'guests' && (
-        <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-          Guests are anonymous app installs. They receive push only — no in-app inbox
-          or read tracking. Recipients are resolved at dispatch time.
-        </p>
-      )}
-
-      {watchedRecipientType === 'specific' && (
-        <Controller
-          control={control}
-          name="recipients"
-          render={({ field: { value, onChange } }) => (
-            <SpecificRecipientsPicker
-              value={(value as ScheduledNotificationInput['recipients']) ?? []}
-              onChange={onChange}
-              error={errors.recipients?.message as string}
-            />
-          )}
-        />
-      )}
-
-      <Input
-        label="Scheduled at"
-        type="datetime-local"
-        {...register('scheduled_at')}
-        error={errors.scheduled_at?.message}
-      />
-
-      <NotificationContentFields
-        register={register}
-        control={control}
-        errors={errors}
-        watch={watch}
-        setValue={setValue}
-      />
-
-      <div className="flex items-center justify-end gap-3">
-        <Button type="button" variant="outline" onClick={closeModal}>
-          Cancel
-        </Button>
-        <Button type="submit" isLoading={isCreating || isUpdating}>
-          {initValues ? 'Save changes' : 'Schedule notification'}
-        </Button>
+      <div className="flex shrink-0 items-center justify-between border-b border-gray-100 px-6 py-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#143087] to-[#39519B] shadow">
+            <PiUsers className="h-5 w-5 text-white" />
+          </div>
+          <div>
+            <h4 className="text-lg font-bold text-gray-900">
+              {initValues
+                ? 'Edit scheduled notification'
+                : 'Schedule notification'}
+            </h4>
+            <p className="mt-0.5 text-xs text-gray-400">
+              Fill each tab — save stays available on every step
+            </p>
+          </div>
+        </div>
+        <ActionIcon
+          size="sm"
+          variant="outline"
+          onClick={closeModal}
+          className="rounded-lg border-gray-200 text-gray-500 hover:border-[#143087]/40 hover:bg-blue-50 hover:text-[#143087]"
+        >
+          <PiXBold className="h-4 w-4" />
+        </ActionIcon>
       </div>
+
+      <ModalFormTabs
+        tabs={tabsWithErrors}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      >
+        <ModalFormTabPanel>
+          <div className="space-y-5">
+            <ModalFormTabPanelCard
+              title="Audience & schedule"
+              description="Who receives this notification and when"
+              contentClassName="sm:grid-cols-1"
+            >
+              <Controller
+                control={control}
+                name="recipient_type"
+                render={({ field: { value, onChange } }) => (
+                  <SelectBox
+                    placeholder="Audience"
+                    options={AUDIENCE_OPTIONS.map((option) => ({
+                      ...option,
+                      name: option.value,
+                    }))}
+                    value={value}
+                    onChange={onChange}
+                    getOptionValue={(option) => option.value}
+                    displayValue={(selected) =>
+                      AUDIENCE_OPTIONS.find(
+                        (option) => option.value === selected
+                      )?.label ?? String(selected)
+                    }
+                    error={errors.recipient_type?.message as string}
+                  />
+                )}
+              />
+
+              {watchedRecipientType === 'guests' && (
+                <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                  Guests are anonymous app installs. They receive push only — no
+                  in-app inbox or read tracking. Recipients are resolved at
+                  dispatch time.
+                </p>
+              )}
+
+              {watchedRecipientType === 'specific' && (
+                <Controller
+                  control={control}
+                  name="recipients"
+                  render={({ field: { value, onChange } }) => (
+                    <SpecificRecipientsPicker
+                      value={(value as NotificationRecipientRef[]) ?? []}
+                      onChange={onChange}
+                      error={errors.recipients?.message as string}
+                    />
+                  )}
+                />
+              )}
+
+              <Input
+                label="Scheduled at"
+                type="datetime-local"
+                {...register('scheduled_at')}
+                error={errors.scheduled_at?.message}
+              />
+            </ModalFormTabPanelCard>
+          </div>
+        </ModalFormTabPanel>
+
+        <ModalFormTabPanel>
+          <div className="space-y-5">
+            <ModalFormTabPanelCard
+              title="Notification content"
+              description="Message body and deep-link options"
+              contentClassName="sm:grid-cols-1"
+            >
+              <NotificationContentFields
+                register={register}
+                control={control}
+                errors={errors}
+                watch={watch}
+                setValue={setValue}
+              />
+            </ModalFormTabPanelCard>
+          </div>
+        </ModalFormTabPanel>
+      </ModalFormTabs>
+
+      <ModalFormTabsFooter
+        activeTab={activeTab}
+        tabCount={SCHEDULED_TABS.length}
+        onPrev={() => goToTab(activeTab - 1)}
+        onNext={() => goToTab(activeTab + 1)}
+        onCancel={closeModal}
+        isLoading={isCreating || isUpdating}
+        disabled={isCreating || isUpdating}
+        submitLabel={initValues ? 'Save changes' : 'Schedule notification'}
+      />
     </form>
   );
 }

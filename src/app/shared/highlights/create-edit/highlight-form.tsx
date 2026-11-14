@@ -2,21 +2,41 @@
 
 import React, { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import { PiTextT, PiImage, PiGearSix } from 'react-icons/pi';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import Select from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Title, Text } from '@/components/ui/text';
+import { Text } from '@/components/ui/text';
 import { useCreateHighlight, useUpdateHighlight } from '@/framework/highlights';
 import { useCountries } from '@/framework/countrues';
 import { Highlight } from '@/types/highlights';
 import { routes } from '@/config/routes';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import {
+  ModalFormTabs,
+  ModalFormTabPanel,
+  ModalFormTabPanelCard,
+  ModalFormTabsFooter,
+  modalFormTabsClassName,
+  type ModalFormTabItem,
+} from '@/components/ui/modal-form-tabs';
 
 // Country targeting is hidden for now. Existing `country_ids` are still sent
 // on edit so saved targeting isn't wiped; new highlights target all countries.
 const SHOW_COUNTRY_TARGETING = false;
+
+type HighlightTabId = 'content' | 'media' | 'settings';
+
+const HIGHLIGHT_TABS: {
+  id: HighlightTabId;
+  label: string;
+  icon: typeof PiTextT;
+}[] = [
+  { id: 'content', label: 'Content', icon: PiTextT },
+  { id: 'media', label: 'Media', icon: PiImage },
+  { id: 'settings', label: 'Settings', icon: PiGearSix },
+];
 
 interface HighlightFormProps {
   initialValues?: Highlight;
@@ -32,6 +52,12 @@ export default function HighlightForm({
   const params = useParams();
   const locale = (params?.locale as string) === 'ar' ? 'ar' : 'en';
   const isEdit = Boolean(initialValues?.id);
+  const [activeTab, setActiveTab] = useState(0);
+  const [tabErrors, setTabErrors] = useState<Record<HighlightTabId, boolean>>({
+    content: false,
+    media: false,
+    settings: false,
+  });
 
   // Country `name` is returned bilingually as { ar, en }. Resolve it to a plain
   // string before using it as a label, otherwise React tries to render the
@@ -63,7 +89,7 @@ export default function HighlightForm({
     initialValues?.country_ids || []
   );
   const [isPinned, setIsPinned] = useState(initialValues?.is_pinned || false);
-  const [order, setOrder] = useState<number>(initialValues?.order ?? 0);
+  const [order] = useState<number>(initialValues?.order ?? 0);
   const [isActive, setIsActive] = useState(initialValues?.is_active ?? true);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(
@@ -86,18 +112,36 @@ export default function HighlightForm({
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const validate = (): boolean => {
+    const nextErrors: Record<HighlightTabId, boolean> = {
+      content: false,
+      media: false,
+      settings: false,
+    };
 
     if (!titleAr.trim() || !titleEn.trim()) {
+      nextErrors.content = true;
       toast.error(t('highlights_form_titles_required'));
-      return;
+      setTabErrors(nextErrors);
+      setActiveTab(0);
+      return false;
     }
 
     if (!isEdit && !coverFile) {
+      nextErrors.media = true;
       toast.error(t('highlights_form_cover_required'));
-      return;
+      setTabErrors(nextErrors);
+      setActiveTab(1);
+      return false;
     }
+
+    setTabErrors(nextErrors);
+    return true;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validate()) return;
 
     const formData = new FormData();
     formData.append('title_ar', titleAr.trim());
@@ -146,172 +190,241 @@ export default function HighlightForm({
     }
   };
 
+  const goToTab = (index: number) => {
+    setActiveTab(Math.max(0, Math.min(HIGHLIGHT_TABS.length - 1, index)));
+  };
+
+  const tabsWithErrors: ModalFormTabItem[] = HIGHLIGHT_TABS.map((tab) => ({
+    ...tab,
+    hasError: tabErrors[tab.id],
+  }));
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-        <Title as="h3" className="mb-4 text-base font-semibold text-gray-900">
-          {isEdit ? t('highlights_form_edit_info') : t('highlights_form_create')}
-        </Title>
-
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+    <form onSubmit={handleSubmit} className={modalFormTabsClassName}>
+      <div className="flex shrink-0 items-center justify-between border-b border-gray-100 px-6 py-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#143087] to-[#39519B] shadow">
+            <PiTextT className="h-5 w-5 text-white" />
+          </div>
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              {t('highlights_form_title_ar')} <span className="text-red-500">*</span>
-            </label>
-            <Input
-              placeholder={t('highlights_form_title_ar_ph')}
-              dir="rtl"
-              value={titleAr}
-              onChange={(e) => setTitleAr(e.target.value)}
-              required
-            />
+            <h4 className="text-lg font-bold text-gray-900">
+              {isEdit
+                ? t('highlights_form_edit_info')
+                : t('highlights_form_create')}
+            </h4>
+            <p className="mt-0.5 text-xs text-gray-400">
+              Fill each tab — save stays available on every step
+            </p>
           </div>
-
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              {t('highlights_form_title_en')} <span className="text-red-500">*</span>
-            </label>
-            <Input
-              placeholder={t('highlights_form_title_en_ph')}
-              value={titleEn}
-              onChange={(e) => setTitleEn(e.target.value)}
-              required
-            />
-          </div>
-
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              {t('highlights_form_visibility')} <span className="text-red-500">*</span>
-            </label>
-            <Select
-              options={[
-                { value: 'always', label: t('highlights_form_visibility_always'), name: 'Always' },
-                { value: 'daily', label: t('highlights_form_visibility_daily'), name: 'Daily' },
-              ]}
-              value={visibilityType}
-              getOptionValue={(opt: any) => opt.value}
-              onChange={(opt: any) => setVisibilityType(opt?.value ?? opt)}
-            />
-          </div>
-
-          {/* Order Priority input removed: order is auto-assigned (kept as-is on
-              edit, 0 on create). Mobile relies on the list order, so a manual
-              priority is not needed for now. */}
-
-          <div className="md:col-span-2">
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              {t('highlights_form_cover')} {!isEdit && <span className="text-red-500">*</span>} {t('highlights_form_cover_hint')}
-            </label>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              {coverPreview && (
-                <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-full border border-gray-300 bg-gray-50">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={coverPreview}
-                    alt="Cover preview"
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-              )}
-              <div className="flex-1">
-                <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-gray-300 p-4 text-sm font-medium text-gray-600 hover:border-gray-900 hover:text-gray-900">
-                  <span>
-                    {coverFile ? coverFile.name : t('highlights_form_choose_cover')}
-                  </span>
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp,image/gif"
-                    className="hidden"
-                    onChange={handleCoverChange}
-                  />
-                </label>
-              </div>
-            </div>
-          </div>
-
-          {SHOW_COUNTRY_TARGETING && (
-            <div className="md:col-span-2">
-              <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                {t('highlights_form_countries')}
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {countryOptions.map((c: any) => {
-                  const isSelected = selectedCountries.includes(c.value);
-                  return (
-                    <button
-                      key={c.value}
-                      type="button"
-                      onClick={() => {
-                        setSelectedCountries((prev) =>
-                          isSelected
-                            ? prev.filter((id) => id !== c.value)
-                            : [...prev, c.value]
-                        );
-                      }}
-                      className={`rounded-full px-3 py-1 text-xs font-medium transition ${isSelected
-                        ? 'bg-[#143087] text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
-                    >
-                      {c.label} {isSelected ? '✓' : '+'}
-                    </button>
-                  );
-                })}
-                {countryOptions.length === 0 && (
-                  <Text className="text-xs text-gray-500">
-                    {t('highlights_form_all_countries')}
-                  </Text>
-                )}
-              </div>
-            </div>
-          )}
-
-          <div className="flex items-center gap-6 md:col-span-2">
-            <div className="flex items-center gap-2">
-              <Switch
-                checked={isPinned}
-                onChange={() => setIsPinned(!isPinned)}
-              />
-              <div>
-                <Text className="text-sm font-semibold text-gray-900">
-                  {t('highlights_form_pin')}
-                </Text>
-                <Text className="text-xs text-gray-500">
-                  {t('highlights_form_pin_hint')}
-                </Text>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Switch
-                checked={isActive}
-                onChange={() => setIsActive(!isActive)}
-              />
-              <div>
-                <Text className="text-sm font-semibold text-gray-900">
-                  {t('highlights_form_active')}
-                </Text>
-                <Text className="text-xs text-gray-500">
-                  {t('highlights_form_active_hint')}
-                </Text>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-6 flex justify-end gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => router.push(routes.highlights.index)}
-          >
-            {t('highlights_cancel')}
-          </Button>
-          <Button type="submit" isLoading={isLoading}>
-            {isEdit ? t('highlights_form_save') : t('highlights_form_create_continue')}
-          </Button>
         </div>
       </div>
+
+      <ModalFormTabs
+        tabs={tabsWithErrors}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      >
+        <ModalFormTabPanel>
+          <div className="space-y-5">
+            <ModalFormTabPanelCard
+              title="Content"
+              description="Titles and visibility"
+            >
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                  {t('highlights_form_title_ar')}{' '}
+                  <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  placeholder={t('highlights_form_title_ar_ph')}
+                  dir="rtl"
+                  value={titleAr}
+                  onChange={(e) => setTitleAr(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                  {t('highlights_form_title_en')}{' '}
+                  <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  placeholder={t('highlights_form_title_en_ph')}
+                  value={titleEn}
+                  onChange={(e) => setTitleEn(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                  {t('highlights_form_visibility')}{' '}
+                  <span className="text-red-500">*</span>
+                </label>
+                <Select
+                  options={[
+                    {
+                      value: 'always',
+                      label: t('highlights_form_visibility_always'),
+                      name: 'Always',
+                    },
+                    {
+                      value: 'daily',
+                      label: t('highlights_form_visibility_daily'),
+                      name: 'Daily',
+                    },
+                  ]}
+                  value={visibilityType}
+                  getOptionValue={(opt: any) => opt.value}
+                  onChange={(opt: any) => setVisibilityType(opt?.value ?? opt)}
+                />
+              </div>
+            </ModalFormTabPanelCard>
+          </div>
+        </ModalFormTabPanel>
+
+        <ModalFormTabPanel>
+          <div className="space-y-5">
+            <ModalFormTabPanelCard
+              title="Media"
+              description="Cover image"
+              contentClassName="grid gap-4 sm:grid-cols-1"
+            >
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                  {t('highlights_form_cover')}{' '}
+                  {!isEdit && <span className="text-red-500">*</span>}{' '}
+                  {t('highlights_form_cover_hint')}
+                </label>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  {coverPreview && (
+                    <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-full border border-gray-300 bg-gray-50">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={coverPreview}
+                        alt="Cover preview"
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-gray-300 p-4 text-sm font-medium text-gray-600 hover:border-gray-900 hover:text-gray-900">
+                      <span>
+                        {coverFile
+                          ? coverFile.name
+                          : t('highlights_form_choose_cover')}
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        className="hidden"
+                        onChange={handleCoverChange}
+                      />
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </ModalFormTabPanelCard>
+          </div>
+        </ModalFormTabPanel>
+
+        <ModalFormTabPanel>
+          <div className="space-y-5">
+            <ModalFormTabPanelCard
+              title="Settings"
+              description="Pin, active status and targeting"
+              contentClassName="grid gap-4 sm:grid-cols-1"
+            >
+              {SHOW_COUNTRY_TARGETING && (
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                    {t('highlights_form_countries')}
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {countryOptions.map((c: any) => {
+                      const isSelected = selectedCountries.includes(c.value);
+                      return (
+                        <button
+                          key={c.value}
+                          type="button"
+                          onClick={() => {
+                            setSelectedCountries((prev) =>
+                              isSelected
+                                ? prev.filter((id) => id !== c.value)
+                                : [...prev, c.value]
+                            );
+                          }}
+                          className={`rounded-full px-3 py-1 text-xs font-medium transition ${
+                            isSelected
+                              ? 'bg-[#143087] text-white'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
+                        >
+                          {c.label} {isSelected ? '✓' : '+'}
+                        </button>
+                      );
+                    })}
+                    {countryOptions.length === 0 && (
+                      <Text className="text-xs text-gray-500">
+                        {t('highlights_form_all_countries')}
+                      </Text>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={isPinned}
+                    onChange={() => setIsPinned(!isPinned)}
+                  />
+                  <div>
+                    <Text className="text-sm font-semibold text-gray-900">
+                      {t('highlights_form_pin')}
+                    </Text>
+                    <Text className="text-xs text-gray-500">
+                      {t('highlights_form_pin_hint')}
+                    </Text>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={isActive}
+                    onChange={() => setIsActive(!isActive)}
+                  />
+                  <div>
+                    <Text className="text-sm font-semibold text-gray-900">
+                      {t('highlights_form_active')}
+                    </Text>
+                    <Text className="text-xs text-gray-500">
+                      {t('highlights_form_active_hint')}
+                    </Text>
+                  </div>
+                </div>
+              </div>
+            </ModalFormTabPanelCard>
+          </div>
+        </ModalFormTabPanel>
+      </ModalFormTabs>
+
+      <ModalFormTabsFooter
+        activeTab={activeTab}
+        tabCount={HIGHLIGHT_TABS.length}
+        onPrev={() => goToTab(activeTab - 1)}
+        onNext={() => goToTab(activeTab + 1)}
+        onCancel={() => router.push(routes.highlights.index)}
+        cancelLabel={t('highlights_cancel')}
+        isLoading={isLoading}
+        disabled={isLoading}
+        submitLabel={
+          isEdit
+            ? t('highlights_form_save')
+            : t('highlights_form_create_continue')
+        }
+      />
     </form>
   );
 }

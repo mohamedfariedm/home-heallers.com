@@ -75,6 +75,7 @@ export const getColumns = ({
               }
               view={<RegionForm initValues={row} />}
               label=""
+              customSize="960px"
               className="p-0 m-0 bg-transparent text-gray-700"
             />
           </Tooltip>

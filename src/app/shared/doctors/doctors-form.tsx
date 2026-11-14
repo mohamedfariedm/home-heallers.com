@@ -1,16 +1,27 @@
-import {
-  ModalFormHeader,
-  ModalFormFooter,
-  modalFormClassName,
-} from '@/components/ui/modal-form-shell';
 import React, { useMemo, useState } from 'react';
-import { useForm, SubmitHandler, Controller } from 'react-hook-form';
-import { PiXBold } from 'react-icons/pi';
+import {
+  SubmitHandler,
+  Controller,
+  type FieldErrors,
+} from 'react-hook-form';
+import {
+  PiXBold,
+  PiUser,
+  PiFolders,
+  PiBriefcase,
+  PiClock,
+} from 'react-icons/pi';
 import { Form } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Title } from '@/components/ui/text';
-import { ActionIcon, Checkbox, Switch } from 'rizzui';
+import { ActionIcon, Switch } from 'rizzui';
+import {
+  ModalFormTabs,
+  ModalFormTabPanel,
+  ModalFormTabPanelCard,
+  ModalFormTabsFooter,
+  modalFormTabsClassName,
+  type ModalFormTabItem,
+} from '@/components/ui/modal-form-tabs';
 import { useModal } from '../modal-views/use-modal';
 import { useCreateDoctors, useUpdateDoctors } from '@/framework/doctors';
 import { DoctorFormInput, doctorFormSchema, employmentTypeOptions } from '@/utils/validators/doctors-form-schema';
@@ -19,7 +30,6 @@ import { useCities } from '@/framework/cities';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import toast from 'react-hot-toast';
-import FormGroup from '../form-group';
 import Spinner from '@/components/ui/spinner';
 import Upload from '@/components/ui/upload';
 import { useCategories } from '@/framework/categories';
@@ -55,10 +65,88 @@ const classifications = [
   { id: 'General Practitioner', name: 'General Practitioner' },
 ];
 
+type DoctorTabId = 'profile' | 'assignment' | 'professional' | 'schedule';
+
+const DOCTOR_TABS: {
+  id: DoctorTabId;
+  label: string;
+  icon: typeof PiUser;
+}[] = [
+  { id: 'profile', label: 'Profile', icon: PiUser },
+  { id: 'assignment', label: 'Assignment', icon: PiFolders },
+  { id: 'professional', label: 'Professional', icon: PiBriefcase },
+  { id: 'schedule', label: 'Schedule', icon: PiClock },
+];
+
+const PROFILE_ERROR_KEYS = [
+  'name',
+  'doctor_role',
+  'email',
+  'national_id',
+  'country_code',
+  'mobile_number',
+  'date_of_birth',
+  'blood_group',
+  'gender',
+  'nationality_id',
+  'city_id',
+  'status',
+];
+
+const ASSIGNMENT_ERROR_KEYS = ['category_ids', 'group_ids'];
+
+const PROFESSIONAL_ERROR_KEYS = [
+  'degree',
+  'languages_spoken',
+  'classification',
+  'department',
+  'experience',
+  'medical_school',
+  'memberships',
+  'specialized_in',
+  'awards',
+  'certification',
+  'upload_attachments',
+  'medical_registration_number',
+  'medical_license_expiry',
+  'specialist',
+  'sub_specialist',
+  'clinic_name',
+];
+
+const SCHEDULE_ERROR_KEYS = [
+  'from',
+  'to',
+  'employment_type',
+  'part_time_session_price',
+];
+
+function doctorTabHasErrors(
+  tabId: DoctorTabId,
+  errors: FieldErrors<DoctorFormInput> | Record<string, unknown>
+): boolean {
+  const has = (keys: string[]) =>
+    keys.some((key) => Boolean((errors as Record<string, unknown>)?.[key]));
+
+  switch (tabId) {
+    case 'profile':
+      return has(PROFILE_ERROR_KEYS);
+    case 'assignment':
+      return has(ASSIGNMENT_ERROR_KEYS);
+    case 'professional':
+      return has(PROFESSIONAL_ERROR_KEYS);
+    case 'schedule':
+      return has(SCHEDULE_ERROR_KEYS);
+    default:
+      return false;
+  }
+}
+
 export default function CreateOrUpdateDoctors({ initValues }: { initValues?: any }) {
   const { mutate: createDoctor, isPending: isCreating } = useCreateDoctors();
   const { mutate: updateDoctor, isPending: isUpdating } = useUpdateDoctors();
-  const [lang, setLang] = useState<"en" | "ar">("en");
+  const [lang] = useState<"en" | "ar">("en");
+  const [activeTab, setActiveTab] = useState(0);
 
   const { data: nationalities, isLoading } = useNationality("");
   const { data: cities, isLoading: isLoadingCities } = useCities('');
@@ -163,6 +251,17 @@ export default function CreateOrUpdateDoctors({ initValues }: { initValues?: any
     setLoading(false);
   };
 
+  const onInvalid = (formErrors: FieldErrors<DoctorFormInput>) => {
+    const tabIndex = DOCTOR_TABS.findIndex((tab) =>
+      doctorTabHasErrors(tab.id, formErrors)
+    );
+    if (tabIndex >= 0) setActiveTab(tabIndex);
+  };
+
+  const goToTab = (index: number) => {
+    setActiveTab(Math.max(0, Math.min(DOCTOR_TABS.length - 1, index)));
+  };
+
   // Build category options once per lang/categories data
   const categoryOptions: SelectOption[] = useMemo(
     () =>
@@ -192,6 +291,7 @@ export default function CreateOrUpdateDoctors({ initValues }: { initValues?: any
   return (
     <Form<DoctorFormInput>
       onSubmit={onSubmit}
+      onInvalid={onInvalid}
       validationSchema={doctorFormSchema}
       useFormProps={{
         defaultValues: {
@@ -249,341 +349,378 @@ export default function CreateOrUpdateDoctors({ initValues }: { initValues?: any
               : '',
         },
       }}
-      className="flex flex-grow flex-col gap-6 p-6 overflow-y-auto"
+      className={modalFormTabsClassName}
     >
-      {({ register, formState: { errors }, watch, setValue, control }) => (
-        <>
-          <ModalFormHeader title={initValues ? 'Update Doctor' : 'Create Doctor'} />
-          <Input
-            key={"name.unified"}
-            label="Name"
-            placeholder="Enter name"
-            {...register("name.en", {
-              onChange: (e) => setValue("name.ar", e.target.value, { shouldValidate: true }),
-            })}
-            error={errors.name?.en?.message || errors.name?.ar?.message}
-          />
+      {({ register, formState: { errors }, watch, setValue, control }) => {
+        const tabsWithErrors: ModalFormTabItem[] = DOCTOR_TABS.map((tab) => ({
+          ...tab,
+          hasError: doctorTabHasErrors(tab.id, errors),
+        }));
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm text-gray-700">Doctor Role</label>
-              <select {...register('doctor_role')} className="w-full border border-gray-300 rounded-lg p-2">
-                <option value="">Select Doctor Role</option>
-                {doctorRoles.map(role => (
-                  <option key={role.id} value={role.id}>{role.name}</option>
-                ))}
-              </select>
-              {errors.doctor_role && <p className="text-sm text-red-500">{errors.doctor_role.message}</p>}
-            </div>
-            <Input label="Email" type="email" {...register('email')} error={errors.email?.message} />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <Input label="National ID" {...register('national_id')} error={errors.national_id?.message} />
-            <Input label="Country Code (Optional)" {...register('country_code')} error={errors.country_code?.message} />
-          </div>
-
-          <div className="grid grid-cols-1 gap-4">
-            {/* ✅ Multi-select Categories using SelectBox + Controller */}
-            <div>
-              <Controller
-                name="category_ids"
-                control={control}
-                render={({ field: { value, onChange } }) => {
-                  // value is string[] of ids; convert to array of option objects
-                  const selectedOptions =
-                    Array.isArray(value)
-                      ? categoryOptions.filter((opt) => value.includes(String(opt.value)))
-                      : [];
-
-                  return (
-                    <SelectBox
-                      multiple
-                      options={categoryOptions}
-                      value={selectedOptions}
-                      onChange={(opts: SelectOption[] | SelectOption) => {
-                        const ids = Array.isArray(opts)
-                          ? opts.map((o) => String(o.value))
-                          : opts
-                          ? [String((opts as SelectOption).value)]
-                          : [];
-                        onChange(ids);
-                      }}
-                      isRequired
-                      disabled={isLoadingCategories}
-                      label="Categories"
-                      placeholder="Select Categories"
-                      error={(errors.category_ids as any)?.message}
-                      // show comma-joined labels when multiple
-                      displayValue={(val: any) => {
-                        if (Array.isArray(val)) {
-                          if (val.length === 0) return '';
-                          return val.map((o: any) => o?.label ?? o?.name ?? o?.value).join(', ');
-                        }
-                        // single fallback (not used when multiple=true, but safe)
-                        if (val?.label) return val.label;
-                        if (val?.name) return val.name;
-                        return val ?? '';
-                      }}
-                    />
-                  );
-                }}
-              />
-            </div>
-
-            <div>
-              <Controller
-                name="group_ids"
-                control={control}
-                render={({ field: { value, onChange } }) => {
-                  const selectedOptions =
-                    Array.isArray(value)
-                      ? groupOptions.filter((opt) => value.includes(String(opt.value)))
-                      : [];
-
-                  return (
-                    <SelectBox
-                      multiple
-                      options={groupOptions}
-                      value={selectedOptions}
-                      onChange={(opts: SelectOption[] | SelectOption) => {
-                        const ids = Array.isArray(opts)
-                          ? opts.map((o) => String(o.value))
-                          : opts
-                            ? [String((opts as SelectOption).value)]
-                            : [];
-                        onChange(ids);
-                      }}
-                      disabled={isLoadingGroups}
-                      label="Groups (optional)"
-                      placeholder="Select groups"
-                      error={(errors.group_ids as any)?.message}
-                      displayValue={(val: any) => {
-                        if (Array.isArray(val)) {
-                          if (val.length === 0) return '';
-                          return val.map((o: any) => o?.label ?? o?.name ?? o?.value).join(', ');
-                        }
-                        if (val?.label) return val.label;
-                        if (val?.name) return val.name;
-                        return val ?? '';
-                      }}
-                    />
-                  );
-                }}
-              />
-            </div>
-
-            <div>
-              <label className="text-sm text-gray-700">Nationality (Optional)</label>
-              <select {...register('nationality_id')} className="w-full border border-gray-300 rounded-lg p-2">
-                <option value="">Select Nationality</option>
-                {nationalities?.data?.map((nationality:any) => (
-                  <option key={nationality.id} value={nationality.id}>{nationality.name.en}</option>
-                ))}
-              </select>
-              {errors.nationality_id && <p className="text-sm text-red-500">{errors.nationality_id.message}</p>}
-            </div>
-
-            <div>
-              <label className="text-sm text-gray-700">City (Optional)</label>
-              <select
-                {...register('city_id')}
-                className="w-full border border-gray-300 rounded-lg p-2"
-                disabled={isLoadingCities}
-              >
-                <option value="">
-                  {isLoadingCities ? 'Loading cities...' : 'Select City'}
-                </option>
-                {cities?.data?.map((city: any) => (
-                  <option key={city.id} value={city.id}>
-                    {city.name?.en ?? city.name?.ar ?? `City ${city.id}`}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <Input label="Mobile Number" {...register('mobile_number')} error={errors.mobile_number?.message} />
-            <Input label="Date of Birth" type="date" {...register('date_of_birth')} error={errors.date_of_birth?.message} />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm text-gray-700">Blood Group (Optional)</label>
-              <select {...register('blood_group')} className="w-full border border-gray-300 rounded-lg p-2">
-                <option value="">Select Blood Group</option>
-                {bloodGroups.map(group => (
-                  <option key={group.id} value={group.id}>{group.name}</option>
-                ))}
-              </select>
-              {errors.blood_group && <p className="text-sm text-red-500">{errors.blood_group.message}</p>}
-            </div>
-            <div>
-              <label className="text-sm text-gray-700">Gender</label>
-              <select {...register('gender')} className="w-full border border-gray-300 rounded-lg p-2">
-                <option value="">Select Gender</option>
-                {genders.map(gender => (
-                  <option key={gender.id} value={gender.id}>{gender.name}</option>
-                ))}
-              </select>
-              {errors.gender && <p className="text-sm text-red-500">{errors.gender.message}</p>}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <Input label="Degree" {...register('degree')} error={errors.degree?.message} />
-            <Input label="Languages Spoken" {...register('languages_spoken')} error={errors.languages_spoken?.message} />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm text-gray-700">Classification</label>
-              <select {...register('classification')} className="w-full border border-gray-300 rounded-lg p-2">
-                <option value="">Select Classification</option>
-                {classifications.map(classification => (
-                  <option key={classification.id} value={classification.id}>{classification.name}</option>
-                ))}
-              </select>
-              {errors.classification && <p className="text-sm text-red-500">{errors.classification.message}</p>}
-            </div>
-            <Input label="Department" {...register('department')} error={errors.department?.message} />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <Input label="Experience (Years)" type="number" {...register('experience')} error={errors.experience?.message} />
-            <Input label="Medical School" {...register('medical_school')} error={errors.medical_school?.message} />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <Input label="Memberships (Optional)" {...register('memberships')} error={errors.memberships?.message} />
-            <Input label="Specialized In" {...register('specialized_in')} error={errors.specialized_in?.message} />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <Input label="Awards (Optional)" {...register('awards')} error={errors.awards?.message} />
-            <Input label="Certification (Optional)" {...register('certification')} error={errors.certification?.message} />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <Input label="Medical Registration Number" {...register('medical_registration_number')} error={errors.medical_registration_number?.message} />
-            <Input label="Medical License Expiry" type="date" {...register('medical_license_expiry')} error={errors.medical_license_expiry?.message} />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <Input label="Specialist" {...register('specialist')} error={errors.specialist?.message} />
-            <Input label="Sub Specialist (Optional)" {...register('sub_specialist')} error={errors.sub_specialist?.message} />
-          </div>
-
-          <Input label="Clinic Name" {...register('clinic_name')} error={errors.clinic_name?.message} />
-
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              label="From Time"
-              type="time"
-              {...register('from')}
-              error={errors.from?.message}
-              helperText="Working hours start time"
-            />
-            <Input
-              label="To Time"
-              type="time"
-              {...register('to')}
-              error={errors.to?.message}
-              helperText="Working hours end time"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm text-gray-700">Employment Type</label>
-              <select
-                {...register('employment_type', {
-                  onChange: (e) => {
-                    if (e.target.value !== 'part_time') {
-                      setValue('part_time_session_price', '', { shouldValidate: false });
-                    }
-                  },
-                })}
-                className="w-full border border-gray-300 rounded-lg p-2"
-              >
-                <option value="">Select Employment Type</option>
-                {employmentTypeOptions.map((opt) => (
-                  <option key={opt.id} value={opt.id}>{opt.name}</option>
-                ))}
-              </select>
-              {errors.employment_type && (
-                <p className="text-sm text-red-500">{errors.employment_type.message}</p>
-              )}
-            </div>
-            {watch('employment_type') === 'part_time' && (
-              <Input
-                label="Part Time Session Price"
-                type="number"
-                step="0.01"
-                min="0"
-                {...register('part_time_session_price')}
-                error={errors.part_time_session_price?.message}
-              />
-            )}
-          </div>
-
-          <FormGroup
-            title="Image"
-            className="relative pt-7 @2xl:pt-9 @3xl:grid-cols-12 @3xl:pt-11"
-          >
-            {(isLoading || loading) && (
-              <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/80 rounded-md">
-                <Spinner size="xl" />
-              </div>
-            )}
-            <div className="flex flex-col gap-2">
-              <Upload
-                title="Image"
-                accept="img"
-                onChange={(e) => {
-                  setImageError(0);
-                  handleFileUpload(e, 'Image');
-                }}
-              />
-              {imageError > 0 && (
-                <p className="text-xs text-red-500">Image is required.</p>
-              )}
-              {(isImageData?.[0]?.thumbnail || isImageData?.[0]?.original) && (
-                <div className="relative flex justify-center items-center w-full mt-2">
-                  <img
-                    src={isImageData[0].thumbnail || isImageData[0].original}
-                    alt="Uploaded Preview"
-                    className="w-48 h-auto rounded border border-gray-200 shadow-sm"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setImage(null)}
-                    className="absolute -top-2 -right-2 bg-white border border-gray-300 rounded-full p-1 shadow hover:bg-red-50"
-                    title="Remove Image"
-                  >
-                    <PiXBold className="w-4 h-4 text-red-500" />
-                  </button>
+        return (
+          <>
+            <div className="flex shrink-0 items-center justify-between border-b border-gray-100 px-6 py-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#143087] to-[#39519B] shadow">
+                  <PiUser className="h-5 w-5 text-white" />
                 </div>
-              )}
+                <div>
+                  <h4 className="text-lg font-bold text-gray-900">
+                    {initValues ? 'Update Doctor' : 'Create Doctor'}
+                  </h4>
+                  <p className="mt-0.5 text-xs text-gray-400">
+                    Fill each tab — save stays available on every step
+                  </p>
+                </div>
+              </div>
+              <ActionIcon
+                size="sm"
+                variant="outline"
+                onClick={closeModal}
+                className="rounded-lg border-gray-200 text-gray-500 hover:border-[#143087]/40 hover:bg-blue-50 hover:text-[#143087]"
+              >
+                <PiXBold className="h-4 w-4" />
+              </ActionIcon>
             </div>
-          </FormGroup>
 
-          <div className="flex items-center gap-2">
-            <Switch
-              checked={watch('status')}
-              onChange={(event) => setValue('status', event.target.checked)}
+            <ModalFormTabs
+              tabs={tabsWithErrors}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+            >
+              {/* ── Profile ── */}
+              <ModalFormTabPanel>
+                <div className="space-y-5">
+                  <ModalFormTabPanelCard
+                    title="Basic information"
+                    description="Identity and contact details"
+                  >
+                    <Input
+                      key={"name.unified"}
+                      label="Name"
+                      placeholder="Enter name"
+                      {...register("name.en", {
+                        onChange: (e) => setValue("name.ar", e.target.value, { shouldValidate: true }),
+                      })}
+                      error={errors.name?.en?.message || errors.name?.ar?.message}
+                    />
+                    <div>
+                      <label className="text-sm text-gray-700">Doctor Role</label>
+                      <select {...register('doctor_role')} className="w-full border border-gray-300 rounded-lg p-2">
+                        <option value="">Select Doctor Role</option>
+                        {doctorRoles.map(role => (
+                          <option key={role.id} value={role.id}>{role.name}</option>
+                        ))}
+                      </select>
+                      {errors.doctor_role && <p className="text-sm text-red-500">{errors.doctor_role.message}</p>}
+                    </div>
+                    <Input label="Email" type="email" {...register('email')} error={errors.email?.message} />
+                    <Input label="National ID" {...register('national_id')} error={errors.national_id?.message} />
+                    <Input label="Country Code (Optional)" {...register('country_code')} error={errors.country_code?.message} />
+                    <Input label="Mobile Number" {...register('mobile_number')} error={errors.mobile_number?.message} />
+                    <Input label="Date of Birth" type="date" {...register('date_of_birth')} error={errors.date_of_birth?.message} />
+                    <div>
+                      <label className="text-sm text-gray-700">Blood Group (Optional)</label>
+                      <select {...register('blood_group')} className="w-full border border-gray-300 rounded-lg p-2">
+                        <option value="">Select Blood Group</option>
+                        {bloodGroups.map(group => (
+                          <option key={group.id} value={group.id}>{group.name}</option>
+                        ))}
+                      </select>
+                      {errors.blood_group && <p className="text-sm text-red-500">{errors.blood_group.message}</p>}
+                    </div>
+                    <div>
+                      <label className="text-sm text-gray-700">Gender</label>
+                      <select {...register('gender')} className="w-full border border-gray-300 rounded-lg p-2">
+                        <option value="">Select Gender</option>
+                        {genders.map(gender => (
+                          <option key={gender.id} value={gender.id}>{gender.name}</option>
+                        ))}
+                      </select>
+                      {errors.gender && <p className="text-sm text-red-500">{errors.gender.message}</p>}
+                    </div>
+                    <div>
+                      <label className="text-sm text-gray-700">Nationality (Optional)</label>
+                      <select {...register('nationality_id')} className="w-full border border-gray-300 rounded-lg p-2">
+                        <option value="">Select Nationality</option>
+                        {nationalities?.data?.map((nationality:any) => (
+                          <option key={nationality.id} value={nationality.id}>{nationality.name.en}</option>
+                        ))}
+                      </select>
+                      {errors.nationality_id && <p className="text-sm text-red-500">{errors.nationality_id.message}</p>}
+                    </div>
+                    <div>
+                      <label className="text-sm text-gray-700">City (Optional)</label>
+                      <select
+                        {...register('city_id')}
+                        className="w-full border border-gray-300 rounded-lg p-2"
+                        disabled={isLoadingCities}
+                      >
+                        <option value="">
+                          {isLoadingCities ? 'Loading cities...' : 'Select City'}
+                        </option>
+                        {cities?.data?.map((city: any) => (
+                          <option key={city.id} value={city.id}>
+                            {city.name?.en ?? city.name?.ar ?? `City ${city.id}`}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </ModalFormTabPanelCard>
+
+                  <ModalFormTabPanelCard
+                    title="Photo & status"
+                    description="Profile image and active flag"
+                    contentClassName="sm:grid-cols-1"
+                  >
+                    <div className="relative">
+                      {(isLoading || loading) && (
+                        <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/80 rounded-md">
+                          <Spinner size="xl" />
+                        </div>
+                      )}
+                      <div className="flex flex-col gap-2">
+                        <Upload
+                          title="Image"
+                          accept="img"
+                          onChange={(e) => {
+                            setImageError(0);
+                            handleFileUpload(e, 'Image');
+                          }}
+                        />
+                        {imageError > 0 && (
+                          <p className="text-xs text-red-500">Image is required.</p>
+                        )}
+                        {(isImageData?.[0]?.thumbnail || isImageData?.[0]?.original) && (
+                          <div className="relative flex justify-center items-center w-full mt-2">
+                            <img
+                              src={isImageData[0].thumbnail || isImageData[0].original}
+                              alt="Uploaded Preview"
+                              className="w-48 h-auto rounded border border-gray-200 shadow-sm"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setImage(null)}
+                              className="absolute -top-2 -right-2 bg-white border border-gray-300 rounded-full p-1 shadow hover:bg-red-50"
+                              title="Remove Image"
+                            >
+                              <PiXBold className="w-4 h-4 text-red-500" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={watch('status')}
+                        onChange={(event) => setValue('status', event.target.checked)}
+                      />
+                      <label className="text-sm text-gray-700">Active Status</label>
+                    </div>
+                  </ModalFormTabPanelCard>
+                </div>
+              </ModalFormTabPanel>
+
+              {/* ── Assignment ── */}
+              <ModalFormTabPanel>
+                <div className="space-y-5">
+                  <ModalFormTabPanelCard
+                    title="Categories & groups"
+                    description="Assign this doctor to categories and optional groups"
+                    contentClassName="sm:grid-cols-1"
+                  >
+                    <div>
+                      <Controller
+                        name="category_ids"
+                        control={control}
+                        render={({ field: { value, onChange } }) => {
+                          const selectedOptions =
+                            Array.isArray(value)
+                              ? categoryOptions.filter((opt) => value.includes(String(opt.value)))
+                              : [];
+
+                          return (
+                            <SelectBox
+                              multiple
+                              options={categoryOptions}
+                              value={selectedOptions}
+                              onChange={(opts: SelectOption[] | SelectOption) => {
+                                const ids = Array.isArray(opts)
+                                  ? opts.map((o) => String(o.value))
+                                  : opts
+                                  ? [String((opts as SelectOption).value)]
+                                  : [];
+                                onChange(ids);
+                              }}
+                              isRequired
+                              disabled={isLoadingCategories}
+                              label="Categories"
+                              placeholder="Select Categories"
+                              error={(errors.category_ids as any)?.message}
+                              displayValue={(val: any) => {
+                                if (Array.isArray(val)) {
+                                  if (val.length === 0) return '';
+                                  return val.map((o: any) => o?.label ?? o?.name ?? o?.value).join(', ');
+                                }
+                                if (val?.label) return val.label;
+                                if (val?.name) return val.name;
+                                return val ?? '';
+                              }}
+                            />
+                          );
+                        }}
+                      />
+                    </div>
+
+                    <div>
+                      <Controller
+                        name="group_ids"
+                        control={control}
+                        render={({ field: { value, onChange } }) => {
+                          const selectedOptions =
+                            Array.isArray(value)
+                              ? groupOptions.filter((opt) => value.includes(String(opt.value)))
+                              : [];
+
+                          return (
+                            <SelectBox
+                              multiple
+                              options={groupOptions}
+                              value={selectedOptions}
+                              onChange={(opts: SelectOption[] | SelectOption) => {
+                                const ids = Array.isArray(opts)
+                                  ? opts.map((o) => String(o.value))
+                                  : opts
+                                    ? [String((opts as SelectOption).value)]
+                                    : [];
+                                onChange(ids);
+                              }}
+                              disabled={isLoadingGroups}
+                              label="Groups (optional)"
+                              placeholder="Select groups"
+                              error={(errors.group_ids as any)?.message}
+                              displayValue={(val: any) => {
+                                if (Array.isArray(val)) {
+                                  if (val.length === 0) return '';
+                                  return val.map((o: any) => o?.label ?? o?.name ?? o?.value).join(', ');
+                                }
+                                if (val?.label) return val.label;
+                                if (val?.name) return val.name;
+                                return val ?? '';
+                              }}
+                            />
+                          );
+                        }}
+                      />
+                    </div>
+                  </ModalFormTabPanelCard>
+                </div>
+              </ModalFormTabPanel>
+
+              {/* ── Professional ── */}
+              <ModalFormTabPanel>
+                <div className="space-y-5">
+                  <ModalFormTabPanelCard
+                    title="Credentials"
+                    description="Education, specialty, and license details"
+                  >
+                    <Input label="Degree" {...register('degree')} error={errors.degree?.message} />
+                    <Input label="Languages Spoken" {...register('languages_spoken')} error={errors.languages_spoken?.message} />
+                    <div>
+                      <label className="text-sm text-gray-700">Classification</label>
+                      <select {...register('classification')} className="w-full border border-gray-300 rounded-lg p-2">
+                        <option value="">Select Classification</option>
+                        {classifications.map(classification => (
+                          <option key={classification.id} value={classification.id}>{classification.name}</option>
+                        ))}
+                      </select>
+                      {errors.classification && <p className="text-sm text-red-500">{errors.classification.message}</p>}
+                    </div>
+                    <Input label="Department" {...register('department')} error={errors.department?.message} />
+                    <Input label="Experience (Years)" type="number" {...register('experience')} error={errors.experience?.message} />
+                    <Input label="Medical School" {...register('medical_school')} error={errors.medical_school?.message} />
+                    <Input label="Memberships (Optional)" {...register('memberships')} error={errors.memberships?.message} />
+                    <Input label="Specialized In" {...register('specialized_in')} error={errors.specialized_in?.message} />
+                    <Input label="Awards (Optional)" {...register('awards')} error={errors.awards?.message} />
+                    <Input label="Certification (Optional)" {...register('certification')} error={errors.certification?.message} />
+                    <Input label="Medical Registration Number" {...register('medical_registration_number')} error={errors.medical_registration_number?.message} />
+                    <Input label="Medical License Expiry" type="date" {...register('medical_license_expiry')} error={errors.medical_license_expiry?.message} />
+                    <Input label="Specialist" {...register('specialist')} error={errors.specialist?.message} />
+                    <Input label="Sub Specialist (Optional)" {...register('sub_specialist')} error={errors.sub_specialist?.message} />
+                    <Input label="Clinic Name" {...register('clinic_name')} error={errors.clinic_name?.message} />
+                  </ModalFormTabPanelCard>
+                </div>
+              </ModalFormTabPanel>
+
+              {/* ── Schedule ── */}
+              <ModalFormTabPanel>
+                <div className="space-y-5">
+                  <ModalFormTabPanelCard
+                    title="Working hours & employment"
+                    description="Availability window and employment type"
+                  >
+                    <Input
+                      label="From Time"
+                      type="time"
+                      {...register('from')}
+                      error={errors.from?.message}
+                      helperText="Working hours start time"
+                    />
+                    <Input
+                      label="To Time"
+                      type="time"
+                      {...register('to')}
+                      error={errors.to?.message}
+                      helperText="Working hours end time"
+                    />
+                    <div>
+                      <label className="text-sm text-gray-700">Employment Type</label>
+                      <select
+                        {...register('employment_type', {
+                          onChange: (e) => {
+                            if (e.target.value !== 'part_time') {
+                              setValue('part_time_session_price', '', { shouldValidate: false });
+                            }
+                          },
+                        })}
+                        className="w-full border border-gray-300 rounded-lg p-2"
+                      >
+                        <option value="">Select Employment Type</option>
+                        {employmentTypeOptions.map((opt) => (
+                          <option key={opt.id} value={opt.id}>{opt.name}</option>
+                        ))}
+                      </select>
+                      {errors.employment_type && (
+                        <p className="text-sm text-red-500">{errors.employment_type.message}</p>
+                      )}
+                    </div>
+                    {watch('employment_type') === 'part_time' && (
+                      <Input
+                        label="Part Time Session Price"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        {...register('part_time_session_price')}
+                        error={errors.part_time_session_price?.message}
+                      />
+                    )}
+                  </ModalFormTabPanelCard>
+                </div>
+              </ModalFormTabPanel>
+            </ModalFormTabs>
+
+            <ModalFormTabsFooter
+              activeTab={activeTab}
+              tabCount={DOCTOR_TABS.length}
+              onPrev={() => goToTab(activeTab - 1)}
+              onNext={() => goToTab(activeTab + 1)}
+              onCancel={closeModal}
+              isLoading={isCreating || isUpdating}
+              submitLabel={initValues ? 'Update Doctor' : 'Create Doctor'}
             />
-            <label className="text-sm text-gray-700">Active Status</label>
-          </div>
-
-          <ModalFormFooter
-            cancelLabel="Cancel"
-            isLoading={isCreating || isUpdating}
-            submitLabel={initValues ? 'Update Doctor' : 'Create Doctor'}
-          />
-        </>
-      )}
+          </>
+        );
+      }}
     </Form>
   );
 }

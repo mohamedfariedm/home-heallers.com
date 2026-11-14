@@ -63,6 +63,7 @@ export default function PatientsTablePage() {
       header="User,Created At"
       createName="Create Patients"
       createElementButton={<CreateOrUpdatePationts />}
+      customSize="960px"
     >
       {isLoading ? (
         <div className="m-auto">

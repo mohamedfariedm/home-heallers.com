@@ -45,6 +45,7 @@ export default function GroupsPage() {
       header="Name,Doctors"
       createName="Create group"
       createElementButton={<GroupsForm />}
+      customSize="960px"
     >
       {isLoading ? (
         <div className="m-auto">

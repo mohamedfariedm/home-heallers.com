@@ -83,7 +83,7 @@ export const getColumns = ({
               }
               view={<CreateOrUpdateExercise initValues={row} />}
               label=""
-              customSize="720px"
+              customSize="960px"
               className="m-0 bg-transparent p-0 text-gray-700"
             />
           </Tooltip>

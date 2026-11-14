@@ -82,7 +82,7 @@ export function getScheduledColumns({ onCancel }: ScheduledColumnsProps) {
                   view={<ScheduledNotificationForm initValues={row} />}
                   label=""
                   className="m-0 bg-transparent p-0 text-gray-700"
-                  customSize="760px"
+                  customSize="960px"
                 />
               </Tooltip>
 

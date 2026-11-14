@@ -51,6 +51,7 @@ export default function CategoriesTablePage() {
       header="User,Created At"
       createName="Create BG"
       createElementButton={<CategoryForm />}
+      customSize="960px"
     >
       {isLoading ? (
         <div className="m-auto">

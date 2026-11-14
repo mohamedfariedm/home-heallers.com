@@ -52,6 +52,7 @@ export default function CitiesTablePage() {
       header="User,Created At"
       createName="Create City"
       createElementButton={<CityForm />}
+      customSize="960px"
     >
       {isLoading ? (
         <div className="m-auto">

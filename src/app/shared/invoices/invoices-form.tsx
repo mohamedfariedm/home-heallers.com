@@ -1,12 +1,11 @@
 'use client';
-import {
-  ModalFormHeader,
-  ModalFormFooter,
-  modalFormClassName,
-} from '@/components/ui/modal-form-shell';
 
 import { useState, useEffect, type ChangeEvent } from 'react';
-import { type SubmitHandler, useForm } from 'react-hook-form';
+import {
+  type FieldErrors,
+  type SubmitHandler,
+  useForm,
+} from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
@@ -22,13 +21,24 @@ import {
   Save,
   X,
   FileText,
-  Calculator,
-  Receipt,
 } from 'lucide-react';
-import { ActionIcon } from '@/components/rizzui/action-icon';
-import { PiXBold } from 'react-icons/pi';
+import { ActionIcon } from 'rizzui';
+import {
+  PiXBold,
+  PiReceipt,
+  PiListBullets,
+  PiCalculator,
+} from 'react-icons/pi';
 import Spinner from '@/components/ui/spinner';
 import FormGroup from '@/components/form-group';
+import {
+  ModalFormTabs,
+  ModalFormTabPanel,
+  ModalFormTabPanelCard,
+  ModalFormTabsFooter,
+  modalFormTabsClassName,
+  type ModalFormTabItem,
+} from '@/components/ui/modal-form-tabs';
 import { useModal } from '../modal-views/use-modal';
 import { useCreateInvoices, useUpdateInvoices, useDeleteInvoiceDetail } from '@/framework/invoices';
 import { usePatients } from '@/framework/patients';
@@ -100,6 +110,50 @@ interface Invoice {
   is_paid?: boolean;
   notes?: string;
   details: InvoiceDetail[];
+}
+
+// -------------------- Tabs --------------------
+type InvoiceTabId = 'header' | 'details' | 'totals';
+
+const INVOICE_TABS: {
+  id: InvoiceTabId;
+  label: string;
+  icon: typeof PiReceipt;
+}[] = [
+  { id: 'header', label: 'Header', icon: PiReceipt },
+  { id: 'details', label: 'Line items', icon: PiListBullets },
+  { id: 'totals', label: 'Totals', icon: PiCalculator },
+];
+
+const HEADER_ERROR_KEYS = ['invoice_number', 'invoice_date', 'status'];
+const DETAILS_ERROR_KEYS = ['details'];
+const TOTALS_ERROR_KEYS = [
+  'discount',
+  'total_before_tax',
+  'tax_total',
+  'grand_total',
+  'balance_due',
+  'is_paid',
+  'notes',
+];
+
+function invoiceTabHasErrors(
+  tabId: InvoiceTabId,
+  errors: FieldErrors<InvoiceFormInput> | Record<string, unknown>
+): boolean {
+  const has = (keys: string[]) =>
+    keys.some((key) => Boolean((errors as Record<string, unknown>)?.[key]));
+
+  switch (tabId) {
+    case 'header':
+      return has(HEADER_ERROR_KEYS);
+    case 'details':
+      return has(DETAILS_ERROR_KEYS);
+    case 'totals':
+      return has(TOTALS_ERROR_KEYS);
+    default:
+      return false;
+  }
 }
 
 // -------------------- Helpers --------------------
@@ -200,6 +254,7 @@ export default function InvoiceManager({
   onSaved?: () => void;
 }) {
   const { closeModal } = useModal();
+  const [activeTab, setActiveTab] = useState(0);
   const [editingDetail, setEditingDetail] = useState<InvoiceDetail | null>(
     null
   );
@@ -264,7 +319,7 @@ export default function InvoiceManager({
           id: d.id,
           customer_name:
             d.customer_name ??
-            initValues?.customer_name ??
+            (initValues as any)?.customer_name ??
             '',
           category_id: Number(d.category_id ?? d.category?.id ?? 0),
           category_name: resolveCategoryLabel(d),
@@ -277,7 +332,7 @@ export default function InvoiceManager({
             1,
           doctor_id:
             d.doctor_id ??
-            initValues?.doctor_id ??
+            (initValues as any)?.doctor_id ??
             0,
           national_id:
             d.national_id ??
@@ -365,12 +420,12 @@ export default function InvoiceManager({
       };
 
       if (isAddingNew) {
-        setValue('details', [...details, newDetail]);
+        setValue('details', [...details, newDetail] as any);
       } else if (editingIndex !== null) {
         const updated = details.map((d: InvoiceDetail, i: number) =>
           i === editingIndex ? newDetail : d
         );
-        setValue('details', updated);
+        setValue('details', updated as any);
       }
 
       setEditingDetail(null);
@@ -437,6 +492,17 @@ export default function InvoiceManager({
       create(payload);
     }
     console.log('Submitted Payload:', JSON.stringify(payload, null, 2));
+  };
+
+  const onInvalid = (formErrors: FieldErrors<InvoiceFormInput>) => {
+    const tabIndex = INVOICE_TABS.findIndex((tab) =>
+      invoiceTabHasErrors(tab.id, formErrors)
+    );
+    if (tabIndex >= 0) setActiveTab(tabIndex);
+  };
+
+  const goToTab = (index: number) => {
+    setActiveTab(Math.max(0, Math.min(INVOICE_TABS.length - 1, index)));
   };
 
   // ---------- Sample Data ----------
@@ -514,604 +580,601 @@ export default function InvoiceManager({
   };
 
 
-  console.log('====================================');
-console.log(editingDetail);
-console.log('====================================');
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-[#E8ECF5] p-4 md:p-6">
-      <div className="mx-auto max-w-7xl space-y-8">
-        {isLoadingAny ? (
-          <div className="flex h-96 items-center justify-center">
-            <div className="space-y-4 text-center">
-              <Spinner size="xl" />
-              <p className="text-muted-foreground">Loading invoice data...</p>
-            </div>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-            {/* Header */}
-            <Card className="border-0 bg-white/80 shadow-lg backdrop-blur-sm">
-              <CardHeader className="rounded-t-lg bg-[#143087] text-white">
-                <CardTitle className="flex items-center justify-between text-xl">
-                  <div className="flex items-center gap-3">
-                    <Receipt className="h-6 w-6" />
-                    {initValues ? 'Update Invoice' : 'Create New Invoice'}
-                  </div>
-                  {!initValues && (
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={loadSampleData}
-                        color="secondary"
-                        size="sm"
-                        className="border-white/30 bg-white/20 hover:bg-white/30"
-                        type="button"
-                      >
-                        Load Sample Data
-                      </Button>
-                      <ActionIcon
-                        size="sm"
-                        variant="text"
-                        onClick={closeModal}
-                        className="text-white hover:bg-white/20"
-                      >
-                        <PiXBold className="h-auto w-5" />
-                      </ActionIcon>
-                    </div>
-                  )}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6 p-8">
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                  <FormGroup className="hidden" title="Invoice Number">
-                    <Input
-                      disabled
-                      placeholder="e.g. INV-2025-001"
-                      {...register('invoice_number')}
-                      className="bg-gray-50 font-mono"
-                    />
-                    {errors.invoice_number && (
-                      <p className="mt-1 text-sm text-red-500">
-                        {errors.invoice_number.message}
-                      </p>
-                    )}
-                  </FormGroup>
-                  <FormGroup title="Invoice Date">
-                    <Input
-                      type="date"
-                      placeholder="Select date"
-                      {...register('invoice_date')}
-                    />
-                    {errors.invoice_date && (
-                      <p className="mt-1 text-sm text-red-500">
-                        {errors.invoice_date.message}
-                      </p>
-                    )}
-                  </FormGroup>
-                </div>
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                  <FormGroup title="Discount (ر.س)">
-                    <Input
-                      type="number"
-                      step="0.01"
-                      placeholder="e.g. 20.00"
-                      {...register('discount', { valueAsNumber: true })}
-                    />
-                    {errors.discount && (
-                      <p className="mt-1 text-sm text-red-500">
-                        {errors.discount.message}
-                      </p>
-                    )}
-                  </FormGroup>
-                  <FormGroup title="Status">
-                    <select
-                      {...register('status')}
-                      className="w-full rounded-lg border border-gray-300 bg-white p-3 focus:border-transparent focus:ring-2 focus:ring-[#143087]/20"
-                    >
-                      <option value="">Select Status</option>
-                      {statusOptions.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                    {errors.status && (
-                      <p className="mt-1 text-sm text-red-500">
-                        {errors.status.message}
-                      </p>
-                    )}
-                  </FormGroup>
-                </div>
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                  <FormGroup title="Payment Status">
-                    <div className="flex items-center gap-3">
-                      <Checkbox
-                        checked={watch('is_paid')}
-                        onChange={() => setValue('is_paid', !watch('is_paid'))}
-                        label="Paid"
-                      />
-                    </div>
-                    {errors.is_paid && (
-                      <p className="mt-1 text-sm text-red-500">
-                        {errors.is_paid.message}
-                      </p>
-                    )}
-                  </FormGroup>
-                </div>
-              </CardContent>
-            </Card>
+  const tabsWithErrors: ModalFormTabItem[] = INVOICE_TABS.map((tab) => ({
+    ...tab,
+    hasError: invoiceTabHasErrors(tab.id, errors),
+  }));
 
-            {/* Details Management */}
-            <Card className="border-0 bg-white/80 shadow-lg backdrop-blur-sm">
-              <CardHeader className="rounded-t-lg bg-gradient-to-r from-emerald-600 to-emerald-700 text-white">
-                <CardTitle className="flex items-center justify-between text-xl">
-                  <div className="flex items-center gap-3">
-                    <FileText className="h-6 w-6" />
-                    Invoice Line Items ({details.length})
-                  </div>
-                  <Button
-                    onClick={handleAddDetail}
-                    size="sm"
-                    className="border-white/30 bg-white/20 hover:bg-white/30"
-                    type="button"
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Detail
-                  </Button>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-8">
-                {errors.details && (
-                  <p className="mb-4 text-sm text-red-500">
-                    {errors.details.message}
+  if (isLoadingAny) {
+    return (
+      <div className="flex h-96 items-center justify-center">
+        <div className="space-y-4 text-center">
+          <Spinner size="xl" />
+          <p className="text-muted-foreground">Loading invoice data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <form
+      onSubmit={handleSubmit(onSubmit, onInvalid)}
+      className={modalFormTabsClassName}
+    >
+      <div className="flex shrink-0 items-center justify-between border-b border-gray-100 px-6 py-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#143087] to-[#39519B] shadow">
+            <PiReceipt className="h-5 w-5 text-white" />
+          </div>
+          <div>
+            <h4 className="text-lg font-bold text-gray-900">
+              {initValues ? 'Update Invoice' : 'Create Invoice'}
+            </h4>
+            <p className="mt-0.5 text-xs text-gray-400">
+              Fill each tab — save stays available on every step
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {!initValues && (
+            <Button
+              onClick={loadSampleData}
+              variant="outline"
+              size="sm"
+              type="button"
+              className="border-gray-200"
+            >
+              Load Sample
+            </Button>
+          )}
+          <ActionIcon
+            size="sm"
+            variant="outline"
+            onClick={closeModal}
+            className="rounded-lg border-gray-200 text-gray-500 hover:border-[#143087]/40 hover:bg-blue-50 hover:text-[#143087]"
+          >
+            <PiXBold className="h-4 w-4" />
+          </ActionIcon>
+        </div>
+      </div>
+
+      <ModalFormTabs
+        tabs={tabsWithErrors}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      >
+        {/* ── Header ── */}
+        <ModalFormTabPanel>
+          <div className="space-y-5">
+            <ModalFormTabPanelCard
+              title="Invoice meta"
+              description="Number, date, and status"
+            >
+              <FormGroup className="hidden" title="Invoice Number">
+                <Input
+                  disabled
+                  placeholder="e.g. INV-2025-001"
+                  {...register('invoice_number')}
+                  className="bg-gray-50 font-mono"
+                />
+                {errors.invoice_number && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {errors.invoice_number.message}
                   </p>
                 )}
-                <div className="space-y-6">
-                  {details.map((detail: InvoiceDetail, index: number) => (
-                    <Card
-                      key={String(detail.id ?? index)}
-                      className="border-l-4 border-l-emerald-500 shadow-md transition-shadow hover:shadow-lg"
-                    >
-                      <CardContent className="p-6">
-                        <div className="flex items-start justify-between">
-                          <div className="grid flex-1 grid-cols-1 gap-6 md:grid-cols-4">
-                            <div className="space-y-1">
-                              <p className="text-sm font-medium text-emerald-600">
-                                Customer
-                              </p>
-                              <p className="font-semibold text-gray-900">
-                                {detail.customer_name}
-                              </p>
-                              {detail.national_id && (
-                                <p className="rounded bg-gray-100 px-2 py-1 text-xs text-gray-500">
-                                  ID: {detail.national_id}
-                                </p>
-                              )}
-                            </div>
-                            <div className="space-y-1">
-                              <p className="text-sm font-medium text-emerald-600">
-                                Category
-                              </p>
-                              <p className="font-semibold text-gray-900">
-                                {detail.category_name || '—'}
-                              </p>
-                              <p className="rounded bg-blue-50 px-2 py-1 text-xs text-[#143087]">
-                                Tax: {detail.tax_percentage || '15%'}
-                              </p>
-                            </div>
-                            <div className="space-y-1">
-                              <p className="text-sm font-medium text-emerald-600">
-                                Doctor
-                              </p>
-                              <p className="font-semibold text-gray-900">
-                                {doctorsData?.data?.find(
-                                  (d: any) => d.id === Number(detail.doctor_id)
-                                )?.name?.en || `Dr. ID: ${detail.doctor_id}`}
-                              </p>
-                            </div>
-                            <div className="space-y-1">
-                              <p className="text-sm font-medium text-emerald-600">
-                                Pricing
-                              </p>
-                              <p className="font-medium text-gray-700">
-                                {Number(detail.session_price)} ر.س ×{' '}
-                                {detail.session_count}
-                              </p>
-                              <p className="rounded bg-emerald-50 px-3 py-1 text-lg font-bold text-emerald-600">
-                                {Number(detail.session_price) *
-                                  Number(detail.session_count)}{' '}
-                                ر.س
-                              </p>
-                            </div>
-                          </div>
-                          <div className="ml-4 flex gap-2">
-                            <Button
-                              onClick={() => handleEditDetail(index)}
-                              size="sm"
-                              variant="outline"
-                              className="hover:bg-blue-50"
-                              type="button"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              onClick={() => handleDeleteDetail(index)}
-                              size="sm"
-                              variant="outline"
-                              className="border-red-200 text-red-600 hover:bg-red-50"
-                              type="button"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+              </FormGroup>
+              <FormGroup title="Invoice Date">
+                <Input
+                  type="date"
+                  placeholder="Select date"
+                  {...register('invoice_date')}
+                />
+                {errors.invoice_date && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {errors.invoice_date.message}
+                  </p>
+                )}
+              </FormGroup>
+              <FormGroup title="Status">
+                <select
+                  {...register('status')}
+                  className="w-full rounded-lg border border-gray-300 bg-white p-3 focus:border-transparent focus:ring-2 focus:ring-[#143087]/20"
+                >
+                  <option value="">Select Status</option>
+                  {statusOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
                   ))}
+                </select>
+                {errors.status && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {errors.status.message}
+                  </p>
+                )}
+              </FormGroup>
+            </ModalFormTabPanelCard>
+          </div>
+        </ModalFormTabPanel>
 
-                  {details.length === 0 && (
-                    <div className="rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 py-12 text-center text-gray-500">
-                      <FileText className="mx-auto mb-4 h-12 w-12 text-gray-400" />
-                      <p className="text-lg font-medium">
-                        No invoice details added yet
-                      </p>
-                      <p className="text-sm">
-                        Click &quot;Add Detail&quot; to get started with your
-                        first line item.
-                      </p>
-                    </div>
-                  )}
-                </div>
+        {/* ── Line items ── */}
+        <ModalFormTabPanel>
+          <div className="space-y-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <h5 className="text-sm font-semibold text-gray-900">
+                  Invoice Line Items ({details.length})
+                </h5>
+                <p className="mt-0.5 text-xs text-gray-500">
+                  Add customers, categories, and session pricing
+                </p>
+              </div>
+              <Button onClick={handleAddDetail} size="sm" type="button">
+                <Plus className="mr-2 h-4 w-4" />
+                Add Detail
+              </Button>
+            </div>
 
-                {/* Edit/Add Detail */}
-                {editingDetail && (
-                  <Card className="mt-8 border-2 border-[#143087] shadow-xl">
-                    <CardHeader className="bg-[#143087] text-white">
-                      <CardTitle className="flex items-center justify-between">
-                        {isAddingNew ? 'Add New Detail' : 'Edit Detail'}
+            {errors.details && (
+              <p className="text-sm text-red-500">{errors.details.message}</p>
+            )}
+
+            <div className="space-y-4">
+              {details.map((detail: InvoiceDetail, index: number) => (
+                <Card
+                  key={String(detail.id ?? index)}
+                  className="border-l-4 border-l-emerald-500 shadow-sm"
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="grid flex-1 grid-cols-1 gap-4 md:grid-cols-4">
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium text-emerald-600">
+                            Customer
+                          </p>
+                          <p className="font-semibold text-gray-900">
+                            {detail.customer_name}
+                          </p>
+                          {detail.national_id && (
+                            <p className="rounded bg-gray-100 px-2 py-1 text-xs text-gray-500">
+                              ID: {detail.national_id}
+                            </p>
+                          )}
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium text-emerald-600">
+                            Category
+                          </p>
+                          <p className="font-semibold text-gray-900">
+                            {detail.category_name || '—'}
+                          </p>
+                          <p className="rounded bg-blue-50 px-2 py-1 text-xs text-[#143087]">
+                            Tax: {detail.tax_percentage || '15%'}
+                          </p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium text-emerald-600">
+                            Doctor
+                          </p>
+                          <p className="font-semibold text-gray-900">
+                            {doctorsData?.data?.find(
+                              (d: any) => d.id === Number(detail.doctor_id)
+                            )?.name?.en || `Dr. ID: ${detail.doctor_id}`}
+                          </p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium text-emerald-600">
+                            Pricing
+                          </p>
+                          <p className="font-medium text-gray-700">
+                            {Number(detail.session_price)} ر.س ×{' '}
+                            {detail.session_count}
+                          </p>
+                          <p className="rounded bg-emerald-50 px-3 py-1 text-lg font-bold text-emerald-600">
+                            {Number(detail.session_price) *
+                              Number(detail.session_count)}{' '}
+                            ر.س
+                          </p>
+                        </div>
+                      </div>
+                      <div className="ml-4 flex gap-2">
                         <Button
-                          onClick={() => {
-                            setEditingDetail(null);
-                            setDetailErrors(null);
-                          }}
+                          onClick={() => handleEditDetail(index)}
                           size="sm"
-                          color="secondary"
-                          className="bg-white/20 hover:bg-white/30"
-                          type="button"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-6 bg-blue-50/30 p-8">
-                      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                        <FormGroup title="Customer Name *">
-                          <Input
-                            value={editingDetail.customer_name}
-                            onChange={(e) =>
-                              handleDetailFieldChange(
-                                'customer_name',
-                                e.target.value
-                              )
-                            }
-                            placeholder="Enter customer name"
-                            className="bg-white"
-                          />
-                          {detailErrors?.errors.find((err) =>
-                            err.path.includes('customer_name')
-                          ) && (
-                            <p className="mt-1 text-sm text-red-500">
-                              {
-                                detailErrors.errors.find((err) =>
-                                  err.path.includes('customer_name')
-                                )?.message
-                              }
-                            </p>
-                          )}
-                        </FormGroup>
-                        <FormGroup title="National ID">
-                          <Input
-                            value={(editingDetail.national_id as any) ?? ''}
-                            onChange={(e) =>
-                              handleDetailFieldChange(
-                                'national_id',
-                                e.target.value
-                              )
-                            }
-                            placeholder="Enter national ID (optional)"
-                            className="bg-white"
-                          />
-                        </FormGroup>
-                      </div>
-
-                      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                        <FormGroup title="Category *">
-                          <select
-                            value={
-                              Number(editingDetail.category_id)
-                                ? String(editingDetail.category_id)
-                                : ''
-                            }
-                            onChange={handleCategoryChange}
-                            className="w-full rounded-lg border border-gray-300 bg-white p-3 focus:border-transparent focus:ring-2 focus:ring-[#143087]/20"
-                          >
-                            <option value="">Select Category</option>
-                            {categoriesData?.data?.map(
-                              (category: { id: number; name?: unknown }) => (
-                                <option key={category.id} value={category.id}>
-                                  {resolveLocalizedName(category.name) ||
-                                    category.id}
-                                </option>
-                              )
-                            )}
-                          </select>
-                          {detailErrors?.errors.find((err) =>
-                            err.path.includes('category_id')
-                          ) && (
-                            <p className="mt-1 text-sm text-red-500">
-                              {
-                                detailErrors.errors.find((err) =>
-                                  err.path.includes('category_id')
-                                )?.message
-                              }
-                            </p>
-                          )}
-                        </FormGroup>
-                        <FormGroup title="Doctor *">
-                          <select
-                            value={String(editingDetail.doctor_id ?? '')}
-                            onChange={handleDoctorChange}
-                            className="w-full rounded-lg border border-gray-300 bg-white p-3 focus:border-transparent focus:ring-2 focus:ring-[#143087]/20"
-                          >
-                            <option value="">Select Doctor</option>
-                            {doctorsData?.data?.map((doctor: any) => (
-                              <option key={doctor.id} value={doctor.id}>
-                                {doctor.name?.en ||
-                                  doctor.name?.ar ||
-                                  doctor.id}
-                              </option>
-                            ))}
-                          </select>
-                          {detailErrors?.errors.find((err) =>
-                            err.path.includes('doctor_id')
-                          ) && (
-                            <p className="mt-1 text-sm text-red-500">
-                              {
-                                detailErrors.errors.find((err) =>
-                                  err.path.includes('doctor_id')
-                                )?.message
-                              }
-                            </p>
-                          )}
-                        </FormGroup>
-                      </div>
-
-                      <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
-                        <FormGroup title="Session Price (ر.س)">
-                          <Input
-                            type="number"
-                            step="0.01"
-                            value={String(editingDetail.session_price)}
-                            onChange={(e) =>
-                              handleDetailFieldChange(
-                                'session_price',
-                                e.target.value
-                              )
-                            }
-                            placeholder="Enter session price"
-                            className="bg-white"
-                          />
-                          {detailErrors?.errors.find((err) =>
-                            err.path.includes('session_price')
-                          ) && (
-                            <p className="mt-1 text-sm text-red-500">
-                              {
-                                detailErrors.errors.find((err) =>
-                                  err.path.includes('session_price')
-                                )?.message
-                              }
-                            </p>
-                          )}
-                        </FormGroup>
-
-                        <FormGroup title="Session Count">
-                          <Input
-                            type="number"
-                            value={String(editingDetail.session_count)}
-                            onChange={(e) =>
-                              handleDetailFieldChange(
-                                'session_count',
-                                e.target.value
-                              )
-                            }
-                            placeholder="Enter session count"
-                            className="bg-white"
-                          />
-                          {detailErrors?.errors.find((err) =>
-                            err.path.includes('session_count')
-                          ) && (
-                            <p className="mt-1 text-sm text-red-500">
-                              {
-                                detailErrors.errors.find((err) =>
-                                  err.path.includes('session_count')
-                                )?.message
-                              }
-                            </p>
-                          )}
-                        </FormGroup>
-
-                        <FormGroup title="Tax Percentage *">
-                          <select
-                            value={editingDetail.tax_percentage || '15%'}
-                            onChange={(e) =>
-                              handleDetailFieldChange(
-                                'tax_percentage',
-                                e.target.value
-                              )
-                            }
-                            className="w-full rounded-lg border border-gray-300 bg-white p-3 focus:border-transparent focus:ring-2 focus:ring-[#143087]/20"
-                          >
-                            {taxPercentageOptions.map((option) => (
-                              <option key={option.value} value={option.value}>
-                                {option.label}
-                              </option>
-                            ))}
-                          </select>
-                          {detailErrors?.errors.find((err) =>
-                            err.path.includes('tax_percentage')
-                          ) && (
-                            <p className="mt-1 text-sm text-red-500">
-                              {
-                                detailErrors.errors.find((err) =>
-                                  err.path.includes('tax_percentage')
-                                )?.message
-                              }
-                            </p>
-                          )}
-                        </FormGroup>
-                      </div>
-
-                      <div className="flex justify-end gap-3 border-t border-gray-200 pt-4">
-                        <Button
-                          onClick={() => {
-                            setEditingDetail(null);
-                            setDetailErrors(null);
-                          }}
                           variant="outline"
-                          size="lg"
+                          className="hover:bg-blue-50"
                           type="button"
                         >
-                          Cancel
+                          <Edit className="h-4 w-4" />
                         </Button>
                         <Button
-                          onClick={handleSaveDetail}
-                          size="lg"
-                          className="bg-[#143087] hover:bg-[#0F2466]"
+                          onClick={() => handleDeleteDetail(index)}
+                          size="sm"
+                          variant="outline"
+                          className="border-red-200 text-red-600 hover:bg-red-50"
                           type="button"
                         >
-                          <Save className="mr-2 h-4 w-4" />
-                          Save Detail
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
-                    </CardContent>
-                  </Card>
-                )}
-              </CardContent>
-            </Card>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
 
-            {/* Notes */}
-            <Card className="border-0 bg-white/80 shadow-lg backdrop-blur-sm">
-              <CardHeader className="rounded-t-lg bg-[#143087] text-white">
-                <CardTitle className="flex items-center gap-3 text-xl">
-                  <FileText className="h-6 w-6" />
-                  Invoice Notes
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-8">
-                <FormGroup title="Additional Notes (Optional)">
-                  <Textarea
-                    {...register('notes')}
-                    placeholder="Add any additional notes, terms, or special instructions for this invoice..."
-                    className="min-h-[120px] resize-none bg-white"
-                  />
-                </FormGroup>
-              </CardContent>
-            </Card>
-
-            {/* Summary */}
-            <Card className="border-0 bg-white/90 shadow-xl backdrop-blur-sm">
-              <CardHeader className="rounded-t-lg bg-gradient-to-r from-slate-700 to-slate-800 text-white">
-                <CardTitle className="flex items-center gap-3 text-xl">
-                  <Calculator className="h-6 w-6" />
-                  Invoice Summary
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-8">
-                <div className="mb-8 grid grid-cols-2 gap-6 md:grid-cols-4">
-                  <div className="rounded-xl border border-blue-200 bg-gradient-to-br from-[#E8ECF5] to-blue-100 p-6 text-center">
-                    <p className="mb-2 text-sm font-medium text-[#143087]">
-                      Total Before Tax
-                    </p>
-                    <p className="text-2xl font-bold text-[#0F2466]">
-                      {Number(watch('total_before_tax'))} ر.س
-                    </p>
-                  </div>
-                  <div className="rounded-xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-emerald-100 p-6 text-center">
-                    <p className="mb-2 text-sm font-medium text-emerald-600">
-                      Tax (per-line)
-                    </p>
-                    <p className="text-2xl font-bold text-emerald-800">
-                      {Number(watch('tax_total'))} ر.س
-                    </p>
-                  </div>
-                  <div className="rounded-xl border border-red-200 bg-gradient-to-br from-red-50 to-red-100 p-6 text-center">
-                    <p className="mb-2 text-sm font-medium text-red-600">
-                      Discount
-                    </p>
-                    <p className="text-2xl font-bold text-red-800">
-                      -{Number(watch('discount'))} ر.س
-                    </p>
-                  </div>
-                  <div className="rounded-xl bg-gradient-to-br from-purple-600 to-purple-700 p-6 text-center text-white shadow-lg">
-                    <p className="mb-2 text-sm font-medium opacity-90">
-                      Grand Total
-                    </p>
-                    <p className="text-3xl font-bold">
-                      {Number(watch('grand_total'))} ر.س
-                    </p>
-                  </div>
+              {details.length === 0 && (
+                <div className="rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 py-12 text-center text-gray-500">
+                  <FileText className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+                  <p className="text-lg font-medium">
+                    No invoice details added yet
+                  </p>
+                  <p className="text-sm">
+                    Click &quot;Add Detail&quot; to get started with your first
+                    line item.
+                  </p>
                 </div>
-                {(detailErrorsArray?.length ?? 0) > 0 && (
-                  <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">
-                    <p className="mb-2 font-medium">
-                      Please fix the following line-item errors:
-                    </p>
-                    <ul className="list-inside list-disc space-y-1 text-sm">
-                      {detailErrorsArray.map((err: any, idx: number) => (
-                        <li key={idx}>
-                          <strong>Item {idx + 1}:</strong>{' '}
-                          {formatErrorItem(err)}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                <div className="flex items-center justify-between border-t border-gray-200 pt-6">
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-medium text-gray-600">
-                      Status:
-                    </span>
-                    <Badge
-                      color={
-                        watch('status') === 'موافق عليه'
-                          ? 'primary'
-                          : 'secondary'
-                      }
-                      className={
-                        watch('status') === 'موافق عليه'
-                          ? 'border-green-200 bg-green-100 text-green-800'
-                          : ''
-                      }
+              )}
+            </div>
+
+            {editingDetail && (
+              <Card className="border-2 border-[#143087] shadow-xl">
+                <CardHeader className="bg-[#143087] text-white">
+                  <CardTitle className="flex items-center justify-between">
+                    {isAddingNew ? 'Add New Detail' : 'Edit Detail'}
+                    <Button
+                      onClick={() => {
+                        setEditingDetail(null);
+                        setDetailErrors(null);
+                      }}
+                      size="sm"
+                      color="secondary"
+                      className="bg-white/20 hover:bg-white/30"
+                      type="button"
                     >
-                      {watch('status')}
-                    </Badge>
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6 bg-blue-50/30 p-6">
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                    <FormGroup title="Customer Name *">
+                      <Input
+                        value={editingDetail.customer_name}
+                        onChange={(e) =>
+                          handleDetailFieldChange(
+                            'customer_name',
+                            e.target.value
+                          )
+                        }
+                        placeholder="Enter customer name"
+                        className="bg-white"
+                      />
+                      {detailErrors?.errors.find((err) =>
+                        err.path.includes('customer_name')
+                      ) && (
+                        <p className="mt-1 text-sm text-red-500">
+                          {
+                            detailErrors.errors.find((err) =>
+                              err.path.includes('customer_name')
+                            )?.message
+                          }
+                        </p>
+                      )}
+                    </FormGroup>
+                    <FormGroup title="National ID">
+                      <Input
+                        value={(editingDetail.national_id as any) ?? ''}
+                        onChange={(e) =>
+                          handleDetailFieldChange(
+                            'national_id',
+                            e.target.value
+                          )
+                        }
+                        placeholder="Enter national ID (optional)"
+                        className="bg-white"
+                      />
+                    </FormGroup>
                   </div>
-                  <Button
-                    type="submit"
-                    size="lg"
-                    className="rounded-xl bg-[#143087] px-12 py-3 shadow-lg hover:bg-[#0F2466]"
-                    disabled={isCreating || isUpdating}
-                  >
-                    {isCreating || isUpdating ? (
-                      <Spinner size="sm" className="mr-2" />
-                    ) : null}
-                    {initValues ? 'Update Invoice' : 'Create Invoice'}
-                  </Button>
+
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                    <FormGroup title="Category *">
+                      <select
+                        value={
+                          Number(editingDetail.category_id)
+                            ? String(editingDetail.category_id)
+                            : ''
+                        }
+                        onChange={handleCategoryChange}
+                        className="w-full rounded-lg border border-gray-300 bg-white p-3 focus:border-transparent focus:ring-2 focus:ring-[#143087]/20"
+                      >
+                        <option value="">Select Category</option>
+                        {categoriesData?.data?.map(
+                          (category: { id: number; name?: unknown }) => (
+                            <option key={category.id} value={category.id}>
+                              {resolveLocalizedName(category.name) ||
+                                category.id}
+                            </option>
+                          )
+                        )}
+                      </select>
+                      {detailErrors?.errors.find((err) =>
+                        err.path.includes('category_id')
+                      ) && (
+                        <p className="mt-1 text-sm text-red-500">
+                          {
+                            detailErrors.errors.find((err) =>
+                              err.path.includes('category_id')
+                            )?.message
+                          }
+                        </p>
+                      )}
+                    </FormGroup>
+                    <FormGroup title="Doctor *">
+                      <select
+                        value={String(editingDetail.doctor_id ?? '')}
+                        onChange={handleDoctorChange}
+                        className="w-full rounded-lg border border-gray-300 bg-white p-3 focus:border-transparent focus:ring-2 focus:ring-[#143087]/20"
+                      >
+                        <option value="">Select Doctor</option>
+                        {doctorsData?.data?.map((doctor: any) => (
+                          <option key={doctor.id} value={doctor.id}>
+                            {doctor.name?.en || doctor.name?.ar || doctor.id}
+                          </option>
+                        ))}
+                      </select>
+                      {detailErrors?.errors.find((err) =>
+                        err.path.includes('doctor_id')
+                      ) && (
+                        <p className="mt-1 text-sm text-red-500">
+                          {
+                            detailErrors.errors.find((err) =>
+                              err.path.includes('doctor_id')
+                            )?.message
+                          }
+                        </p>
+                      )}
+                    </FormGroup>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
+                    <FormGroup title="Session Price (ر.س)">
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={String(editingDetail.session_price)}
+                        onChange={(e) =>
+                          handleDetailFieldChange(
+                            'session_price',
+                            e.target.value
+                          )
+                        }
+                        placeholder="Enter session price"
+                        className="bg-white"
+                      />
+                      {detailErrors?.errors.find((err) =>
+                        err.path.includes('session_price')
+                      ) && (
+                        <p className="mt-1 text-sm text-red-500">
+                          {
+                            detailErrors.errors.find((err) =>
+                              err.path.includes('session_price')
+                            )?.message
+                          }
+                        </p>
+                      )}
+                    </FormGroup>
+
+                    <FormGroup title="Session Count">
+                      <Input
+                        type="number"
+                        value={String(editingDetail.session_count)}
+                        onChange={(e) =>
+                          handleDetailFieldChange(
+                            'session_count',
+                            e.target.value
+                          )
+                        }
+                        placeholder="Enter session count"
+                        className="bg-white"
+                      />
+                      {detailErrors?.errors.find((err) =>
+                        err.path.includes('session_count')
+                      ) && (
+                        <p className="mt-1 text-sm text-red-500">
+                          {
+                            detailErrors.errors.find((err) =>
+                              err.path.includes('session_count')
+                            )?.message
+                          }
+                        </p>
+                      )}
+                    </FormGroup>
+
+                    <FormGroup title="Tax Percentage *">
+                      <select
+                        value={editingDetail.tax_percentage || '15%'}
+                        onChange={(e) =>
+                          handleDetailFieldChange(
+                            'tax_percentage',
+                            e.target.value
+                          )
+                        }
+                        className="w-full rounded-lg border border-gray-300 bg-white p-3 focus:border-transparent focus:ring-2 focus:ring-[#143087]/20"
+                      >
+                        {taxPercentageOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                      {detailErrors?.errors.find((err) =>
+                        err.path.includes('tax_percentage')
+                      ) && (
+                        <p className="mt-1 text-sm text-red-500">
+                          {
+                            detailErrors.errors.find((err) =>
+                              err.path.includes('tax_percentage')
+                            )?.message
+                          }
+                        </p>
+                      )}
+                    </FormGroup>
+                  </div>
+
+                  <div className="flex justify-end gap-3 border-t border-gray-200 pt-4">
+                    <Button
+                      onClick={() => {
+                        setEditingDetail(null);
+                        setDetailErrors(null);
+                      }}
+                      variant="outline"
+                      type="button"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleSaveDetail}
+                      className="bg-[#143087] hover:bg-[#0F2466]"
+                      type="button"
+                    >
+                      <Save className="mr-2 h-4 w-4" />
+                      Save Detail
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </ModalFormTabPanel>
+
+        {/* ── Totals / payment / notes ── */}
+        <ModalFormTabPanel>
+          <div className="space-y-5">
+            <ModalFormTabPanelCard
+              title="Payment & discount"
+              description="Discount and payment status"
+            >
+              <FormGroup title="Discount (ر.س)">
+                <Input
+                  type="number"
+                  step="0.01"
+                  placeholder="e.g. 20.00"
+                  {...register('discount', { valueAsNumber: true })}
+                />
+                {errors.discount && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {errors.discount.message}
+                  </p>
+                )}
+              </FormGroup>
+              <FormGroup title="Payment Status">
+                <div className="flex items-center gap-3">
+                  <Checkbox
+                    checked={watch('is_paid')}
+                    onChange={() => setValue('is_paid', !watch('is_paid'))}
+                    label="Paid"
+                  />
                 </div>
-              </CardContent>
-            </Card>
-          </form>
-        )}
-      </div>
-    </div>
+                {errors.is_paid && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {errors.is_paid.message}
+                  </p>
+                )}
+              </FormGroup>
+            </ModalFormTabPanelCard>
+
+            <ModalFormTabPanelCard
+              title="Notes"
+              description="Optional terms or special instructions"
+              contentClassName="sm:grid-cols-1"
+            >
+              <Textarea
+                {...register('notes')}
+                placeholder="Add any additional notes, terms, or special instructions for this invoice..."
+                className="min-h-[120px] resize-none bg-white"
+              />
+            </ModalFormTabPanelCard>
+
+            <ModalFormTabPanelCard
+              title="Invoice summary"
+              description="Calculated totals from line items"
+              contentClassName="sm:grid-cols-2 md:grid-cols-4"
+            >
+              <div className="rounded-xl border border-blue-200 bg-gradient-to-br from-[#E8ECF5] to-blue-100 p-4 text-center">
+                <p className="mb-1 text-xs font-medium text-[#143087]">
+                  Total Before Tax
+                </p>
+                <p className="text-xl font-bold text-[#0F2466]">
+                  {Number(watch('total_before_tax'))} ر.س
+                </p>
+              </div>
+              <div className="rounded-xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-emerald-100 p-4 text-center">
+                <p className="mb-1 text-xs font-medium text-emerald-600">
+                  Tax (per-line)
+                </p>
+                <p className="text-xl font-bold text-emerald-800">
+                  {Number(watch('tax_total'))} ر.س
+                </p>
+              </div>
+              <div className="rounded-xl border border-red-200 bg-gradient-to-br from-red-50 to-red-100 p-4 text-center">
+                <p className="mb-1 text-xs font-medium text-red-600">Discount</p>
+                <p className="text-xl font-bold text-red-800">
+                  -{Number(watch('discount'))} ر.س
+                </p>
+              </div>
+              <div className="rounded-xl bg-gradient-to-br from-[#143087] to-[#39519B] p-4 text-center text-white shadow">
+                <p className="mb-1 text-xs font-medium opacity-90">
+                  Grand Total
+                </p>
+                <p className="text-2xl font-bold">
+                  {Number(watch('grand_total'))} ر.س
+                </p>
+              </div>
+            </ModalFormTabPanelCard>
+
+            {(detailErrorsArray?.length ?? 0) > 0 && (
+              <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">
+                <p className="mb-2 font-medium">
+                  Please fix the following line-item errors:
+                </p>
+                <ul className="list-inside list-disc space-y-1 text-sm">
+                  {detailErrorsArray.map((err: any, idx: number) => (
+                    <li key={idx}>
+                      <strong>Item {idx + 1}:</strong> {formatErrorItem(err)}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-gray-600">Status:</span>
+              <Badge
+                color={
+                  watch('status') === 'موافق عليه' ? 'primary' : 'secondary'
+                }
+                className={
+                  watch('status') === 'موافق عليه'
+                    ? 'border-green-200 bg-green-100 text-green-800'
+                    : ''
+                }
+              >
+                {watch('status')}
+              </Badge>
+            </div>
+          </div>
+        </ModalFormTabPanel>
+      </ModalFormTabs>
+
+      <ModalFormTabsFooter
+        activeTab={activeTab}
+        tabCount={INVOICE_TABS.length}
+        onPrev={() => goToTab(activeTab - 1)}
+        onNext={() => goToTab(activeTab + 1)}
+        onCancel={closeModal}
+        isLoading={isCreating || isUpdating}
+        submitLabel={initValues ? 'Update Invoice' : 'Create Invoice'}
+      />
+    </form>
   );
 }

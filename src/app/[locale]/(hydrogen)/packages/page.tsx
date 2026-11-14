@@ -56,6 +56,7 @@ export default function CountriesTablePage() {
       header="User,Created At"
       createName="Create packages"
       createElementButton={<CreateOrUpdatePackages />}
+      customSize="960px"
     >
       {isLoading ? (
         <div className="m-auto">

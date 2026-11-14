@@ -5,14 +5,27 @@ import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
-import { PiBellSimpleRingingFill, PiWarningBold } from 'react-icons/pi';
+import {
+  PiBellSimpleRingingFill,
+  PiWarningBold,
+  PiMapTrifold,
+  PiPolygon,
+  PiToggleLeft,
+} from 'react-icons/pi';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { DatePicker } from '@/components/ui/datepicker';
-import { Title, Text } from '@/components/ui/text';
+import { Text } from '@/components/ui/text';
 import Spinner from '@/components/ui/spinner';
+import {
+  ModalFormTabs,
+  ModalFormTabPanel,
+  ModalFormTabPanelCard,
+  ModalFormTabsFooter,
+  modalFormTabsClassName,
+  type ModalFormTabItem,
+} from '@/components/ui/modal-form-tabs';
 import {
   useCreateGeoRegion,
   useGeoRegions,
@@ -62,6 +75,40 @@ const MAX_BODY = 250;
 
 type FieldErrors = Record<string, string>;
 
+type RegionTabId = 'region' | 'coverage' | 'status';
+
+const REGION_TABS: {
+  id: RegionTabId;
+  label: string;
+  icon: typeof PiMapTrifold;
+}[] = [
+  { id: 'region', label: 'Region', icon: PiMapTrifold },
+  { id: 'coverage', label: 'Coverage', icon: PiPolygon },
+  { id: 'status', label: 'Status', icon: PiToggleLeft },
+];
+
+const REGION_ERROR_KEYS = [
+  'name.ar',
+  'name.en',
+  'push_title.ar',
+  'push_title.en',
+  'push_body.ar',
+  'push_body.en',
+  'market_coupon_id',
+];
+const COVERAGE_ERROR_KEYS = ['points'];
+const STATUS_ERROR_KEYS = ['priority', 'expires_at'];
+
+function regionTabHasErrors(tabId: RegionTabId, errors: FieldErrors): boolean {
+  const keys =
+    tabId === 'region'
+      ? REGION_ERROR_KEYS
+      : tabId === 'coverage'
+        ? COVERAGE_ERROR_KEYS
+        : STATUS_ERROR_KEYS;
+  return keys.some((key) => Boolean(errors[key]));
+}
+
 const SHAPE_ERROR_KEY: Record<GeoShapeError, [string, string]> = {
   count: ['geo_err_count', 'The region must have exactly 4 points.'],
   distinct: ['geo_err_distinct', 'The region points must be distinct.'],
@@ -109,6 +156,7 @@ export default function RegionForm({ initialValues }: RegionFormProps) {
   const { t, i18n } = useTranslation();
   const uiLang: GeoLang = i18n.language?.startsWith('ar') ? 'ar' : 'en';
   const isEdit = Boolean(initialValues?.id);
+  const [activeTab, setActiveTab] = useState(0);
 
   const [name, setName] = useState<GeoBilingual>(
     toBilingual(initialValues?.name)
@@ -215,12 +263,20 @@ export default function RegionForm({ initialValues }: RegionFormProps) {
     return found;
   };
 
+  const goToTab = (index: number) => {
+    setActiveTab(Math.max(0, Math.min(REGION_TABS.length - 1, index)));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const found = validate();
     setErrors(found);
     if (Object.keys(found).length > 0) {
-      toast.error(t('geo_fix_errors', 'Please fix the highlighted fields'));
+      const tabIndex = REGION_TABS.findIndex((tab) =>
+        regionTabHasErrors(tab.id, found)
+      );
+      if (tabIndex >= 0) setActiveTab(tabIndex);
+      toast.error(t('geo_form_errors', 'Please fix the highlighted fields'));
       return;
     }
 
@@ -255,6 +311,10 @@ export default function RegionForm({ initialValues }: RegionFormProps) {
           if (!mapped[key]) mapped[key] = String(first);
         });
         setErrors(mapped);
+        const tabIndex = REGION_TABS.findIndex((tab) =>
+          regionTabHasErrors(tab.id, mapped)
+        );
+        if (tabIndex >= 0) setActiveTab(tabIndex);
       }
     }
   };
@@ -275,294 +335,353 @@ export default function RegionForm({ initialValues }: RegionFormProps) {
   })() : undefined);
 
   const labelCls = 'mb-1.5 block text-sm font-medium text-gray-700';
-  const cardCls =
-    'space-y-4 rounded-lg border border-gray-200 bg-white p-5 shadow-sm';
+
+  const tabsWithErrors: ModalFormTabItem[] = REGION_TABS.map((tab) => ({
+    ...tab,
+    hasError: regionTabHasErrors(tab.id, errors),
+  }));
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6" noValidate>
-      {/* Coupon */}
-      <div className={cardCls}>
-        <Title as="h3" className="text-base font-semibold text-gray-900">
-          {t('geo_section_coupon', 'Coupon')}
-        </Title>
-        <div className="max-w-xl">
-          <CouponSelect
-            value={couponId}
-            onChange={(id) => {
-              setCouponId(id);
-              clearError('market_coupon_id');
-            }}
-            lang={uiLang}
-            currentCoupon={initialValues?.coupon}
-            error={errors.market_coupon_id}
-            disabled={isSaving}
-          />
+    <form
+      onSubmit={handleSubmit}
+      className={modalFormTabsClassName}
+      noValidate
+    >
+      <div className="flex shrink-0 items-center justify-between border-b border-gray-100 px-6 py-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#143087] to-[#39519B] shadow">
+            <PiMapTrifold className="h-5 w-5 text-white" />
+          </div>
+          <div>
+            <h4 className="text-lg font-bold text-gray-900">
+              {isEdit
+                ? t('geo_save', 'Save Changes')
+                : t('geo_create_btn', 'Create Region')}
+            </h4>
+            <p className="mt-0.5 text-xs text-gray-400">
+              Fill each tab — save stays available on every step
+            </p>
+          </div>
         </div>
-        {isEdit && couponId === initialValues?.market_coupon_id && (
-          <CouponStatusAlert status={initialValues?.coupon_status} />
-        )}
       </div>
 
-      {/* Settings */}
-      <div className={cardCls}>
-        <Title as="h3" className="text-base font-semibold text-gray-900">
-          {t('geo_section_settings', 'Region settings')}
-        </Title>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div>
-            <label className={labelCls}>
-              {t('geo_field_priority', 'Priority')}
-            </label>
-            <Input
-              type="number"
-              min={0}
-              max={1000000}
-              value={priority}
-              onChange={(e) => {
-                setPriority(e.target.value);
-                clearError('priority');
-              }}
-              error={errors.priority}
-            />
-            <Text className="mt-1 text-xs text-gray-500">
-              {t(
+      <ModalFormTabs
+        tabs={tabsWithErrors}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      >
+        <ModalFormTabPanel>
+          <div className="space-y-5">
+            <ModalFormTabPanelCard
+              title={t('geo_section_coupon', 'Coupon')}
+              description={t(
+                'geo_name_hint',
+                'Visible to admins only. Users never see it.'
+              )}
+              contentClassName="sm:grid-cols-1"
+            >
+              <CouponSelect
+                value={couponId}
+                onChange={(id) => {
+                  setCouponId(id);
+                  clearError('market_coupon_id');
+                }}
+                lang={uiLang}
+                currentCoupon={initialValues?.coupon}
+                error={errors.market_coupon_id}
+                disabled={isSaving}
+              />
+              {isEdit && couponId === initialValues?.market_coupon_id && (
+                <CouponStatusAlert status={initialValues?.coupon_status} />
+              )}
+            </ModalFormTabPanelCard>
+
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+              {LANGS.map(({ key, label }) => {
+                const isAr = key === 'ar';
+                return (
+                  <ModalFormTabPanelCard
+                    key={key}
+                    title={label}
+                    contentClassName="sm:grid-cols-1"
+                  >
+                    <div>
+                      <label className={labelCls}>
+                        {t('geo_field_name', 'Internal name')}{' '}
+                        <span className="text-red-500">*</span>
+                      </label>
+                      <Input
+                        dir={isAr ? 'rtl' : 'ltr'}
+                        placeholder={isAr ? 'العليا' : 'Olaya'}
+                        value={name[key]}
+                        onChange={(e) =>
+                          setLangField(setName, 'name', key, e.target.value)
+                        }
+                        error={errors[`name.${key}`]}
+                      />
+                      <Text className="mt-1 text-xs text-gray-500">
+                        {t(
+                          'geo_name_hint',
+                          'Visible to admins only. Users never see it.'
+                        )}
+                      </Text>
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <label className={labelCls}>
+                          {t('geo_field_push_title', 'Notification title')}{' '}
+                          <span className="text-red-500">*</span>
+                        </label>
+                        <CharCounter value={pushTitle[key]} max={MAX_TITLE} />
+                      </div>
+                      <Input
+                        dir={isAr ? 'rtl' : 'ltr'}
+                        placeholder={
+                          isAr ? 'خصم 20% قريب منك' : '20% off near you'
+                        }
+                        value={pushTitle[key]}
+                        onChange={(e) =>
+                          setLangField(
+                            setPushTitle,
+                            'push_title',
+                            key,
+                            e.target.value
+                          )
+                        }
+                        error={errors[`push_title.${key}`]}
+                      />
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <label className={labelCls}>
+                          {t('geo_field_push_body', 'Notification body')}{' '}
+                          <span className="text-red-500">*</span>
+                        </label>
+                        <CharCounter value={pushBody[key]} max={MAX_BODY} />
+                      </div>
+                      <Textarea
+                        dir={isAr ? 'rtl' : 'ltr'}
+                        rows={3}
+                        placeholder={
+                          isAr
+                            ? 'احجز جلستك النهارده بكود SUMMER20'
+                            : 'Book today with code SUMMER20'
+                        }
+                        value={pushBody[key]}
+                        onChange={(e) =>
+                          setLangField(
+                            setPushBody,
+                            'push_body',
+                            key,
+                            e.target.value
+                          )
+                        }
+                        error={errors[`push_body.${key}`]}
+                      />
+                    </div>
+                  </ModalFormTabPanelCard>
+                );
+              })}
+            </div>
+
+            <ModalFormTabPanelCard
+              title={t('geo_section_preview', 'Notification preview')}
+              contentClassName="sm:grid-cols-1"
+            >
+              <div className="flex items-center justify-end gap-3">
+                <div className="inline-flex rounded-lg border border-gray-200 bg-white p-1">
+                  {LANGS.map(({ key, label }) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setPreviewLang(key)}
+                      className={`rounded-md px-3 py-1 text-sm font-medium transition ${
+                        previewLang === key
+                          ? 'bg-[#143087] text-white'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      {key.toUpperCase()}
+                      <span className="sr-only"> {label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div
+                dir={previewLang === 'ar' ? 'rtl' : 'ltr'}
+                className="max-w-md rounded-2xl border border-gray-200 bg-gray-50 p-4 shadow-sm"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-900 text-white">
+                    <PiBellSimpleRingingFill className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-gray-900">
+                      {pushTitle[previewLang] ||
+                        t('geo_preview_title_ph', 'Notification title')}
+                    </p>
+                    <p className="mt-0.5 break-words text-sm text-gray-600">
+                      {pushBody[previewLang] ||
+                        t(
+                          'geo_preview_body_ph',
+                          'Notification body appears here.'
+                        )}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </ModalFormTabPanelCard>
+          </div>
+        </ModalFormTabPanel>
+
+        <ModalFormTabPanel>
+          <div className="space-y-5">
+            <ModalFormTabPanelCard
+              title={t('geo_section_area', 'Region area')}
+              description={t('geo_points_count', {
+                defaultValue: '{{count}} / {{total}} points',
+                count: points.length,
+                total: REQUIRED_POINTS,
+              })}
+              contentClassName="sm:grid-cols-1"
+            >
+              <RegionMap
+                points={points}
+                onChange={(next) => {
+                  setPoints(next);
+                  clearError('points');
+                }}
+                otherRegions={otherRegions}
+                hasError={Boolean(mapError)}
+                disabled={isSaving}
+              />
+
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <Text className="text-sm text-gray-700">
+                  {points.length >= 3
+                    ? t('geo_area_value', {
+                        defaultValue: 'Approx. area: {{area}}',
+                        area: formatArea(area),
+                      })
+                    : t(
+                        'geo_area_pending',
+                        'Place at least 3 points to see the area.'
+                      )}
+                </Text>
+                <Text className="text-xs text-gray-500">
+                  {t('geo_min_area', {
+                    defaultValue: 'Minimum area: {{area}}',
+                    area: formatArea(MIN_AREA_M2),
+                  })}
+                </Text>
+              </div>
+
+              {mapError && (
+                <div className="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                  <PiWarningBold className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span>{mapError}</span>
+                </div>
+              )}
+            </ModalFormTabPanelCard>
+          </div>
+        </ModalFormTabPanel>
+
+        <ModalFormTabPanel>
+          <div className="space-y-5">
+            <ModalFormTabPanelCard
+              title={t('geo_section_settings', 'Region settings')}
+              description={t(
                 'geo_priority_hint',
                 'The lower number wins when regions overlap.'
               )}
-            </Text>
-          </div>
-
-          <div>
-            <label className={labelCls}>
-              {t('geo_field_expires', 'Expires at')}
-            </label>
-            <DatePicker
-              selected={expiresAt ?? undefined}
-              onChange={(date: Date | null) => {
-                setExpiresAt(date ?? null);
-                clearError('expires_at');
-              }}
-              showTimeSelect
-              isClearable
-              minDate={new Date()}
-              dateFormat="yyyy-MM-dd HH:mm"
-              placeholderText={t('geo_no_expiry', 'No expiry')}
-              inputProps={{ className: 'w-full' }}
-            />
-            {errors.expires_at ? (
-              <p className="mt-1 text-sm text-red-500">{errors.expires_at}</p>
-            ) : (
-              <Text className="mt-1 text-xs text-gray-500">
-                {t('geo_expires_hint', 'Leave empty for no expiry.')}
-              </Text>
-            )}
-          </div>
-
-          <div className="flex items-center gap-3 md:pt-7">
-            <Switch checked={isActive} onChange={() => setIsActive(!isActive)} />
-            <div>
-              <Text className="text-sm font-semibold text-gray-900">
-                {t('geo_field_active', 'Active')}
-              </Text>
-              <Text className="text-xs text-gray-500">
-                {t(
-                  'geo_active_hint',
-                  'Only active regions reach the mobile app.'
-                )}
-              </Text>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Copy per language */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {LANGS.map(({ key, label }) => {
-          const isAr = key === 'ar';
-          return (
-            <div key={key} className={cardCls}>
-              <Title as="h3" className="text-base font-semibold text-gray-900">
-                {label}
-              </Title>
-
+            >
               <div>
                 <label className={labelCls}>
-                  {t('geo_field_name', 'Internal name')}{' '}
-                  <span className="text-red-500">*</span>
+                  {t('geo_field_priority', 'Priority')}
                 </label>
                 <Input
-                  dir={isAr ? 'rtl' : 'ltr'}
-                  placeholder={isAr ? 'العليا' : 'Olaya'}
-                  value={name[key]}
-                  onChange={(e) => setLangField(setName, 'name', key, e.target.value)}
-                  error={errors[`name.${key}`]}
+                  type="number"
+                  min={0}
+                  max={1000000}
+                  value={priority}
+                  onChange={(e) => {
+                    setPriority(e.target.value);
+                    clearError('priority');
+                  }}
+                  error={errors.priority}
                 />
                 <Text className="mt-1 text-xs text-gray-500">
                   {t(
-                    'geo_name_hint',
-                    'Visible to admins only. Users never see it.'
+                    'geo_priority_hint',
+                    'The lower number wins when regions overlap.'
                   )}
                 </Text>
               </div>
 
               <div>
-                <div className="flex items-center justify-between">
-                  <label className={labelCls}>
-                    {t('geo_field_push_title', 'Notification title')}{' '}
-                    <span className="text-red-500">*</span>
-                  </label>
-                  <CharCounter value={pushTitle[key]} max={MAX_TITLE} />
-                </div>
-                <Input
-                  dir={isAr ? 'rtl' : 'ltr'}
-                  placeholder={isAr ? 'خصم 20% قريب منك' : '20% off near you'}
-                  value={pushTitle[key]}
-                  onChange={(e) =>
-                    setLangField(setPushTitle, 'push_title', key, e.target.value)
-                  }
-                  error={errors[`push_title.${key}`]}
+                <label className={labelCls}>
+                  {t('geo_field_expires', 'Expires at')}
+                </label>
+                <DatePicker
+                  selected={expiresAt ?? undefined}
+                  onChange={(date: Date | null) => {
+                    setExpiresAt(date ?? null);
+                    clearError('expires_at');
+                  }}
+                  showTimeSelect
+                  isClearable
+                  minDate={new Date()}
+                  dateFormat="yyyy-MM-dd HH:mm"
+                  placeholderText={t('geo_no_expiry', 'No expiry')}
+                  inputProps={{ className: 'w-full' }}
                 />
+                {errors.expires_at ? (
+                  <p className="mt-1 text-sm text-red-500">{errors.expires_at}</p>
+                ) : (
+                  <Text className="mt-1 text-xs text-gray-500">
+                    {t('geo_expires_hint', 'Leave empty for no expiry.')}
+                  </Text>
+                )}
               </div>
 
-              <div>
-                <div className="flex items-center justify-between">
-                  <label className={labelCls}>
-                    {t('geo_field_push_body', 'Notification body')}{' '}
-                    <span className="text-red-500">*</span>
-                  </label>
-                  <CharCounter value={pushBody[key]} max={MAX_BODY} />
-                </div>
-                <Textarea
-                  dir={isAr ? 'rtl' : 'ltr'}
-                  rows={3}
-                  placeholder={
-                    isAr
-                      ? 'احجز جلستك النهارده بكود SUMMER20'
-                      : 'Book today with code SUMMER20'
-                  }
-                  value={pushBody[key]}
-                  onChange={(e) =>
-                    setLangField(setPushBody, 'push_body', key, e.target.value)
-                  }
-                  error={errors[`push_body.${key}`]}
+              <div className="flex items-center gap-3 sm:col-span-2">
+                <Switch
+                  checked={isActive}
+                  onChange={() => setIsActive(!isActive)}
                 />
+                <div>
+                  <Text className="text-sm font-semibold text-gray-900">
+                    {t('geo_field_active', 'Active')}
+                  </Text>
+                  <Text className="text-xs text-gray-500">
+                    {t(
+                      'geo_active_hint',
+                      'Only active regions reach the mobile app.'
+                    )}
+                  </Text>
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Preview */}
-      <div className={cardCls}>
-        <div className="flex items-center justify-between gap-3">
-          <Title as="h3" className="text-base font-semibold text-gray-900">
-            {t('geo_section_preview', 'Notification preview')}
-          </Title>
-          <div className="inline-flex rounded-lg border border-gray-200 bg-white p-1">
-            {LANGS.map(({ key, label }) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setPreviewLang(key)}
-                className={`rounded-md px-3 py-1 text-sm font-medium transition ${
-                  previewLang === key
-                    ? 'bg-[#143087] text-white'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                {key.toUpperCase()}
-                <span className="sr-only"> {label}</span>
-              </button>
-            ))}
+            </ModalFormTabPanelCard>
           </div>
-        </div>
-        <div
-          dir={previewLang === 'ar' ? 'rtl' : 'ltr'}
-          className="max-w-md rounded-2xl border border-gray-200 bg-gray-50 p-4 shadow-sm"
-        >
-          <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-900 text-white">
-              <PiBellSimpleRingingFill className="h-5 w-5" />
-            </div>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-gray-900">
-                {pushTitle[previewLang] ||
-                  t('geo_preview_title_ph', 'Notification title')}
-              </p>
-              <p className="mt-0.5 break-words text-sm text-gray-600">
-                {pushBody[previewLang] ||
-                  t('geo_preview_body_ph', 'Notification body appears here.')}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+        </ModalFormTabPanel>
+      </ModalFormTabs>
 
-      {/* Map */}
-      <div className={cardCls}>
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <Title as="h3" className="text-base font-semibold text-gray-900">
-            {t('geo_section_area', 'Region area')}
-          </Title>
-          <Text className="text-xs text-gray-500">
-            {t('geo_points_count', {
-              defaultValue: '{{count}} / {{total}} points',
-              count: points.length,
-              total: REQUIRED_POINTS,
-            })}
-          </Text>
-        </div>
-
-        <RegionMap
-          points={points}
-          onChange={(next) => {
-            setPoints(next);
-            clearError('points');
-          }}
-          otherRegions={otherRegions}
-          hasError={Boolean(mapError)}
-          disabled={isSaving}
-        />
-
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <Text className="text-sm text-gray-700">
-            {points.length >= 3
-              ? t('geo_area_value', {
-                  defaultValue: 'Approx. area: {{area}}',
-                  area: formatArea(area),
-                })
-              : t('geo_area_pending', 'Place at least 3 points to see the area.')}
-          </Text>
-          <Text className="text-xs text-gray-500">
-            {t('geo_min_area', {
-              defaultValue: 'Minimum area: {{area}}',
-              area: formatArea(MIN_AREA_M2),
-            })}
-          </Text>
-        </div>
-
-        {mapError && (
-          <div className="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-            <PiWarningBold className="mt-0.5 h-4 w-4 shrink-0" />
-            <span>{mapError}</span>
-          </div>
-        )}
-      </div>
-
-      <div className="flex justify-end gap-3">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => router.push(routes.geoRegions.index)}
-        >
-          {t('geo_cancel', 'Cancel')}
-        </Button>
-        <Button type="submit" isLoading={isSaving}>
-          {isEdit
+      <ModalFormTabsFooter
+        activeTab={activeTab}
+        tabCount={REGION_TABS.length}
+        onPrev={() => goToTab(activeTab - 1)}
+        onNext={() => goToTab(activeTab + 1)}
+        onCancel={() => router.push(routes.geoRegions.index)}
+        cancelLabel={t('geo_cancel', 'Cancel')}
+        isLoading={isSaving}
+        submitLabel={
+          isEdit
             ? t('geo_save', 'Save Changes')
-            : t('geo_create_btn', 'Create Region')}
-        </Button>
-      </div>
+            : t('geo_create_btn', 'Create Region')
+        }
+      />
     </form>
   );
 }

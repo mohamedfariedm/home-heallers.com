@@ -90,7 +90,7 @@ export const getColumns = ({
             view={<BlogsForm initValues={row} />}
             label=""
             className="m-0 bg-transparent p-0 text-gray-700"
-            customSize="800px"
+            customSize="960px"
           />
         </Tooltip>
         <DeletePopover

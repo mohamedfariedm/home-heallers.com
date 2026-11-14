@@ -74,6 +74,7 @@ export default function AbandonedReservationsTablePage() {
         createElementButton={
           reservationPermissions.create ? <CreateOrUpdateReservation /> : undefined
         }
+        customSize="960px"
         importButton={reservationPermissions.import ? 'reservations/import' : undefined}
         canCreate={reservationPermissions.create}
         canImport={reservationPermissions.import}

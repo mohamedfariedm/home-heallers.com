@@ -1,17 +1,28 @@
 'use client';
-import {
-  ModalFormHeader,
-  ModalFormFooter,
-  modalFormClassName,
-} from '@/components/ui/modal-form-shell';
 
 import { useMemo, useState } from 'react';
-import { PiXBold } from 'react-icons/pi';
-import { Controller, SubmitHandler } from 'react-hook-form';
+import {
+  PiXBold,
+  PiPackage,
+  PiCurrencyCircleDollar,
+  PiFolders,
+} from 'react-icons/pi';
+import {
+  Controller,
+  SubmitHandler,
+  type FieldErrors,
+} from 'react-hook-form';
 import { Form } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Title } from '@/components/ui/text';
+import { ActionIcon } from 'rizzui';
+import {
+  ModalFormTabs,
+  ModalFormTabPanel,
+  ModalFormTabPanelCard,
+  ModalFormTabsFooter,
+  modalFormTabsClassName,
+  type ModalFormTabItem,
+} from '@/components/ui/modal-form-tabs';
 import { useModal } from '@/app/shared/modal-views/use-modal';
 import {
   packageFormSchema,
@@ -24,8 +35,42 @@ import SelectBox, { type SelectOption } from '@/components/ui/select';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import toast from 'react-hot-toast';
-import FormGroup from '../form-group';
 import Upload from '@/components/ui/upload';
+
+type PackageTabId = 'package' | 'pricing' | 'details';
+
+const PACKAGE_TABS: {
+  id: PackageTabId;
+  label: string;
+  icon: typeof PiPackage;
+}[] = [
+  { id: 'package', label: 'Package', icon: PiPackage },
+  { id: 'pricing', label: 'Pricing', icon: PiCurrencyCircleDollar },
+  { id: 'details', label: 'Details', icon: PiFolders },
+];
+
+const PACKAGE_ERROR_KEYS = ['name', 'description', 'type'];
+const PRICING_ERROR_KEYS = ['price', 'discount', 'sessions_count'];
+const DETAILS_ERROR_KEYS = ['category_ids', 'doctors'];
+
+function packageTabHasErrors(
+  tabId: PackageTabId,
+  errors: FieldErrors<PackageFormInput> | Record<string, unknown>
+): boolean {
+  const has = (keys: string[]) =>
+    keys.some((key) => Boolean((errors as Record<string, unknown>)?.[key]));
+
+  switch (tabId) {
+    case 'package':
+      return has(PACKAGE_ERROR_KEYS);
+    case 'pricing':
+      return has(PRICING_ERROR_KEYS);
+    case 'details':
+      return has(DETAILS_ERROR_KEYS);
+    default:
+      return false;
+  }
+}
 
 export default function CreateOrUpdatePackages({
   initValues,
@@ -36,6 +81,7 @@ export default function CreateOrUpdatePackages({
   const { mutate: createPackage, isPending: isCreating } = useCreatePackages();
   const { mutate: updatePackage, isPending: isUpdating } = useUpdatePackages();
   const [lang] = useState<'en' | 'ar'>('en');
+  const [activeTab, setActiveTab] = useState(0);
   const { data: categories, isLoading: isLoadingCategories } = useCategories('');
 
   const [loading, setLoading] = useState(false);
@@ -65,6 +111,7 @@ export default function CreateOrUpdatePackages({
       .catch(() => toast.error('Please Try Again'))
       .finally(() => setImageLoading(false));
   };
+
   const categoryOptions: SelectOption[] = useMemo(() => {
     const list = (categories?.data ?? []).filter((c: any) => {
       if (c.active === false || c.active === 0) return false;
@@ -79,11 +126,11 @@ export default function CreateOrUpdatePackages({
   }, [categories?.data, lang]);
 
   const onSubmit: SubmitHandler<PackageFormInput> = (data) => {
-    // Validate image is required
     const imageToUse = isImageData || initValues?.image;
     if (!imageToUse) {
       setImageError(1);
       toast.error('Image is required');
+      setActiveTab(0);
       return;
     }
 
@@ -109,17 +156,21 @@ export default function CreateOrUpdatePackages({
     setLoading(true);
   };
 
-  if (isCreating || isUpdating) {
-    return (
-      <div className="m-auto">
-        <Spinner size="lg" />
-      </div>
+  const onInvalid = (formErrors: FieldErrors<PackageFormInput>) => {
+    const tabIndex = PACKAGE_TABS.findIndex((tab) =>
+      packageTabHasErrors(tab.id, formErrors)
     );
-  }
+    if (tabIndex >= 0) setActiveTab(tabIndex);
+  };
+
+  const goToTab = (index: number) => {
+    setActiveTab(Math.max(0, Math.min(PACKAGE_TABS.length - 1, index)));
+  };
 
   return (
     <Form<PackageFormInput>
       onSubmit={onSubmit}
+      onInvalid={onInvalid}
       validationSchema={packageFormSchema}
       useFormProps={{
         defaultValues: {
@@ -142,187 +193,249 @@ export default function CreateOrUpdatePackages({
               : [],
         },
       }}
-      className="flex flex-grow flex-col gap-6 p-6"
+      className={modalFormTabsClassName}
     >
-      {({ register, formState: { errors }, control }) => (
-        <>
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <Title as="h4" className="font-semibold">
-              {initValues ? 'Update Package' : 'Create Package'}
-            </Title>
-            <Button onClick={closeModal}>
-              <PiXBold className="h-4 w-4" />
-            </Button>
-          </div>
+      {({ register, formState: { errors }, control }) => {
+        const tabsWithErrors: ModalFormTabItem[] = PACKAGE_TABS.map((tab) => ({
+          ...tab,
+          hasError:
+            packageTabHasErrors(tab.id, errors) ||
+            (tab.id === 'package' && imageError > 0),
+        }));
 
-          {/* Multilingual Name Field */}
-          <Input
-            key={'name.en'}
-            label="Package Name (English)"
-            {...register('name.en')}
-            error={errors.name?.en?.message}
-          />
-          <Input
-            key={'name.ar'}
-            label="Package Name (Arabic)"
-            {...register('name.ar')}
-            error={errors.name?.ar?.message}
-          />
-
-          {/* Multilingual Description Field */}
-          <Input
-            key={'description.en'}
-            label="Description (English)"
-            {...register('description.en')}
-            error={errors.description?.en?.message}
-          />
-          <Input
-            key={'description.ar'}
-            label="Description (Arabic)"
-            {...register('description.ar')}
-            error={errors.description?.ar?.message}
-          />
-
-          {/* Type Field */}
-          <div>
-            <label>Type</label>
-            <select
-              {...register('type')}
-              className="w-full rounded-lg border border-gray-300 p-2"
-            >
-              <option value="offer">Offer</option>
-              <option value="package">Package</option>
-            </select>
-            {errors.type && (
-              <p className="text-sm text-red-500">{errors.type.message}</p>
-            )}
-          </div>
-
-          {/* Price Field */}
-          <Input
-            label="Price"
-            type="number"
-            {...register('price')}
-            error={errors.price?.message}
-          />
-
-          {/* Discount Field */}
-          <Input
-            label="Discount"
-            type="number"
-            {...register('discount')}
-            error={errors.discount?.message}
-          />
-
-          {/* Sessions Count Field */}
-          <Input
-            label="Number of Sessions"
-            type="number"
-            {...register('sessions_count')}
-            error={errors.sessions_count?.message}
-          />
-
-          <FormGroup
-            title="Image *"
-            className="relative pt-7 @2xl:pt-9 @3xl:grid-cols-12 @3xl:pt-11"
-          >
-            {isLoading && (
-              <div className="absolute inset-0 z-10 flex items-center justify-center rounded-md bg-white/80">
-                <Spinner size="xl" />
-              </div>
-            )}
-            <div className="flex flex-col gap-2">
-              <Upload
-                title="Image"
-                accept="img"
-                onChange={(e) => {
-                  setImageError(0);
-                  handleFileUpload(e, 'Image');
-                }}
-              />
-              {imageError > 0 && (
-                <p className="text-xs text-red-500">Image is required.</p>
-              )}
-              {(isImageData?.[0]?.thumbnail || isImageData?.[0]?.original) && (
-                <div className="relative mt-2 flex w-full items-center justify-center">
-                  <img
-                    src={isImageData[0].thumbnail || isImageData[0].original}
-                    alt="Uploaded Preview"
-                    className="h-auto w-48 rounded border border-gray-200 shadow-sm"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setImage(null)}
-                    className="absolute -right-2 -top-2 rounded-full border border-gray-300 bg-white p-1 shadow hover:bg-red-50"
-                    title="Remove Image"
-                  >
-                    <PiXBold className="h-4 w-4 text-red-500" />
-                  </button>
+        return (
+          <>
+            <div className="flex shrink-0 items-center justify-between border-b border-gray-100 px-6 py-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#143087] to-[#39519B] shadow">
+                  <PiPackage className="h-5 w-5 text-white" />
                 </div>
-              )}
+                <div>
+                  <h4 className="text-lg font-bold text-gray-900">
+                    {initValues ? 'Update Package' : 'Create Package'}
+                  </h4>
+                  <p className="mt-0.5 text-xs text-gray-400">
+                    Fill each tab — save stays available on every step
+                  </p>
+                </div>
+              </div>
+              <ActionIcon
+                size="sm"
+                variant="outline"
+                onClick={closeModal}
+                className="rounded-lg border-gray-200 text-gray-500 hover:border-[#143087]/40 hover:bg-blue-50 hover:text-[#143087]"
+              >
+                <PiXBold className="h-4 w-4" />
+              </ActionIcon>
             </div>
-          </FormGroup>
 
-          <div>
-            <Controller
-              name="category_ids"
-              control={control}
-              render={({ field: { value, onChange } }) => {
-                const selectedOptions = Array.isArray(value)
-                  ? categoryOptions.filter((opt) =>
-                      value.includes(String(opt.value))
-                    )
-                  : [];
-
-                return (
-                  <SelectBox
-                    multiple
-                    options={categoryOptions}
-                    value={selectedOptions}
-                    onChange={(opts: SelectOption[] | SelectOption) => {
-                      const ids = Array.isArray(opts)
-                        ? opts.map((o) => String(o.value))
-                        : opts
-                          ? [String((opts as SelectOption).value)]
-                          : [];
-                      onChange(ids);
-                    }}
-                    disabled={isLoadingCategories}
-                    label="Categories"
-                    placeholder="Select categories (optional)"
-                    error={(errors.category_ids as { message?: string })?.message}
-                    displayValue={(val: SelectOption | SelectOption[]) => {
-                      if (Array.isArray(val)) {
-                        if (val.length === 0) return '';
-                        return val
-                          .map((o) => o?.label ?? o?.name ?? o?.value)
-                          .join(', ');
-                      }
-                      if (val?.label) return val.label;
-                      if (val?.name) return val.name;
-                      return String(val ?? '');
-                    }}
-                  />
-                );
-              }}
-            />
-          </div>
-
-          {/* Action Buttons */}
-          <div className="mt-6 flex justify-end gap-4">
-            <Button variant="outline" onClick={closeModal}>
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              isLoading={loading || isCreating || isUpdating}
+            <ModalFormTabs
+              tabs={tabsWithErrors}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
             >
-              {initValues ? 'Update Package' : 'Create Package'}
-            </Button>
-          </div>
-        </>
-      )}
+              <ModalFormTabPanel>
+                <div className="space-y-5">
+                  <ModalFormTabPanelCard
+                    title="Package info"
+                    description="Name, description, and type"
+                  >
+                    <Input
+                      key="name.en"
+                      label="Package Name (English)"
+                      {...register('name.en')}
+                      error={errors.name?.en?.message}
+                    />
+                    <Input
+                      key="name.ar"
+                      label="Package Name (Arabic)"
+                      {...register('name.ar')}
+                      error={errors.name?.ar?.message}
+                    />
+                    <Input
+                      key="description.en"
+                      label="Description (English)"
+                      {...register('description.en')}
+                      error={errors.description?.en?.message}
+                    />
+                    <Input
+                      key="description.ar"
+                      label="Description (Arabic)"
+                      {...register('description.ar')}
+                      error={errors.description?.ar?.message}
+                    />
+                    <div>
+                      <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                        Type
+                      </label>
+                      <select
+                        {...register('type')}
+                        className="w-full rounded-lg border border-gray-300 p-2"
+                      >
+                        <option value="offer">Offer</option>
+                        <option value="package">Package</option>
+                      </select>
+                      {errors.type && (
+                        <p className="text-sm text-red-500">
+                          {errors.type.message}
+                        </p>
+                      )}
+                    </div>
+                  </ModalFormTabPanelCard>
+
+                  <ModalFormTabPanelCard
+                    title="Image"
+                    description="Package image is required"
+                    contentClassName="sm:grid-cols-1"
+                  >
+                    <div className="relative">
+                      {isLoading && (
+                        <div className="absolute inset-0 z-10 flex items-center justify-center rounded-md bg-white/80">
+                          <Spinner size="xl" />
+                        </div>
+                      )}
+                      <div className="flex flex-col gap-2">
+                        <Upload
+                          title="Image"
+                          accept="img"
+                          onChange={(e) => {
+                            setImageError(0);
+                            handleFileUpload(e, 'Image');
+                          }}
+                        />
+                        {imageError > 0 && (
+                          <p className="text-xs text-red-500">
+                            Image is required.
+                          </p>
+                        )}
+                        {(isImageData?.[0]?.thumbnail ||
+                          isImageData?.[0]?.original) && (
+                          <div className="relative mt-2 flex w-full items-center justify-center">
+                            <img
+                              src={
+                                isImageData[0].thumbnail ||
+                                isImageData[0].original
+                              }
+                              alt="Uploaded Preview"
+                              className="h-auto w-48 rounded border border-gray-200 shadow-sm"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setImage(null)}
+                              className="absolute -right-2 -top-2 rounded-full border border-gray-300 bg-white p-1 shadow hover:bg-red-50"
+                              title="Remove Image"
+                            >
+                              <PiXBold className="h-4 w-4 text-red-500" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </ModalFormTabPanelCard>
+                </div>
+              </ModalFormTabPanel>
+
+              <ModalFormTabPanel>
+                <div className="space-y-5">
+                  <ModalFormTabPanelCard
+                    title="Pricing"
+                    description="Price, discount, and session count"
+                  >
+                    <Input
+                      label="Price"
+                      type="number"
+                      {...register('price')}
+                      error={errors.price?.message}
+                    />
+                    <Input
+                      label="Discount"
+                      type="number"
+                      {...register('discount')}
+                      error={errors.discount?.message}
+                    />
+                    <Input
+                      label="Number of Sessions"
+                      type="number"
+                      {...register('sessions_count')}
+                      error={errors.sessions_count?.message}
+                    />
+                  </ModalFormTabPanelCard>
+                </div>
+              </ModalFormTabPanel>
+
+              <ModalFormTabPanel>
+                <div className="space-y-5">
+                  <ModalFormTabPanelCard
+                    title="Categories"
+                    description="Optional category assignment"
+                    contentClassName="sm:grid-cols-1"
+                  >
+                    <Controller
+                      name="category_ids"
+                      control={control}
+                      render={({ field: { value, onChange } }) => {
+                        const selectedOptions = Array.isArray(value)
+                          ? categoryOptions.filter((opt) =>
+                              value.includes(String(opt.value))
+                            )
+                          : [];
+
+                        return (
+                          <SelectBox
+                            multiple
+                            options={categoryOptions}
+                            value={selectedOptions}
+                            onChange={(
+                              opts: SelectOption[] | SelectOption
+                            ) => {
+                              const ids = Array.isArray(opts)
+                                ? opts.map((o) => String(o.value))
+                                : opts
+                                  ? [String((opts as SelectOption).value)]
+                                  : [];
+                              onChange(ids);
+                            }}
+                            disabled={isLoadingCategories}
+                            label="Categories"
+                            placeholder="Select categories (optional)"
+                            error={
+                              (errors.category_ids as { message?: string })
+                                ?.message
+                            }
+                            displayValue={(
+                              val: SelectOption | SelectOption[]
+                            ) => {
+                              if (Array.isArray(val)) {
+                                if (val.length === 0) return '';
+                                return val
+                                  .map((o) => o?.label ?? o?.name ?? o?.value)
+                                  .join(', ');
+                              }
+                              if (val?.label) return val.label;
+                              if (val?.name) return val.name;
+                              return String(val ?? '');
+                            }}
+                          />
+                        );
+                      }}
+                    />
+                  </ModalFormTabPanelCard>
+                </div>
+              </ModalFormTabPanel>
+            </ModalFormTabs>
+
+            <ModalFormTabsFooter
+              activeTab={activeTab}
+              tabCount={PACKAGE_TABS.length}
+              onPrev={() => goToTab(activeTab - 1)}
+              onNext={() => goToTab(activeTab + 1)}
+              onCancel={closeModal}
+              isLoading={loading || isCreating || isUpdating}
+              submitLabel={initValues ? 'Update Package' : 'Create Package'}
+            />
+          </>
+        );
+      }}
     </Form>
   );
 }

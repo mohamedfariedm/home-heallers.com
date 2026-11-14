@@ -44,7 +44,7 @@ export default function ExerciseProgramsPage() {
       header="Program,Doctor,Patient,Status"
       createName="Create Program"
       createElementButton={<CreateOrUpdateExerciseProgram />}
-      customSize="900px"
+      customSize="960px"
       canExport={false}
     >
       {isLoading ? (

@@ -107,7 +107,7 @@ export default function InvoicesTablePage() {
       header="invoices"
       createName="Create Invoice"
       createElementButton={<InvoiceForm />}
-      customSize="750px"
+      customSize="960px"
       canCreate
       canExport={activeView === 'management'}
     >

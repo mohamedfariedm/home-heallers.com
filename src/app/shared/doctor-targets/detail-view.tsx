@@ -77,6 +77,7 @@ export default function DoctorTargetDetailView({
               label="Edit"
               icon={null}
               view={<EditDoctorTargetForm initValues={target} />}
+              customSize="960px"
               className="h-9"
             />
           )}

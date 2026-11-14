@@ -48,6 +48,7 @@ console.log('data', data);
       header="Name,Phone,Email,Status,Created At"
       createName="Create Center"
       createElementButton={<CenterForm />}
+      customSize="960px"
     >
       {isLoading ? (
         <div className="m-auto">

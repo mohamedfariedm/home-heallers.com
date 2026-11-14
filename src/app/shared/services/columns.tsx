@@ -89,7 +89,7 @@ const lang="en"
             view={<CreateOrUpdateServices initValues={row} />}
             label=""
             className="p-0 m-0 bg-transparent text-gray-700"
-            customSize="1200px"
+            customSize="960px"
           />
         </Tooltip>
         <DeletePopover

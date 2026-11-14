@@ -136,7 +136,7 @@ export default function NotificationsPage() {
             : undefined
       }
       createElementButton={createElement}
-      customSize="760px"
+      customSize="960px"
       canExport={false}
       canImport={false}
       canCreate={activeTab !== 'sent'}
@@ -177,7 +177,7 @@ export default function NotificationsPage() {
             <CreateButton
               label="Send notification"
               view={<SendNotificationForm />}
-              customSize="760px"
+              customSize="960px"
               className={adminPrimaryButtonClass}
             />
           </div>

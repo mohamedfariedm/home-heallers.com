@@ -69,6 +69,7 @@ export const getColumns = ({
       <div className="flex items-center gap-3">
         <Tooltip size="sm" content={() => 'Edit Lead'} placement="top" color="invert">
           <CreateButton
+            customSize="960px"
             icon={
               <ActionIcon tag="span" size="sm" variant="outline" className="hover:!border-gray-900 hover:text-gray-700">
                 <PencilIcon className="h-4 w-4" />

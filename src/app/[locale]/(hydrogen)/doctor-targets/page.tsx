@@ -160,6 +160,7 @@ export default function DoctorTargetsPage() {
           <CreateDoctorTargetsForm />
         ) : undefined
       }
+      customSize="960px"
       canCreate={isTargetsTab && targetPermissions.create}
       canExport={isTargetsTab && targetPermissions.reports}
       exportElement={<DoctorTargetsExportButton />}

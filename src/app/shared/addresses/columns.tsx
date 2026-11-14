@@ -70,6 +70,7 @@ export const getColumns = ({
                       view={<AddressForm initValues={row} />}
                       label=""
                       className="p-0 m-0 bg-transparent text-gray-700"
+                      customSize="960px"
                     />
                   </Tooltip>
         <DeletePopover

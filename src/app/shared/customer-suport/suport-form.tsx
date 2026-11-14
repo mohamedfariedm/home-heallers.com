@@ -1,15 +1,23 @@
-import {
-  ModalFormHeader,
-  ModalFormFooter,
-  modalFormClassName,
-} from '@/components/ui/modal-form-shell';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { PiXBold } from 'react-icons/pi';
-import { Controller, SubmitHandler } from 'react-hook-form';
+import {
+  PiXBold,
+  PiUser,
+  PiBriefcase,
+  PiPhone,
+  PiCalendarBlank,
+} from 'react-icons/pi';
+import { Controller, SubmitHandler, type FieldErrors } from 'react-hook-form';
 import { Form } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Title } from '@/components/ui/text';
+import { ActionIcon } from 'rizzui';
+import {
+  ModalFormTabs,
+  ModalFormTabPanel,
+  ModalFormTabPanelCard,
+  ModalFormTabsFooter,
+  modalFormTabsClassName,
+  type ModalFormTabItem,
+} from '@/components/ui/modal-form-tabs';
 import { useModal } from '@/app/shared/modal-views/use-modal';
 import {
   LeadFormInput,
@@ -191,6 +199,104 @@ function LeadCityStateFields({
   );
 }
 
+type LeadTabId = 'contact' | 'lead' | 'call' | 'booking';
+
+const LEAD_TABS: {
+  id: LeadTabId;
+  label: string;
+  icon: typeof PiUser;
+}[] = [
+  { id: 'contact', label: 'Contact', icon: PiUser },
+  { id: 'lead', label: 'Lead', icon: PiBriefcase },
+  { id: 'call', label: 'Call details', icon: PiPhone },
+  { id: 'booking', label: 'Booking & ads', icon: PiCalendarBlank },
+];
+
+const CONTACT_ERROR_KEYS = [
+  'first_name',
+  'middle_name',
+  'last_name',
+  'name',
+  'age',
+  'gender',
+  'mobile_phone',
+  'home_phone',
+  'booking_phone_number',
+  'address_1',
+  'city',
+  'state',
+];
+
+const LEAD_ERROR_KEYS = [
+  'offer',
+  'agent_name',
+  'status',
+  'reason',
+  'status_reason',
+  'source_campaign',
+  'communication_channel',
+  'cc',
+  'rework',
+  'communication_times',
+];
+
+const CALL_ERROR_KEYS = [
+  'activity_code',
+  'call_sub_result',
+  'will_call_us_again_reason',
+  'not_interested_reason',
+  'inquiry_only_reason',
+  'injection_date',
+  'duplicate_lead',
+  'call_count',
+  'modified_by',
+  'patient_id',
+  'phonecall_patient_id',
+  'description',
+  'first_call_time',
+  'last_call_result',
+  'last_call_total_duration',
+  'last_phone',
+  'last_call_created_by',
+  'booking_count',
+];
+
+const BOOKING_ERROR_KEYS = [
+  'reservation_date_1',
+  'doctor1',
+  'notes',
+  'ads',
+  'ad_set',
+  'no_show_lost_reason',
+  'specialtie_1',
+  'specialtie_2',
+  'specialtie_3',
+  'ads_name',
+  'created_by',
+  'event_agent_name',
+];
+
+function leadTabHasErrors(
+  tabId: LeadTabId,
+  errors: FieldErrors<LeadFormInput> | Record<string, unknown>
+): boolean {
+  const has = (keys: string[]) =>
+    keys.some((key) => Boolean((errors as Record<string, unknown>)?.[key]));
+
+  switch (tabId) {
+    case 'contact':
+      return has(CONTACT_ERROR_KEYS);
+    case 'lead':
+      return has(LEAD_ERROR_KEYS);
+    case 'call':
+      return has(CALL_ERROR_KEYS);
+    case 'booking':
+      return has(BOOKING_ERROR_KEYS);
+    default:
+      return false;
+  }
+}
+
 export default function CreateOrUpdateLead({ initValues,type }: { initValues?: any,type: string }) {
 
     
@@ -211,6 +317,7 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
   const [packagesLoading, setPackagesLoading] = useState<boolean>(false);
   const [selectedOffer, setSelectedOffer] = useState<string>('');
   const [selectedCityId, setSelectedCityId] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState(0);
 
   const { data: citiesData, isLoading: isCitiesLoading } = useCities('limit=1000');
   const { data: statesData, isLoading: isStatesLoading } = useStates('limit=1000');
@@ -364,6 +471,16 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
     }
   };
 
+  const onInvalid = (formErrors: FieldErrors<LeadFormInput>) => {
+    const tabIndex = LEAD_TABS.findIndex((tab) =>
+      leadTabHasErrors(tab.id, formErrors)
+    );
+    if (tabIndex >= 0) setActiveTab(tabIndex);
+  };
+
+  const goToTab = (index: number) => {
+    setActiveTab(Math.max(0, Math.min(LEAD_TABS.length - 1, index)));
+  };
 
   // Extract Created By and Modified By from activity logs
   const activityLogs = initValues?.activity_logs || [];
@@ -382,6 +499,7 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
   return (
     <Form<LeadFormInput>
       onSubmit={onSubmit}
+      onInvalid={onInvalid}
       validationSchema={
         isDraftStatus(initValues?.status) ? draftLeadFormSchema : leadFormSchema
       }
@@ -444,317 +562,388 @@ export default function CreateOrUpdateLead({ initValues,type }: { initValues?: a
           communication_times: initValues?.communication_times ?? 0,
         },
       }}
-      className="flex flex-grow flex-col gap-6 p-6"
+      className={modalFormTabsClassName}
     >
       {({ register, control, setValue, formState: { errors } }) => {
+        const tabsWithErrors: ModalFormTabItem[] = LEAD_TABS.map((tab) => ({
+          ...tab,
+          hasError: leadTabHasErrors(tab.id, errors),
+        }));
+
         return (
           <>
-          <div className="flex items-center justify-between">
-            <Title as="h4" className="font-semibold">
-              {initValues ? 'Update Lead' : 'Create Lead'}
-            </Title>
-            <Button onClick={closeModal}>
-              <PiXBold className="h-4 w-4" />
-            </Button>
-          </div>
-
-          <div className="grid grid-cols-3 gap-4">
-            <Input label="First Name" {...register('first_name')} error={errors.first_name?.message} />
-            <Input label="Middle Name" {...register('middle_name')} error={errors.middle_name?.message} />
-            <Input label="Last Name" {...register('last_name')} error={errors.last_name?.message} />
-          </div>
-
-          <Input label="Full Name" {...register('name')} error={errors.name?.message} />
-
-          <div className="grid grid-cols-2 gap-4">
-            <Input label="Age" type="number" {...register('age')} error={errors.age?.message} />
-            <div>
-              <label>Gender</label>
-              <select {...register('gender')} className="w-full border border-gray-300 rounded-lg p-2">
-                <option value="">Select Gender</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-              </select>
-              {errors.gender && <p className="text-sm text-red-500">{errors.gender.message}</p>}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-4">
-            <Input label="Mobile Phone" {...register('mobile_phone')} error={errors.mobile_phone?.message} />
-            <Input label="Home Phone" {...register('home_phone')} error={errors.home_phone?.message} />
-            <Input label="Booking Phone" {...register('booking_phone_number')} error={errors.booking_phone_number?.message} />
-          </div>
-
-          <Input label="Address" {...register('address_1')} error={errors.address_1?.message} />
-
-          <LeadCityStateFields
-            control={control}
-            setValue={setValue}
-            errors={errors}
-            initCity={initValues?.city}
-            initState={initValues?.state}
-            activeCities={activeCities}
-            activeStates={activeStates}
-            isCitiesLoading={isCitiesLoading}
-            isStatesLoading={isStatesLoading}
-            selectedCityId={selectedCityId}
-            setSelectedCityId={setSelectedCityId}
-            filteredStates={filteredStates}
-          />
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm text-gray-700">Offer</label>
-              <select
-                {...register('offer')}
-                className="w-full border border-gray-300 rounded-lg p-2"
-                disabled={packagesLoading}
-                value={selectedOffer}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  setSelectedOffer(v);
-                }}
+            <div className="flex shrink-0 items-center justify-between border-b border-gray-100 px-6 py-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#143087] to-[#39519B] shadow">
+                  <PiUser className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <h4 className="text-lg font-bold text-gray-900">
+                    {initValues ? 'Update Lead' : 'Create Lead'}
+                  </h4>
+                  <p className="mt-0.5 text-xs text-gray-400">
+                    Fill each tab — save stays available on every step
+                  </p>
+                </div>
+              </div>
+              <ActionIcon
+                size="sm"
+                variant="outline"
+                onClick={closeModal}
+                className="rounded-lg border-gray-200 text-gray-500 hover:border-[#143087]/40 hover:bg-blue-50 hover:text-[#143087]"
               >
-                <option value="">{packagesLoading ? 'Loading...' : 'Select Offer (Package)'}</option>
-                {packages.map((pkg: any) => (
-                  <option key={pkg?.name?.ar} value={String(pkg?.name?.ar)}>
-                    {pkg?.name?.ar ||pkg?.name?.en ||  `Package #${pkg.id}`}
-                  </option>
-                ))}
-              </select>
-              {errors.offer && <p className="text-sm text-red-500">{errors.offer.message}</p>}
+                <PiXBold className="h-4 w-4" />
+              </ActionIcon>
             </div>
-            <Input label="Agent Name" {...register('agent_name')} error={errors.agent_name?.message} />
-          </div>
 
-          <input type="hidden" {...register('status')} />
-          <Input label="Chief Comment" {...register('reason')} error={errors.reason?.message} />
-
-          {(String(initValues?.status || '').toLowerCase() === 'failed' ||
-            String(initValues?.status || '').toLowerCase() === 'closed') && (
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-900">
-                Status Reason <span className="text-red-500">*</span>
-              </label>
-              <select
-                {...register('status_reason')}
-                className="h-10 w-full rounded-md border border-gray-300 bg-white p-2 outline-none transition-all focus:border-[#143087] focus:ring-2 focus:ring-[#143087]/20"
-              >
-                <option value="">Select reason</option>
-                {LEAD_STATUS_REASONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              {errors.status_reason && (
-                <p className="mt-1 text-sm text-red-500">{errors.status_reason.message}</p>
-              )}
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-900 mb-1">Source <span className="text-red-500">*</span></label>
-              <select 
-                {...register('source_campaign')} 
-                className="w-full border border-gray-300 rounded-md p-2 h-10 bg-white focus:ring-2 focus:ring-[#143087]/20 focus:border-[#143087] outline-none transition-all"
-              >
-                <option value="">Select Source</option>
-                {sourceCampaignOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              {errors.source_campaign && <p className="text-sm text-red-500 mt-1">{errors.source_campaign.message}</p>}
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1">Communication Channel <span className="text-red-500">*</span></label>
-            <select
-              {...register('communication_channel')}
-              className="w-full border border-gray-300 rounded-md p-2 h-10 bg-white focus:ring-2 focus:ring-[#143087]/20 focus:border-[#143087] outline-none transition-all"
+            <ModalFormTabs
+              tabs={tabsWithErrors}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
             >
-              {!isInbound && !isSeo && <option value="">Select Communication Channel</option>}
-              {communicationChannelOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            {errors.communication_channel && <p className="text-sm text-red-500 mt-1">{errors.communication_channel.message}</p>}
-          </div>
+              {/* ── Contact ── */}
+              <ModalFormTabPanel>
+                <div className="space-y-5">
+                  <ModalFormTabPanelCard
+                    title="Contact information"
+                    description="Name, demographics, phones, and address"
+                    contentClassName="sm:grid-cols-1"
+                  >
+                    <div className="grid grid-cols-3 gap-4">
+                      <Input label="First Name" {...register('first_name')} error={errors.first_name?.message} />
+                      <Input label="Middle Name" {...register('middle_name')} error={errors.middle_name?.message} />
+                      <Input label="Last Name" {...register('last_name')} error={errors.last_name?.message} />
+                    </div>
 
-          <div>
-            <label className="mb-1 block text-sm font-medium text-gray-900">CC</label>
-            <select
-              {...register('cc')}
-              className="h-10 w-full rounded-md border border-gray-300 bg-white p-2 outline-none transition-all focus:border-[#143087] focus:ring-2 focus:ring-[#143087]/20"
-            >
-              <option value="">Select CC</option>
-              {CC_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            {errors.cc && (
-              <p className="mt-1 text-sm text-red-500">{errors.cc.message}</p>
-            )}
-          </div>
+                    <Input label="Full Name" {...register('name')} error={errors.name?.message} />
 
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              label="Rework"
-              type="number"
-              min={0}
-              {...register('rework', { valueAsNumber: true })}
-              error={errors.rework?.message}
+                    <div className="grid grid-cols-2 gap-4">
+                      <Input label="Age" type="number" {...register('age')} error={errors.age?.message} />
+                      <div>
+                        <label>Gender</label>
+                        <select {...register('gender')} className="w-full border border-gray-300 rounded-lg p-2">
+                          <option value="">Select Gender</option>
+                          <option value="male">Male</option>
+                          <option value="female">Female</option>
+                        </select>
+                        {errors.gender && <p className="text-sm text-red-500">{errors.gender.message}</p>}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-4">
+                      <Input label="Mobile Phone" {...register('mobile_phone')} error={errors.mobile_phone?.message} />
+                      <Input label="Home Phone" {...register('home_phone')} error={errors.home_phone?.message} />
+                      <Input label="Booking Phone" {...register('booking_phone_number')} error={errors.booking_phone_number?.message} />
+                    </div>
+
+                    <Input label="Address" {...register('address_1')} error={errors.address_1?.message} />
+
+                    <LeadCityStateFields
+                      control={control}
+                      setValue={setValue}
+                      errors={errors}
+                      initCity={initValues?.city}
+                      initState={initValues?.state}
+                      activeCities={activeCities}
+                      activeStates={activeStates}
+                      isCitiesLoading={isCitiesLoading}
+                      isStatesLoading={isStatesLoading}
+                      selectedCityId={selectedCityId}
+                      setSelectedCityId={setSelectedCityId}
+                      filteredStates={filteredStates}
+                    />
+                  </ModalFormTabPanelCard>
+                </div>
+              </ModalFormTabPanel>
+
+              {/* ── Lead ── */}
+              <ModalFormTabPanel>
+                <div className="space-y-5">
+                  <ModalFormTabPanelCard
+                    title="Lead details"
+                    description="Offer, agent, status, source, and communication"
+                    contentClassName="sm:grid-cols-1"
+                  >
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm text-gray-700">Offer</label>
+                        <select
+                          {...register('offer')}
+                          className="w-full border border-gray-300 rounded-lg p-2"
+                          disabled={packagesLoading}
+                          value={selectedOffer}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            setSelectedOffer(v);
+                          }}
+                        >
+                          <option value="">{packagesLoading ? 'Loading...' : 'Select Offer (Package)'}</option>
+                          {packages.map((pkg: any) => (
+                            <option key={pkg?.name?.ar} value={String(pkg?.name?.ar)}>
+                              {pkg?.name?.ar ||pkg?.name?.en ||  `Package #${pkg.id}`}
+                            </option>
+                          ))}
+                        </select>
+                        {errors.offer && <p className="text-sm text-red-500">{errors.offer.message}</p>}
+                      </div>
+                      <Input label="Agent Name" {...register('agent_name')} error={errors.agent_name?.message} />
+                    </div>
+
+                    <input type="hidden" {...register('status')} />
+                    <Input label="Chief Comment" {...register('reason')} error={errors.reason?.message} />
+
+                    {(String(initValues?.status || '').toLowerCase() === 'failed' ||
+                      String(initValues?.status || '').toLowerCase() === 'closed') && (
+                      <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-900">
+                          Status Reason <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          {...register('status_reason')}
+                          className="h-10 w-full rounded-md border border-gray-300 bg-white p-2 outline-none transition-all focus:border-[#143087] focus:ring-2 focus:ring-[#143087]/20"
+                        >
+                          <option value="">Select reason</option>
+                          {LEAD_STATUS_REASONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                        {errors.status_reason && (
+                          <p className="mt-1 text-sm text-red-500">{errors.status_reason.message}</p>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-1 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-900 mb-1">Source <span className="text-red-500">*</span></label>
+                        <select 
+                          {...register('source_campaign')} 
+                          className="w-full border border-gray-300 rounded-md p-2 h-10 bg-white focus:ring-2 focus:ring-[#143087]/20 focus:border-[#143087] outline-none transition-all"
+                        >
+                          <option value="">Select Source</option>
+                          {sourceCampaignOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                        {errors.source_campaign && <p className="text-sm text-red-500 mt-1">{errors.source_campaign.message}</p>}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-900 mb-1">Communication Channel <span className="text-red-500">*</span></label>
+                      <select
+                        {...register('communication_channel')}
+                        className="w-full border border-gray-300 rounded-md p-2 h-10 bg-white focus:ring-2 focus:ring-[#143087]/20 focus:border-[#143087] outline-none transition-all"
+                      >
+                        {!isInbound && !isSeo && <option value="">Select Communication Channel</option>}
+                        {communicationChannelOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                      {errors.communication_channel && <p className="text-sm text-red-500 mt-1">{errors.communication_channel.message}</p>}
+                    </div>
+
+                    <div>
+                      <label className="mb-1 block text-sm font-medium text-gray-900">CC</label>
+                      <select
+                        {...register('cc')}
+                        className="h-10 w-full rounded-md border border-gray-300 bg-white p-2 outline-none transition-all focus:border-[#143087] focus:ring-2 focus:ring-[#143087]/20"
+                      >
+                        <option value="">Select CC</option>
+                        {CC_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                      {errors.cc && (
+                        <p className="mt-1 text-sm text-red-500">{errors.cc.message}</p>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <Input
+                        label="Rework"
+                        type="number"
+                        min={0}
+                        {...register('rework', { valueAsNumber: true })}
+                        error={errors.rework?.message}
+                      />
+                      <Input
+                        label="Communication Times"
+                        type="number"
+                        min={0}
+                        {...register('communication_times', { valueAsNumber: true })}
+                        error={errors.communication_times?.message}
+                      />
+                    </div>
+                  </ModalFormTabPanelCard>
+                </div>
+              </ModalFormTabPanel>
+
+              {/* ── Call details ── */}
+              <ModalFormTabPanel>
+                <div className="space-y-5">
+                  <ModalFormTabPanelCard
+                    title="Call details"
+                    description="Activity, outcomes, patient IDs, and call history"
+                    contentClassName="sm:grid-cols-1"
+                  >
+                    <div className="grid grid-cols-2 gap-4">
+                      <Input label="Activity Code" {...register('activity_code')} error={errors.activity_code?.message} />
+                      <Input label="Call Sub Result" {...register('call_sub_result')} error={errors.call_sub_result?.message} />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <Input label="Will Call Again Reason" {...register('will_call_us_again_reason')} error={errors.will_call_us_again_reason?.message} />
+                      <Input label="Not Interested Reason" {...register('not_interested_reason')} error={errors.not_interested_reason?.message} />
+                    </div>
+
+                    <Input label="Inquiry Only Reason" {...register('inquiry_only_reason')} error={errors.inquiry_only_reason?.message} />
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <Input label="Injection Date" type="date" {...register('injection_date')} error={errors.injection_date?.message} />
+                      <Input label="Duplicate Lead" {...register('duplicate_lead')} error={errors.duplicate_lead?.message} />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <Input label="Call Count" type="number" {...register('call_count')} error={errors.call_count?.message} />
+                      <Input label="Modified By" {...register('modified_by')} error={errors.modified_by?.message} disabled />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <Input label="Patient ID" {...register('patient_id')} error={errors.patient_id?.message} />
+                      <Input label="Phone Call Patient ID" {...register('phonecall_patient_id')} error={errors.phonecall_patient_id?.message} />
+                    </div>
+
+                    <Textarea label="Description" {...register('description')} error={errors.description?.message}  rows={3} />
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <Input label="First Call Time" type="datetime-local" {...register('first_call_time')} error={errors.first_call_time?.message} />
+                      <Input label="Last Call Result" {...register('last_call_result')} error={errors.last_call_result?.message} />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <Input
+                        label="Last Call Duration"
+                        type="number"
+                        min={0}
+                        {...register('last_call_total_duration', {
+                          min: { value: 0, message: 'Must be greater than or equal 0' },
+                          valueAsNumber: true,
+                        })}
+                        error={errors.last_call_total_duration?.message}
+                      />
+                      <Input label="Last Phone" {...register('last_phone')} error={errors.last_phone?.message} />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <Input label="Last Call Created By" {...register('last_call_created_by')} error={errors.last_call_created_by?.message} />
+                      <Input label="Booking Count" type="number" {...register('booking_count')} error={errors.booking_count?.message} />
+                    </div>
+                  </ModalFormTabPanelCard>
+                </div>
+              </ModalFormTabPanel>
+
+              {/* ── Booking & ads ── */}
+              <ModalFormTabPanel>
+                <div className="space-y-5">
+                  <ModalFormTabPanelCard
+                    title="Booking & ads"
+                    description="Reservation, specialties, and ad attribution"
+                    contentClassName="sm:grid-cols-1"
+                  >
+                    <div className="grid grid-cols-2 gap-4">
+                      <Input label="Reservation Date" type="date" {...register('reservation_date_1')} error={errors.reservation_date_1?.message} />
+                      <Input label="Doctor" {...register('doctor1')} error={errors.doctor1?.message} />
+                    </div>
+
+                    <Textarea label="Notes" {...register('notes')} error={errors.notes?.message}  rows={3} />
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <Input label="Ads" {...register('ads')} error={errors.ads?.message} />
+                      <Input label="Ad Set" {...register('ad_set')} error={errors.ad_set?.message} />
+                    </div>
+
+                    <Input label="No Show Lost Reason" {...register('no_show_lost_reason')} error={errors.no_show_lost_reason?.message} />
+
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-900 mb-1">Specialty 1</label>
+                        <select 
+                          {...register('specialtie_1')} 
+                          className="w-full border border-gray-300 rounded-md p-2 h-10 bg-white focus:ring-2 focus:ring-[#143087]/20 focus:border-[#143087] outline-none transition-all"
+                        >
+                          <option value="">Select Specialty</option>
+                          <option value="Physiotherapy">Physiotherapy</option>
+                          <option value="Nursing visits">Nursing visits</option>
+                          <option value="Doctors visits">Doctors visits</option>
+                          <option value="Caregivers">Caregivers</option>
+                          <option value="Extendcare">Extendcare</option>
+                        </select>
+                        {errors.specialtie_1 && <p className="text-sm text-red-500 mt-1">{errors.specialtie_1.message}</p>}
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-900 mb-1">Specialty 2</label>
+                        <select 
+                          {...register('specialtie_2')} 
+                          className="w-full border border-gray-300 rounded-md p-2 h-10 bg-white focus:ring-2 focus:ring-[#143087]/20 focus:border-[#143087] outline-none transition-all"
+                        >
+                          <option value="">Select Specialty</option>
+                          <option value="Physiotherapy">Physiotherapy</option>
+                          <option value="Nursing visits">Nursing visits</option>
+                          <option value="Doctors visits">Doctors visits</option>
+                          <option value="Caregivers">Caregivers</option>
+                          <option value="Extendcare">Extendcare</option>
+                        </select>
+                        {errors.specialtie_2 && <p className="text-sm text-red-500 mt-1">{errors.specialtie_2.message}</p>}
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-900 mb-1">Specialty 3</label>
+                        <select 
+                          {...register('specialtie_3')} 
+                          className="w-full border border-gray-300 rounded-md p-2 h-10 bg-white focus:ring-2 focus:ring-[#143087]/20 focus:border-[#143087] outline-none transition-all"
+                        >
+                          <option value="">Select Specialty</option>
+                          <option value="Physiotherapy">Physiotherapy</option>
+                          <option value="Nursing visits">Nursing visits</option>
+                          <option value="Doctors visits">Doctors visits</option>
+                          <option value="Caregivers">Caregivers</option>
+                          <option value="Extendcare">Extendcare</option>
+                        </select>
+                        {errors.specialtie_3 && <p className="text-sm text-red-500 mt-1">{errors.specialtie_3.message}</p>}
+                      </div>
+                    </div>
+
+                    <div>
+                      <Input label="Ads Name" {...register('ads_name')} error={errors.ads_name?.message} />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <Input label="Created By" {...register('created_by')} error={errors.created_by?.message} disabled />
+                      <Input label="Event Agent Name" {...register('event_agent_name')} error={errors.event_agent_name?.message} />
+                    </div>
+                  </ModalFormTabPanelCard>
+                </div>
+              </ModalFormTabPanel>
+            </ModalFormTabs>
+
+            <ModalFormTabsFooter
+              activeTab={activeTab}
+              tabCount={LEAD_TABS.length}
+              onPrev={() => goToTab(activeTab - 1)}
+              onNext={() => goToTab(activeTab + 1)}
+              onCancel={closeModal}
+              isLoading={isCreating || isUpdating}
+              disabled={isCreating || isUpdating}
+              submitLabel={initValues ? 'Update Lead' : 'Create Lead'}
             />
-            <Input
-              label="Communication Times"
-              type="number"
-              min={0}
-              {...register('communication_times', { valueAsNumber: true })}
-              error={errors.communication_times?.message}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <Input label="Activity Code" {...register('activity_code')} error={errors.activity_code?.message} />
-            <Input label="Call Sub Result" {...register('call_sub_result')} error={errors.call_sub_result?.message} />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <Input label="Will Call Again Reason" {...register('will_call_us_again_reason')} error={errors.will_call_us_again_reason?.message} />
-            <Input label="Not Interested Reason" {...register('not_interested_reason')} error={errors.not_interested_reason?.message} />
-          </div>
-
-          <Input label="Inquiry Only Reason" {...register('inquiry_only_reason')} error={errors.inquiry_only_reason?.message} />
-
-          <div className="grid grid-cols-2 gap-4">
-            <Input label="Injection Date" type="date" {...register('injection_date')} error={errors.injection_date?.message} />
-            <Input label="Duplicate Lead" {...register('duplicate_lead')} error={errors.duplicate_lead?.message} />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <Input label="Call Count" type="number" {...register('call_count')} error={errors.call_count?.message} />
-            <Input label="Modified By" {...register('modified_by')} error={errors.modified_by?.message} disabled />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <Input label="Patient ID" {...register('patient_id')} error={errors.patient_id?.message} />
-            <Input label="Phone Call Patient ID" {...register('phonecall_patient_id')} error={errors.phonecall_patient_id?.message} />
-          </div>
-
-          <Textarea label="Description" {...register('description')} error={errors.description?.message}  rows={3} />
-
-          <div className="grid grid-cols-2 gap-4">
-            <Input label="First Call Time" type="datetime-local" {...register('first_call_time')} error={errors.first_call_time?.message} />
-            <Input label="Last Call Result" {...register('last_call_result')} error={errors.last_call_result?.message} />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              label="Last Call Duration"
-              type="number"
-              min={0}
-              {...register('last_call_total_duration', {
-                min: { value: 0, message: 'Must be greater than or equal 0' },
-                valueAsNumber: true,
-              })}
-              error={errors.last_call_total_duration?.message}
-            />
-            <Input label="Last Phone" {...register('last_phone')} error={errors.last_phone?.message} />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <Input label="Last Call Created By" {...register('last_call_created_by')} error={errors.last_call_created_by?.message} />
-            <Input label="Booking Count" type="number" {...register('booking_count')} error={errors.booking_count?.message} />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <Input label="Reservation Date" type="date" {...register('reservation_date_1')} error={errors.reservation_date_1?.message} />
-            <Input label="Doctor" {...register('doctor1')} error={errors.doctor1?.message} />
-          </div>
-
-
-          <Textarea label="Notes" {...register('notes')} error={errors.notes?.message}  rows={3} />
-
-          <div className="grid grid-cols-2 gap-4">
-            <Input label="Ads" {...register('ads')} error={errors.ads?.message} />
-            <Input label="Ad Set" {...register('ad_set')} error={errors.ad_set?.message} />
-          </div>
-
-          <Input label="No Show Lost Reason" {...register('no_show_lost_reason')} error={errors.no_show_lost_reason?.message} />
-
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-900 mb-1">Specialty 1</label>
-              <select 
-                {...register('specialtie_1')} 
-                className="w-full border border-gray-300 rounded-md p-2 h-10 bg-white focus:ring-2 focus:ring-[#143087]/20 focus:border-[#143087] outline-none transition-all"
-              >
-                <option value="">Select Specialty</option>
-                <option value="Physiotherapy">Physiotherapy</option>
-                <option value="Nursing visits">Nursing visits</option>
-                <option value="Doctors visits">Doctors visits</option>
-                <option value="Caregivers">Caregivers</option>
-                <option value="Extendcare">Extendcare</option>
-              </select>
-              {errors.specialtie_1 && <p className="text-sm text-red-500 mt-1">{errors.specialtie_1.message}</p>}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-900 mb-1">Specialty 2</label>
-              <select 
-                {...register('specialtie_2')} 
-                className="w-full border border-gray-300 rounded-md p-2 h-10 bg-white focus:ring-2 focus:ring-[#143087]/20 focus:border-[#143087] outline-none transition-all"
-              >
-                <option value="">Select Specialty</option>
-                <option value="Physiotherapy">Physiotherapy</option>
-                <option value="Nursing visits">Nursing visits</option>
-                <option value="Doctors visits">Doctors visits</option>
-                <option value="Caregivers">Caregivers</option>
-                <option value="Extendcare">Extendcare</option>
-              </select>
-              {errors.specialtie_2 && <p className="text-sm text-red-500 mt-1">{errors.specialtie_2.message}</p>}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-900 mb-1">Specialty 3</label>
-              <select 
-                {...register('specialtie_3')} 
-                className="w-full border border-gray-300 rounded-md p-2 h-10 bg-white focus:ring-2 focus:ring-[#143087]/20 focus:border-[#143087] outline-none transition-all"
-              >
-                <option value="">Select Specialty</option>
-                <option value="Physiotherapy">Physiotherapy</option>
-                <option value="Nursing visits">Nursing visits</option>
-                <option value="Doctors visits">Doctors visits</option>
-                <option value="Caregivers">Caregivers</option>
-                <option value="Extendcare">Extendcare</option>
-              </select>
-              {errors.specialtie_3 && <p className="text-sm text-red-500 mt-1">{errors.specialtie_3.message}</p>}
-            </div>
-          </div>
-
-          <div>
-            <Input label="Ads Name" {...register('ads_name')} error={errors.ads_name?.message} />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <Input label="Created By" {...register('created_by')} error={errors.created_by?.message} disabled />
-            <Input label="Event Agent Name" {...register('event_agent_name')} error={errors.event_agent_name?.message} />
-          </div>
-
-          <div className="flex justify-end gap-4 mt-6">
-            <Button variant="outline" onClick={closeModal}>
-              Cancel
-            </Button>
-            <Button type="submit" isLoading={ isCreating || isUpdating}>
-              {initValues ? 'Update Lead' : 'Create Lead'}
-            </Button>
-          </div>
           </>
         );
       }}

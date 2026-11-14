@@ -52,6 +52,7 @@ export default function ClientReviewPage() {
        header="User,Created At"
        createName={t('client_review_create')}
        createElementButton={<ClientForm />}
+       customSize="960px"
           >
             {isLoading ? (
               <div className="m-auto">

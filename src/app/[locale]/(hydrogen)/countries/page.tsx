@@ -53,6 +53,7 @@ export default function CountriesTablePage() {
       header="User,Created At"
       createName="Create Country"
       createElementButton={<UpdateCreateCountries />}
+      customSize="960px"
     >
       {isLoading ? (
         <div className="m-auto">

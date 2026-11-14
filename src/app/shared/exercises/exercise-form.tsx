@@ -1,23 +1,32 @@
 'use client';
-import {
-  ModalFormHeader,
-  ModalFormFooter,
-  modalFormClassName,
-} from '@/components/ui/modal-form-shell';
 
 import { useMemo, useState } from 'react';
-import { Controller, SubmitHandler } from 'react-hook-form';
-import { PiXBold } from 'react-icons/pi';
-import { Switch, Textarea } from 'rizzui';
+import {
+  Controller,
+  SubmitHandler,
+  type FieldErrors,
+} from 'react-hook-form';
+import {
+  PiXBold,
+  PiListChecks,
+  PiImage,
+  PiSlidersHorizontal,
+} from 'react-icons/pi';
+import { Switch, Textarea, ActionIcon } from 'rizzui';
 import { Form } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Title, Text } from '@/components/ui/text';
+import { Text } from '@/components/ui/text';
 import SelectBox, { type SelectOption } from '@/components/ui/select';
+import {
+  ModalFormTabs,
+  ModalFormTabPanel,
+  ModalFormTabPanelCard,
+  ModalFormTabsFooter,
+  modalFormTabsClassName,
+  type ModalFormTabItem,
+} from '@/components/ui/modal-form-tabs';
 import { useModal } from '@/app/shared/modal-views/use-modal';
-import Spinner from '@/components/ui/spinner';
 import Upload from '@/components/ui/upload';
-import FormGroup from '@/app/shared/form-group';
 import {
   useCreateExercise,
   useExercisesFilterOptions,
@@ -39,6 +48,53 @@ const MEDIA_TYPE_OPTIONS = [
   { value: 'pdf', label: 'PDF' },
   { value: 'other', label: 'Other' },
 ] as const;
+
+type ExerciseTabId = 'basics' | 'media' | 'details';
+
+const EXERCISE_TABS: {
+  id: ExerciseTabId;
+  label: string;
+  icon: typeof PiListChecks;
+}[] = [
+  { id: 'basics', label: 'Basics', icon: PiListChecks },
+  { id: 'media', label: 'Media', icon: PiImage },
+  { id: 'details', label: 'Details', icon: PiSlidersHorizontal },
+];
+
+const BASICS_ERROR_KEYS = [
+  'title',
+  'description',
+  'instructions',
+  'category_id',
+  'is_active',
+];
+const MEDIA_ERROR_KEYS = ['media_type'];
+const DETAILS_ERROR_KEYS = [
+  'body_part',
+  'equipment',
+  'target',
+  'muscle_group',
+  'secondary_muscles',
+];
+
+function exerciseTabHasErrors(
+  tabId: ExerciseTabId,
+  errors: FieldErrors<ExerciseFormInput> | Record<string, unknown>
+): boolean {
+  const has = (keys: string[]) =>
+    keys.some((key) => Boolean((errors as Record<string, unknown>)?.[key]));
+
+  switch (tabId) {
+    case 'basics':
+      return has(BASICS_ERROR_KEYS);
+    case 'media':
+      return has(MEDIA_ERROR_KEYS);
+    case 'details':
+      return has(DETAILS_ERROR_KEYS);
+    default:
+      return false;
+  }
+}
 
 function parseSecondaryMuscles(value?: string | null) {
   if (!value?.trim()) return [];
@@ -182,6 +238,7 @@ export default function CreateOrUpdateExercise({
   );
   const { data: filterOptionsData, isLoading: isLoadingFilterOptions } =
     useExercisesFilterOptions();
+  const [activeTab, setActiveTab] = useState(0);
   const [file, setFile] = useState<File | null>(null);
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(
@@ -258,17 +315,21 @@ export default function CreateOrUpdateExercise({
     }
   };
 
-  if (isCreating || isUpdating) {
-    return (
-      <div className="m-auto p-10">
-        <Spinner size="lg" />
-      </div>
+  const onInvalid = (formErrors: FieldErrors<ExerciseFormInput>) => {
+    const tabIndex = EXERCISE_TABS.findIndex((tab) =>
+      exerciseTabHasErrors(tab.id, formErrors)
     );
-  }
+    if (tabIndex >= 0) setActiveTab(tabIndex);
+  };
+
+  const goToTab = (index: number) => {
+    setActiveTab(Math.max(0, Math.min(EXERCISE_TABS.length - 1, index)));
+  };
 
   return (
     <Form<ExerciseFormInput>
       onSubmit={onSubmit}
+      onInvalid={onInvalid}
       validationSchema={exerciseFormSchema}
       useFormProps={{
         defaultValues: {
@@ -298,250 +359,329 @@ export default function CreateOrUpdateExercise({
           is_active: initValues?.is_active ?? true,
         },
       }}
-      className="flex flex-grow flex-col gap-5 p-6"
+      className={modalFormTabsClassName}
     >
-      {({ register, control, formState: { errors } }) => (
-        <>
-          <div className="flex items-center justify-between">
-            <Title as="h4" className="font-semibold">
-              {initValues ? 'Update Exercise' : 'Create Exercise'}
-            </Title>
-            <Button variant="text" onClick={closeModal}>
-              <PiXBold className="h-4 w-4" />
-            </Button>
-          </div>
+      {({ register, control, formState: { errors } }) => {
+        const tabsWithErrors: ModalFormTabItem[] = EXERCISE_TABS.map((tab) => ({
+          ...tab,
+          hasError: exerciseTabHasErrors(tab.id, errors),
+        }));
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Input
-              label="Title (English)"
-              {...register('title.en')}
-              error={errors.title?.en?.message}
-            />
-            <Input
-              label="Title (Arabic)"
-              {...register('title.ar')}
-              error={errors.title?.ar?.message}
-            />
-          </div>
-
-          <Textarea
-            label="Description (English)"
-            {...register('description.en')}
-            error={errors.description?.en?.message}
-            rows={3}
-          />
-          <Textarea
-            label="Description (Arabic)"
-            {...register('description.ar')}
-            error={errors.description?.ar?.message}
-            rows={3}
-          />
-          <Textarea
-            label="Instructions (English)"
-            {...register('instructions.en')}
-            error={errors.instructions?.en?.message}
-            rows={3}
-          />
-          <Textarea
-            label="Instructions (Arabic)"
-            {...register('instructions.ar')}
-            error={errors.instructions?.ar?.message}
-            rows={3}
-          />
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Controller
-              name="body_part"
-              control={control}
-              render={({ field: { value, onChange } }) => (
-                <SelectField
-                  label="Body part"
-                  placeholder="Select body part"
-                  options={bodyPartOptions}
-                  value={value}
-                  onChange={onChange}
-                  disabled={isLoadingFilterOptions}
-                  error={errors.body_part?.message}
-                />
-              )}
-            />
-            <Controller
-              name="equipment"
-              control={control}
-              render={({ field: { value, onChange } }) => (
-                <SelectField
-                  label="Equipment"
-                  placeholder="Select equipment"
-                  options={equipmentOptions}
-                  value={value}
-                  onChange={onChange}
-                  disabled={isLoadingFilterOptions}
-                  error={errors.equipment?.message}
-                />
-              )}
-            />
-            <Controller
-              name="target"
-              control={control}
-              render={({ field: { value, onChange } }) => (
-                <SelectField
-                  label="Target"
-                  placeholder="Select target"
-                  options={targetOptions}
-                  value={value}
-                  onChange={onChange}
-                  disabled={isLoadingFilterOptions}
-                  error={errors.target?.message}
-                />
-              )}
-            />
-            <Controller
-              name="muscle_group"
-              control={control}
-              render={({ field: { value, onChange } }) => (
-                <SelectField
-                  label="Muscle group"
-                  placeholder="Select muscle group"
-                  options={muscleGroupOptions}
-                  value={value}
-                  onChange={onChange}
-                  disabled={isLoadingFilterOptions}
-                  error={errors.muscle_group?.message}
-                />
-              )}
-            />
-            <Controller
-              name="category_id"
-              control={control}
-              render={({ field: { value, onChange } }) => (
-                <SelectField
-                  label="Category"
-                  placeholder="Select category (optional)"
-                  options={categoryOptions}
-                  value={value}
-                  onChange={onChange}
-                  disabled={isLoadingCategories}
-                  error={errors.category_id?.message}
-                />
-              )}
-            />
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                Media type
-              </label>
-              <select
-                {...register('media_type')}
-                className="w-full rounded-lg border border-gray-300 p-2"
+        return (
+          <>
+            <div className="flex shrink-0 items-center justify-between border-b border-gray-100 px-6 py-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#143087] to-[#39519B] shadow">
+                  <PiListChecks className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <h4 className="text-lg font-bold text-gray-900">
+                    {initValues ? 'Update Exercise' : 'Create Exercise'}
+                  </h4>
+                  <p className="mt-0.5 text-xs text-gray-400">
+                    Fill each tab — save stays available on every step
+                  </p>
+                </div>
+              </div>
+              <ActionIcon
+                size="sm"
+                variant="outline"
+                onClick={closeModal}
+                className="rounded-lg border-gray-200 text-gray-500 hover:border-[#143087]/40 hover:bg-blue-50 hover:text-[#143087]"
               >
-                {MEDIA_TYPE_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+                <PiXBold className="h-4 w-4" />
+              </ActionIcon>
             </div>
-          </div>
 
-          <Input
-            label="Secondary muscles"
-            placeholder="Comma-separated, e.g. hip flexors, lower back"
-            {...register('secondary_muscles')}
-          />
+            <ModalFormTabs
+              tabs={tabsWithErrors}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+            >
+              <ModalFormTabPanel>
+                <div className="space-y-5">
+                  <ModalFormTabPanelCard
+                    title="Titles & copy"
+                    description="Localized title, description, and instructions"
+                  >
+                    <Input
+                      label="Title (English)"
+                      {...register('title.en')}
+                      error={errors.title?.en?.message}
+                    />
+                    <Input
+                      label="Title (Arabic)"
+                      {...register('title.ar')}
+                      error={errors.title?.ar?.message}
+                    />
+                    <div className="sm:col-span-2">
+                      <Textarea
+                        label="Description (English)"
+                        {...register('description.en')}
+                        error={errors.description?.en?.message}
+                        rows={3}
+                      />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <Textarea
+                        label="Description (Arabic)"
+                        {...register('description.ar')}
+                        error={errors.description?.ar?.message}
+                        rows={3}
+                      />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <Textarea
+                        label="Instructions (English)"
+                        {...register('instructions.en')}
+                        error={errors.instructions?.en?.message}
+                        rows={3}
+                      />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <Textarea
+                        label="Instructions (Arabic)"
+                        {...register('instructions.ar')}
+                        error={errors.instructions?.ar?.message}
+                        rows={3}
+                      />
+                    </div>
+                  </ModalFormTabPanelCard>
 
-          <Controller
-            name="is_active"
-            control={control}
-            render={({ field: { value, onChange } }) => (
-              <Switch
-                label="Active"
-                checked={Boolean(value)}
-                onChange={onChange}
-              />
-            )}
-          />
+                  <ModalFormTabPanelCard
+                    title="Category & status"
+                    description="Optional category and active flag"
+                  >
+                    <Controller
+                      name="category_id"
+                      control={control}
+                      render={({ field: { value, onChange } }) => (
+                        <SelectField
+                          label="Category"
+                          placeholder="Select category (optional)"
+                          options={categoryOptions}
+                          value={value}
+                          onChange={onChange}
+                          disabled={isLoadingCategories}
+                          error={errors.category_id?.message}
+                        />
+                      )}
+                    />
+                    <Controller
+                      name="is_active"
+                      control={control}
+                      render={({ field: { value, onChange } }) => (
+                        <div className="flex items-center pt-7">
+                          <Switch
+                            label="Active"
+                            checked={Boolean(value)}
+                            onChange={onChange}
+                          />
+                        </div>
+                      )}
+                    />
+                  </ModalFormTabPanelCard>
+                </div>
+              </ModalFormTabPanel>
 
-          <FormGroup title="Media file" className="pt-2">
-            <Upload
-              title="Animation / media (max 20MB)"
-              accept="img"
-              onChange={(event) => {
-                const selected = event.target.files?.[0] ?? null;
-                setFile(selected);
-                if (selected) {
-                  setFilePreview(URL.createObjectURL(selected));
-                }
-              }}
+              <ModalFormTabPanel>
+                <div className="space-y-5">
+                  <ModalFormTabPanelCard
+                    title="Media type"
+                    description="Choose how this exercise is presented"
+                    contentClassName="sm:grid-cols-1"
+                  >
+                    <div>
+                      <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                        Media type
+                      </label>
+                      <select
+                        {...register('media_type')}
+                        className="w-full rounded-lg border border-gray-300 p-2"
+                      >
+                        {MEDIA_TYPE_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </ModalFormTabPanelCard>
+
+                  <ModalFormTabPanelCard
+                    title="Media file"
+                    description="Animation or media upload (max 20MB)"
+                    contentClassName="sm:grid-cols-1"
+                  >
+                    <Upload
+                      title="Animation / media (max 20MB)"
+                      accept="img"
+                      onChange={(event) => {
+                        const selected = event.target.files?.[0] ?? null;
+                        setFile(selected);
+                        if (selected) {
+                          setFilePreview(URL.createObjectURL(selected));
+                        }
+                      }}
+                    />
+                    {filePreview ? (
+                      <div className="relative mt-2 inline-block">
+                        <img
+                          src={filePreview}
+                          alt="Media preview"
+                          className="h-auto max-h-40 w-48 rounded border border-gray-200 object-contain"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFile(null);
+                            setFilePreview(initValues?.media_url || null);
+                          }}
+                          className="absolute -right-2 -top-2 rounded-full border border-gray-300 bg-white p-1 shadow"
+                        >
+                          <PiXBold className="h-3.5 w-3.5 text-red-500" />
+                        </button>
+                      </div>
+                    ) : (
+                      <Text className="mt-1 text-xs text-gray-500">
+                        No media selected
+                      </Text>
+                    )}
+                  </ModalFormTabPanelCard>
+
+                  <ModalFormTabPanelCard
+                    title="Thumbnail"
+                    description="Thumbnail image (max 5MB)"
+                    contentClassName="sm:grid-cols-1"
+                  >
+                    <Upload
+                      title="Thumbnail image (max 5MB)"
+                      accept="img"
+                      onChange={(event) => {
+                        const selected = event.target.files?.[0] ?? null;
+                        setThumbnail(selected);
+                        if (selected) {
+                          setThumbPreview(URL.createObjectURL(selected));
+                        }
+                      }}
+                    />
+                    {thumbPreview ? (
+                      <div className="relative mt-2 inline-block">
+                        <img
+                          src={thumbPreview}
+                          alt="Thumbnail preview"
+                          className="h-auto max-h-32 w-36 rounded border border-gray-200 object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setThumbnail(null);
+                            setThumbPreview(initValues?.thumbnail_url || null);
+                          }}
+                          className="absolute -right-2 -top-2 rounded-full border border-gray-300 bg-white p-1 shadow"
+                        >
+                          <PiXBold className="h-3.5 w-3.5 text-red-500" />
+                        </button>
+                      </div>
+                    ) : (
+                      <Text className="mt-1 text-xs text-gray-500">
+                        No thumbnail selected
+                      </Text>
+                    )}
+                  </ModalFormTabPanelCard>
+                </div>
+              </ModalFormTabPanel>
+
+              <ModalFormTabPanel>
+                <div className="space-y-5">
+                  <ModalFormTabPanelCard
+                    title="Targeting"
+                    description="Body part, equipment, and muscle targeting"
+                  >
+                    <Controller
+                      name="body_part"
+                      control={control}
+                      render={({ field: { value, onChange } }) => (
+                        <SelectField
+                          label="Body part"
+                          placeholder="Select body part"
+                          options={bodyPartOptions}
+                          value={value}
+                          onChange={onChange}
+                          disabled={isLoadingFilterOptions}
+                          error={errors.body_part?.message}
+                        />
+                      )}
+                    />
+                    <Controller
+                      name="equipment"
+                      control={control}
+                      render={({ field: { value, onChange } }) => (
+                        <SelectField
+                          label="Equipment"
+                          placeholder="Select equipment"
+                          options={equipmentOptions}
+                          value={value}
+                          onChange={onChange}
+                          disabled={isLoadingFilterOptions}
+                          error={errors.equipment?.message}
+                        />
+                      )}
+                    />
+                    <Controller
+                      name="target"
+                      control={control}
+                      render={({ field: { value, onChange } }) => (
+                        <SelectField
+                          label="Target"
+                          placeholder="Select target"
+                          options={targetOptions}
+                          value={value}
+                          onChange={onChange}
+                          disabled={isLoadingFilterOptions}
+                          error={errors.target?.message}
+                        />
+                      )}
+                    />
+                    <Controller
+                      name="muscle_group"
+                      control={control}
+                      render={({ field: { value, onChange } }) => (
+                        <SelectField
+                          label="Muscle group"
+                          placeholder="Select muscle group"
+                          options={muscleGroupOptions}
+                          value={value}
+                          onChange={onChange}
+                          disabled={isLoadingFilterOptions}
+                          error={errors.muscle_group?.message}
+                        />
+                      )}
+                    />
+                    <div className="sm:col-span-2">
+                      <Input
+                        label="Secondary muscles"
+                        placeholder="Comma-separated, e.g. hip flexors, lower back"
+                        {...register('secondary_muscles')}
+                      />
+                    </div>
+                  </ModalFormTabPanelCard>
+                </div>
+              </ModalFormTabPanel>
+            </ModalFormTabs>
+
+            <ModalFormTabsFooter
+              activeTab={activeTab}
+              tabCount={EXERCISE_TABS.length}
+              onPrev={() => goToTab(activeTab - 1)}
+              onNext={() => goToTab(activeTab + 1)}
+              onCancel={closeModal}
+              isLoading={isCreating || isUpdating}
+              submitLabel={initValues ? 'Update Exercise' : 'Create Exercise'}
             />
-            {filePreview ? (
-              <div className="relative mt-2 inline-block">
-                <img
-                  src={filePreview}
-                  alt="Media preview"
-                  className="h-auto max-h-40 w-48 rounded border border-gray-200 object-contain"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFile(null);
-                    setFilePreview(initValues?.media_url || null);
-                  }}
-                  className="absolute -right-2 -top-2 rounded-full border border-gray-300 bg-white p-1 shadow"
-                >
-                  <PiXBold className="h-3.5 w-3.5 text-red-500" />
-                </button>
-              </div>
-            ) : (
-              <Text className="mt-1 text-xs text-gray-500">No media selected</Text>
-            )}
-          </FormGroup>
-
-          <FormGroup title="Thumbnail" className="pt-2">
-            <Upload
-              title="Thumbnail image (max 5MB)"
-              accept="img"
-              onChange={(event) => {
-                const selected = event.target.files?.[0] ?? null;
-                setThumbnail(selected);
-                if (selected) {
-                  setThumbPreview(URL.createObjectURL(selected));
-                }
-              }}
-            />
-            {thumbPreview ? (
-              <div className="relative mt-2 inline-block">
-                <img
-                  src={thumbPreview}
-                  alt="Thumbnail preview"
-                  className="h-auto max-h-32 w-36 rounded border border-gray-200 object-cover"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setThumbnail(null);
-                    setThumbPreview(initValues?.thumbnail_url || null);
-                  }}
-                  className="absolute -right-2 -top-2 rounded-full border border-gray-300 bg-white p-1 shadow"
-                >
-                  <PiXBold className="h-3.5 w-3.5 text-red-500" />
-                </button>
-              </div>
-            ) : (
-              <Text className="mt-1 text-xs text-gray-500">
-                No thumbnail selected
-              </Text>
-            )}
-          </FormGroup>
-
-          <div className="mt-2 flex justify-end gap-3">
-            <Button variant="outline" onClick={closeModal}>
-              Cancel
-            </Button>
-            <Button type="submit" isLoading={isCreating || isUpdating}>
-              {initValues ? 'Update Exercise' : 'Create Exercise'}
-            </Button>
-          </div>
-        </>
-      )}
+          </>
+        );
+      }}
     </Form>
   );
 }

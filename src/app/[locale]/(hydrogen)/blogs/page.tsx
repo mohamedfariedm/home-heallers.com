@@ -43,7 +43,7 @@ export default function AddressesTablePage() {
       header="Street,Created At"
       createName={t('blogs_create')}
       createElementButton={<BlogsForm />}
-      customSize="800px"
+      customSize="960px"
     >
       {isLoading ? (
         <div className="m-auto"><Spinner size="lg" /></div>

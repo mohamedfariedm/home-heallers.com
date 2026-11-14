@@ -279,7 +279,7 @@ export default function ZatcaFixPopup({
   const handleEditInvoice = () => {
     if (invoiceId == null) return;
     openModal({
-      customSize: '750px',
+      customSize: '960px',
       view: (
         <ZatcaInvoiceEditor
           invoiceId={invoiceId}

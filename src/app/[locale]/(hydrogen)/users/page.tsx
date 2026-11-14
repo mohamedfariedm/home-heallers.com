@@ -60,6 +60,7 @@ export default function UsersTablePage({
       header="User,Created At"
       createName="Create User"
       createElementButton={<UserForm />}
+      customSize="960px"
     >
       {isLoading ? (
         <div className="m-auto">

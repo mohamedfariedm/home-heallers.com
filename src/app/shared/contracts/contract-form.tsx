@@ -1,12 +1,7 @@
 'use client';
-import {
-  ModalFormHeader,
-  ModalFormFooter,
-  modalFormClassName,
-} from '@/components/ui/modal-form-shell';
 
 import { useMemo, useState } from 'react';
-import { SubmitHandler } from 'react-hook-form';
+import { SubmitHandler, type FieldErrors } from 'react-hook-form';
 import {
   PiFile,
   PiFileImage,
@@ -15,15 +10,26 @@ import {
   PiTrash,
   PiUploadSimple,
   PiXBold,
+  PiClipboardText,
+  PiUsersThree,
+  PiPaperclip,
 } from 'react-icons/pi';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Form } from '@/components/ui/form';
-import { Text, Title } from '@/components/ui/text';
-import { ActionIcon } from '@/components/ui/action-icon';
+import { Text } from '@/components/ui/text';
+import { ActionIcon } from 'rizzui';
 import { Badge } from '@/components/ui/badge';
+import {
+  ModalFormTabs,
+  ModalFormTabPanel,
+  ModalFormTabPanelCard,
+  ModalFormTabsFooter,
+  modalFormTabsClassName,
+  type ModalFormTabItem,
+} from '@/components/ui/modal-form-tabs';
 import {
   useCreateContract,
   useUpdateContract,
@@ -48,7 +54,6 @@ import {
 } from '@/app/shared/contracts/contract-utils';
 import cn from '@/utils/class-names';
 import toast from 'react-hot-toast';
-
 const ownerTypeOptions = [
   { value: 'company', label: 'Company' },
   { value: 'doctor', label: 'Doctor' },
@@ -210,26 +215,62 @@ const defaultValues: ContractFormInput = {
   assigned_to: null,
 };
 
-function FormSection({
-  title,
-  description,
-  children,
-}: {
-  title: string;
-  description?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="rounded-xl border border-gray-200 bg-gray-50/60 p-5 dark:border-gray-300 dark:bg-gray-100/40">
-      <div className="mb-4 border-b border-gray-200 pb-3 dark:border-gray-300">
-        <h5 className="text-sm font-semibold text-gray-900 dark:text-gray-800">{title}</h5>
-        {description && (
-          <Text className="mt-1 text-xs text-gray-500 dark:text-gray-600">{description}</Text>
-        )}
-      </div>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">{children}</div>
-    </section>
-  );
+type ContractTabId = 'general' | 'parties' | 'attachments';
+
+const CONTRACT_TABS: {
+  id: ContractTabId;
+  label: string;
+  icon: typeof PiClipboardText;
+}[] = [
+  { id: 'general', label: 'General', icon: PiClipboardText },
+  { id: 'parties', label: 'Parties / terms', icon: PiUsersThree },
+  { id: 'attachments', label: 'Attachments', icon: PiPaperclip },
+];
+
+const GENERAL_ERROR_KEYS = [
+  'visit_date',
+  'visit_time',
+  'visit_type',
+  'visit_summary',
+  'contract_type',
+  'center_interest_level',
+  'company_location',
+];
+
+const PARTIES_ERROR_KEYS = [
+  'contract_owner_type',
+  'company_name',
+  'company_activity',
+  'company_activity_custom',
+  'manager_name',
+  'manager_mobile',
+  'manager_email',
+  'website',
+  'social_media_links',
+  'communication_date',
+  'communication_times_count',
+  'assigned_to',
+  'requirements',
+  'sales_rep_notes',
+];
+
+function contractTabHasErrors(
+  tabId: ContractTabId,
+  errors: FieldErrors<ContractFormInput> | Record<string, unknown>
+): boolean {
+  const has = (keys: string[]) =>
+    keys.some((key) => Boolean((errors as Record<string, unknown>)?.[key]));
+
+  switch (tabId) {
+    case 'general':
+      return has(GENERAL_ERROR_KEYS);
+    case 'parties':
+      return has(PARTIES_ERROR_KEYS);
+    case 'attachments':
+      return false;
+    default:
+      return false;
+  }
 }
 
 function FullWidthField({ children }: { children: React.ReactNode }) {
@@ -293,6 +334,7 @@ export default function ContractForm({ initValues }: { initValues?: Contract }) 
     useUploadContractAttachments();
   const { data: usersData } = useUsers('page=1&limit=200');
   const isEditing = !!initValues;
+  const [activeTab, setActiveTab] = useState(0);
   const [pending, setPending] = useState<PendingFile[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const loading = isCreating || isUpdating || isUploading || isSubmitting;
@@ -371,14 +413,26 @@ export default function ContractForm({ initValues }: { initValues?: Contract }) 
     }
   };
 
+  const onInvalid = (formErrors: FieldErrors<ContractFormInput>) => {
+    const tabIndex = CONTRACT_TABS.findIndex((tab) =>
+      contractTabHasErrors(tab.id, formErrors)
+    );
+    if (tabIndex >= 0) setActiveTab(tabIndex);
+  };
+
+  const goToTab = (index: number) => {
+    setActiveTab(Math.max(0, Math.min(CONTRACT_TABS.length - 1, index)));
+  };
+
   return (
     <Form<ContractFormInput>
       onSubmit={onSubmit}
-      validationSchema={contractSchema}
+      onInvalid={onInvalid}
+      validationSchema={contractSchema as any}
       useFormProps={{
         defaultValues: initValues ? normalizeContractForForm(initValues) : defaultValues,
       }}
-      className="flex max-h-[min(90vh,820px)] flex-col @container [&_.rizzui-input-label]:font-medium [&_.rizzui-input-label]:text-gray-900"
+      className={modalFormTabsClassName}
     >
       {({ register, watch, setValue, formState: { errors } }) => {
         const ownerType = watch('contract_owner_type');
@@ -387,414 +441,461 @@ export default function ContractForm({ initValues }: { initValues?: Contract }) 
         const isCompany = ownerType === 'company';
         const isDoctor = ownerType === 'doctor';
 
+        const tabsWithErrors: ModalFormTabItem[] = CONTRACT_TABS.map((tab) => ({
+          ...tab,
+          hasError: contractTabHasErrors(tab.id, errors),
+        }));
+
         return (
           <>
-            <div className="flex shrink-0 items-start justify-between border-b border-gray-200 px-6 pb-4 pt-6 dark:border-gray-300">
-              <div>
-                <Title as="h4" className="text-lg font-semibold">
-                  {isEditing ? 'Update Contract' : 'Create Contract'}
-                </Title>
-                <Text className="mt-1 text-sm text-gray-500">
-                  {isEditing
-                    ? 'Update contract details and upload documents. All fields are optional.'
-                    : 'All wizard fields are optional — add documents below if you have them.'}
-                </Text>
+            <div className="flex shrink-0 items-center justify-between border-b border-gray-100 px-6 py-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#143087] to-[#39519B] shadow">
+                  <PiClipboardText className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <h4 className="text-lg font-bold text-gray-900">
+                    {isEditing ? 'Update Contract' : 'Create Contract'}
+                  </h4>
+                  <p className="mt-0.5 text-xs text-gray-400">
+                    Fill each tab — save stays available on every step
+                  </p>
+                </div>
               </div>
-              <ActionIcon size="sm" variant="text" onClick={closeModal} aria-label="Close">
-                <PiXBold className="h-auto w-5" />
+              <ActionIcon
+                size="sm"
+                variant="outline"
+                onClick={closeModal}
+                className="rounded-lg border-gray-200 text-gray-500 hover:border-[#143087]/40 hover:bg-blue-50 hover:text-[#143087]"
+              >
+                <PiXBold className="h-4 w-4" />
               </ActionIcon>
             </div>
 
-            <div className="flex-1 space-y-5 overflow-y-auto px-6 py-5">
-              <FormSection title="Visit" description="When the visit happened and what was discussed.">
-                <Input label="Visit Date" type="date" {...register('visit_date')} />
-                <Input label="Visit Time" type="time" {...register('visit_time')} />
-                <Input
-                  label="Visit Type"
-                  placeholder="e.g. Introductory, Follow-up"
-                  {...register('visit_type')}
-                />
-                <FullWidthField>
-                  <Textarea
-                    label="Visit Summary"
-                    placeholder="Describe the visit and key outcomes"
-                    rows={3}
-                    {...register('visit_summary')}
-                  />
-                </FullWidthField>
-              </FormSection>
-
-              <FormSection title="Location & Type" description="How and where the visit took place.">
-                <FullWidthField>
-                  <SegmentedControl
-                    label="Contract Type"
-                    value={contractType}
-                    options={contractTypeOptions}
-                    allowClear
-                    onChange={(value) =>
-                      setValue('contract_type', value as ContractType | null, {
-                        shouldValidate: true,
-                      })
-                    }
-                    error={errors.contract_type?.message}
-                  />
-                </FullWidthField>
-                <Input
-                  label="Priority (1–5)"
-                  type="number"
-                  min={1}
-                  max={5}
-                  placeholder="Interest level"
-                  {...register('center_interest_level')}
-                />
-                <FullWidthField>
-                  <Input
-                    label="Location"
-                    placeholder="Company address or clinic location"
-                    {...register('company_location')}
-                  />
-                </FullWidthField>
-              </FormSection>
-
-              <FormSection
-                title="Owner"
-                description="Whether this contract is for a company or an individual doctor."
-              >
-                <FullWidthField>
-                  <SegmentedControl
-                    label="Owner Type"
-                    value={ownerType}
-                    options={ownerTypeOptions}
-                    allowClear
-                    onChange={(value) =>
-                      setValue('contract_owner_type', value as ContractOwnerType | null, {
-                        shouldValidate: true,
-                      })
-                    }
-                  />
-                </FullWidthField>
-
-                <Input
-                  label={isDoctor ? 'Doctor Name' : 'Company Name'}
-                  placeholder={isDoctor ? 'Enter doctor name' : 'Enter company name'}
-                  {...register('company_name')}
-                />
-                <Input
-                  label={isDoctor ? 'Specialty' : 'Company Activity'}
-                  placeholder={isDoctor ? 'e.g. Orthopedics' : 'e.g. Healthcare'}
-                  {...register('company_activity')}
-                />
-                {!isDoctor && (
-                  <Input
-                    label="Custom Activity"
-                    placeholder="Other activity (optional)"
-                    {...register('company_activity_custom')}
-                  />
-                )}
-              </FormSection>
-
-              {isCompany !== false && ownerType !== 'doctor' && (
-                <FormSection
-                  title="Company Contact"
-                  description="External manager contact (omit for doctor contracts)."
-                >
-                  <Input
-                    label="Manager Name"
-                    placeholder="External contact name"
-                    {...register('manager_name')}
-                  />
-                  <Input
-                    label="Manager Mobile"
-                    placeholder="e.g. 966501234567"
-                    {...register('manager_mobile')}
-                  />
-                  <FullWidthField>
+            <ModalFormTabs
+              tabs={tabsWithErrors}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+            >
+              {/* ── General ── */}
+              <ModalFormTabPanel>
+                <div className="space-y-5">
+                  <ModalFormTabPanelCard
+                    title="Visit"
+                    description="When the visit happened and what was discussed."
+                  >
+                    <Input label="Visit Date" type="date" {...register('visit_date')} />
+                    <Input label="Visit Time" type="time" {...register('visit_time')} />
                     <Input
-                      label="Manager Email"
-                      type="email"
-                      placeholder="manager@company.com"
-                      {...register('manager_email')}
-                      error={errors.manager_email?.message}
+                      label="Visit Type"
+                      placeholder="e.g. Introductory, Follow-up"
+                      {...register('visit_type')}
                     />
-                  </FullWidthField>
-                </FormSection>
-              )}
+                    <FullWidthField>
+                      <Textarea
+                        label="Visit Summary"
+                        placeholder="Describe the visit and key outcomes"
+                        rows={3}
+                        {...register('visit_summary')}
+                      />
+                    </FullWidthField>
+                  </ModalFormTabPanelCard>
 
-              <FormSection
-                title="Online presence"
-                description="Website and social links (scheme optional for website)."
-              >
-                <FullWidthField>
-                  <Input
-                    label="Website"
-                    placeholder="acme.com or https://acme.com"
-                    {...register('website')}
-                  />
-                </FullWidthField>
-                <FullWidthField>
-                  <Textarea
-                    label="Social Media Links"
-                    placeholder="One URL per line"
-                    rows={3}
-                    {...register('social_media_links')}
-                  />
-                </FullWidthField>
-              </FormSection>
+                  <ModalFormTabPanelCard
+                    title="Location & Type"
+                    description="How and where the visit took place."
+                  >
+                    <FullWidthField>
+                      <SegmentedControl
+                        label="Contract Type"
+                        value={contractType}
+                        options={contractTypeOptions}
+                        allowClear
+                        onChange={(value) =>
+                          setValue('contract_type', value as ContractType | null, {
+                            shouldValidate: true,
+                          })
+                        }
+                        error={errors.contract_type?.message}
+                      />
+                    </FullWidthField>
+                    <Input
+                      label="Priority (1–5)"
+                      type="number"
+                      min={1}
+                      max={5}
+                      placeholder="Interest level"
+                      {...register('center_interest_level')}
+                    />
+                    <FullWidthField>
+                      <Input
+                        label="Location"
+                        placeholder="Company address or clinic location"
+                        {...register('company_location')}
+                      />
+                    </FullWidthField>
+                  </ModalFormTabPanelCard>
+                </div>
+              </ModalFormTabPanel>
 
-              <FormSection
-                title="Communication"
-                description="Latest communication date and times contacted."
-              >
-                <Input label="Communication Date" type="date" {...register('communication_date')} />
-                <Input
-                  label="Times Communicated"
-                  type="number"
-                  min={0}
-                  placeholder="0"
-                  {...register('communication_times_count')}
-                />
-              </FormSection>
+              {/* ── Parties / terms ── */}
+              <ModalFormTabPanel>
+                <div className="space-y-5">
+                  <ModalFormTabPanelCard
+                    title="Owner"
+                    description="Whether this contract is for a company or an individual doctor."
+                  >
+                    <FullWidthField>
+                      <SegmentedControl
+                        label="Owner Type"
+                        value={ownerType}
+                        options={ownerTypeOptions}
+                        allowClear
+                        onChange={(value) =>
+                          setValue('contract_owner_type', value as ContractOwnerType | null, {
+                            shouldValidate: true,
+                          })
+                        }
+                      />
+                    </FullWidthField>
 
-              <FormSection title="Assignment" description="Sales rep responsible for this contract.">
-                <FullWidthField>
-                  <div>
-                    <Text className="mb-1.5 block text-sm font-medium text-gray-900">
-                      Assigned To
-                    </Text>
-                    <select
-                      className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900 outline-none transition focus:border-[#143087] focus:ring-2 focus:ring-[#143087]/20"
-                      value={
-                        assignedTo != null && !Number.isNaN(Number(assignedTo))
-                          ? String(assignedTo)
-                          : ''
-                      }
-                      onChange={(e) => {
-                        const next = e.target.value;
-                        setValue('assigned_to', next ? Number(next) : null, {
-                          shouldValidate: true,
-                        });
-                      }}
+                    <Input
+                      label={isDoctor ? 'Doctor Name' : 'Company Name'}
+                      placeholder={isDoctor ? 'Enter doctor name' : 'Enter company name'}
+                      {...register('company_name')}
+                    />
+                    <Input
+                      label={isDoctor ? 'Specialty' : 'Company Activity'}
+                      placeholder={isDoctor ? 'e.g. Orthopedics' : 'e.g. Healthcare'}
+                      {...register('company_activity')}
+                    />
+                    {!isDoctor && (
+                      <Input
+                        label="Custom Activity"
+                        placeholder="Other activity (optional)"
+                        {...register('company_activity_custom')}
+                      />
+                    )}
+                  </ModalFormTabPanelCard>
+
+                  {isCompany !== false && ownerType !== 'doctor' && (
+                    <ModalFormTabPanelCard
+                      title="Company Contact"
+                      description="External manager contact (omit for doctor contracts)."
                     >
-                      <option value="">Select sales rep (defaults to creator)</option>
-                      {userOptions.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </FullWidthField>
-                {isEditing && initValues?.assigned_user && (
-                  <FullWidthField>
-                    <Text className="text-sm text-gray-600">
-                      Current assignee:{' '}
-                      <span className="font-medium text-gray-900">
-                        {resolveLocalizedName(
-                          initValues.assigned_user.name as
-                            | string
-                            | { en?: string; ar?: string }
-                            | null
-                            | undefined
-                        ) || '—'}
-                      </span>
-                      {initValues.assigned_user.email
-                        ? ` (${initValues.assigned_user.email})`
-                        : ''}
-                    </Text>
-                  </FullWidthField>
-                )}
-                {isEditing && initValues?.service_manager_name && (
-                  <FullWidthField>
-                    <Text className="text-sm text-gray-600">
-                      Service manager label:{' '}
-                      <span className="font-medium text-gray-900">
-                        {initValues.service_manager_name}
-                      </span>
-                    </Text>
-                  </FullWidthField>
-                )}
-              </FormSection>
+                      <Input
+                        label="Manager Name"
+                        placeholder="External contact name"
+                        {...register('manager_name')}
+                      />
+                      <Input
+                        label="Manager Mobile"
+                        placeholder="e.g. 966501234567"
+                        {...register('manager_mobile')}
+                      />
+                      <FullWidthField>
+                        <Input
+                          label="Manager Email"
+                          type="email"
+                          placeholder="manager@company.com"
+                          {...register('manager_email')}
+                          error={errors.manager_email?.message}
+                        />
+                      </FullWidthField>
+                    </ModalFormTabPanelCard>
+                  )}
 
-              <FormSection title="Notes" description="Requirements and internal sales notes.">
-                <FullWidthField>
-                  <Textarea
-                    label="Requirements"
-                    placeholder="Client requirements or requests"
-                    rows={2}
-                    {...register('requirements')}
-                  />
-                </FullWidthField>
-                <FullWidthField>
-                  <Textarea
-                    label="Sales Rep Notes"
-                    placeholder="Internal follow-up notes"
-                    rows={2}
-                    {...register('sales_rep_notes')}
-                  />
-                </FullWidthField>
-              </FormSection>
+                  <ModalFormTabPanelCard
+                    title="Online presence"
+                    description="Website and social links (scheme optional for website)."
+                  >
+                    <FullWidthField>
+                      <Input
+                        label="Website"
+                        placeholder="acme.com or https://acme.com"
+                        {...register('website')}
+                      />
+                    </FullWidthField>
+                    <FullWidthField>
+                      <Textarea
+                        label="Social Media Links"
+                        placeholder="One URL per line"
+                        rows={3}
+                        {...register('social_media_links')}
+                      />
+                    </FullWidthField>
+                  </ModalFormTabPanelCard>
 
-              <FormSection
-                title="Documents"
-                description="pdf, jpg, jpeg, png — up to 10MB each. Files upload after the contract is saved."
-              >
-                {isEditing && existingAttachments.length > 0 && (
-                  <FullWidthField>
-                    <div className="rounded-xl border border-gray-200 bg-white">
-                      <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50/80 px-4 py-2.5">
-                        <Text className="text-xs font-semibold text-gray-800">
-                          Existing attachments
+                  <ModalFormTabPanelCard
+                    title="Communication"
+                    description="Latest communication date and times contacted."
+                  >
+                    <Input
+                      label="Communication Date"
+                      type="date"
+                      {...register('communication_date')}
+                    />
+                    <Input
+                      label="Times Communicated"
+                      type="number"
+                      min={0}
+                      placeholder="0"
+                      {...register('communication_times_count')}
+                    />
+                  </ModalFormTabPanelCard>
+
+                  <ModalFormTabPanelCard
+                    title="Assignment"
+                    description="Sales rep responsible for this contract."
+                  >
+                    <FullWidthField>
+                      <div>
+                        <Text className="mb-1.5 block text-sm font-medium text-gray-900">
+                          Assigned To
                         </Text>
-                        <Badge variant="flat" className="text-xs">
-                          {existingAttachments.length}
-                        </Badge>
+                        <select
+                          className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900 outline-none transition focus:border-[#143087] focus:ring-2 focus:ring-[#143087]/20"
+                          value={
+                            assignedTo != null && !Number.isNaN(Number(assignedTo))
+                              ? String(assignedTo)
+                              : ''
+                          }
+                          onChange={(e) => {
+                            const next = e.target.value;
+                            setValue('assigned_to', next ? Number(next) : null, {
+                              shouldValidate: true,
+                            });
+                          }}
+                        >
+                          <option value="">Select sales rep (defaults to creator)</option>
+                          {userOptions.map((option: { value: string | number; label: string }) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
                       </div>
-                      <ul className="divide-y divide-gray-100">
-                        {existingAttachments.map((item) => (
+                    </FullWidthField>
+                    {isEditing && initValues?.assigned_user && (
+                      <FullWidthField>
+                        <Text className="text-sm text-gray-600">
+                          Current assignee:{' '}
+                          <span className="font-medium text-gray-900">
+                            {resolveLocalizedName(
+                              initValues.assigned_user.name as
+                                | string
+                                | { en?: string; ar?: string }
+                                | null
+                                | undefined
+                            ) || '—'}
+                          </span>
+                          {initValues.assigned_user.email
+                            ? ` (${initValues.assigned_user.email})`
+                            : ''}
+                        </Text>
+                      </FullWidthField>
+                    )}
+                    {isEditing && initValues?.service_manager_name && (
+                      <FullWidthField>
+                        <Text className="text-sm text-gray-600">
+                          Service manager label:{' '}
+                          <span className="font-medium text-gray-900">
+                            {initValues.service_manager_name}
+                          </span>
+                        </Text>
+                      </FullWidthField>
+                    )}
+                  </ModalFormTabPanelCard>
+
+                  <ModalFormTabPanelCard
+                    title="Notes"
+                    description="Requirements and internal sales notes."
+                  >
+                    <FullWidthField>
+                      <Textarea
+                        label="Requirements"
+                        placeholder="Client requirements or requests"
+                        rows={2}
+                        {...register('requirements')}
+                      />
+                    </FullWidthField>
+                    <FullWidthField>
+                      <Textarea
+                        label="Sales Rep Notes"
+                        placeholder="Internal follow-up notes"
+                        rows={2}
+                        {...register('sales_rep_notes')}
+                      />
+                    </FullWidthField>
+                  </ModalFormTabPanelCard>
+                </div>
+              </ModalFormTabPanel>
+
+              {/* ── Attachments ── */}
+              <ModalFormTabPanel>
+                <div className="space-y-5">
+                  <ModalFormTabPanelCard
+                    title="Documents"
+                    description="pdf, jpg, jpeg, png — up to 10MB each. Files upload after the contract is saved."
+                    contentClassName="sm:grid-cols-1"
+                  >
+                    {isEditing && existingAttachments.length > 0 && (
+                      <div className="rounded-xl border border-gray-200 bg-white">
+                        <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50/80 px-4 py-2.5">
+                          <Text className="text-xs font-semibold text-gray-800">
+                            Existing attachments
+                          </Text>
+                          <Badge variant="flat" className="text-xs">
+                            {existingAttachments.length}
+                          </Badge>
+                        </div>
+                        <ul className="divide-y divide-gray-100">
+                          {existingAttachments.map((item) => (
+                            <li
+                              key={item.id}
+                              className="flex items-center gap-3 px-4 py-2.5"
+                            >
+                              <FileTypeIcon fileName={item.file_name} />
+                              <div className="min-w-0 flex-1">
+                                <a
+                                  href={item.file_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="block truncate text-sm font-medium text-[#143087] hover:text-[#0F2466] hover:underline"
+                                >
+                                  {item.file_name || 'Open file'}
+                                </a>
+                                <Text className="text-xs text-gray-500">
+                                  {ATTACHMENT_TYPE_LABELS[
+                                    item.type as ContractAttachmentType
+                                  ] ?? item.type}
+                                  {item.created_at
+                                    ? ` · ${formatContractDate(item.created_at)}`
+                                    : ''}
+                                </Text>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    <label className="group flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-gray-300 bg-white px-4 py-8 text-center transition hover:border-gray-400 hover:bg-gray-50">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gray-50 shadow-sm ring-1 ring-gray-200 transition group-hover:scale-105">
+                        <PiUploadSimple className="h-5 w-5 text-gray-700" />
+                      </div>
+                      <Text className="text-sm font-medium text-gray-800">
+                        Drop files here or click to browse
+                      </Text>
+                      <Text className="text-xs text-gray-500">
+                        You can select multiple files at once
+                      </Text>
+                      <span className="mt-1 inline-flex items-center gap-1 rounded-md bg-[#143087] px-3 py-1.5 text-xs font-medium text-white">
+                        <PiPlusBold className="h-3.5 w-3.5" />
+                        Choose files
+                      </span>
+                      <input
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/*"
+                        multiple
+                        className="hidden"
+                        onChange={(e) => {
+                          handleFilesSelected(e.target.files);
+                          e.target.value = '';
+                        }}
+                      />
+                    </label>
+
+                    {pending.length > 0 && (
+                      <ul className="space-y-3">
+                        {pending.map((item) => (
                           <li
                             key={item.id}
-                            className="flex items-center gap-3 px-4 py-2.5"
+                            className="rounded-xl border border-gray-200 bg-white p-3"
                           >
-                            <FileTypeIcon fileName={item.file_name} />
-                            <div className="min-w-0 flex-1">
-                              <a
-                                href={item.file_url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="block truncate text-sm font-medium text-[#143087] hover:text-[#0F2466] hover:underline"
+                            <div className="mb-3 flex items-start gap-3">
+                              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-gray-200 bg-gray-50">
+                                <FileTypeIcon fileName={item.file.name} />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <Text className="truncate text-sm font-medium text-gray-900">
+                                  {item.file.name}
+                                </Text>
+                                <Text className="text-xs text-gray-500">
+                                  {formatBytes(item.file.size)}
+                                </Text>
+                              </div>
+                              <ActionIcon
+                                size="sm"
+                                variant="outline"
+                                onClick={() => removePending(item.id)}
+                                aria-label="Remove pending file"
+                                className="hover:!border-red-500 hover:text-red-600"
                               >
-                                {item.file_name || 'Open file'}
-                              </a>
-                              <Text className="text-xs text-gray-500">
-                                {ATTACHMENT_TYPE_LABELS[
-                                  item.type as ContractAttachmentType
-                                ] ?? item.type}
-                                {item.created_at
-                                  ? ` · ${formatContractDate(item.created_at)}`
-                                  : ''}
-                              </Text>
+                                <PiTrash className="h-4 w-4" />
+                              </ActionIcon>
+                            </div>
+                            <div className="grid gap-3 sm:grid-cols-2">
+                              <div>
+                                <Text className="mb-1.5 block text-xs font-medium text-gray-700">
+                                  Document type
+                                </Text>
+                                <select
+                                  className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900 outline-none focus:border-[#143087] focus:ring-2 focus:ring-[#143087]/20"
+                                  value={item.type}
+                                  onChange={(e) =>
+                                    updatePending(item.id, {
+                                      type: e.target.value as ContractAttachmentType,
+                                    })
+                                  }
+                                >
+                                  {typeOptions.map((option) => (
+                                    <option key={option.value} value={option.value}>
+                                      {option.label}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div>
+                                <Text className="mb-1.5 block text-xs font-medium text-gray-700">
+                                  Notes (optional)
+                                </Text>
+                                <Input
+                                  placeholder="e.g. CR copy, expires 2027"
+                                  value={item.notes}
+                                  onChange={(e) =>
+                                    updatePending(item.id, { notes: e.target.value })
+                                  }
+                                />
+                              </div>
                             </div>
                           </li>
                         ))}
                       </ul>
-                    </div>
-                  </FullWidthField>
-                )}
+                    )}
+                  </ModalFormTabPanelCard>
+                </div>
+              </ModalFormTabPanel>
+            </ModalFormTabs>
 
-                <FullWidthField>
-                  <label className="group flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-gray-300 bg-white px-4 py-8 text-center transition hover:border-gray-400 hover:bg-gray-50">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gray-50 shadow-sm ring-1 ring-gray-200 transition group-hover:scale-105">
-                      <PiUploadSimple className="h-5 w-5 text-gray-700" />
-                    </div>
-                    <Text className="text-sm font-medium text-gray-800">
-                      Drop files here or click to browse
-                    </Text>
-                    <Text className="text-xs text-gray-500">
-                      You can select multiple files at once
-                    </Text>
-                    <span className="mt-1 inline-flex items-center gap-1 rounded-md bg-[#143087] px-3 py-1.5 text-xs font-medium text-white">
-                      <PiPlusBold className="h-3.5 w-3.5" />
-                      Choose files
-                    </span>
-                    <input
-                      type="file"
-                      accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/*"
-                      multiple
-                      className="hidden"
-                      onChange={(e) => {
-                        handleFilesSelected(e.target.files);
-                        e.target.value = '';
-                      }}
-                    />
-                  </label>
-                </FullWidthField>
-
-                {pending.length > 0 && (
-                  <FullWidthField>
-                    <ul className="space-y-3">
-                      {pending.map((item) => (
-                        <li
-                          key={item.id}
-                          className="rounded-xl border border-gray-200 bg-white p-3"
-                        >
-                          <div className="mb-3 flex items-start gap-3">
-                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-gray-200 bg-gray-50">
-                              <FileTypeIcon fileName={item.file.name} />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <Text className="truncate text-sm font-medium text-gray-900">
-                                {item.file.name}
-                              </Text>
-                              <Text className="text-xs text-gray-500">
-                                {formatBytes(item.file.size)}
-                              </Text>
-                            </div>
-                            <ActionIcon
-                              size="sm"
-                              variant="outline"
-                              onClick={() => removePending(item.id)}
-                              aria-label="Remove pending file"
-                              className="hover:!border-red-500 hover:text-red-600"
-                            >
-                              <PiTrash className="h-4 w-4" />
-                            </ActionIcon>
-                          </div>
-                          <div className="grid gap-3 sm:grid-cols-2">
-                            <div>
-                              <Text className="mb-1.5 block text-xs font-medium text-gray-700">
-                                Document type
-                              </Text>
-                              <select
-                                className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900 outline-none focus:border-[#143087] focus:ring-2 focus:ring-[#143087]/20"
-                                value={item.type}
-                                onChange={(e) =>
-                                  updatePending(item.id, {
-                                    type: e.target.value as ContractAttachmentType,
-                                  })
-                                }
-                              >
-                                {typeOptions.map((option) => (
-                                  <option key={option.value} value={option.value}>
-                                    {option.label}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-                            <div>
-                              <Text className="mb-1.5 block text-xs font-medium text-gray-700">
-                                Notes (optional)
-                              </Text>
-                              <Input
-                                placeholder="e.g. CR copy, expires 2027"
-                                value={item.notes}
-                                onChange={(e) =>
-                                  updatePending(item.id, { notes: e.target.value })
-                                }
-                              />
-                            </div>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  </FullWidthField>
-                )}
-              </FormSection>
-            </div>
-
-            <div className="flex shrink-0 justify-end gap-3 border-t border-gray-200 bg-white px-6 py-4 dark:border-gray-300">
-              <Button type="button" variant="outline" onClick={closeModal} disabled={loading}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={loading} className="min-w-[140px]">
-                {loading
+            <ModalFormTabsFooter
+              activeTab={activeTab}
+              tabCount={CONTRACT_TABS.length}
+              onPrev={() => goToTab(activeTab - 1)}
+              onNext={() => goToTab(activeTab + 1)}
+              onCancel={closeModal}
+              isLoading={loading}
+              disabled={loading}
+              submitLabel={
+                loading
                   ? isUploading
                     ? 'Uploading...'
                     : 'Saving...'
                   : isEditing
                     ? 'Update Contract'
-                    : 'Create Contract'}
-              </Button>
-            </div>
+                    : 'Create Contract'
+              }
+            />
           </>
         );
       }}

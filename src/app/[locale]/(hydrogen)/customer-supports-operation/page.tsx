@@ -50,6 +50,7 @@ export default function CountriesTablePage() {
       header="User,Created At"
       createName="Create Customer Support"
       createElementButton={<CreateOrUpdateCustomerSupport type="operation" />}
+      customSize="960px"
       importButton="customer-supports/import"
     >
       {isLoading ? (

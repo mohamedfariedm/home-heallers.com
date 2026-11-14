@@ -56,7 +56,7 @@ export default function ExercisesPage() {
       header="Exercise,Body Part,Equipment,Target"
       createName="Create Exercise"
       createElementButton={<CreateOrUpdateExercise />}
-      customSize="720px"
+      customSize="960px"
       exportElement={
         <div className="flex items-center gap-3">
           <Link href={routes.exercises.rehabilitationReview}>

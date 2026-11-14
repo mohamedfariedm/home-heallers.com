@@ -45,7 +45,7 @@ export const getColumns = ({ onSend, sendingId }: Columns) => [
                 }
                 view={<CreateOrUpdateExerciseProgram initValues={row} />}
                 label=""
-                customSize="900px"
+                customSize="960px"
                 className="m-0 bg-transparent p-0 text-gray-700"
               />
             </Tooltip>

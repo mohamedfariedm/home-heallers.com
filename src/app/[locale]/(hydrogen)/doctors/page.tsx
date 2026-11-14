@@ -62,6 +62,7 @@ export default function DoctorsTablePage() {
       header="Doctor,Created At"
       createName="Create Doctor"
       createElementButton={<CreateOrUpdateDoctors />}
+      customSize="960px"
       headerActions={
         <CreateButton
           label="Bulk price"

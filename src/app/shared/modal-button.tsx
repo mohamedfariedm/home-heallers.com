@@ -16,7 +16,7 @@ interface ModalButtonProps extends ButtonProps {
 export default function ModalButton({
   label = 'Add New',
   className,
-  customSize = '500px',
+  customSize = '960px',
   view,
   icon = <PiPlusBold className="me-1.5 h-[17px] w-[17px]" />,
   ...rest

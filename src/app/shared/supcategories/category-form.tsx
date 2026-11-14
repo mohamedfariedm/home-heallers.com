@@ -1,287 +1,263 @@
 'use client';
-import {
-  ModalFormHeader,
-  ModalFormFooter,
-  modalFormClassName,
-} from '@/components/ui/modal-form-shell';
 
 import { useState } from 'react';
-import { PiXBold } from 'react-icons/pi';
-import { SubmitHandler, Controller } from 'react-hook-form';
+import { PiInfo, PiNotePencil, PiTag, PiXBold } from 'react-icons/pi';
+import { SubmitHandler, type FieldErrors } from 'react-hook-form';
 import { Form } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Button } from '@/components/ui/button';
-import SelectBox from '@/components/ui/select';
-import FormGroup from '@/app/shared/form-group';
 import { ActionIcon } from '@/components/ui/action-icon';
 import {
-    CategoryFormInput,
-    CategoryFormSchema,
+  ModalFormTabs,
+  ModalFormTabPanel,
+  ModalFormTabPanelCard,
+  ModalFormTabsFooter,
+  modalFormTabsClassName,
+  type ModalFormTabItem,
+} from '@/components/ui/modal-form-tabs';
+import {
+  CategoryFormInput,
+  CategoryFormSchema,
 } from '@/utils/validators/category-form.schema';
-import { Title, Text } from '@/components/ui/text';
 import { useModal } from '@/app/shared/modal-views/use-modal';
-import { useSupCategories, useCreateMainCategory, useUpdateMainCategory,useMainCategories } from '@/framework/maincategories ';
-import toast from 'react-hot-toast';
+import {
+  useSupCategories,
+  useCreateMainCategory,
+  useUpdateMainCategory,
+} from '@/framework/maincategories ';
 import Spinner from '@/components/ui/spinner';
 
-// main category form component for create and update category
-export default function UpdateCreateRegion({ initValues }: {
-    initValues?: any
+type FormTabId = 'general' | 'details';
+
+const FORM_TABS: {
+  id: FormTabId;
+  label: string;
+  icon: typeof PiInfo;
+}[] = [
+  { id: 'general', label: 'General', icon: PiInfo },
+  { id: 'details', label: 'Details', icon: PiNotePencil },
+];
+
+const GENERAL_ERROR_KEYS = ['name'];
+const DETAILS_ERROR_KEYS = ['priority'];
+
+function tabHasErrors(
+  tabId: FormTabId,
+  errors: FieldErrors<CategoryFormInput> | Record<string, unknown>
+): boolean {
+  const has = (keys: string[]) =>
+    keys.some((key) => Boolean((errors as Record<string, unknown>)?.[key]));
+  switch (tabId) {
+    case 'general':
+      return has(GENERAL_ERROR_KEYS);
+    case 'details':
+      return has(DETAILS_ERROR_KEYS);
+    default:
+      return false;
+  }
+}
+
+export default function UpdateCreateRegion({
+  initValues,
+}: {
+  initValues?: any;
 }) {
   const { closeModal } = useModal();
   const [reset, setReset] = useState({});
   const [isLoading, setLoading] = useState(false);
-  const { data: ParentCategories, isLoading: isCategoriesLoading} = useSupCategories("")
+  const { isLoading: isCategoriesLoading } = useSupCategories('');
   const { mutate: update } = useUpdateMainCategory();
   const { mutate: create, isPending } = useCreateMainCategory();
-  const [isActive, setIsActive] = useState<number>(initValues ? initValues?.is_active : 1)
-  const [lang, setLang] = useState('en')
-  const [nameEn, setNameEn] = useState(initValues ? initValues?.en_name : '')
-  const [nameAr, setNameAr] = useState(initValues ? initValues?.ar_name : '')
+  const [isActive, setIsActive] = useState<number>(
+    initValues ? initValues?.is_active : 1
+  );
+  const [lang, setLang] = useState('en');
+  const [nameEn, setNameEn] = useState(initValues ? initValues?.en_name : '');
+  const [nameAr, setNameAr] = useState(initValues ? initValues?.ar_name : '');
+  const [activeTab, setActiveTab] = useState(0);
 
   const onSubmit: SubmitHandler<CategoryFormInput> = (data) => {
-      const formatedName = JSON.stringify({
-              en: lang == 'en' ? data.name : nameEn,
-              ar: lang == 'en' ? nameAr : data.name
-      })
-        if(initValues) {
-            update({
-                ...data,
-                category_id: initValues?.id,
-                priority: initValues?.priority,
-                is_active: isActive,
-                name: formatedName,
-                parent_category: Number(data.parent_category) == 0 ? null : data.parent_category?.toString()
-            })
+    const formatedName = JSON.stringify({
+      en: lang == 'en' ? data.name : nameEn,
+      ar: lang == 'en' ? nameAr : data.name,
+    });
+    if (initValues) {
+      update({
+        ...data,
+        category_id: initValues?.id,
+        priority: initValues?.priority,
+        is_active: isActive,
+        name: formatedName,
+        parent_category:
+          Number(data.parent_category) == 0
+            ? null
+            : data.parent_category?.toString(),
+      });
     } else {
-        create({
-            ...data,
-            name: formatedName,
-            is_active: isActive,
-            priority: data.priority,
-            type:"Tag",
-            parent_category: Number(data.parent_category) == 0 ? null : data.parent_category?.toString()
-        })
+      create({
+        ...data,
+        name: formatedName,
+        is_active: isActive,
+        priority: data.priority,
+        type: 'Tag',
+        parent_category:
+          Number(data.parent_category) == 0
+            ? null
+            : data.parent_category?.toString(),
+      });
     }
     setLoading(isPending);
     setReset({
       roleName: '',
     });
-    // closeModal()
   };
 
-  return (
-    <>
-        {isCategoriesLoading ? (
-            <div className="m-auto">
-                <Spinner size="lg" />
-            </div>
-        ) : (
+  const onInvalid = (formErrors: FieldErrors<CategoryFormInput>) => {
+    const tabIndex = FORM_TABS.findIndex((tab) =>
+      tabHasErrors(tab.id, formErrors)
+    );
+    if (tabIndex >= 0) setActiveTab(tabIndex);
+  };
 
-            <Form<CategoryFormInput>
-                resetValues={reset}
-                onSubmit={onSubmit}
-                validationSchema={CategoryFormSchema}
-                useFormProps={{
-                    defaultValues: {
-                    //@ts-ignore
-                    name: initValues?.name || '',
-                    priority: initValues?.priority ? `${initValues?.priority}` : ''
-                    }
-                }}
-                className="flex flex-grow flex-col gap-6 p-6 @container [&_.rizzui-input-label]:font-medium [&_.rizzui-input-label]:text-gray-900"
-                >
-                {({ register, getValues, setValue, control , formState: { errors } }) => {
-                    return (
-                    <>
-                        <ModalFormHeader title={initValues ? 'Update Tag' : 'Add a new Tag'} />
-                        <div className='flex flex-wrap px-1 gap-3'>
-                            <Checkbox
-                                key={0} 
-                                label={'English'}
-                                checked={lang == 'en'}
-                                onChange={ function() {
-                                    if(lang == 'en') return
-                                    const currentName = getValues('name')
-                                    setNameAr(currentName)
-                                    setValue('name', nameEn == '' ? '' : nameEn)
-                                    setLang(lang == 'en' ? 'ar' : 'en')
-                                } }
-                            />
-                            <Checkbox
-                                key={1} 
-                                label={'Arabic'}
-                                checked={lang == 'ar'}
-                                onChange={ function() {
-                                    if(lang == 'ar') return
-                                    const currentName = getValues('name')
-                                    setNameEn(currentName)
-                                    setValue('name', nameAr == '' ? '' : nameAr)
-                                    setLang(lang == 'en' ? 'ar' : 'en')
-                                } }
-                            />
-                        </div>
-                        <Input
+  const goToTab = (index: number) => {
+    setActiveTab(Math.max(0, Math.min(FORM_TABS.length - 1, index)));
+  };
+
+  if (isCategoriesLoading) {
+    return (
+      <div className="m-auto">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
+
+  return (
+    <Form<CategoryFormInput>
+      resetValues={reset}
+      onSubmit={onSubmit}
+      onInvalid={onInvalid}
+      validationSchema={CategoryFormSchema}
+      useFormProps={{
+        defaultValues: {
+          //@ts-ignore
+          name: initValues?.name || '',
+          priority: initValues?.priority ? `${initValues?.priority}` : '',
+        },
+      }}
+      className={modalFormTabsClassName}
+    >
+      {({ register, getValues, setValue, formState: { errors } }) => {
+        const tabsWithErrors: ModalFormTabItem[] = FORM_TABS.map((tab) => ({
+          ...tab,
+          hasError: tabHasErrors(tab.id, errors),
+        }));
+
+        return (
+          <>
+            <div className="flex shrink-0 items-center justify-between border-b border-gray-100 px-6 py-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#143087] to-[#39519B] shadow">
+                  <PiTag className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <h4 className="text-lg font-bold text-gray-900">
+                    {initValues ? 'Update Tag' : 'Add a new Tag'}
+                  </h4>
+                  <p className="mt-0.5 text-xs text-gray-400">
+                    Fill each tab — save stays available on every step
+                  </p>
+                </div>
+              </div>
+              <ActionIcon
+                size="sm"
+                variant="outline"
+                onClick={closeModal}
+                className="rounded-lg border-gray-200 text-gray-500 hover:border-[#143087]/40 hover:bg-blue-50 hover:text-[#143087]"
+              >
+                <PiXBold className="h-4 w-4" />
+              </ActionIcon>
+            </div>
+
+            <ModalFormTabs
+              tabs={tabsWithErrors}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+            >
+              <ModalFormTabPanel>
+                <div className="space-y-5">
+                  <ModalFormTabPanelCard
+                    title="Tag details"
+                    description="Name and language"
+                  >
+                    <div className="sm:col-span-2 flex flex-wrap gap-3">
+                      <Checkbox
+                        key={0}
+                        label={'English'}
+                        checked={lang == 'en'}
+                        onChange={function () {
+                          if (lang == 'en') return;
+                          const currentName = getValues('name');
+                          setNameAr(currentName);
+                          setValue('name', nameEn == '' ? '' : nameEn);
+                          setLang(lang == 'en' ? 'ar' : 'en');
+                        }}
+                      />
+                      <Checkbox
+                        key={1}
+                        label={'Arabic'}
+                        checked={lang == 'ar'}
+                        onChange={function () {
+                          if (lang == 'ar') return;
+                          const currentName = getValues('name');
+                          setNameEn(currentName);
+                          setValue('name', nameAr == '' ? '' : nameAr);
+                          setLang(lang == 'en' ? 'ar' : 'en');
+                        }}
+                      />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <Input
                         label="Name"
                         placeholder="name"
                         {...register('name')}
                         error={errors.name?.message}
-                        />
-                        <Input
-                        label="Slug"
-                        placeholder="priority"
-                        {...register('priority')}
-                        error={errors.priority?.message}
-                        />
-                     
-                        <ModalFormFooter
-                cancelLabel="Cancel"
-                isLoading={isLoading}
-                submitLabel={initValues ? 'Update Tag' : 'Create Tag'}
+                      />
+                    </div>
+                  </ModalFormTabPanelCard>
+                </div>
+              </ModalFormTabPanel>
+
+              <ModalFormTabPanel>
+                <div className="space-y-5">
+                  <ModalFormTabPanelCard
+                    title="Priority"
+                    description="Ordering slug"
+                    contentClassName="sm:grid-cols-1"
+                  >
+                    <Input
+                      label="Slug"
+                      placeholder="priority"
+                      {...register('priority')}
+                      error={errors.priority?.message}
+                    />
+                  </ModalFormTabPanelCard>
+                </div>
+              </ModalFormTabPanel>
+            </ModalFormTabs>
+
+            <ModalFormTabsFooter
+              activeTab={activeTab}
+              tabCount={FORM_TABS.length}
+              onPrev={() => goToTab(activeTab - 1)}
+              onNext={() => goToTab(activeTab + 1)}
+              onCancel={closeModal}
+              isLoading={isLoading || isPending}
+              disabled={isLoading || isPending}
+              submitLabel={initValues ? 'Update Tag' : 'Create Tag'}
             />
-                    </>
-                    );
-                }}
-            </Form>   
-        )}
-    </>
+          </>
+        );
+      }}
+    </Form>
   );
 }
-
-
-
-//? last categorie configration if we need it ??
-
-// return (
-//     <>
-//         {isCategoriesLoading ? (
-//             <div className="m-auto">
-//                 <Spinner size="lg" />
-//             </div>
-//         ) : (
-
-//             <Form<TagFormInput>
-//                 resetValues={reset}
-//                 onSubmit={onSubmit}
-//                 validationSchema={CategoryFormSchema}
-//                 useFormProps={{
-//                     defaultValues: {
-//                     //@ts-ignore
-//                     name: initValues?.name || '',
-//                     priority: initValues?.priority ? `${initValues?.priority}` : 'priority'
-//                     }
-//                 }}
-//                 className="flex flex-grow flex-col gap-6 p-6 @container [&_.rizzui-input-label]:font-medium [&_.rizzui-input-label]:text-gray-900"
-//                 >
-//                 {({ register, getValues, setValue, control , formState: { errors } }) => {
-//                     return (
-//                     <>
-//                         <div className="flex items-center justify-between">
-//                             <Title as="h4" className="font-semibold">
-//                                 {initValues ? 'Update Region' : 'Add a new Region'}
-//                             </Title>
-//                             <ActionIcon size="sm" variant="text" onClick={closeModal}>
-//                                 <PiXBold className="h-auto w-5" />
-//                             </ActionIcon>
-//                         </div>
-//                         <div className='flex flex-wrap px-1 gap-3'>
-//                             <Checkbox
-//                                 key={0} 
-//                                 label={'English'}
-//                                 checked={lang == 'en'}
-//                                 onChange={ function() {
-//                                     if(lang == 'en') return
-//                                     const currentName = getValues('name')
-//                                     setNameAr(currentName)
-//                                     setValue('name', nameEn == '' ? '' : nameEn)
-//                                     setLang(lang == 'en' ? 'ar' : 'en')
-//                                 } }
-//                             />
-//                             <Checkbox
-//                                 key={1} 
-//                                 label={'Arabic'}
-//                                 checked={lang == 'ar'}
-//                                 onChange={ function() {
-//                                     if(lang == 'ar') return
-//                                     const currentName = getValues('name')
-//                                     setNameEn(currentName)
-//                                     setValue('name', nameAr == '' ? '' : nameAr)
-//                                     setLang(lang == 'en' ? 'ar' : 'en')
-//                                 } }
-//                             />
-//                         </div>
-//                         <Input
-//                         label="Category Name"
-//                         placeholder="Category name"
-//                         {...register('name')}
-//                         error={errors.name?.message}
-//                         />
-//                         <Input
-//                         label="Priority"
-//                         placeholder="priority"
-//                         {...register('priority')}
-//                         error={errors.priority?.message}
-//                         />
-//                         <FormGroup
-//                             title="Categories"
-//                             className="pt-7 @2xl:pt-7 @3xl:grid-cols-12 @3xl:pt-11"
-//                             >
-//                             <Controller
-//                                 control={control}
-//                                 name="parent_category"
-//                                 render={({ field: { value, onChange } }) => (
-//                                 <SelectBox
-//                                     placeholder="Parent Category"
-//                                     options={ [{id: 0, name: 'blank'}].concat(ParentCategories?.data)?.map((role: any) =>{ return {...role, value: role.name}})}
-//                                     onChange={onChange}
-//                                     value={value}
-//                                     className="col-span-full"
-//                                     getOptionValue={(option) => String(option.id)}
-//                                     displayValue={(selected) =>
-//                                         [{id: 0, name: 'blank'}].concat(ParentCategories?.data)?.find((r: any) => r.id == selected)?.name ?? ''
-//                                     }
-//                                     error={errors?.parent_category?.message as string}
-//                                 />
-//                                 )}
-//                             />
-//                         </FormGroup>
-//                         <div className='flex flex-wrap px-1 gap-3'>
-//                             <Checkbox
-//                                 key={1} 
-//                                 label={'Active'}
-//                                 checked={isActive == 1}
-//                                 // value={permission.id}
-//                                 onChange={ () => setIsActive(isActive ? 0 : 1) }
-//                             />
-//                             <Checkbox
-//                                 key={0} 
-//                                 label={'Inactive'}
-//                                 checked={isActive == 0}
-//                                 // value={permission.id}
-//                                 onChange={ () => setIsActive(isActive ? 0 : 1) }
-//                             />
-//                         </div>
-//                         <div className="flex items-center justify-end gap-4">
-//                         <Button
-//                             variant="outline"
-//                             onClick={closeModal}
-//                             className="w-full @xl:w-auto"
-//                         >
-//                             Cancel
-//                         </Button>
-//                         <Button
-//                             type="submit"
-//                             isLoading={isLoading}
-//                             className="w-full @xl:w-auto"
-//                         >
-//                             {initValues ? 'Update Category' : 'Create Category'}
-//                         </Button>
-//                         </div>
-//                     </>
-//                     );
-//                 }}
-//             </Form>   
-//         )}
-//     </>
-//   );
