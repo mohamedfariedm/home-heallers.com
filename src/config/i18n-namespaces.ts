@@ -12,6 +12,7 @@ export const I18N_NAMESPACES = [
   'blogs',
   'faqs',
   'client-review',
+  'campaigns',
 ] as const;
 
 export type I18nNamespace = (typeof I18N_NAMESPACES)[number];

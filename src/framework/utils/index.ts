@@ -1175,6 +1175,15 @@ class Client {
         visits: (id: string | number, param = '') =>
             HttpClient.get(`/geo-regions/${id}/visits${param ? `?${param}` : ''}`),
     };
+
+    campaigns = {
+        all: (param = '') => HttpClient.get(`/campaigns${param ? `?${param}` : ''}`),
+        findOne: (id: string | number) => HttpClient.get(`/campaigns/${id}`),
+        create: (input: any) => HttpClient.post('/campaigns', input),
+        update: (input: { id: string | number; data: any }) =>
+            HttpClient.patch(`/campaigns/${input.id}`, input.data),
+        delete: (id: string | number) => HttpClient.delete(`/campaigns/${id}`),
+    };
 }
 
 

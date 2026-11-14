@@ -271,6 +271,12 @@ export const routes = {
     edit: (id: string | number) => `/geo-regions/${id}/edit`,
     visits: (id: string | number) => `/geo-regions/${id}/visits`,
   },
+  campaigns: {
+    index: '/campaigns',
+    create: '/campaigns/create',
+    view: (id: string | number) => `/campaigns/${id}`,
+    edit: (id: string | number) => `/campaigns/${id}/edit`,
+  },
   invoices: {
     index: '/invoices',
     detail: (id: string | number) => `/invoices/${id}`,
