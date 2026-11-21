@@ -8,6 +8,10 @@ export const BlogFormSchema = z.object({
   descriptionAR: z.string().min(1, 'Description (AR) is required'),
   date: z.string().min(1, 'Date is required'),
   show_in_home_page: z.boolean(),
+  redirect_url: z
+    .string()
+    .max(2048, 'Redirect URL must not exceed 2048 characters')
+    .optional(),
   relatedBlogs: z.array(z.any()).optional(),
   tags: z.array(z.string()).optional(),
   ...entitySeoFieldsSchema,
