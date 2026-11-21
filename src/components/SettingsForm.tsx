@@ -8,6 +8,7 @@ import {
   MediaFolder,
   RateColorsByMetric,
   AbandonedPaymentCouponSettings,
+  WelcomeWalletSettings,
 } from '../types/settings';
 import BannerSection from './BannerSection';
 import SocialSection from './SocialSection';
@@ -26,6 +27,7 @@ import {
   FolderOpen,
   Palette,
   BellRing,
+  Gift,
 } from 'lucide-react';
 import TermsSection from './TermsSection';
 import ConditionsSection from './ConditionsSection';
@@ -36,6 +38,13 @@ import PaymentSection, {
   resolveAbandonedPaymentCouponSettings,
   validateAbandonedPaymentCouponSettings,
 } from './PaymentSection';
+import WelcomeWalletSection, {
+  resolveWelcomeWalletSettings,
+  pickWelcomeWalletSettings,
+  validateWelcomeWalletSettings,
+  buildWelcomeWalletPayload,
+  type WelcomeWalletErrors,
+} from './WelcomeWalletSection';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 
@@ -78,6 +87,7 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
       ...source,
       seo,
       ...resolveAbandonedPaymentCouponSettings(source),
+      ...resolveWelcomeWalletSettings(source),
     };
   };
 
@@ -90,12 +100,14 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
     percent?: string;
     delayMinutes?: string;
   }>({});
+  const [welcomeErrors, setWelcomeErrors] = useState<WelcomeWalletErrors>({});
 
   // After save/refetch, show server values (including abandoned coupon keys)
   useEffect(() => {
     if (!initialSettings) return;
     setSettings(normalizeSettings(initialSettings));
     setPaymentErrors({});
+    setWelcomeErrors({});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialSettings]);
 
@@ -111,6 +123,11 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
       id: 'payment',
       label: t('settings_tab_payment', 'Abandoned Booking Notifications'),
       icon: BellRing,
+    },
+    {
+      id: 'welcome-wallet',
+      label: t('settings_tab_welcome_wallet', 'Welcome Wallet Bonus'),
+      icon: Gift,
     },
     { id: 'rate-colors', label: t('settings_tab_rate_colors'), icon: Palette },
     // { id: 'folder-management', label: 'Folder Management', icon: FolderOpen },
@@ -142,11 +159,26 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
       return;
     }
 
+    const welcome = pickWelcomeWalletSettings(settings);
+    const welcomeErrs = validateWelcomeWalletSettings(welcome, t);
+    setWelcomeErrors(welcomeErrs);
+    if (welcomeErrs.amount || welcomeErrs.days || welcomeErrs.hours) {
+      toast.error(
+        t(
+          'settings_ww_save_blocked',
+          'Fix the welcome wallet bonus fields before saving'
+        )
+      );
+      setActiveTab('welcome-wallet');
+      return;
+    }
+
     // The server replaces the whole `setting` object, so send everything we
-    // received (`...settings`) with the four recovery keys as proper
-    // booleans / numbers.
+    // received (`...settings`) with the recovery keys and the welcome wallet
+    // keys as proper booleans / numbers.
     const payload: Settings = {
       ...settings,
+      ...buildWelcomeWalletPayload(welcome),
       abandoned_payment_reminder_enabled:
         abandoned.abandoned_payment_reminder_enabled,
       abandoned_payment_coupon_enabled:
@@ -203,6 +235,11 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
 
   const updateRateColors = (rate_colors: RateColorsByMetric) => {
     setSettings((prev) => ({ ...prev, rate_colors }));
+  };
+
+  const updateWelcomeWallet = (values: WelcomeWalletSettings) => {
+    setSettings((prev) => ({ ...prev, ...values }));
+    setWelcomeErrors(validateWelcomeWalletSettings(values, t));
   };
 
   const updateAbandonedPaymentCoupon = (
@@ -288,6 +325,14 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
             }}
             onUpdate={updateAbandonedPaymentCoupon}
             errors={paymentErrors}
+          />
+        );
+      case 'welcome-wallet':
+        return (
+          <WelcomeWalletSection
+            values={pickWelcomeWalletSettings(settings)}
+            onUpdate={updateWelcomeWallet}
+            errors={welcomeErrors}
           />
         );
       case 'rate-colors':

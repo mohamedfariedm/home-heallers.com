@@ -43,11 +43,11 @@ export function resolveAbandonedPaymentCouponSettings(
         : couponEnabled,
     abandoned_payment_coupon_enabled: couponEnabled,
     abandoned_payment_coupon_percent:
-      percentRaw === null || percentRaw === undefined || percentRaw === ''
+      percentRaw === null || percentRaw === undefined || (percentRaw as unknown) === ''
         ? ABANDONED_DEFAULTS.percent
         : Number(percentRaw),
     abandoned_payment_coupon_delay_minutes:
-      delayRaw === null || delayRaw === undefined || delayRaw === ''
+      delayRaw === null || delayRaw === undefined || (delayRaw as unknown) === ''
         ? ABANDONED_DEFAULTS.delayMinutes
         : Number(delayRaw),
     abandoned_payment_message_title_ar: str(
@@ -86,7 +86,7 @@ export function validateAbandonedPaymentCouponSettings(
     | 'abandoned_payment_coupon_percent'
     | 'abandoned_payment_coupon_delay_minutes'
   >,
-  t: (key: string, fallback?: string) => string
+  t: (...args: any[]) => any
 ): { percent?: string; delayMinutes?: string } {
   const errors: { percent?: string; delayMinutes?: string } = {};
 
@@ -111,7 +111,7 @@ export function validateAbandonedPaymentCouponSettings(
 }
 
 /** Inline ON/OFF indicator shown under a toggle. */
-const StatusBanner: React.FC<{
+export const StatusBanner: React.FC<{
   active: boolean;
   onText: string;
   offText: string;

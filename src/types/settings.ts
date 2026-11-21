@@ -349,7 +349,31 @@ export interface AbandonedPaymentCouponSettings {
   abandoned_payment_message_body_en: string;
 }
 
-export interface Settings extends Partial<AbandonedPaymentCouponSettings> {
+/**
+ * Welcome wallet bonus settings. The server credits the bonus, sends the
+ * notifications and expires it; the dashboard only edits these keys.
+ * Empty text = the server uses its own default text.
+ */
+export interface WelcomeWalletSettings {
+  welcome_wallet_enabled: boolean;
+  welcome_wallet_amount: number;
+  welcome_wallet_expiry_days: number;
+  welcome_wallet_credit_notification_enabled: boolean;
+  welcome_wallet_expiry_notification_enabled: boolean;
+  welcome_wallet_expiry_reminder_hours: number;
+  welcome_wallet_credit_title_ar: string;
+  welcome_wallet_credit_title_en: string;
+  welcome_wallet_credit_body_ar: string;
+  welcome_wallet_credit_body_en: string;
+  welcome_wallet_expiry_title_ar: string;
+  welcome_wallet_expiry_title_en: string;
+  welcome_wallet_expiry_body_ar: string;
+  welcome_wallet_expiry_body_en: string;
+}
+
+export interface Settings
+  extends Partial<AbandonedPaymentCouponSettings>,
+    Partial<WelcomeWalletSettings> {
   banners: Banner[];
   social: Social;
   ios_link: string;
