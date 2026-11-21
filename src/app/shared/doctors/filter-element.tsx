@@ -129,7 +129,7 @@ export default function FilterElement({
         displayValue={(selected: string) =>
           statusOptions.find((option) => option.value === selected)?.label ?? selected
         }
-        placeholder="Active / Inactive"
+        placeholder="Select status"
         label="Status"
         labelClassName="font-medium text-gray-700"
       />

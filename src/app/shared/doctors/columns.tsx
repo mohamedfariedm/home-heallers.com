@@ -18,6 +18,7 @@ import LookupColumnFilterPopover from '@/app/shared/lookup-column-filter-popover
 import { resolveLocalizedNameOrFallback } from '@/utils/resolve-localized-name';
 import { routes } from '@/config/routes';
 import { PiToggleLeft, PiToggleRight } from 'react-icons/pi';
+import { isActiveDoctor } from '@/framework/doctors';
 
 interface Columns {
   data: any[];
@@ -381,15 +382,23 @@ export const getColumns = ({
       <div className="flex items-center gap-1">
         <HeaderCell title="Status" />
         {onFilterChange && (
-          <ColumnFilterPopover columnKey="status" onFilterChange={onFilterChange} />
+          <ColumnFilterPopover
+            columnKey="status"
+            onFilterChange={onFilterChange}
+            equalsOnly
+            offerOptions={[
+              { label: 'Active', value: 'active' },
+              { label: 'Inactive', value: 'inactive' },
+            ]}
+          />
         )}
       </div>
     ),
     dataIndex: 'status',
     key: 'status',
     width: 140,
-    render: (status: boolean, row: any) => {
-      const isActive = Boolean(status);
+    render: (_status: boolean, row: any) => {
+      const isActive = isActiveDoctor(row);
       const isToggling = togglingDoctorId === row.id;
 
       return (

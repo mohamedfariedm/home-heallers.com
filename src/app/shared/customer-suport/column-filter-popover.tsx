@@ -94,17 +94,19 @@ export default function ColumnFilterPopover({
   initialValue,
   offerOptions,
   offerOptionsLoading,
+  equalsOnly = false,
 }: {
   columnKey: string;
   onFilterChange: (key: string, value: any) => void;
   initialValue?: { c1?: { op: string; value: string }; c2?: { op: string; value: string }; logic?: 'and' | 'or' };
   offerOptions?: { label: string; value: string }[];
   offerOptionsLoading?: boolean;
+  /** Restrict operators to Equals / Does not equal (e.g. Active/Inactive). */
+  equalsOnly?: boolean;
 }) {
   const isQualificationField = isLeadsQualificationFilterKey(columnKey);
-  const availableOperators = isQualificationField
-    ? qualificationOperators
-    : operators;
+  const availableOperators =
+    equalsOnly || isQualificationField ? qualificationOperators : operators;
   const [open, setOpen] = useState(false);
   const [cond1, setCond1] = useState({
     op: initialValue?.c1?.op || 'equal',
