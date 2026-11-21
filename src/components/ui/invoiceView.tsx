@@ -11,6 +11,7 @@ import {
   resolveInvoiceCategories,
   type InvoiceCategoryRef,
 } from '@/utils/invoice-category';
+import { resolveLocalizedName } from '@/utils/resolve-localized-name';
 
 type ApiDetail = {
   id: number;
@@ -19,7 +20,7 @@ type ApiDetail = {
   category_id?: number;
   category_name?: string;
   category?: InvoiceCategoryRef | null;
-  customer_name: string;
+  customer_name: unknown;
   national_id: string | null;
   service_name: string;
   service_code: string;
@@ -129,7 +130,7 @@ export default function InvoiceView({ invoiceData }: InvoiceViewProps) {
       return {
         i: idx + 1,
         categoryLabel: resolveCategoryLabel(d, 'ar') || '—',
-        customerName: d.customer_name,
+        customerName: resolveLocalizedName(d.customer_name, 'ar') || '—',
         qty,
         price,
         lineBeforeTax,
