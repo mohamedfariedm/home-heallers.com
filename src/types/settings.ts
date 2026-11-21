@@ -330,10 +330,23 @@ export interface OfferPopup {
   tracking: OfferPopupTracking;
 }
 
+/**
+ * Abandoned booking recovery message settings.
+ * Note: the `coupon_delay_minutes` key name is legacy — it is the wait time
+ * for the message whether or not a coupon is attached.
+ */
 export interface AbandonedPaymentCouponSettings {
+  /** Master switch for the recovery message. */
+  abandoned_payment_reminder_enabled: boolean;
+  /** Attach a personal discount coupon to the message. */
   abandoned_payment_coupon_enabled: boolean;
   abandoned_payment_coupon_percent: number;
   abandoned_payment_coupon_delay_minutes: number;
+  /** Message texts. Empty string = use the system default text. */
+  abandoned_payment_message_title_ar: string;
+  abandoned_payment_message_title_en: string;
+  abandoned_payment_message_body_ar: string;
+  abandoned_payment_message_body_en: string;
 }
 
 export interface Settings extends Partial<AbandonedPaymentCouponSettings> {

@@ -12,7 +12,7 @@ export default function SettingsPage() {
   const { mutate: update, isPending } = useUpdateSettings();
 
   const handleSave = async (settings: Settings) => {
-    update({ setting: settings });
+    update({ id: data?.data?.[0]?.id, setting: settings });
   };
 
   return (
