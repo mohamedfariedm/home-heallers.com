@@ -14,6 +14,7 @@ import {
   isZatcaValidationError,
 } from '@/app/shared/zatca/zatca-fix-error';
 import type { ZatcaInvoice, ZatcaMode } from '@/types/zatca';
+import { resolveLocalizedName } from '@/utils/resolve-localized-name';
 
 export default function CreateCreditNoteButton({ invoice }: { invoice: ZatcaInvoice }) {
   const { openModal, closeModal } = useModal();
@@ -99,7 +100,7 @@ export default function CreateCreditNoteButton({ invoice }: { invoice: ZatcaInvo
               />
               <Text className="mb-4 text-sm text-gray-600">
                 This will refund {amount} SAR (incl. {invoice.tax_total ?? 0} SAR VAT) to{' '}
-                {invoice.customer_name}
+                {resolveLocalizedName(invoice.customer_name, 'ar') || '—'}
               </Text>
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={closeModal}>

@@ -12,6 +12,7 @@ import type { ZatcaPermissions } from '@/app/shared/zatca/permissions';
 import type { ZatcaInvoice } from '@/types/zatca';
 import { formatDate } from '@/utils/format-date';
 import { resolveInvoiceCategories } from '@/utils/invoice-category';
+import { resolveLocalizedName } from '@/utils/resolve-localized-name';
 
 type Columns = {
   data: ZatcaInvoice[];
@@ -110,7 +111,11 @@ export function getZatcaColumns({
       dataIndex: 'customer_name',
       key: 'customer_name',
       width: 140,
-      render: (v: string) => <span className="line-clamp-1">{v}</span>,
+      render: (v: unknown) => (
+        <span className="line-clamp-1">
+          {resolveLocalizedName(v, 'ar') || '—'}
+        </span>
+      ),
     },
     {
       title: (

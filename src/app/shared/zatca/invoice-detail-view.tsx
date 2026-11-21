@@ -24,6 +24,7 @@ import type { ZatcaPermissions } from '@/app/shared/zatca/permissions';
 import type { ZatcaSubmission } from '@/types/zatca';
 import DateCell from '@/components/ui/date-cell';
 import { resolveInvoiceCategories } from '@/utils/invoice-category';
+import { resolveLocalizedName } from '@/utils/resolve-localized-name';
 
 type TabKey = 'pdf' | 'qr' | 'xml';
 
@@ -161,7 +162,9 @@ export default function InvoiceDetailView({
           <dl className="grid gap-2 text-sm">
             <div className="flex justify-between">
               <dt className="text-gray-500">Name</dt>
-              <dd>{invoice.customer_name}</dd>
+              <dd>
+                {resolveLocalizedName(invoice.customer_name, 'ar') || '—'}
+              </dd>
             </div>
             {invoice.national_id && (
               <div className="flex justify-between">

@@ -318,9 +318,10 @@ export default function InvoiceManager({
         initValues?.details?.map((d: any) => ({
           id: d.id,
           customer_name:
-            d.customer_name ??
-            (initValues as any)?.customer_name ??
-            '',
+            resolveLocalizedName(
+              d.customer_name ?? (initValues as any)?.customer_name,
+              'ar'
+            ) || '',
           category_id: Number(d.category_id ?? d.category?.id ?? 0),
           category_name: resolveCategoryLabel(d),
           session_price:
@@ -471,7 +472,9 @@ export default function InvoiceManager({
       notes: data.notes,
       details: data.details.map((detail) => ({
         id: detail.id ?? undefined,
-        customer_name: detail.customer_name,
+        customer_name:
+          resolveLocalizedName(detail.customer_name, 'ar') ||
+          detail.customer_name,
         national_id: detail.national_id ?? null,
         doctor_id: Number(detail.doctor_id),
         category_id: Number(detail.category_id),
@@ -733,7 +736,8 @@ export default function InvoiceManager({
                             Customer
                           </p>
                           <p className="font-semibold text-gray-900">
-                            {detail.customer_name}
+                            {resolveLocalizedName(detail.customer_name, 'ar') ||
+                              '—'}
                           </p>
                           {detail.national_id && (
                             <p className="rounded bg-gray-100 px-2 py-1 text-xs text-gray-500">
@@ -839,7 +843,10 @@ export default function InvoiceManager({
                   <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     <FormGroup title="Customer Name *">
                       <Input
-                        value={editingDetail.customer_name}
+                        value={
+                          resolveLocalizedName(editingDetail.customer_name, 'ar') ||
+                          ''
+                        }
                         onChange={(e) =>
                           handleDetailFieldChange(
                             'customer_name',

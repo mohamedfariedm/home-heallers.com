@@ -11,6 +11,7 @@ import {
   resolveInvoiceCategories,
   type InvoiceCategoryRef,
 } from '@/utils/invoice-category';
+import { resolveLocalizedName } from '@/utils/resolve-localized-name';
 
 type ApiDetail = {
   id: number;
@@ -19,7 +20,7 @@ type ApiDetail = {
   category_id?: number;
   category_name?: string;
   category?: InvoiceCategoryRef | null;
-  customer_name: string;
+  customer_name: unknown;
   national_id: string | null;
   service_name: string;
   service_code: string;
@@ -129,7 +130,7 @@ export default function InvoiceView({ invoiceData }: InvoiceViewProps) {
       return {
         i: idx + 1,
         categoryLabel: resolveCategoryLabel(d, 'ar') || '—',
-        customerName: d.customer_name,
+        customerName: resolveLocalizedName(d.customer_name, 'ar') || '—',
         qty,
         price,
         lineBeforeTax,
@@ -591,12 +592,12 @@ export default function InvoiceView({ invoiceData }: InvoiceViewProps) {
               <p>الرقم الضريبي (310500448400003)</p>
               <p>الرقم المميز (3105004484)</p>
               <p>السجل التجاري رقم (4031281879)</p>
-              <p>العنوان المختصر : R L D A  4 4 4 1</p>
-              <p>رقم المبنى : 4441</p>
-              <p>الشارع : البقاع</p>
-              <p>الرقم الفرعي : 7020</p>
-              <p>الحي : حى الشفا</p>
-              <p>الرمز البريدي : 14712</p>
+              <p>العنوان المختصر : RMDD3999</p>
+              <p>رقم المبنى : 3999</p>
+              <p>الشارع : الخرج</p>
+              <p>الرقم الفرعي : 8178</p>
+              <p>الحي : حى الدار البيضاء</p>
+              <p>الرمز البريدي : 14516</p>
               <p>المدينة : الرياض</p>
             </div>
           </div>
