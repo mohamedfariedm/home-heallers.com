@@ -26,16 +26,32 @@ interface QuillEditorProps<TFieldValues extends FieldValues = FieldValues>
   formats?: string[];
 }
 
+const FONT_SIZES = [
+  false,
+  '10px',
+  '12px',
+  '14px',
+  '16px',
+  '18px',
+  '20px',
+  '24px',
+  '28px',
+  '32px',
+  '36px',
+  '48px',
+];
+
 const defaultModules = {
   toolbar: [
     [{ header: [1, 2, 3, 4, 5, 6, false] }],
+    [{ size: FONT_SIZES }],
     ['bold', 'italic', 'underline', 'strike'],
     ['blockquote', 'code-block'],
     [{ list: 'ordered' }, { list: 'bullet' }],
     [{ script: 'sub' }, { script: 'super' }],
     [{ indent: '-1' }, { indent: '+1' }],
     [{ color: [] }, { background: [] }],
-    [{ font: [] }, { size: [] }],
+    [{ font: [] }],
     [{ align: [] }, { direction: 'rtl' }],
     ['link', 'image', 'video'],
     ['clean'],
@@ -55,28 +71,7 @@ function registerQuillStyleAttributors() {
   const FontStyle = Quill.import('attributors/style/font');
   const SizeStyle = Quill.import('attributors/style/size');
 
-  SizeStyle.whitelist = [
-    false,
-    'small',
-    'large',
-    'huge',
-    '10px',
-    '11px',
-    '12px',
-    '13px',
-    '14px',
-    '15px',
-    '16px',
-    '18px',
-    '20px',
-    '22px',
-    '24px',
-    '26px',
-    '28px',
-    '32px',
-    '36px',
-    '48px',
-  ];
+  SizeStyle.whitelist = FONT_SIZES;
 
   Quill.register(AlignStyle, true);
   Quill.register(BackgroundStyle, true);
