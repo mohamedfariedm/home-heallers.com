@@ -11,7 +11,7 @@ import toast from 'react-hot-toast';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ActionIcon } from 'rizzui';
 import { PiCaretDownBold, PiCaretUpBold } from 'react-icons/pi';
-import { useDeleteDoctors, useUpdateDoctors } from '@/framework/doctors';
+import { isActiveDoctor, useDeleteDoctors, useUpdateDoctors } from '@/framework/doctors';
 import {
   applyDateRangeToParams,
   buildClearedFiltersParams,
@@ -152,7 +152,7 @@ export default function DoctorsTable({
         return;
       }
 
-      const nextStatus = !Boolean(row.status);
+      const nextStatus = !isActiveDoctor(row);
       setTogglingDoctorId(row.id);
 
       updateDoctor(
@@ -203,6 +203,22 @@ export default function DoctorsTable({
 
     Object.entries(columnFilters).forEach(([key, val]) => {
       const { c1, c2, logic } = val;
+
+      // Doctor status is active/inactive — API expects `status=active|inactive`,
+      // not kanban-style `status_equal=...` / lead statuses.
+      if (key === 'status') {
+        const resolveStatus = (op?: string, value?: string) => {
+          if (!value) return;
+          if (op === 'equal') params.set('status', value);
+          if (op === 'not_equal') {
+            params.set('status', value === 'active' ? 'inactive' : 'active');
+          }
+        };
+        resolveStatus(c1?.op, c1?.value);
+        if (!c1?.value) resolveStatus(c2?.op, c2?.value);
+        return;
+      }
+
       if (c1.value) params.set(`${key}_${c1.op}`, c1.value);
       if (c2.value)
         params.set(`${key}_${c2.op}_${logic === 'or' ? 'or' : 'and'}`, c2.value);

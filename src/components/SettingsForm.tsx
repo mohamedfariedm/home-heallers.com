@@ -7,6 +7,8 @@ import {
   BusinessInfo,
   MediaFolder,
   RateColorsByMetric,
+  AbandonedPaymentCouponSettings,
+  WelcomeWalletSettings,
 } from '../types/settings';
 import BannerSection from './BannerSection';
 import SocialSection from './SocialSection';
@@ -24,7 +26,8 @@ import {
   Building2,
   FolderOpen,
   Palette,
-  CreditCard,
+  BellRing,
+  Gift,
 } from 'lucide-react';
 import TermsSection from './TermsSection';
 import ConditionsSection from './ConditionsSection';
@@ -35,6 +38,13 @@ import PaymentSection, {
   resolveAbandonedPaymentCouponSettings,
   validateAbandonedPaymentCouponSettings,
 } from './PaymentSection';
+import WelcomeWalletSection, {
+  resolveWelcomeWalletSettings,
+  pickWelcomeWalletSettings,
+  validateWelcomeWalletSettings,
+  buildWelcomeWalletPayload,
+  type WelcomeWalletErrors,
+} from './WelcomeWalletSection';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 
@@ -73,17 +83,11 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
     if (!seo.booking) seo.booking = emptyPage();
     if (!seo['doctors-apply']) seo['doctors-apply'] = emptyPage();
 
-    const abandoned = resolveAbandonedPaymentCouponSettings(source);
-
     return {
       ...source,
       seo,
-      abandoned_payment_coupon_enabled:
-        abandoned.abandoned_payment_coupon_enabled,
-      abandoned_payment_coupon_percent:
-        abandoned.abandoned_payment_coupon_percent,
-      abandoned_payment_coupon_delay_minutes:
-        abandoned.abandoned_payment_coupon_delay_minutes,
+      ...resolveAbandonedPaymentCouponSettings(source),
+      ...resolveWelcomeWalletSettings(source),
     };
   };
 
@@ -96,12 +100,14 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
     percent?: string;
     delayMinutes?: string;
   }>({});
+  const [welcomeErrors, setWelcomeErrors] = useState<WelcomeWalletErrors>({});
 
   // After save/refetch, show server values (including abandoned coupon keys)
   useEffect(() => {
     if (!initialSettings) return;
     setSettings(normalizeSettings(initialSettings));
     setPaymentErrors({});
+    setWelcomeErrors({});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialSettings]);
 
@@ -115,8 +121,13 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
     { id: 'business-info', label: t('settings_tab_business'), icon: Building2 },
     {
       id: 'payment',
-      label: t('settings_tab_payment', 'Payment'),
-      icon: CreditCard,
+      label: t('settings_tab_payment', 'Abandoned Booking Notifications'),
+      icon: BellRing,
+    },
+    {
+      id: 'welcome-wallet',
+      label: t('settings_tab_welcome_wallet', 'Welcome Wallet Bonus'),
+      icon: Gift,
     },
     { id: 'rate-colors', label: t('settings_tab_rate_colors'), icon: Palette },
     // { id: 'folder-management', label: 'Folder Management', icon: FolderOpen },
@@ -124,6 +135,9 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
 
   const handleSave = async () => {
     const abandoned = {
+      abandoned_payment_reminder_enabled: Boolean(
+        settings.abandoned_payment_reminder_enabled
+      ),
       abandoned_payment_coupon_enabled: Boolean(
         settings.abandoned_payment_coupon_enabled
       ),
@@ -138,15 +152,35 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
       toast.error(
         t(
           'settings_abandoned_coupon_save_blocked',
-          'Fix abandoned coupon fields before saving'
+          'Fix abandoned booking recovery fields before saving'
         )
       );
       setActiveTab('payment');
       return;
     }
 
+    const welcome = pickWelcomeWalletSettings(settings);
+    const welcomeErrs = validateWelcomeWalletSettings(welcome, t);
+    setWelcomeErrors(welcomeErrs);
+    if (welcomeErrs.amount || welcomeErrs.days || welcomeErrs.hours) {
+      toast.error(
+        t(
+          'settings_ww_save_blocked',
+          'Fix the welcome wallet bonus fields before saving'
+        )
+      );
+      setActiveTab('welcome-wallet');
+      return;
+    }
+
+    // The server replaces the whole `setting` object, so send everything we
+    // received (`...settings`) with the recovery keys and the welcome wallet
+    // keys as proper booleans / numbers.
     const payload: Settings = {
       ...settings,
+      ...buildWelcomeWalletPayload(welcome),
+      abandoned_payment_reminder_enabled:
+        abandoned.abandoned_payment_reminder_enabled,
       abandoned_payment_coupon_enabled:
         abandoned.abandoned_payment_coupon_enabled,
       abandoned_payment_coupon_percent: Number(
@@ -203,11 +237,14 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
     setSettings((prev) => ({ ...prev, rate_colors }));
   };
 
-  const updateAbandonedPaymentCoupon = (values: {
-    abandoned_payment_coupon_enabled: boolean;
-    abandoned_payment_coupon_percent: number;
-    abandoned_payment_coupon_delay_minutes: number;
-  }) => {
+  const updateWelcomeWallet = (values: WelcomeWalletSettings) => {
+    setSettings((prev) => ({ ...prev, ...values }));
+    setWelcomeErrors(validateWelcomeWalletSettings(values, t));
+  };
+
+  const updateAbandonedPaymentCoupon = (
+    values: AbandonedPaymentCouponSettings
+  ) => {
     setSettings((prev) => ({ ...prev, ...values }));
     setPaymentErrors(
       validateAbandonedPaymentCouponSettings(values, t)
@@ -267,6 +304,9 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
         return (
           <PaymentSection
             values={{
+              abandoned_payment_reminder_enabled: Boolean(
+                settings.abandoned_payment_reminder_enabled
+              ),
               abandoned_payment_coupon_enabled: Boolean(
                 settings.abandoned_payment_coupon_enabled
               ),
@@ -274,9 +314,25 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
                 settings.abandoned_payment_coupon_percent as number,
               abandoned_payment_coupon_delay_minutes:
                 settings.abandoned_payment_coupon_delay_minutes as number,
+              abandoned_payment_message_title_ar:
+                settings.abandoned_payment_message_title_ar ?? '',
+              abandoned_payment_message_title_en:
+                settings.abandoned_payment_message_title_en ?? '',
+              abandoned_payment_message_body_ar:
+                settings.abandoned_payment_message_body_ar ?? '',
+              abandoned_payment_message_body_en:
+                settings.abandoned_payment_message_body_en ?? '',
             }}
             onUpdate={updateAbandonedPaymentCoupon}
             errors={paymentErrors}
+          />
+        );
+      case 'welcome-wallet':
+        return (
+          <WelcomeWalletSection
+            values={pickWelcomeWalletSettings(settings)}
+            onUpdate={updateWelcomeWallet}
+            errors={welcomeErrors}
           />
         );
       case 'rate-colors':

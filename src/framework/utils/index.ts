@@ -891,7 +891,11 @@ class Client {
     };
     SiteSettings = {
         all: () => HttpClient.get('/settings'),
-        update: (input: any) => HttpClient.put(`/settings/1`, input),
+        update: (input: any) => {
+            // Optional `id` (from GET /settings) selects the record; body stays `{ setting }`.
+            const { id, ...body } = input ?? {};
+            return HttpClient.put(`/settings/${id ?? 1}`, body);
+        },
     };
     LandingPages = {
         all: () => HttpClient.get('/landing-pages'),
