@@ -134,7 +134,20 @@ function BlogFormFields({ initValues }: { initValues?: any }) {
   const [locale, setLocale] = useState<SeoLocale>('en');
   const [activeTab, setActiveTab] = useState(0);
   const [isLoading, setLoading] = useState(false);
-  const [isImageData, setImage] = useState(initValues?.image || null);
+  const [isImageData, setImage] = useState(() => {
+    const img = initValues?.image;
+    if (Array.isArray(img) && img.some((i: any) => i?.lang)) {
+      return [
+        img.find((i: any) => i.lang === 'ar') || { lang: 'ar' },
+        img.find((i: any) => i.lang === 'en') || { lang: 'en' },
+      ];
+    }
+    const first = Array.isArray(img) ? img[0] : null;
+    return [
+      { lang: 'ar', ...(first || {}) },
+      { lang: 'en', ...(first || {}) },
+    ];
+  });
   const [imageError, setImageError] = useState(0);
   const loadedSlug = initValues ? asLocaleTextMap(initValues.slug) : null;
 
@@ -144,7 +157,11 @@ function BlogFormFields({ initValues }: { initValues?: any }) {
     { value: 'test3', label: 'Test 3' },
   ];
 
-  const handleFileUpload = (event: any, type: 'Image' | 'File') => {
+  const handleFileUpload = (
+    event: any,
+    type: 'Image' | 'File',
+    lang?: 'ar' | 'en'
+  ) => {
     setLoading(true);
     const file = event.target.files?.[0];
     const formData = new FormData();
@@ -158,8 +175,13 @@ function BlogFormFields({ initValues }: { initValues?: any }) {
         },
       })
       .then((response) => {
-        if (type === 'Image') {
-          setImage(response.data.data);
+        if (type === 'Image' && lang) {
+          const uploaded = response.data.data?.[0] || response.data.data;
+          setImage((prev: any[]) =>
+            prev.map((item) =>
+              item.lang === lang ? { lang, ...uploaded } : item
+            )
+          );
         }
         toast.success(
           t('blogs_uploaded', {
@@ -181,7 +203,7 @@ function BlogFormFields({ initValues }: { initValues?: any }) {
         en: data.descriptionEN,
         ar: data.descriptionAR,
       }),
-      image: isImageData || initValues?.image,
+      image: isImageData || [{ lang: 'ar' }, { lang: 'en' }],
       show_in_home_page: data.show_in_home_page,
       date: data.date,
       redirect_url: data.redirect_url?.trim() || null,
@@ -493,52 +515,67 @@ function BlogFormFields({ initValues }: { initValues?: any }) {
                     description="Blog cover image"
                     contentClassName="grid gap-4 sm:grid-cols-1"
                   >
-                    <FormGroup
-                      title={t('blogs_image')}
-                      className="relative pt-2 @3xl:grid-cols-12"
-                    >
-                      {isLoading && (
-                        <div className="absolute inset-0 z-10 flex items-center justify-center rounded-md bg-white/80">
-                          <Spinner size="xl" />
-                        </div>
-                      )}
-                      <div className="flex flex-col gap-2">
-                        <Upload
-                          title={t('blogs_image')}
-                          accept="img"
-                          onChange={(e) => {
-                            setImageError(0);
-                            handleFileUpload(e, 'Image');
-                          }}
-                        />
-                        {imageError > 0 && (
-                          <p className="text-xs text-red-500">
-                            {t('blogs_image_required')}
-                          </p>
-                        )}
-                        {(isImageData?.[0]?.thumbnail ||
-                          isImageData?.[0]?.original) && (
-                          <div className="relative mt-2 flex w-full items-center justify-center">
-                            <img
-                              src={
-                                isImageData[0].thumbnail ||
-                                isImageData[0].original
-                              }
-                              alt={t('blogs_preview_alt')}
-                              className="h-auto w-48 rounded border border-gray-200 shadow-sm"
+                    {(['en', 'ar'] as const).map((lang) => {
+                      const imageItem =
+                        isImageData?.find((i: any) => i.lang === lang) || {
+                          lang,
+                        };
+                      return (
+                        <FormGroup
+                          key={lang}
+                          title={`${t('blogs_image')} (${lang.toUpperCase()})`}
+                          className="relative pt-2 @3xl:grid-cols-12"
+                        >
+                          {isLoading && (
+                            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-md bg-white/80">
+                              <Spinner size="xl" />
+                            </div>
+                          )}
+                          <div className="flex flex-col gap-2">
+                            <Upload
+                              title={`${t('blogs_image')} (${lang.toUpperCase()})`}
+                              accept="img"
+                              onChange={(e) => {
+                                setImageError(0);
+                                handleFileUpload(e, 'Image', lang);
+                              }}
                             />
-                            <button
-                              type="button"
-                              onClick={() => setImage(null)}
-                              className="absolute -right-2 -top-2 rounded-full border border-gray-300 bg-white p-1 shadow hover:bg-red-50"
-                              title={t('blogs_remove_image')}
-                            >
-                              <PiXBold className="h-4 w-4 text-red-500" />
-                            </button>
+                            {imageError > 0 && (
+                              <p className="text-xs text-red-500">
+                                {t('blogs_image_required')}
+                              </p>
+                            )}
+                            {(imageItem?.thumbnail || imageItem?.original) && (
+                              <div className="relative mt-2 flex w-full items-center justify-center">
+                                <img
+                                  src={
+                                    imageItem.thumbnail || imageItem.original
+                                  }
+                                  alt={t('blogs_preview_alt')}
+                                  className="h-auto w-48 rounded border border-gray-200 shadow-sm"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setImage((prev: any[]) =>
+                                      prev.map((item) =>
+                                        item.lang === lang
+                                          ? { lang }
+                                          : item
+                                      )
+                                    )
+                                  }
+                                  className="absolute -right-2 -top-2 rounded-full border border-gray-300 bg-white p-1 shadow hover:bg-red-50"
+                                  title={t('blogs_remove_image')}
+                                >
+                                  <PiXBold className="h-4 w-4 text-red-500" />
+                                </button>
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                    </FormGroup>
+                        </FormGroup>
+                      );
+                    })}
                   </ModalFormTabPanelCard>
                 </div>
               </ModalFormTabPanel>
