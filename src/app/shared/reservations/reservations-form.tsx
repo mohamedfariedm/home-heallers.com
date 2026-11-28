@@ -420,7 +420,10 @@ export default function CreateOrUpdateReservation({
       // 🧩 numbers and billing
       session_price: initialSessionPrice,
       sub_total: initialSubTotal,
-      fees: initValues?.fees || 0, // now fees is string type
+      fees:
+        initValues?.fees !== undefined && initValues?.fees !== null
+          ? String(initValues.fees)
+          : '0',
       fees_type: initialFeesType,
       remaining_payment: initValues?.remaining_payment?.toString() || '',
       total_amount: initValues?.total_amount?.toString() || '',
@@ -867,7 +870,9 @@ export default function CreateOrUpdateReservation({
       ...(data.cc ? { cc: data.cc } : {}),
       address_city: data.address_city,
       address_state: data.address_state,
-      address_link: data.address_link,
+      ...(data.address_link?.trim()
+        ? { address_link: data.address_link.trim() }
+        : {}),
       paid: data.paid !== undefined && data.paid !== null ? Number(data.paid) : 0,
       source_campaign: data.source_campaign,
       center_id: data.center_id ? Number(data.center_id) : undefined,
@@ -942,6 +947,8 @@ export default function CreateOrUpdateReservation({
               }
               if (onSuccess) {
                 onSuccess();
+              } else {
+                closeModal();
               }
             },
             onError: (error) => {
@@ -954,6 +961,8 @@ export default function CreateOrUpdateReservation({
           onSuccess: () => {
             if (onSuccess) {
               onSuccess();
+            } else {
+              closeModal();
             }
           },
           onError: (error) => {

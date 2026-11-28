@@ -57,7 +57,13 @@ export const reservationFormSchema = z
     // Address fields
     address_city: z.string().min(1, "Address city is required"),
     address_state: z.string().min(1, "Address state is required"),
-    address_link: z.string().url().optional(),
+    // Backend requires address_link when no address_id is present (create path).
+    // Empty default used to hit `.url().optional()` as "Invalid url" — require a real Maps URL.
+    address_link: z
+      .string({ required_error: 'Address link (Maps) is required' })
+      .trim()
+      .min(1, 'Address link (Maps) is required')
+      .url('Enter a valid Maps URL (e.g. https://maps.google.com/?q=...)'),
 
     // New fields
     paid: z.number().optional().default(0),

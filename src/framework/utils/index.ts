@@ -202,6 +202,8 @@ class Client {
     }
     customerSupport = {
         all: (param: string) => HttpClient.get(`${routes.customerSupport.index}?${param}`),
+        findOne: (id: number | string) =>
+            HttpClient.get(`${routes.customerSupport.index}/${id}`),
         create: (input: any) => HttpClient.post(`${routes.customerSupport.index}`, input),
         update: (input: any) => HttpClient.patch(`${routes.customerSupport.index}/${input.lead_id}`, input),
         delete: (input: { region_id: number[] }) => HttpClient.delete(`${routes.customerSupport.index}/${input.region_id}`),

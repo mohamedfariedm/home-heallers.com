@@ -84,14 +84,15 @@ export function useReservationsCalendarMonth(params: {
 
 export const useCreateReservation = () => {
   const queryClient = useQueryClient();
-  const { closeModal } = useModal();
 
   return useMutation({
     mutationFn: client.reservations.create,
     onSuccess() {
       queryClient.invalidateQueries({ queryKey: [routes.reservations.index] });
+      // Keep kanban lead cards / edit modal reservation lists in sync without a full page reload
+      queryClient.invalidateQueries({ queryKey: [routes.customerSupport.index] });
       toast.success('Reservation created successfully');
-      closeModal();
+      // Modal close is handled by the form (keeps nested kanban edit modal open when onSuccess is provided).
     },
     onError: (error) => {
       toast.error(`Error ${error?.message}`);
@@ -101,14 +102,14 @@ export const useCreateReservation = () => {
 
 export const useUpdateReservation = () => {
   const queryClient = useQueryClient();
-  const { closeModal } = useModal();
   
   return useMutation({
     mutationFn: client.reservations.update,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [routes.reservations.index] });
+      queryClient.invalidateQueries({ queryKey: [routes.customerSupport.index] });
       toast.success('Reservation updated successfully');
-      closeModal();
+      // Modal close is handled by the form (keeps nested kanban edit modal open when onSuccess is provided).
     },
     onError: (error) => {
       toast.error(`Error ${error?.message}`);

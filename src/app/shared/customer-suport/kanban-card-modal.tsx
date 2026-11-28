@@ -43,79 +43,69 @@ export default function KanbanCardModal({
   // Prefer page scope (e.g. marketing), then item type, then inbound default
   const supportType = supportTypeProp || item?.type || 'operation';
 
-  // Function to fetch reservations
+  // Load THIS lead's reservations only.
+  // Do NOT use /reservations?lead_id=… — backend ignores that filter and returns everyone.
   const fetchReservations = async (forceRefresh = false) => {
-    // If item already has reservations and we're not forcing refresh, use those
-    if (!forceRefresh && item?.reservations && Array.isArray(item.reservations) && item.reservations.length > 0) {
+    if (
+      !forceRefresh &&
+      item?.reservations !== undefined &&
+      Array.isArray(item.reservations)
+    ) {
       setReservations(item.reservations);
       setIsLoadingReservation(false);
       return;
     }
 
-    if (!item?.patient_id && !item?.id) {
-      setReservations([]);
+    if (!item?.id) {
+      setReservations(
+        Array.isArray(item?.reservations) ? item.reservations : []
+      );
       setIsLoadingReservation(false);
       return;
     }
 
     setIsLoadingReservation(true);
-    const params = new URLSearchParams();
-    
-    // Try to fetch by lead_id first, then by patient_id
-    if (item?.id) {
-      params.set('lead_id', String(item.id));
-    } else if (item?.patient_id) {
-      params.set('patient_id', String(item.patient_id));
-    }
-    
-    // Remove limit to get all reservations
-    params.set('limit', '100');
-
     try {
-      const response = await client.reservations.all(params.toString());
-      if (response?.data?.data && Array.isArray(response.data.data)) {
-        setReservations(response.data.data);
-      } else {
-        // Fallback to item.reservations if API returns empty
-        if (item?.reservations && Array.isArray(item.reservations)) {
-          setReservations(item.reservations);
-        } else {
-          setReservations([]);
-        }
-      }
+      // Lead detail embeds only this lead's reservations
+      const response = await client.customerSupport.findOne(Number(item.id));
+      const lead = Array.isArray(response?.data)
+        ? response.data[0]
+        : response?.data;
+      const embedded = Array.isArray(lead?.reservations)
+        ? lead.reservations
+        : Array.isArray(item?.reservations)
+          ? item.reservations
+          : [];
+      setReservations(embedded);
     } catch (error) {
-      console.error('Error fetching reservations:', error);
-      // Fallback to item.reservations on error
-      if (item?.reservations && Array.isArray(item.reservations)) {
-        setReservations(item.reservations);
-      } else {
-        setReservations([]);
-      }
+      console.error('Error fetching lead reservations:', error);
+      setReservations(
+        Array.isArray(item?.reservations) ? item.reservations : []
+      );
     } finally {
       setIsLoadingReservation(false);
     }
   };
 
-  // Use reservations from item if available (from API response) - prioritize this
+  // Seed from the lead card, then refresh from lead detail (scoped)
   useEffect(() => {
-    // Check if item has reservations array (even if empty, it means the data structure is there)
     if (item?.reservations !== undefined && Array.isArray(item.reservations)) {
       setReservations(item.reservations);
       setIsLoadingReservation(false);
-    } else if (item?.patient_id || item?.id) {
-      // Only fetch if reservations are not in the item
-      fetchReservations();
-    } else {
+    }
+    if (item?.id) {
+      fetchReservations(true);
+    } else if (item?.reservations === undefined) {
       setReservations([]);
       setIsLoadingReservation(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [item?.reservations, item?.patient_id, item?.id]);
+  }, [item?.id]);
 
-  // Refetch reservations when switching to reservations tab (force refresh)
+  // Refetch this lead's reservations when opening the Reservation tab
   useEffect(() => {
     if (activeTab === 1 && !selectedReservation && !viewingReservation && !isCreatingNew) {
-      fetchReservations(true); // Force refresh when switching to tab
+      fetchReservations(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
@@ -299,10 +289,9 @@ export default function KanbanCardModal({
                     <CreateOrUpdateReservation 
                       initValues={selectedReservation || null} 
                       leadData={item}
-                      onSuccess={() => {
-                        // Refresh reservations list after successful save (force refresh)
-                        fetchReservations(true);
+                      onSuccess={async () => {
                         handleBackToList();
+                        await fetchReservations(true);
                       }}
                     />
                   </div>
