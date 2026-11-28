@@ -41,6 +41,7 @@ import {
   applySeoValidationErrors,
   asLocaleTextMap,
   buildEntitySeoPayload,
+  localeMapToForm,
   mergeAdminFormRecord,
   preserveRichLocaleHtml,
   seoFormDefaults,
@@ -74,8 +75,21 @@ const GENERAL_ERROR_KEYS = [
   'nameAR',
   'date',
   'show_in_home_page',
-  'redirect_url',
+  'redirectUrlEN',
+  'redirectUrlAR',
 ];
+
+function redirectUrlFormDefaults(value: unknown): {
+  redirectUrlEN: string;
+  redirectUrlAR: string;
+} {
+  // Legacy single-string values were migrated into both locales.
+  if (typeof value === 'string') {
+    return { redirectUrlEN: value, redirectUrlAR: value };
+  }
+  const map = localeMapToForm(value);
+  return { redirectUrlEN: map.en, redirectUrlAR: map.ar };
+}
 const CONTENT_ERROR_KEYS = [
   'descriptionEN',
   'descriptionAR',
@@ -206,7 +220,10 @@ function BlogFormFields({ initValues }: { initValues?: any }) {
       image: isImageData || [{ lang: 'ar' }, { lang: 'en' }],
       show_in_home_page: data.show_in_home_page,
       date: data.date,
-      redirect_url: data.redirect_url?.trim() || null,
+      redirect_url: {
+        en: data.redirectUrlEN?.trim() || null,
+        ar: data.redirectUrlAR?.trim() || null,
+      },
       tags: data.tags || [],
       blogs_ids: data.relatedBlogs,
       ...buildEntitySeoPayload(data, loadedSlug, !initValues),
@@ -227,11 +244,10 @@ function BlogFormFields({ initValues }: { initValues?: any }) {
         (error as any)?.response?.data?.msg ||
         (error as any)?.response?.data?.message ||
         '';
-      if (
-        typeof serverMsg === 'string' &&
-        /redirect\s*url/i.test(serverMsg)
-      ) {
-        methodsRef.current!.setError('redirect_url', {
+      if (typeof serverMsg === 'string' && /redirect\s*url/i.test(serverMsg)) {
+        const field =
+          /\.ar\b/i.test(serverMsg) ? 'redirectUrlAR' : 'redirectUrlEN';
+        methodsRef.current!.setError(field, {
           type: 'server',
           message: serverMsg,
         });
@@ -276,7 +292,7 @@ function BlogFormFields({ initValues }: { initValues?: any }) {
           descriptionAR: initValues?.description?.ar || '',
           date: initValues?.date || '',
           show_in_home_page: !!initValues?.show_in_home_page,
-          redirect_url: initValues?.redirect_url || '',
+          ...redirectUrlFormDefaults(initValues?.redirect_url),
           relatedBlogs:
             initValues?.related_blogs?.map((blog: any) => blog.id) || [],
           tags: initValues?.tags || [],
@@ -362,12 +378,20 @@ function BlogFormFields({ initValues }: { initValues?: any }) {
                       error={errors.date?.message}
                     />
                     <Input
-                      label={t('blogs_redirect_url')}
+                      label={t('blogs_redirect_url_en')}
                       placeholder={t('blogs_redirect_url_placeholder')}
                       helperText={t('blogs_redirect_url_helper')}
-                      {...register('redirect_url')}
-                      error={errors.redirect_url?.message}
-                      className="sm:col-span-2"
+                      dir="ltr"
+                      {...register('redirectUrlEN')}
+                      error={errors.redirectUrlEN?.message}
+                    />
+                    <Input
+                      label={t('blogs_redirect_url_ar')}
+                      placeholder={t('blogs_redirect_url_placeholder')}
+                      helperText={t('blogs_redirect_url_helper')}
+                      dir="ltr"
+                      {...register('redirectUrlAR')}
+                      error={errors.redirectUrlAR?.message}
                     />
                     <div className="flex items-center gap-2 sm:col-span-2">
                       <Switch
